@@ -1,0 +1,9 @@
+import { ShieldCheck, ExternalLink, ArrowRight } from "lucide-react";
+import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
+
+export default function SocialSettings() {
+  const shell = "min-h-screen overflow-x-hidden bg-[#f7f3ec] p-5 sm:p-10";
+  const card = "mx-auto max-w-3xl rounded-[2rem] bg-white p-7 shadow-[0_20px_60px_-35px_rgba(30,50,40,.45)] sm:p-10";
+
+  return <div dir="rtl" className={shell}><main className={card}><a href="/products" className="inline-flex items-center gap-2 text-sm font-bold text-emerald-800"><ArrowRight size={16} /> العودة إلى المنتجات</a><div className="mt-8 flex items-start gap-4"><span className="rounded-2xl bg-emerald-100 p-3 text-emerald-900"><ShieldCheck size={26} /></span><div><h1 className="text-3xl font-black text-emerald-950">تضمين رسمي بلا رموز</h1><p className="mt-2 leading-7 text-stone-600">لا يحتاج هذا الإصدار إلى إدخال أو قراءة رموز وصول Meta. يعرض الموقع التضمينات العامة الرسمية فقط، ولا يخزّن منشورات ولا يملك صلاحية النشر.</p></div></div><div className="mt-8 rounded-2xl border border-stone-200 bg-stone-50 p-5"><h2 className="font-bold text-stone-900">المصادر المعروضة</h2><div className="mt-4 space-y-3"><a href={SOCIAL_EMBED_CONFIG.instagramProfileUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3 font-bold text-[#d62976]">Instagram: @omrantoys.store <ExternalLink size={16} /></a><a href={SOCIAL_EMBED_CONFIG.facebookPageUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3 font-bold text-[#1877f2]">Facebook: الصفحة الرسمية <ExternalLink size={16} /></a></div></div><p className="mt-6 text-sm leading-6 text-stone-500">إذا غيّرت رابط الحساب أو الصفحة مستقبلاً، حدّث الرابط العام فقط. لا تضع Access Token في الواجهة أو في ملفات المشروع.</p></main></div>;
+}

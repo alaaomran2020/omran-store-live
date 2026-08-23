@@ -16,7 +16,6 @@ export const appRouter = router({
       } as const;
     }),
   }),
-
   // TODO: add feature routers here, e.g.
   // todo: router({
   //   list: protectedProcedure.query(({ ctx }) =>
