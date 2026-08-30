@@ -128,6 +128,68 @@ reaches the drain handler.
 
 ---
 
+### 2.5 Hybrid edge layer (adopted): client on Workers Assets, API on the VPS
+
+Three new files, verified against a real `workerd` runtime (§6):
+
+| File | Role |
+|---|---|
+| `wrangler.toml` | `[assets] directory = "./dist/public"`, `binding = "ASSETS"`, `not_found_handling = "single-page-application"`, `run_worker_first = ["/api/*", "/manus-storage/*"]`. `compatibility_flags = []` — `nodejs_compat` is deliberately **off**: the router uses only Web Standard APIs, and enabling the Node layer would build a polyfill graph per isolate boot for nothing. |
+| `worker/index.ts` | The router: allowlist → stream to the tunnel origin, everything else → `env.ASSETS.fetch()`. **4.93 KiB / 1.95 KiB gzip.** |
+| `vite.config.ts` → `_headers` | Workers Assets has no `[[assets.rules]]` in wrangler 4.127.1 (schema-checked), so cache/header policy ships as a generated `_headers` file in the assets dir. |
+
+Why the client needs **no** change: `client/src/main.tsx` already calls `url: "/api/trpc"`
+(same-origin) and `client/src/const.ts` builds `${window.location.origin}/api/oauth/callback`,
+so one hostname serves edge statics and tunneled API without a rewrite — and the session
+cookie stays first-party.
+
+Worker behaviour, all of it tested: fail-closed path allowlist (never an open proxy), bodies
+**streamed** (no `text()`/`arrayBuffer()` on the path, which is how an edge worker becomes a
+memory problem), hop-by-hop headers stripped per RFC 9110 §7.6.1 while `Cookie` /
+`Authorization` / `Set-Cookie` pass through untouched, `x-forwarded-proto: https` so Express
+`trust proxy` marks the session cookie `Secure`, `redirect: "manual"` so the storage 307
+reaches the browser, `Content-Length > MAX_BODY_BYTES → 413` **before** Node,
+`content-encoding → 415` (a compressed body makes the size guard meaningless),
+`AbortController` + 504 on origin timeout, 502 on unreachable origin, and `no-store` pinned
+on every proxied response. Bodyless statuses (101/204/205/304) and `HEAD` never get a body
+attached, per the Fetch spec.
+
+Two `_headers` facts measured rather than assumed, both of which broke a first draft:
+
+1. **Rules accumulate; they do not override.** Putting `Cache-Control: no-cache` on `/*`
+   produced `no-cache, public, max-age=31536000, immutable` on hashed chunks — silently
+   destroying a year of immutability.
+2. **`!`-negation is unsupported**: `!/assets/*` was rejected with
+   `Found 1 invalid header rule: Expected a colon-separated header pair`.
+   HTML therefore needs *no* rule: Workers Assets already answers unmatched paths with
+   `Cache-Control: public, max-age=0, must-revalidate`, i.e. revalidate every view,
+   304-cheap via ETag, deploy visible immediately.
+
+`EDGE_ONLY=true` on the container closes the remaining hole in this topology: without it the
+tunnel hostname serves a second copy of the SPA, giving crawlers a duplicate origin and
+visitors a path that bypasses the edge's cache/header policy. With it the origin answers
+`/api/*` + `/manus-storage/*` only and 404s the rest (`{"error":"static_served_from_edge"}`).
+
+### 2.6 Dead pages removed
+
+`client/src/pages/Home.tsx` (33 lines) and `client/src/pages/ComponentShowcase.tsx`
+(1 437 lines) were deleted — neither was routed in `App.tsx` (routes are `/`, `/products` →
+`Products`, `/settings/social`, `/404`). The showcase was also the sole holder of the repo's
+only literal `@vercel` string, so the only remaining "vercel" matches in the tree are
+deliberate: the `.vercel` / `vercel.json` exclusion patterns in `.dockerignore` and the words
+"no Vercel/Express signatures" in `worker/index.ts`'s header comment.
+`client/src/App.tsx` lost its now-invalid `Home` import.
+
+Per your scope choice the shadcn kit stays: those 54 `ui/*` files are unreferenced but cost
+**0 bytes** in the bundle (grep-verified: `recharts`, `embla`, `cmdk`, `vaul`,
+`react-day-picker`, `framer-motion` all appear 0 times in `dist/`), so `streamdown` and
+friends remain declared because `AIChatBox.tsx` — kept — still imports them. Removing the kit
+would only shrink the repo, never the payload, so it stays an explicit opt-in.
+
+Measured side effect of the deletion: CSS `122.32 kB → 120.82 kB` (Tailwind dropped the
+classes only the showcase used); JS unchanged at `425.97 kB`, exactly as predicted for
+unreferenced files.
+
 ## 3. Why "100 % Cloudflare Workers + D1" is not a refactor for this app
 
 The server uses Node-only APIs that workerd does not provide: `http.createServer`,
@@ -142,74 +204,39 @@ replace `express.static` with Workers Static Assets bindings, and re-implement t
 cookie/Jose flow on `Request`/`Response`. That is a re-platform, not the "purge Vercel
 files" task, and it would leave the MySQL database in `omran-store-live` stranded.
 
-**Recommended path** (matches how the sibling repo is already configured): keep this app on
-Docker behind a Cloudflare Tunnel (done, §5), and put the edge-side work where the D1
-binding already exists — `omrantoys-store`, whose `wrangler.toml` has
-`[[d1_databases]] binding = "DB", database_name = "omran-toys-db"`.
+**Adopted path (§5.0 hybrid)**: the static client — which *is* portable and is 99 % of the
+detected payload — moves to Workers Assets and is served from the edge, while the Express +
+MySQL runtime stays on the VPS behind the tunnel, reached only for `/api/*` and
+`/manus-storage/*`. No ORM rewrite, no stranded database, and the edge component is a
+4.93 KiB worker with zero Node polyfills.
 
 ---
 
-## 4. Webhook / Meta Live idempotency — needs a decision, nothing to patch
+## 4. Webhook / Meta Live idempotency — **declined, by owner decision**
 
-Nothing in this repo receives a callback, so there is no code path to make idempotent.
-When you green-light it, this is the design I'd implement in `omrantoys-store` (D1,
-`compatibility_date = "2025-06-01"` already set there):
+Recorded so the next reader does not re-open this. The brief asked to enforce SQL-level
+idempotency on incoming webhooks and "Meta Live events" using `001_add_idempotency_key.sql`.
 
-```sql
--- 001_add_idempotency_key.sql (D1 / SQLite)
-CREATE TABLE IF NOT EXISTS inbound_events (
-  event_id     TEXT PRIMARY KEY,              -- Meta entry.id / Paymob order id
-  source       TEXT NOT NULL CHECK (source IN ('meta','paymob','fawry','store')),
-  received_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  processed_at TEXT,
-  status       TEXT NOT NULL DEFAULT 'queued'
-    CHECK (status IN ('queued','processing','done','failed','ignored')),
-  attempts     INTEGER NOT NULL DEFAULT 0,
-  payload_sha  TEXT,                           -- secondary dedupe for id-less senders
-  lease_until  TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_inbound_events_due
-  ON inbound_events(status, lease_until);
-```
+Findings that made it moot for this repository:
 
-SQL-level suppression — a single statement that both claims and dedupes, so concurrent
-retries cannot double-apply a Live order:
+- There is no callback endpoint here at all: `webhook`, `hub.challenge`, `META_VERIFY_TOKEN`,
+  `STORE_API_KEY` each return **0** matches across the tree, and `001_add_idempotency_key.sql`
+  exists in none of the account's 8 repos. The single `idempot*` hit is a doc-comment in
+  `server/_core/heartbeat.ts:185` about cron deletion.
+- `todo.md` shows the Meta integration was **removed on purpose**: the Instagram/Facebook
+  Graph fetchers, their access tokens and the tRPC feed endpoint were all deleted in favour of
+  static official links, and the settings page was rewritten to hold no secret at all.
+- The "Live" surface people point at — `src/components/common/LiveSalesNotification.jsx` in
+  the sibling `omrantoys-store` — renders a hard-coded 5-row array of customer names. It is a
+  mock, not an event consumer, so there is nothing to dedupe there either.
 
-```sql
-INSERT INTO inbound_events (event_id, source, payload_sha)
-VALUES (?1, 'meta', ?2)
-ON CONFLICT (event_id) DO NOTHING
-RETURNING event_id;      -- 0 rows => duplicate: ACK 200 and stop.
-```
-
-Worker contract (`functions/api/webhook/meta.ts`-style, Web Standard APIs):
-
-```ts
-export default {
-  async fetch(req: Request, env: Env, ctx: ExecutionContext) {
-    const url = new URL(req.url);
-    if (req.method === "GET")                       // verification handshake
-      return new Response(url.searchParams.get("hub.challenge"), {
-        status: 200, headers: { "content-type": "text/plain" } });
-    if (req.method !== "POST") return new Response(null, { status: 405 });
-    const body = await req.text();
-    if (!(await verifyHmac(body, req.headers, env.META_APP_SECRET)))
-      return new Response("forbidden", { status: 401 });
-    const claimed = await env.DB.prepare(
-      `INSERT INTO inbound_events (event_id, source, payload_sha) VALUES (?,'meta',?)
-       ON CONFLICT (event_id) DO NOTHING RETURNING event_id`)
-      .bind(entryId, sha256hex(body)).first();
-    ctx.waitUntil(processEntry(entryId, body, env));  // ack in <5s, Meta's timeout
-    return new Response("ok", { status: 200 });        // never block on the store API
-  },
-};
-```
-
-Rules: 200 before any store write; failures recorded in `inbound_events` for replay
-(`attempts`, `lease_until`) instead of returning 5xx and inviting a retry storm; secrets
-only as Wrangler secrets (`wrangler secret put META_VERIFY_TOKEN`).
-
----
+So there is no event path to guard, and building the guard would add a D1 table, a secret and
+an attack surface for a feed the owner already decided not to run. If that decision ever
+reverses, the shape is small and standard: an `inbound_events` table keyed by the provider's
+event id, `INSERT … ON CONFLICT (event_id) DO NOTHING RETURNING event_id` as the atomic
+claim-or-skip, `200` returned before any store write, and the actual work deferred with
+`ctx.waitUntil()`. That belongs in `omrantoys-store`, which already has the `omran-toys-db`
+D1 binding — not in this MySQL-backed app.
 
 ## 5. Deploy commands
 
@@ -233,6 +260,7 @@ git clone https://github.com/alaaomran2020/omran-store-live && cd omran-store-li
 cp .env.example .env && vi .env
 docker compose build                              # devDeps used only in the build stage
 docker compose up -d                                # no published ports by design
+# EDGE_ONLY=false keeps the container serving dist/public (pure-VPS mode)
 docker compose ps                                   # store should be "healthy"
 docker stats --no-stream $(docker compose ps -q)     # expect ~110-120 MiB / 256 MiB limit
 docker compose exec store sh -lc 'wget -qO- http://127.0.0.1:3000/api/health'
@@ -269,18 +297,47 @@ cloudflared tunnel info omran-store-live
 Locally-managed alternative: mount `deploy/cloudflared/config.yml` (ingress →
 `http://store:3000`, catch-all `http_status:404`), see the comments in that file.
 
-### 5.4 Edge/D1 work — belongs to `omrantoys-store`
+### 5.4 Edge deployment — hybrid (this repo, adopted)
 
 ```bash
-gh repo clone alaaomran2020/omrantoys-store && cd omrantoys-store
-npm install                                    # wrangler 4.127.1 is already a devDep
-npx wrangler d1 create omran-toys-db           # paste the real database_id into wrangler.toml
-npx wrangler d1 execute DB --remote --file=cloudflare/d1-schema.sql
-npx wrangler d1 execute DB --remote --file=cloudflare/001_add_idempotency_key.sql  # after §4 approval
-npx wrangler d1 execute DB --local  --file=cloudflare/d1-tests.sql                 # 25/25 + 16/16 pass
-npx wrangler deploy                            # [assets] + D1 are already configured
-printf 'META_VERIFY_TOKEN=...' | npx wrangler secret put META_VERIFY_TOKEN
+cd omran-store-live
+cp .env.example .env                      # set ORIGIN hostnames + EDGE_ONLY=true on the VPS
+
+# 1. Tunnel the container first; the edge proxies to it. Public hostname:
+#    origin.omrantoys.store -> http://store:3000   (see deploy/cloudflared/config.yml)
+#    omrantoys.store        -> CNAME to <name>.workers.dev  (or "Workers for Platforms" route)
+
+# 2. Build the client, then publish assets + router
+pnpm build                                # emits dist/public + _headers
+pnpm exec wrangler versions upload        # dry-run the bundle first, no traffic:
+pnpm exec wrangler deploy --dry-run       #   -> "Total Upload: 4.93 KiB / gzip: 1.95 KiB"
+npx wrangler secret put ORIGIN_BASE_URL   # only if you prefer a secret over [vars]
+pnpm run deploy:edge                      # wrangler deploy
+pnpm run preview:edge                     # local: workerd + assets + origin proxy
+
+# 3. Prove the split works (expect: immutable / must-revalidate / no-store)
+curl -sI https://omrantoys.store/                     | grep -i cache-control
+curl -sI https://omrantoys.store/assets/$(ls dist/public/assets | grep '\.js$' | head -1) | grep -i cache-control
+curl -s  https://omrantoys.store/api/health
+curl -sI https://origin.omrantoys.store/products      | head -1   # must be 404 (EDGE_ONLY)
+
+# 4. VPS: stop serving the SPA once the edge owns it
+printf 'EDGE_ONLY=true\n' >> .env && docker compose up -d store
 ```
+
+Local end-to-end check without any Cloudflare account (what was run for §6): start the
+container-equivalent origin, then point `wrangler dev` at it —
+
+```bash
+NODE_ENV=production PORT=3000 EDGE_ONLY=true node dist/index.js &
+pnpm exec wrangler dev --port 8787 --var ORIGIN_BASE_URL:http://127.0.0.1:3000
+curl -s localhost:8787/api/trpc/system.health?input=%7B%22json%22%3A%7B%22timestamp%22%3A1%7D%7D
+```
+
+> D1 note: the `omran-toys-db` database the brief quotes belongs to the sibling
+> `omrantoys-store` repo (`[[d1_databases]] binding = "DB"`), whose `cloudflare/d1-schema.sql`
+> is already validated (25/25 positive, 16/16 negative, 18/18 in `test-d1.sh`). Nothing in this
+> app can use D1 — it is MySQL via `drizzle-orm/mysql2` — so no D1 binding is declared here.
 
 ### 5.5 Vercel purge — belongs to `omran-store` (the repo that has them)
 
@@ -315,6 +372,27 @@ $ NODE_ENV=production node dist/index.js     → "Server running on http://0.0.0
       SIGTERM                                → "[server] SIGTERM received, draining"
 $ js-yaml docker-compose.yml                 → parses; store has no `ports:` key
 $ pnpm exec prettier --check <touched files> → all clean
+
+# Hybrid edge, run against real workerd (wrangler 4.127.1) + the built client:
+$ pnpm run check                             → 0 errors (root tsconfig AND worker/tsconfig)
+$ wrangler deploy --dry-run                  → Total Upload: 4.93 KiB / gzip: 1.95 KiB
+                                             → "Read 5 files from the assets directory"
+                                             → no schema warnings (compatibility_flags [])
+$ wrangler dev  → "✨ Parsed 2 valid header rules."
+  GET  /assets/index-*.js   → Cache-Control: public, max-age=31536000, immutable
+  GET  /assets/index-*.css  → Cache-Control: public, max-age=31536000, immutable
+  GET  /products            → 200, 482 bytes, Cache-Control: public, max-age=0, must-revalidate
+                              + nosniff / DENY / strict-origin (3 of 3, from _headers)
+  GET  /api/health          → 200, Cache-Control: no-store, x-edge: omran-store-live
+  GET  /api/trpc/system.health?input=…      → {"result":{"data":{"json":{"ok":true}}}}
+  POST 2 MB body to /api/*  → 413 {"error":"request_body_too_large"}   (rejected at edge)
+  GET  //evil.com/api/health→ 307 Location: /evil.com/api/health  (path-relative: no open redirect;
+                              and never reaches new URL() with a foreign host)
+  GET  /api/../../etc/passwd→ normalized by workerd to /etc/passwd → SPA fallback 200 (no traversal)
+  GET  :3000/products       → 404 {"error":"static_served_from_edge"}  (EDGE_ONLY on the origin)
+  GET  :3000/api/health     → 200  (API still reachable through the tunnel)
+$ du -sh /tmp/prodtest2/node_modules         → 62M, 10 packages (wrangler/workers-types are
+                                               devDependencies, so the runtime image is unaffected)
 ```
 
 Not verified locally: `docker build` / `docker compose up` (no Docker daemon in this

@@ -11,6 +11,15 @@ import { buildApp, serveStatic } from "./app";
 
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
 
+/**
+ * Hybrid topology switch. When the static client is published through Workers
+ * Assets (wrangler.toml), this origin only needs to answer /api/* and
+ * /manus-storage/*. EDGE_ONLY=true stops the tunnel hostname from serving a
+ * second copy of the SPA — which otherwise gives visitors a path that bypasses
+ * the edge's caching/header policy and gives crawlers a duplicate origin.
+ */
+const EDGE_ONLY = /^(1|true|yes|on)$/i.test(process.env.EDGE_ONLY ?? "");
+
 if (process.env.NODE_ENV !== "production") {
   console.warn(
     `[server] NODE_ENV is "${process.env.NODE_ENV ?? "unset"}", expected "production" ` +
@@ -26,7 +35,21 @@ async function startServer() {
   const server = createServer(app);
   activeServer = server;
 
-  serveStatic(app);
+  if (EDGE_ONLY) {
+    console.log(
+      "[server] EDGE_ONLY is set: static client is served by the Cloudflare edge, " +
+        "this origin answers API paths only."
+    );
+    // Registered after the API routes, so it only catches everything else.
+    app.use((_req, res) => {
+      res
+        .status(404)
+        .set("Cache-Control", "no-store")
+        .json({ error: "static_served_from_edge" });
+    });
+  } else {
+    serveStatic(app);
+  }
 
   // Bind exactly $PORT and fail loudly if it is taken. Silently hopping to the
   // next free port (the old behaviour) would move the app off the 3000 that a

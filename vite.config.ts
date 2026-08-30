@@ -209,9 +209,54 @@ function vitePluginOptionalAnalytics(
   };
 }
 
+/**
+ * Workers Assets reads a `_headers` file from the root of the assets directory
+ * to set response headers. In the hybrid topology the edge answers every static
+ * request *without* invoking the worker, so Express never gets a chance to set
+ * these — they must travel with the deployed assets. Mirrors the policy in
+ * `server/_core/app.ts` so both deploy targets behave identically.
+ */
+const EDGE_HEADERS = [
+  "/*",
+  "  X-Content-Type-Options: nosniff",
+  "  X-Frame-Options: DENY",
+  "  Referrer-Policy: strict-origin-when-cross-origin",
+  "",
+  "# Content-hashed chunks are safe to pin for a year (browser + edge).",
+  "/assets/*",
+  "  Cache-Control: public, max-age=31536000, immutable",
+  "",
+].join("\n");
+
+/*
+ * Measured against workerd (wrangler 4.127.1), because the shape of this file is
+ * counter-intuitive:
+ *   - Rules ACCUMULATE, they never override. Declaring `Cache-Control: no-cache`
+ *     on `/*` produced `no-cache, public, max-age=31536000, immutable` on hashed
+ *     assets — the no-cache silently defeated a year of immutability.
+ *   - `!`-negated paths are NOT supported; `!/assets/*` was parsed as a literal
+ *     path and appended a second `no-cache`.
+ *   - HTML needs no rule at all: Workers Assets already answers unmatched paths
+ *     with `Cache-Control: public, max-age=0, must-revalidate`, which revalidates
+ *     every view (cheap 304 via ETag) and makes a deploy visible immediately.
+ * So: security headers on /*, and Cache-Control only where it differs.
+ */
+function vitePluginEdgeHeaders(): Plugin {
+  return {
+    name: "edge-headers",
+    apply: "build",
+    enforce: "post",
+    closeBundle() {
+      const outDir = path.resolve(import.meta.dirname, "dist", "public");
+      if (!fs.existsSync(outDir)) return;
+      fs.writeFileSync(path.join(outDir, "_headers"), EDGE_HEADERS, "utf8");
+    },
+  };
+}
+
 function buildPlugins(): PluginOption[] {
-  // The analytics ids are plain VITE_* vars; merge the env dir over process.env
-  // so both `pnpm dev` and `pnpm build` (and CI-injected vars) are honoured.
+  // Vite's mode only decides which .env.[mode] file wins; the analytics ids are
+  // plain VITE_* vars, so merge the env dir over process.env and read them there.
   const env = {
     ...loadEnv("development", path.resolve(import.meta.dirname), ""),
     ...process.env,
@@ -223,6 +268,7 @@ function buildPlugins(): PluginOption[] {
     devOnly(vitePluginManusRuntime()),
     vitePluginManusDebugCollector(),
     vitePluginOptionalAnalytics(env),
+    vitePluginEdgeHeaders(),
   ];
 }
 

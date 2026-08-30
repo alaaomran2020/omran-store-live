@@ -1,0 +1,64 @@
+#:schema node_modules/wrangler/config-schema.json
+# =============================================================================
+# Omran Store Live — edge layer (hybrid topology)
+#
+#   browser ──▶ Cloudflare edge (this worker)
+#                 ├── /assets/*, /*  → served straight from Workers Assets
+#                 │                    (never enters the worker: run_worker_first
+#                 │                     is scoped to the API globs below)
+#                 └── /api/*, /manus-storage/* → tunneled to the VPS container
+#
+# The VPS keeps the MySQL/Node runtime (express + mysql2 cannot run on workerd);
+# the static client — which is 99% of the payload — is served from the edge.
+# The client needs no change: it already calls same-origin "/api/trpc"
+# (client/src/main.tsx) and `${window.location.origin}/api/oauth/callback`
+# (client/src/const.ts).
+# =============================================================================
+
+name = "omran-store-live-edge"
+main = "worker/index.ts"
+
+# Pinned deliberately: matches the compatibility baseline requested for the
+# platform move. `compatibility_date` gates the worker's runtime behaviour
+# (URL parsing, fetch semantics), not the build toolchain.
+compatibility_date = "2024-09-01"
+
+# NOTE ON `nodejs_compat`: intentionally NOT enabled. The router below speaks
+# only Web Standard APIs (Request/Response/Headers/fetch/AbortSignal). Turning
+# on the Node compatibility layer would allocate its polyfill graph on every
+# isolate boot for zero benefit — the opposite of the memory budget in scope.
+compatibility_flags = []
+
+# ---------------------------------------------------------------------------
+# Static client (built by `pnpm build` -> dist/public, 0.48 kB html + hashed
+# js/css). `not_found_handling` reproduces the Express SPA fallback so deep
+# links like /products resolve to index.html at the edge.
+# ---------------------------------------------------------------------------
+[assets]
+directory = "./dist/public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+# Only API traffic pays the worker hop; every asset/HTML request is answered by
+# the asset worker directly. Negative rules ("!/…") stay with the asset layer.
+run_worker_first = ["/api/*", "/manus-storage/*"]
+
+# ---------------------------------------------------------------------------
+# Origin (= the container behind the Cloudflare Tunnel). Publicly resolvable
+# through Cloudflare's network but intentionally NOT the user-facing hostname:
+# pair it with `EDGE_ONLY=true` on the VPS so the tunnel origin answers nothing
+# except API paths, and gate it further with a WAF/Access rule on this hostname.
+# ---------------------------------------------------------------------------
+[vars]
+ORIGIN_BASE_URL = "https://origin.omrantoys.store"
+# Ceiling for a single proxied request body; mirrors BODY_LIMIT on the container
+# so oversized payloads are rejected at the edge instead of reaching Node.
+MAX_BODY_BYTES = "1048576"
+# tRPC batch + the OAuth code exchange complete in <1s; the generous default is
+# headroom for the admin/file endpoints, not an invitation to hang a request.
+ORIGIN_TIMEOUT_MS = "30000"
+
+# Tail sampling for incident triage is opt-in (it has a log-volume cost):
+# [observability]
+# enabled = true
+# head_sampling_rate = 0.05

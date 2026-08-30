@@ -39,6 +39,11 @@ services:
       NODE_OPTIONS: >-
         --max-old-space-size=160
       BODY_LIMIT: 1mb
+      # Hybrid topology switch (client served by Workers Assets, see wrangler.toml).
+      # Leave "false" for a VPS-only deploy: with "true" this origin stops serving
+      # dist/public, so the public hostname MUST already be the Cloudflare edge or
+      # visitors get 404s.
+      EDGE_ONLY: ${EDGE_ONLY:-false}
     # No `ports:` on purpose — see the ingress note at the top of this file.
     # If you run cloudflared on the host instead of in this compose project,
     # publish loopback-only and change the tunnel target to localhost:3000:
