@@ -3,7 +3,13 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
-import { defineConfig, type Plugin, type ViteDevServer } from "vite";
+import {
+  defineConfig,
+  loadEnv,
+  type Plugin,
+  type PluginOption,
+  type ViteDevServer,
+} from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
 // =============================================================================
@@ -56,7 +62,7 @@ function writeToLogFile(source: LogSource, entries: unknown[]) {
   const logPath = path.join(LOG_DIR, `${source}.log`);
 
   // Format entries with timestamps
-  const lines = entries.map((entry) => {
+  const lines = entries.map(entry => {
     const ts = new Date().toISOString();
     return `[${ts}] ${JSON.stringify(entry)}`;
   });
@@ -69,7 +75,7 @@ function writeToLogFile(source: LogSource, entries: unknown[]) {
 }
 
 /**
- * Vite plugin to collect browser debug logs
+ * Vite plugin to collect browser logs (DEV ONLY — see `apply: "serve"` below)
  * - POST /__manus__/logs: Browser sends logs, written directly to files
  * - Files: browserConsole.log, networkRequests.log, sessionReplay.log
  * - Auto-trimmed when exceeding 1MB (keeps newest entries)
@@ -77,11 +83,11 @@ function writeToLogFile(source: LogSource, entries: unknown[]) {
 function vitePluginManusDebugCollector(): Plugin {
   return {
     name: "manus-debug-collector",
+    // Dev-only: the log sink writes to the local filesystem, so it must never
+    // be registered in a production/container build.
+    apply: "serve",
 
     transformIndexHtml(html) {
-      if (process.env.NODE_ENV === "production") {
-        return html;
-      }
       return {
         html,
         tags: [
@@ -132,7 +138,7 @@ function vitePluginManusDebugCollector(): Plugin {
         }
 
         let body = "";
-        req.on("data", (chunk) => {
+        req.on("data", chunk => {
           body += chunk.toString();
         });
 
@@ -150,7 +156,81 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+// -----------------------------------------------------------------------------
+// Host/IDE tooling must never reach production output.
+//
+// `vite-plugin-manus-runtime` inlines its whole previewer bundle
+// (~367 kB of JS, plus ~34 kB CSS) directly into index.html on every build —
+// it is the host editor's element-picker, not application code. `@builder.io/
+// vite-plugin-jsx-loc` likewise stamps `data-jsx-loc` source coordinates onto
+// every element (bundle bloat + leaked file paths). Both are marked
+// `apply: "serve"` so `vite build` skips them; `client/public` only holds the
+// dev log collector, so it is dropped from the build output too.
+// -----------------------------------------------------------------------------
+function devOnly(plugin: Plugin): Plugin {
+  return { ...plugin, apply: "serve" };
+}
+
+/**
+ * Optional Umami analytics tag.
+ *
+ * The tracker was previously hard-coded into `client/index.html` as
+ * `%VITE_ANALYTICS_ENDPOINT%/umami`. With those env vars unset Vite leaves the
+ * placeholder literal, so every page load requested a bogus relative URL that
+ * the SPA fallback answered with HTML — a guaranteed 404-ish fetch plus a
+ * "script loaded as stylesheet/module" console error on each view. Injecting
+ * here means the tag only exists when it can actually work.
+ */
+function vitePluginOptionalAnalytics(
+  env: Record<string, string | undefined>
+): Plugin {
+  const endpoint = (env.VITE_ANALYTICS_ENDPOINT ?? "").replace(/\/+$/, "");
+  const websiteId = env.VITE_ANALYTICS_WEBSITE_ID ?? "";
+  const enabled = /^https?:\/\//.test(endpoint) && websiteId.length > 0;
+  return {
+    name: "optional-analytics-tag",
+    transformIndexHtml(html) {
+      if (!enabled) return html;
+      return {
+        html,
+        tags: [
+          {
+            tag: "script",
+            attrs: {
+              defer: true,
+              src: `${endpoint}/umami`,
+              "data-website-id": websiteId,
+            },
+            injectTo: "body",
+          },
+        ],
+      };
+    },
+  };
+}
+
+function buildPlugins(): PluginOption[] {
+  // The analytics ids are plain VITE_* vars; merge the env dir over process.env
+  // so both `pnpm dev` and `pnpm build` (and CI-injected vars) are honoured.
+  const env = {
+    ...loadEnv("development", path.resolve(import.meta.dirname), ""),
+    ...process.env,
+  };
+  return [
+    react(),
+    tailwindcss(),
+    devOnly(jsxLocPlugin()),
+    devOnly(vitePluginManusRuntime()),
+    vitePluginManusDebugCollector(),
+    vitePluginOptionalAnalytics(env),
+  ];
+}
+
+// NOTE: this must stay a plain object, not the `defineConfig(({command}) => ({...}))`
+// function form. `server/_core/vite.ts` spreads this default export into its
+// programmatic dev-server options (`configFile: false`); a function there would
+// silently strip plugins and path aliases from `pnpm dev`.
+const plugins = buildPlugins();
 
 export default defineConfig({
   plugins,
@@ -163,10 +243,17 @@ export default defineConfig({
   },
   envDir: path.resolve(import.meta.dirname),
   root: path.resolve(import.meta.dirname, "client"),
+  // `client/public` holds only `__manus__/debug-collector.js` (dev tooling):
+  // keep serving it in dev, but never copy it into the deployable output.
   publicDir: path.resolve(import.meta.dirname, "client", "public"),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    // Emit no sourcemaps in the shipped client, and skip the publicDir copy
+    // (Vite >= 6) so dev-only assets stay out of dist/.
+    sourcemap: false,
+    copyPublicDir: false,
+    chunkSizeWarningLimit: 500,
   },
   server: {
     host: true,

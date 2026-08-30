@@ -1,66 +1,71 @@
-import "dotenv/config";
-import express from "express";
 import { createServer } from "http";
-import net from "net";
-import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerOAuthRoutes } from "./oauth";
-import { registerStorageProxy } from "./storageProxy";
-import { appRouter } from "../routers";
-import { createContext } from "./context";
-import { serveStatic, setupVite } from "./vite";
+import { buildApp, serveStatic } from "./app";
 
-function isPortAvailable(port: number): Promise<boolean> {
-  return new Promise(resolve => {
-    const server = net.createServer();
-    server.listen(port, () => {
-      server.close(() => resolve(true));
-    });
-    server.on("error", () => resolve(false));
-  });
+/**
+ * Production entry point — bundled by esbuild into `dist/index.js`.
+ *
+ * Nothing in this file's import graph may reference Vite or any other
+ * devDependency; `./app` is where the shared wiring lives, and the dev-server
+ * helper lives in `./vite` (imported only by `./dev`).
+ */
+
+const PORT = Number.parseInt(process.env.PORT || "3000", 10);
+
+if (process.env.NODE_ENV !== "production") {
+  console.warn(
+    `[server] NODE_ENV is "${process.env.NODE_ENV ?? "unset"}", expected "production" ` +
+      "(use server/_core/dev.ts for development)."
+  );
 }
 
-async function findAvailablePort(startPort: number = 3000): Promise<number> {
-  for (let port = startPort; port < startPort + 20; port++) {
-    if (await isPortAvailable(port)) {
-      return port;
-    }
-  }
-  throw new Error(`No available port found starting from ${startPort}`);
-}
+/** Held so the signal handlers can drain the live listener. */
+let activeServer: ReturnType<typeof createServer> | null = null;
 
 async function startServer() {
-  const app = express();
+  const app = buildApp();
   const server = createServer(app);
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  registerStorageProxy(app);
-  registerOAuthRoutes(app);
-  // tRPC API
-  app.use(
-    "/api/trpc",
-    createExpressMiddleware({
-      router: appRouter,
-      createContext,
-    })
-  );
-  // development mode uses Vite, production mode uses static files
-  if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+  activeServer = server;
 
-  const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = await findAvailablePort(preferredPort);
+  serveStatic(app);
 
-  if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
-  }
+  // Bind exactly $PORT and fail loudly if it is taken. Silently hopping to the
+  // next free port (the old behaviour) would move the app off the 3000 that a
+  // Cloudflare Tunnel/ingress targets, leaving a "healthy" but unreachable
+  // container. Dev keeps the hop; see ./dev.ts.
 
-  server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(PORT, "0.0.0.0", () => {
+      server.removeListener("error", reject);
+      resolve();
+    });
   });
+
+  console.log(`Server running on http://0.0.0.0:${PORT}/`);
 }
 
-startServer().catch(console.error);
+/**
+ * Graceful drain: stop accepting new sockets, let in-flight requests finish,
+ * then force-exit after a bounded window so a stuck keep-alive cannot block
+ * `docker stop` (Compose sends SIGTERM, waits stop_grace_period, then SIGKILL).
+ */
+function shutdown(signal: string) {
+  console.log(`[server] ${signal} received, draining`);
+  const server = activeServer;
+  if (!server) {
+    process.exit(0);
+    return;
+  }
+  const force = setTimeout(() => process.exit(1), 8_000);
+  force.unref();
+  server.closeIdleConnections();
+  server.close(() => process.exit(0));
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+startServer().catch(err => {
+  console.error("[server] fatal:", err);
+  process.exit(1);
+});
