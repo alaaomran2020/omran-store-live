@@ -1,0 +1,57 @@
+# Build context hygiene: keep the image small and keep secrets out of it.
+# Everything excluded here simply isn't sent to the daemon; the stages that
+# need sources copy them explicitly in the Dockerfile.
+
+# Dependencies / build output (re-created inside the image)
+node_modules
+**/node_modules
+dist
+build
+*.dist
+
+# Local env files — never bake secrets into a layer
+.env
+.env.*
+!.env.example
+.dev.vars
+.vercel
+vercel.json
+
+# VCS / tooling / caches
+.git
+.gitignore
+.gitkeep
+.github
+.mynpy_cache
+.pytest_cache
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs and local debug output (the Vite log sink writes here in dev only)
+logs
+*.log
+.manus-logs
+**/__manus__
+
+# Docs and packaging artifacts not needed to run the app
+docs
+*.md
+!README.md
+project.zip
+*.tgz
+coverage
+.nyc_output
+.DS_Store
+
+# Edge layer — deployed by wrangler, irrelevant to the container image
+worker
+wrangler.toml
+.wrangler
+
+# Docker files themselves
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml

@@ -106,6 +106,9 @@ temp/
 *.sqlite
 *.sqlite3
 
+# Cloudflare Workers local state (wrangler dev simulates D1/KV on disk)
+.wrangler/
+
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/
 

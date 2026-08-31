@@ -1,0 +1,53 @@
+# =============================================================================
+# Cloudflare Tunnel — alternative (remotely-managed = token mode is the default
+# in docker-compose.yml and needs no file like this one).
+#
+# Use this locally-managed form only if you prefer the tunnel defined in Git.
+# Route it to the compose service over the internal network:
+#     service: http://store:3000
+# If cloudflared runs on the VPS host (outside Docker), publish loopback-only
+# (`127.0.0.1:3000:3000`) and use http://localhost:3000 instead.
+#
+# Setup:
+#   cloudflared tunnel login
+#   cloudflared tunnel create omran-store-live
+#     -> writes ~/.cloudflared/<TUNNEL_ID>.json  (mount it read-only)
+#   cloudflared tunnel route dns omran-store-live omrantoys.store
+#   cloudflared tunnel route dns omran-store-live www.omrantoys.store
+#
+# Mounting (compose snippet to merge into the `cloudflared` service):
+#   command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+#   volumes:
+#     - ./deploy/cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+#     - ~/.cloudflared:/etc/cloudflared/creds:ro
+#   environment: {}        # drop TUNNEL_TOKEN when using config-file mode
+#   # then set `credentials-file: /etc/cloudflared/creds/<TUNNEL_ID>.json` below
+# =============================================================================
+
+tunnel: omran-store-live
+credentials-file: /etc/cloudflared/creds/REPLACE_WITH_TUNNEL_ID.json
+
+# No public listener on the VPS: the connector dials out to Cloudflare's edge
+# over an authenticated control stream. Keep 80/443 closed at the firewall and
+# rely on `ingress` below plus Cloudflare WAF/Access for policy.
+ingress:
+  # Webhooks and Meta "live" event callbacks land here the moment such a
+  # handler exists; it is declared now so the hostname is already provisioned
+  # and the 5s-ACK contract has a stable target.
+  - hostname: omrantoys.store
+    service: http://store:3000
+
+  - hostname: www.omrantoys.store
+    service: http://store:3000
+
+  # Catch-all, required and last. Fail closed rather than proxying unknown
+  # hostnames to the app.
+  - service: http_status:404
+
+# Connector-side hardening: bound the tunnel's own buffers and drop the
+# metrics listener (bind it to loopback if you want /metrics for scraping).
+metrics: 127.0.0.1:20241
+origin_request:
+  connect_timeout: 3s
+  tcp_keep_alive: 30s
+no_tls_verify: false

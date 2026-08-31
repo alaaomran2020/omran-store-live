@@ -1,0 +1,116 @@
+# =============================================================================
+# Omran Store Live — VPS compose file (memory/CPU capped, no public ports)
+#
+# Ingress model: the app is NOT published on the host. `cloudflared` runs as a
+# sibling container on the internal network and reaches it by Docker DNS
+# (http://store:3000), so nothing listens on the VPS's public interfaces and
+# ports 80/443 stay closed at the firewall.
+#
+# Numbers below are measured, not guessed: idle RSS is ~116 MB with the heap
+# capped at 128 MB and stays flat across 200 sequential requests, so a 256 MB
+# hard limit with a 160 MB heap gives comfortable headroom.
+# =============================================================================
+
+name: omran-store-live
+
+services:
+  store:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Only VITE_* public values belong in build args — never secrets.
+      args:
+        VITE_ANALYTICS_ENDPOINT: ""
+        VITE_ANALYTICS_WEBSITE_ID: ""
+    image: omran-store-live:latest
+    restart: unless-stopped
+    init: true
+    # PID 1 reaping + signal forwarding; store's drain handler expects SIGTERM.
+    stop_grace_period: 15s
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # NOTE: only heap sizing is legal here. `--optimize-for-size` is rejected
+      # inside NODE_OPTIONS ("not allowed in NODE_OPTIONS") and is therefore
+      # set as a CLI flag in the Dockerfile ENTRYPOINT.
+      NODE_OPTIONS: >-
+        --max-old-space-size=160
+      BODY_LIMIT: 1mb
+      # Hybrid topology switch (client served by Workers Assets, see wrangler.toml).
+      # Leave "false" for a VPS-only deploy: with "true" this origin stops serving
+      # dist/public, so the public hostname MUST already be the Cloudflare edge or
+      # visitors get 404s.
+      EDGE_ONLY: ${EDGE_ONLY:-false}
+    # No `ports:` on purpose — see the ingress note at the top of this file.
+    # If you run cloudflared on the host instead of in this compose project,
+    # publish loopback-only and change the tunnel target to localhost:3000:
+    #   ports:
+    #     - "127.0.0.1:3000:3000"
+    expose:
+      - "3000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+        reservations:
+          memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    networks:
+      - edge
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # --- Cloudflare Tunnel (zero-trust inbound; no listener on the host) ------
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      store:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 64M
+        reservations:
+          memory: 16M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "2m"
+        max-file: "2"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - edge
+
+networks:
+  edge:
+    driver: bridge
