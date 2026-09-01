@@ -5,6 +5,10 @@ import {
   createFeedCache,
   type SocialFeedEnv,
 } from "../shared/socialFeed";
+import {
+  createProductsCache,
+  fetchProductsPayload,
+} from "../shared/products";
 
 /**
  * omran-store-live edge router — Web Standard APIs only (no framework-specific
@@ -37,6 +41,12 @@ interface Env extends SocialFeedEnv {
   ORIGIN_BASE_URL?: string;
   MAX_BODY_BYTES?: string;
   ORIGIN_TIMEOUT_MS?: string;
+  /**
+   * رابط Google Sheet المنشور كـCSV (Publish to web → CSV). المصدر الوحيد
+   * لمنتجات المتجر. عام تمامًا: ليس سرًا وليس مفتاح API — يُضبط في
+   * `[vars]` داخل wrangler.toml.
+   */
+  PRODUCTS_SHEET_URL?: string;
 }
 
 const API_PREFIXES = ["/api/", "/manus-storage/"] as const;
@@ -135,6 +145,43 @@ async function handleSocialFeed(request: Request, env: Env): Promise<Response> {
   }
 }
 
+/**
+ * كتالوج المنتجات (Google Sheets → CSV) — كاش على مستوى الـisolate تمامًا مثل
+ * feedCache أعلاه. لا مفتاح API ولا OAuth: الرابط عام ومنشور بواسطة صاحب المتجر.
+ */
+const productsCache = createProductsCache();
+
+async function handleProducts(request: Request, env: Env): Promise<Response> {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return json(405, "method_not_allowed", { allow: "GET, HEAD" });
+  }
+  let payload;
+  try {
+    payload = await productsCache.get(() =>
+      fetchProductsPayload(env.PRODUCTS_SHEET_URL, (u, init) => fetch(u, init))
+    );
+  } catch {
+    // Google غير متاح ولا نسخة قديمة في الكاش: حالة محترمة، لا خطأ للزائر.
+    payload = {
+      products: [],
+      status: "error" as const,
+      fetchedAt: new Date().toISOString(),
+    };
+  }
+  return new Response(
+    request.method === "HEAD" ? null : JSON.stringify(payload),
+    {
+      status: 200,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control":
+          payload.status === "ok" ? "public, max-age=60" : "no-store",
+        "x-edge": "omran-store-live",
+      },
+    }
+  );
+}
+
 export default {
   async fetch(
     request: Request,
@@ -142,6 +189,13 @@ export default {
     _ctx: ExecutionContext
   ): Promise<Response> {
     const url = new URL(request.url);
+
+    // ---- كتالوج المنتجات من Google Sheets: يُجاب هنا على الحافة.
+    // القراءة تتم من الحافة لا من متصفح الزائر، فلا مشاكل CORS، ونتيجة واحدة
+    // مخزّنة مؤقتًا تخدم كل الزوار خلال مدة الكاش بدل طلب لكل تفاعل.
+    if (url.pathname === "/api/products") {
+      return handleProducts(request, env);
+    }
 
     // ---- Facebook/Instagram product feed: answered at the edge, never
     // proxied. This keeps the storefront 100% Cloudflare — no origin server

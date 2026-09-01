@@ -6,6 +6,9 @@
 #                 ├── /assets/*, /*  → served straight from Workers Assets
 #                 │                    (never enters the worker: run_worker_first
 #                 │                     is scoped to the API globs below)
+#                 ├── /api/products  → answered AT THE EDGE (worker/index.ts):
+#                 │                    Google Sheets (CSV منشور) + كاش 5 دقائق.
+#                 │                    الضبط الوحيد: PRODUCTS_SHEET_URL في [vars] بالأسفل.
 #                 ├── /api/social/feed → answered AT THE EDGE (worker/index.ts):
 #                 │                    Facebook/Instagram Graph sync + 5-min cache.
 #                 │                    Secrets (set once, stored by Cloudflare):
@@ -56,6 +59,16 @@ run_worker_first = ["/api/*", "/manus-storage/*"]
 # except API paths, and gate it further with a WAF/Access rule on this hostname.
 # ---------------------------------------------------------------------------
 [vars]
+# ---------------------------------------------------------------------------
+# مصدر منتجات المتجر: رابط Google Sheet المنشور كـCSV.
+#   Google Sheets → File → Share → Publish to web → (الورقة) → Comma-separated values (.csv)
+# الصق الرابط هنا مرة واحدة فقط، ثم أعِد النشر (pnpm build && pnpm deploy:edge).
+# بعدها كل منتج جديد تضيفه كصف في الشيت يظهر تلقائيًا خلال ~5 دقائق
+# بلا GitHub ولا Deploy ولا مفتاح API. الرابط عام وليس سرًا.
+# مثال:
+# PRODUCTS_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-xxxxxxxx/pub?gid=0&single=true&output=csv"
+# ---------------------------------------------------------------------------
+PRODUCTS_SHEET_URL = ""
 ORIGIN_BASE_URL = "https://origin.omrantoys.store"
 # Ceiling for a single proxied request body; mirrors BODY_LIMIT on the container
 # so oversized payloads are rejected at the edge instead of reaching Node.

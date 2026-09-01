@@ -5,6 +5,8 @@ export const SOCIAL_EMBED_CONFIG = {
   /**
    * رقم واتساب المتجر بالصيغة الدولية بدون "+" (مثال: "2010XXXXXXXX").
    * اتركه فارغًا لإخفاء زر "اطلب عبر واتساب" من بطاقات المنتجات.
+   * بديل بلا تعديل كود: اضبط `VITE_WHATSAPP_NUMBER` وقت البناء — تقرأه
+   * `client/src/lib/productFormat.ts` وتفضّله على هذا الثابت.
    */
   whatsappNumber: "",
 } as const;
