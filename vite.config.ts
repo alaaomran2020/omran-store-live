@@ -309,6 +309,7 @@ export default defineConfig({
       ".manus-asia.computer",
       ".manuscomputer.ai",
       ".manusvm.computer",
+      ".e2b.app",
       "localhost",
       "127.0.0.1",
     ],

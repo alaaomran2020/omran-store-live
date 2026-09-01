@@ -6,7 +6,13 @@
 #                 ├── /assets/*, /*  → served straight from Workers Assets
 #                 │                    (never enters the worker: run_worker_first
 #                 │                     is scoped to the API globs below)
-#                 └── /api/*, /manus-storage/* → tunneled to the VPS container
+#                 ├── /api/social/feed → answered AT THE EDGE (worker/index.ts):
+#                 │                    Facebook/Instagram Graph sync + 5-min cache.
+#                 │                    Secrets (set once, stored by Cloudflare):
+#                 │                      wrangler secret put INSTAGRAM_ACCESS_TOKEN
+#                 │                      wrangler secret put FACEBOOK_PAGE_ID
+#                 │                      wrangler secret put FACEBOOK_PAGE_ACCESS_TOKEN
+#                 └── other /api/*, /manus-storage/* → tunneled to the VPS container
 #
 # The VPS keeps the MySQL/Node runtime (express + mysql2 cannot run on workerd);
 # the static client — which is 99% of the payload — is served from the edge.

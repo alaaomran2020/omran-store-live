@@ -14,8 +14,6 @@ build
 .env.*
 !.env.example
 .dev.vars
-.vercel
-vercel.json
 
 # VCS / tooling / caches
 .git

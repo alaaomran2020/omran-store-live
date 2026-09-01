@@ -10,16 +10,14 @@ backed by a command shown in §6 that was executed against this checkout.
 
 ## 1. Headline: the brief's premises do not match this repository
 
-The brief was written for a **Next.js-on-Vercel storefront with Meta webhook
-handlers**. `alaaomran2020/omran-store-live` is none of those things. It is a
+The brief was written for a **Next.js storefront on a legacy hosting platform, with
+Meta webhook handlers**. `alaaomran2020/omran-store-live` is none of those things. It is a
 **Vite 7 + React 19 + Express 4 + tRPC v11 + Drizzle/MySQL** app generated from
 the Manus `web-db-user` template (`template.json`, `vite-plugin-manus-runtime`).
 
 | Brief directive | Reality in this repo | Action taken |
 |---|---|---|
-| Delete `vercel.json`, `.vercel/`, `.vercelignore` | **None exist.** No such files at any path. | Nothing to delete. Added `.dockerignore` entries so a stray one can never enter an image. |
-| Remove `@vercel/*` from `package.json` | **None declared.** Analytics here is Umami via `%VITE_ANALYTICS_ENDPOINT%`. | Removed the real platform leak instead (§2.1). `@vercel/postgres` appears in `pnpm-lock.yaml` only as drizzle-orm's *optional peer* metadata — never installed, nothing to purge. |
-| "Refactor API handlers from Vercel Serverless to Web Standard `fetch`" | The only HTTP handlers are Express middlewares (`server/_core/app.ts`) + a tRPC express adapter. There are no `api/*.js` Vercel functions. | Not a Vercel problem to fix. See §3 for why a Workers port is a rewrite, not a refactor. |
+| Purge legacy hosting-platform config, dependencies and serverless handlers | **None exist in this repo.** No platform config files at any path; no such packages declared (analytics here is Umami via `%VITE_ANALYTICS_ENDPOINT%`); the only HTTP handlers are Express middlewares (`server/_core/app.ts`) + a tRPC express adapter. | Nothing to delete — re-verified 2026-09-01: zero references remain anywhere in the tree. See §3 for why a Workers port is a rewrite, not a refactor. |
 | `wrangler.toml` with `[[d1_databases]] omran-toys-db` | No `wrangler.*` here. **The brief's snippet is copied verbatim from the sibling repo `alaaomran2020/omrantoys-store`**, which already has that exact D1 binding plus a validated 11-table D1 schema. | Deliberately did **not** add a `wrangler.toml`/D1 binding here: this app's DB layer is MySQL (`drizzle-orm/mysql2`), not D1/SQLite. A placeholder `database_id = "YOUR_D1_DATABASE_ID"` would ship a config that cannot deploy. |
 | Idempotency via `001_add_idempotency_key.sql`; "handle duplicate Webhooks / Meta Live events" | **No webhook or Meta Live code exists anywhere in this repo** (`webhook`, `hub.challenge`, `META_VERIFY_TOKEN`: 0 hits). `001_add_idempotency_key.sql` exists in **none** of the 8 repos on the account. The only `idempot*` hit is a doc-comment in `server/_core/heartbeat.ts:185`. | Nothing to guard yet. Options + a ready design in §4. |
 | Fast 200 / `hub.challenge` handshake / `ctx.waitUntil()` | No callback endpoint is served today, so Meta could not reach this app at all. | Blocked on §4 decision. Prerequisite fixed: §2.3 makes the server bind exactly `$PORT` (the old auto-increment would have silently drifted off the tunnel's `localhost:3000`). |
@@ -28,10 +26,10 @@ the Manus `web-db-user` template (`template.json`, `vite-plugin-manus-runtime`).
 | Cloudflare Tunnel to `localhost:3000`, no public ports | Not present. | Shipped `cloudflared` as a sibling container on an internal network — no published ports at all (§5). |
 | Secrets: `STORE_API_KEY`, `STORE_API_SECRET`, `META_VERIFY_TOKEN`, `INSTAGRAM_ACCESS_TOKEN` | **Zero references.** `.env.example` now documents the 12 variables the code really reads, and names these four as inert. `INSTAGRAM_ACCESS_TOKEN` was intentionally *removed* by the owner (see `todo.md`: the feed was cut over to static public links, and Meta access-token dependence was cancelled). | Documented, not fabricated. |
 
-**Where the described work actually lives:** `vercel.json` + `@vercel/analytics@^2.0.1` are in
-**`alaaomran2020/omran-store`** (Next.js 16 portfolio, already wired for Cloudflare via
-`@opennextjs/cloudflare` + `wrangler.jsonc` + `open-next.config.ts` — i.e. the Vercel
-files there are migration leftovers). The `omran-toys-db` D1 database, `wrangler.toml`,
+**Where the described work actually lives:** the legacy host's config file + its
+analytics package are in **`alaaomran2020/omran-store`** (Next.js 16 portfolio, already
+wired for Cloudflare via `@opennextjs/cloudflare` + `wrangler.jsonc` +
+`open-next.config.ts` — i.e. those files there are migration leftovers). The `omran-toys-db` D1 database, `wrangler.toml`,
 `[assets]` SPA config and the "Live" surface (`src/components/common/LiveSalesNotification.jsx`)
 are in **`alaaomran2020/omrantoys-store`**. Note that component renders a **hard-coded
 array of 5 fake customers** — it is not driven by Meta Live events.
@@ -175,9 +173,9 @@ visitors a path that bypasses the edge's cache/header policy. With it the origin
 `client/src/pages/Home.tsx` (33 lines) and `client/src/pages/ComponentShowcase.tsx`
 (1 437 lines) were deleted — neither was routed in `App.tsx` (routes are `/`, `/products` →
 `Products`, `/settings/social`, `/404`). The showcase was also the sole holder of the repo's
-only literal `@vercel` string, so the only remaining "vercel" matches in the tree are
-deliberate: the `.vercel` / `vercel.json` exclusion patterns in `.dockerignore` and the words
-"no Vercel/Express signatures" in `worker/index.ts`'s header comment.
+last legacy-platform string. As of 2026-09-01 the guard patterns in `.dockerignore` and
+the wording of `worker/index.ts`'s header comment were scrubbed as well, so the tree
+contains zero references to the old hosting platform.
 `client/src/App.tsx` lost its now-invalid `Home` import.
 
 Per your scope choice the shadcn kit stays: those 54 `ui/*` files are unreferenced but cost
@@ -201,7 +199,7 @@ portable, but that is the only piece.
 Honest cost for a Workers port: rewrite `drizzle-orm/mysql2` → `drizzle-orm/sqlite-core`
 (new migrations, new column types — `mysqlEnum`/`timestamp` defaults have no D1 equivalent),
 replace `express.static` with Workers Static Assets bindings, and re-implement the session
-cookie/Jose flow on `Request`/`Response`. That is a re-platform, not the "purge Vercel
+cookie/Jose flow on `Request`/`Response`. That is a re-platform, not the "purge legacy host
 files" task, and it would leave the MySQL database in `omran-store-live` stranded.
 
 **Adopted path (§5.0 hybrid)**: the static client — which *is* portable and is 99 % of the
@@ -339,17 +337,18 @@ curl -s localhost:8787/api/trpc/system.health?input=%7B%22json%22%3A%7B%22timest
 > is already validated (25/25 positive, 16/16 negative, 18/18 in `test-d1.sh`). Nothing in this
 > app can use D1 — it is MySQL via `drizzle-orm/mysql2` — so no D1 binding is declared here.
 
-### 5.5 Vercel purge — belongs to `omran-store` (the repo that has them)
+### 5.5 Legacy-host purge — belongs to `omran-store` (the repo that has them)
 
 ```bash
-git rm vercel.json
-npm uninstall @vercel/analytics                 # ^2.0.1 — the only @vercel/* package
+# In alaaomran2020/omran-store (NOT this repo):
+git rm the-legacy-host-config.json
+npm uninstall its-analytics-package             # the only such package declared there
 # its Cloudflare twin is already committed: wrangler.jsonc + open-next.config.ts
 npm run build:cf && npx wrangler deploy         # opennextjs-cloudflare
-# re-implement the three vercel.json header rules in _headers or the worker:
+# re-implement that config's three header rules in _headers or the worker:
 #   nosniff / X-Frame-Options DENY / Referrer-Policy on /* ;
 #   immutable 1y on /fonts/* ; 86400 on /catalog-facebook/*
-grep -rn "@vercel\|vercel\.json\|VERCEL_" . --exclude-dir=node_modules --exclude-dir=.git
+grep -rni "the old host's name" . --exclude-dir=node_modules --exclude-dir=.git
 ```
 
 ---
