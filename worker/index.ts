@@ -1,13 +1,21 @@
 /// <reference types="@cloudflare/workers-types" />
 
+import {
+  buildSocialFeed,
+  createFeedCache,
+  type SocialFeedEnv,
+} from "../shared/socialFeed";
+
 /**
- * omran-store-live edge router — Web Standard APIs only (no Vercel/Express
- * signatures, no Node polyfills).
+ * omran-store-live edge router — Web Standard APIs only (no framework-specific
+ * handler signatures, no Node polyfills).
  *
  * Responsibility is deliberately narrow: in the hybrid topology this worker only
  * ever sees `/api/*` and `/manus-storage/*` (see `run_worker_first` in
- * wrangler.toml). Those are forwarded to the container behind the Cloudflare
- * Tunnel; everything else is answered by Workers Assets.
+ * wrangler.toml). `/api/social/feed` (the Facebook/Instagram product feed) is
+ * answered HERE at the edge; the remaining API paths are forwarded to the
+ * container behind the Cloudflare Tunnel — if one is configured at all;
+ * everything else is answered by Workers Assets.
  *
  * Design rules, in priority order:
  *   1. Fail closed. Only an explicit path allowlist may reach the origin, so a
@@ -22,7 +30,7 @@
  *      responses.
  */
 
-interface Env {
+interface Env extends SocialFeedEnv {
   /** Bound Assets namespace ([assets] binding = "ASSETS"). */
   ASSETS?: Fetcher;
   /** Tunnel hostname of the container, e.g. https://origin.omrantoys.store */
@@ -97,6 +105,36 @@ function copyHeaders(
   return { headers, declaredLength };
 }
 
+/**
+ * Facebook/Instagram feed cache — module scope, so it lives as long as the
+ * isolate and is shared by every request this isolate serves. Tokens are read
+ * from Worker secrets (`wrangler secret put …`) and never leave the edge.
+ */
+const feedCache = createFeedCache();
+
+async function handleSocialFeed(request: Request, env: Env): Promise<Response> {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return json(405, "method_not_allowed", { allow: "GET, HEAD" });
+  }
+  try {
+    const feed = await feedCache.get(() =>
+      buildSocialFeed(env, (url, init) => fetch(url, init))
+    );
+    return new Response(request.method === "HEAD" ? null : JSON.stringify(feed), {
+      status: 200,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        // Browsers/edge may hold it briefly; the worker cache (5 min) is the
+        // real sync interval.
+        "cache-control": "public, max-age=60",
+        "x-edge": "omran-store-live",
+      },
+    });
+  } catch {
+    return json(502, "social_feed_unavailable");
+  }
+}
+
 export default {
   async fetch(
     request: Request,
@@ -104,6 +142,13 @@ export default {
     _ctx: ExecutionContext
   ): Promise<Response> {
     const url = new URL(request.url);
+
+    // ---- Facebook/Instagram product feed: answered at the edge, never
+    // proxied. This keeps the storefront 100% Cloudflare — no origin server
+    // is required for the public site.
+    if (url.pathname === "/api/social/feed") {
+      return handleSocialFeed(request, env);
+    }
 
     // ---- Static client: only reachable if run_worker_first is widened to true.
     if (!isAllowedPath(url.pathname)) {

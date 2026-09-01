@@ -7,6 +7,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
+import { registerSocialFeedRoute } from "../socialFeed";
 
 /**
  * Request body caps.
@@ -72,6 +73,9 @@ export function buildApp(): Express {
 
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+
+  // Facebook/Instagram product feed (same module the Cloudflare edge uses).
+  registerSocialFeedRoute(app);
 
   // tRPC API
   app.use(
