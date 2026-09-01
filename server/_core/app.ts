@@ -8,6 +8,7 @@ import { createContext } from "./context";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { registerSocialFeedRoute } from "../socialFeed";
+import { registerProductsRoute } from "../products";
 
 /**
  * Request body caps.
@@ -73,6 +74,9 @@ export function buildApp(): Express {
 
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+
+  // كتالوج المنتجات من Google Sheets CSV (نفس الوحدة التي تستخدمها حافة Cloudflare).
+  registerProductsRoute(app);
 
   // Facebook/Instagram product feed (same module the Cloudflare edge uses).
   registerSocialFeedRoute(app);
