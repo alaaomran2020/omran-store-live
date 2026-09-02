@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import AdminApp from "@/admin/AdminApp";
 import NotFound from "@/pages/NotFound";
 import Products from "@/pages/Products";
 import SocialSettings from "@/pages/SocialSettings";
@@ -14,6 +15,8 @@ function Router() {
       <Route path={"/"} component={Products} />
       <Route path={"/products"} component={Products} />
       <Route path={"/settings/social"} component={SocialSettings} />
+      <Route path={"/admin"} component={AdminApp} />
+      <Route path={"/admin/:rest*"} component={AdminApp} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
