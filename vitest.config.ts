@@ -26,6 +26,9 @@ export default defineConfig({
       "client/src/**/*.spec.ts",
       // منطق Pipeline إدارة المنتجات (Telegram → n8n → Sheets) — automation/n8n/lib
       "automation/**/*.test.mjs",
+      // وحدات مشتركة (التصنيفات/التطبيع) وطبقة الحافة (health/redirect)
+      "shared/**/*.test.ts",
+      "worker/**/*.test.ts",
     ],
   },
 });
