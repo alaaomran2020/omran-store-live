@@ -983,3 +983,15 @@ writeFileSync(outPath, JSON.stringify(workflow, null, 2) + "\n", "utf8");
 console.log(
   `✔ generated ${outPath} — ${nodes.length} nodes, ${Object.keys(connections).length} connection sources`
 );
+
+// ---------------------------------------------------------------------------
+// 8) نسخة n8n Cloud: لا يمكن ضبط process env هناك، فالإعدادات تُقرأ من
+//    Variables ($vars بدل $env). نفس الـWorkflow حرفيًا مع الاستبدال الآمن.
+// ---------------------------------------------------------------------------
+const cloudWorkflow = JSON.parse(
+  JSON.stringify(workflow).replaceAll("$env.", "$vars.")
+);
+cloudWorkflow.name += " — n8n Cloud ($vars)";
+const cloudPath = join(here, "omran-toys-product-pipeline.n8n-cloud.json");
+writeFileSync(cloudPath, JSON.stringify(cloudWorkflow, null, 2) + "\n", "utf8");
+console.log(`✔ generated ${cloudPath} (نسخة $vars لـ n8n Cloud)`);

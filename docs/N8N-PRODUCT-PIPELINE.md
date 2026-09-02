@@ -81,7 +81,10 @@ OMRAN TOYS/
 
 ### الاستيراد والتفعيل
 
-1. n8n → Workflows → **Import from File** → `omran-toys-product-pipeline.json`.
+1. n8n → Workflows → **Import from File**:
+   - مستضاف ذاتيًا (Docker/VPS): `omran-toys-product-pipeline.json` (يقرأ `$env`).
+   - **n8n Cloud**: `omran-toys-product-pipeline.n8n-cloud.json` (يقرأ `$vars` —
+     اضبط نفس الأسماء في Admin Panel → Variables بدل env).
 2. اربط الـCredentials الثلاثة في العقد التي تطلبها (Telegram / Sheets / Drive).
 3. فعّل الـWorkflow (زر Active) — يسجّل Telegram webhook تلقائيًا.
 
