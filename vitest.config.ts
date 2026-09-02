@@ -24,6 +24,8 @@ export default defineConfig({
       "client/src/**/*.test.ts",
       "client/src/**/*.test.tsx",
       "client/src/**/*.spec.ts",
+      // منطق Pipeline إدارة المنتجات (Telegram → n8n → Sheets) — automation/n8n/lib
+      "automation/**/*.test.mjs",
     ],
   },
 });

@@ -34,6 +34,12 @@
 نموذج جاهز للنسخ: [`docs/sample-products.csv`](./sample-products.csv) — افتحه في
 Google Sheets عبر `File → Import → Upload` لتحصل على الأعمدة بترتيبها الصحيح.
 
+> 🤖 **إضافة المنتجات آليًا من Telegram**: توجد Pipeline جاهزة
+> (Telegram → n8n → AI → Drive → Sheets → موافقة → الموقع) تكتب في نفس هذا
+> الشيت وتحترم نفس الأعمدة — انظر [`docs/N8N-PRODUCT-PIPELINE.md`](./N8N-PRODUCT-PIPELINE.md).
+> الأعمدة الإضافية التي تستخدمها (`workflow_status`, `created_at`, `updated_at`)
+> تشغيلية فقط ويتجاهلها الموقع تمامًا.
+
 ---
 
 ## 2) نشر الشيت كـCSV (مرة واحدة فقط)
