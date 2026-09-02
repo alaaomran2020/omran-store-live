@@ -9,6 +9,10 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { registerSocialFeedRoute } from "../socialFeed";
 import { registerProductsRoute } from "../products";
+import {
+  registerAdminRoutes,
+  registerWhatsappWebhook,
+} from "../adminRoutes";
 
 /**
  * Request body caps.
@@ -56,8 +60,15 @@ export function buildApp(): Express {
     next();
   });
 
+  // Webhook واتساب يُسجَّل قبل express.json ليبقى الجسم الخام متاحًا للتحقق
+  // من توقيع X-Hub-Signature-256 (Meta يوقّع النص الخام حرفيًا).
+  registerWhatsappWebhook(app);
+
   app.use(express.json({ limit: BODY_LIMIT }));
   app.use(express.urlencoded({ limit: BODY_LIMIT, extended: false }));
+
+  // لوحة إدارة المدراء: واتساب OTP + RBAC (مساراتها تحمل مُحلِّل JSON خاصًا).
+  registerAdminRoutes(app);
 
   // Container/orchestrator liveness probe. Deliberately dependency-free (no DB,
   // no upstream calls) so an outage downstream can't trigger a restart loop.

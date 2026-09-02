@@ -1,5 +1,13 @@
 # Project TODO
 
+- [x] نقل ميزة لوحة إدارة المدراء (WhatsApp OTP + RBAC) من مستودع التطوير إلى النسخة المباشرة: مصادقة بلا كلمات مرور عبر قالب Meta Authentication، جلسات HttpOnly مع AUTH_PEPPER (SHA-256)، صلاحيات تُقرأ من DB مع كل طلب، سجل تدقيق، حدود معدل، وCSRF guard — `server/adminAuth.ts` + `server/adminRoutes.ts` + `server/adminWhatsapp.ts`.
+- [x] طبقة تخزين مزدوجة للوحة (`server/adminStore.ts`): MySQL عبر Drizzle في الإنتاج + MemoryAdminStore (بذور من ADMIN_*) للتطوير/المعاينة بلا قاعدة بيانات.
+- [x] جداول جديدة (`drizzle/schema.ts`): admin_users، auth_challenges، admin_sessions، admin_audit_log، product_overrides.
+- [x] تعديلات المنتجات كتجاوزات فوق Google Sheets: دمج في `shared/products.ts` (applyOverridesToProducts) يُستخدم في Express وواجهة الحافة، مع manifest عام يقرأه الـWorker من الأصل (كاش 60 ثانية وتدهور سلس).
+- [x] واجهة `/admin` بالعربية RTL (دخول واتساب + قائمة + تعديل حسب RBAC) بألوان Dark Digital Brutalism.
+- [x] دليل تشغيلي `docs/WHATSAPP-ADMIN-AUTH.md` + سكربت زرع `scripts/seed-admin.mjs` + اختبارات Vitest (أمان، مخزن، دمج التجاوزات).
+
+
 - [x] تصميم نوع موحد لمنشورات Instagram وFacebook، يشمل الصور المفردة وCarousel والرابط وتاريخ النشر ومصدره.
 - [x] بناء جالب Instagram خلفي يستخدم `INSTAGRAM_ACCESS_TOKEN` فقط على الخادم ويعيد أحدث المنشورات من Graph API.
 - [x] بناء جالب Facebook Pages خلفي يستخدم `FACEBOOK_PAGE_ACCESS_TOKEN` و`FACEBOOK_PAGE_ID` فقط على الخادم ويعيد أحدث منشورات الصفحة.

@@ -547,6 +547,73 @@ export async function fetchProductsPayload(
   }
 }
 
+// ---------------------------------------------------------------------------
+// 6) تجاوزات المدراء (Admin Overrides)
+//
+// الشيت يبقى مصدر الحقيقة للبنية والترتيب والمنتجات الجديدة، لكن لوحة الإدارة
+// تسمح للمدراء بتعديل حقول محددة (الاسم/السعر/الوصف/الصورة/الظهور) تُخزَّن
+// في قاعدة البيانات وتُدمج فوق بيانات الشيت عند القراءة — فيبقى التعديل
+// ساريًا حتى لو غُيّر الشيت، ويظهر للزوار خلال مدة كاش المنتجات.
+//
+// قاعدة الدمج: الحقل غير null في التجاوز يعلو قيمة الشيت. إفراغ حقل في
+// الواجهة = "لا تغيير" (لا يمكن مسح قيمة من الشيت عبر اللوحة — يُعدَّل الشيت).
+// ---------------------------------------------------------------------------
+
+/** صف تجاوز واحد كما يأتي من قاعدة البيانات/الـmanifest. */
+export type ProductOverride = {
+  productId: string;
+  name?: string | null;
+  price?: number | null;
+  description?: string | null;
+  image?: string | null;
+  active?: boolean | null;
+  updatedAt?: string | Date | null;
+};
+
+/** حمولة الـmanifest العام الذي تقرأه حافة Cloudflare من الأصل. */
+export type OverridesManifest = {
+  overrides: ProductOverride[];
+  fetchedAt: string;
+};
+
+/**
+ * يدمج تجاوزات المدراء فوق كتالوج الشيت. الحقل `null`/غير الموجود في التجاوز
+ * يعني "بلا تعديل" فيبقى من الشيت. `active` يمكنه إخفاء منتج (false) أو
+ * إظهاره (true). المنتجات غير الموجودة في الشيت تُتجاهل (لا يُخترع منتج).
+ */
+export function applyOverridesToProducts(
+  products: Product[],
+  overrides: readonly ProductOverride[]
+): Product[] {
+  if (overrides.length === 0) return products;
+  const map = new Map<string, ProductOverride>();
+  for (const o of overrides) map.set(o.productId, o);
+
+  const out: Product[] = [];
+  for (const product of products) {
+    const o = map.get(product.id);
+    if (!o) {
+      out.push(product);
+      continue;
+    }
+    // إخفاء عبر اللوحة: يُحذف من الكتالوج العام (يبقى في الـadmin بعلامة).
+    if (o.active === false) continue;
+
+    out.push({
+      ...product,
+      name: o.name ?? product.name,
+      price: o.price !== undefined && o.price !== null ? o.price : product.price,
+      description: o.description ?? product.description,
+      image: o.image !== undefined && o.image !== null
+        ? toDisplayableImageUrl(o.image)
+        : product.image,
+      imageSource: o.image !== undefined && o.image !== null ? o.image : product.imageSource,
+      active: o.active === true ? true : product.active,
+    });
+  }
+  return out;
+}
+
 /**
  * كاش TTL في الذاكرة مع منع الطلبات المتزامنة المكررة، ويقدّم النسخة القديمة
  * إذا فشل التحديث (stale-while-error) — الموقع لا يفرغ لمجرد تعثّر Google.

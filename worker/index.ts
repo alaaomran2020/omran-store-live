@@ -6,8 +6,10 @@ import {
   type SocialFeedEnv,
 } from "../shared/socialFeed";
 import {
+  applyOverridesToProducts,
   createProductsCache,
   fetchProductsPayload,
+  type OverridesManifest,
 } from "../shared/products";
 
 /**
@@ -148,8 +150,52 @@ async function handleSocialFeed(request: Request, env: Env): Promise<Response> {
 /**
  * كتالوج المنتجات (Google Sheets → CSV) — كاش على مستوى الـisolate تمامًا مثل
  * feedCache أعلاه. لا مفتاح API ولا OAuth: الرابط عام ومنشور بواسطة صاحب المتجر.
+ *
+ * تجاوزات المدراء (تعديلات لوحة الإدارة في MySQL) تُدمج عبر manifest خفيف
+ * يُقرأ من الأصل (ORIGIN_BASE_URL) — البيانات عامة والكاش قصير، وإن تعذّر
+ * الأصل يُقدَّم كتالوج الشيت كما هو (تدهور سلس، لا انقطاع).
  */
 const productsCache = createProductsCache();
+
+/** كاش manifest التجاوزات: 60 ثانية فقط، ولا يُخزَّن الفشل (يعيد المحاولة فورًا). */
+const overridesManifestCache: {
+  data: OverridesManifest | null;
+  at: number;
+} = { data: null, at: 0 };
+const OVERRIDES_MANIFEST_TTL_MS = 60_000;
+const OVERRIDES_MANIFEST_TIMEOUT_MS = 4_000;
+
+async function fetchOverridesManifest(
+  env: Env
+): Promise<OverridesManifest | null> {
+  const now = Date.now();
+  if (overridesManifestCache.data && now - overridesManifestCache.at < OVERRIDES_MANIFEST_TTL_MS) {
+    return overridesManifestCache.data;
+  }
+  const base = (env.ORIGIN_BASE_URL ?? "").trim().replace(/\/+$/, "");
+  if (!base) return null;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), OVERRIDES_MANIFEST_TIMEOUT_MS);
+    try {
+      const res = await fetch(`${base}/api/admin/products/overrides-manifest`, {
+        headers: { accept: "application/json" },
+        signal: controller.signal,
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as OverridesManifest;
+      if (!Array.isArray(data?.overrides)) return null;
+      overridesManifestCache.data = data;
+      overridesManifestCache.at = now;
+      return data;
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch {
+    // الأصل غير متاح: نُقدّم الشيت كما هو، ونعيد المحاولة في الطلب التالي
+    return null;
+  }
+}
 
 async function handleProducts(request: Request, env: Env): Promise<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") {
@@ -167,6 +213,17 @@ async function handleProducts(request: Request, env: Env): Promise<Response> {
       status: "error" as const,
       fetchedAt: new Date().toISOString(),
     };
+  }
+
+  // دمج تجاوزات المدراء فوق كتالوج الشيت (إن وُجدت)
+  if (payload.status === "ok" && payload.products.length > 0) {
+    const manifest = await fetchOverridesManifest(env);
+    if (manifest && manifest.overrides.length > 0) {
+      payload = {
+        ...payload,
+        products: applyOverridesToProducts(payload.products, manifest.overrides),
+      };
+    }
   }
   return new Response(
     request.method === "HEAD" ? null : JSON.stringify(payload),

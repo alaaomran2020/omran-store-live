@@ -3,6 +3,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* لوحة الإدارة — Dark Digital Brutalism (ألوان ثابتة تُستخدم كـ bg-electric …) */
+@theme {
+  --color-electric: #2e62ff;
+  --color-electric-hover: #1f4fe0;
+  --color-electric-soft: #9db4ff;
+  --color-sunbeam: #ffd60a;
+  --color-sunbeam-hover: #ffc300;
+  --color-sunbeam-ink: #1a1b25;
+  --color-ink: #0b1220;
+  --color-ink-deep: #050a18;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
