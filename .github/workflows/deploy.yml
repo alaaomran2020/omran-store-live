@@ -29,7 +29,8 @@ permissions:
   contents: read
 
 env:
-  SITE_URL: https://omrantoys.store
+  SITE_URL: https://omran-store-live-edge.adreanolomran.workers.dev
+  PRODUCTION_URL: https://omrantoys.store
   NODE_OPTIONS: --max-old-space-size=4096
 
 jobs:
@@ -128,7 +129,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Smoke-check live site
+      - name: Smoke-check deployed Worker
         env:
           SITE_URL: ${{ env.SITE_URL }}
         run: |
@@ -192,4 +193,9 @@ jobs:
           grep -qiE '^x-edge:[[:space:]]*omran-store-live' /tmp/products.hdr
 
           echo "Edge header OK."
-          echo "Live site smoke-check passed."
+          echo "Worker smoke-check passed."
+
+      - name: Report production URL
+        run: |
+          echo "Deployment completed successfully."
+          echo "Production site: ${PRODUCTION_URL}"
