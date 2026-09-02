@@ -83,6 +83,13 @@ Production.
 
 ## 6) CI/CD بعد التعديل
 
+> **قيد منصة:** GitHub يرفض رفع تعديلات `.github/workflows` عبر تطبيق Arena
+> (صلاحية `workflows` غير مطلوبة في manifest التطبيق ولا تُمنح من إعدادات
+> المستودع). لذلك يُسلَّم الـworkflow المُشدَّد كاملًا في
+> `docs/ci/deploy-hardened.yml` (مجرّب وظيفيًا) ليُطبقه المالك بنسخه إلى
+> `.github/workflows/deploy.yml` عبر Web UI أو بعد إضافة المنصة للصلاحية.
+> ما دخل هذا الـPR فعليًا: سكربت `pnpm lint` الجديد (chore(lint)).
+
 `quality` (Install→Lint→Typecheck→Tests) يعمل أيضًا على `pull_request`؛
 `deploy` على push/main فقط ويتضمن smoke صارمًا:
 - `/health` = 200 + JSON صالح (`status=ok` + `service`) وإلا فشل (404/522/DNS/TLS فشل).
