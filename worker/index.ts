@@ -247,6 +247,41 @@ export default {
   ): Promise<Response> {
     const url = new URL(request.url);
 
+    // ---- www → apex: permanent redirect preserving path + query.
+    // مسارات HTML/robots/sitemap على www تدخل الـWorker عبر run_worker_first
+    // (انظر wrangler.toml) فيُفرَض النطاق الأساسي من الحافة. الأصول المُجزّأة
+    // (hashed assets) تبقى على طبقة الأصول للأداء، ويكمل توحيد النطاق بقاعدة
+    // Cloudflare على مستوى الـzone (إجراء خارجي موثّق في docs).
+    if (url.hostname === "www.omrantoys.store") {
+      return new Response(null, {
+        status: 301,
+        headers: {
+          location: `https://omrantoys.store${url.pathname}${url.search}`,
+          "cache-control": "public, max-age=3600",
+        },
+      });
+    }
+
+    // ---- Edge health check: خفيف، لا يعتمد على SPA ولا على الأصل ولا يعرض
+    // أي أسرار. يُستخدم كفحص صحة Production في CI/CD.
+    if (url.pathname === "/health") {
+      return new Response(
+        JSON.stringify({
+          status: "ok",
+          service: "omran-store-live",
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json; charset=utf-8",
+            "cache-control": "no-store",
+            "x-edge": "omran-store-live",
+          },
+        }
+      );
+    }
+
     // ---- كتالوج المنتجات من Google Sheets: يُجاب هنا على الحافة.
     // القراءة تتم من الحافة لا من متصفح الزائر، فلا مشاكل CORS، ونتيجة واحدة
     // مخزّنة مؤقتًا تخدم كل الزوار خلال مدة الكاش بدل طلب لكل تفاعل.
