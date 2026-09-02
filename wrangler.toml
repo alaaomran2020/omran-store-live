@@ -27,6 +27,14 @@
 name = "omran-store-live-edge"
 main = "worker/index.ts"
 
+# Production hostnames are managed as code. Both proxied DNS records are
+# intercepted by this Worker, so neither hostname falls through to a legacy
+# or unavailable origin.
+routes = [
+  { pattern = "omrantoys.store/*", zone_name = "omrantoys.store" },
+  { pattern = "www.omrantoys.store/*", zone_name = "omrantoys.store" },
+]
+
 # Pinned deliberately: matches the compatibility baseline requested for the
 # platform move. `compatibility_date` gates the worker's runtime behaviour
 # (URL parsing, fetch semantics), not the build toolchain.
