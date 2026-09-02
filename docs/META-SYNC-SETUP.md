@@ -72,9 +72,12 @@ pnpm exec vite build      # يبني dist/public
 wrangler deploy           # ينشر الـWorker + الأصول على omrantoys.store
 ```
 
-أو ادمج إلى `main` ودع GitHub Actions ينشر تلقائيًا
-(`.github/workflows/deploy.yml` — يتطلب سرّي `CLOUDFLARE_API_TOKEN` و
-`CLOUDFLARE_ACCOUNT_ID` في إعدادات GitHub).
+أو شغّل **Deploy to Cloudflare** يدويًا من تبويب Actions (أو ادمج إلى `main`)
+بعد نسخ `deploy/github-workflow-deploy.yml` إلى `.github/workflows/deploy.yml`
+(انظر `deploy/README-DEPLOY.md`). الـWorkflow يشغّل الاختبارات ثم `wrangler deploy`
+ثم يفحص `https://omrantoys.store`. يتطلب سرّي `CLOUDFLARE_API_TOKEN` و
+`CLOUDFLARE_ACCOUNT_ID` في GitHub → Settings → Secrets and variables → Actions
+— بلا قيم داخل الملفات.
 
 بعد النشر تحقق من:
 
