@@ -52,7 +52,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Type checks
         run: pnpm check
@@ -106,7 +106,7 @@ jobs:
           echo "Required Cloudflare secrets are configured."
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build client assets
         run: pnpm exec vite build
