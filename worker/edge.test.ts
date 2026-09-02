@@ -60,3 +60,17 @@ describe("سلوك الحافة بدون أصل", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("edge /edge-api/products mirror", () => {
+  it("نفس عقد /api/products: 200 + JSON (not_configured بلا ضبط)", async () => {
+    const res = await get("https://omrantoys.store/edge-api/products");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      products: unknown[];
+      status: string;
+    };
+    expect(body.status).toBe("not_configured");
+    expect(body.products).toEqual([]);
+    expect(res.headers.get("x-edge")).toBe("omran-store-live");
+  });
+});

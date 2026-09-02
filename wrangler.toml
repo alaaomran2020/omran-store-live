@@ -12,6 +12,10 @@
 #                 ├── /api/products  → answered AT THE EDGE (worker/index.ts):
 #                 │                    Google Sheets (CSV منشور) + كاش 5 دقائق.
 #                 │                    الضبط الوحيد: PRODUCTS_SHEET_URL في [vars] بالأسفل.
+#                 ├── /edge-api/products → مرآة نفس الكتالوج خارج /api/* (نفس
+#                 │                    المعالج والكاش)؛ تبقى تصل إلى هذا الـWorker
+#                 │                    عبر route النطاق حتى لو تملّك route قديم
+#                 │                    أكثر تحديدًا مسار /api/* (see productsClient.ts).
 #                 ├── /api/social/feed → answered AT THE EDGE (worker/index.ts):
 #                 │                    Facebook/Instagram Graph sync + 5-min cache.
 #                 │                    Secrets (set once, stored by Cloudflare):
@@ -66,6 +70,7 @@ not_found_handling = "single-page-application"
 # by wildcards so deep links on www redirect too.
 run_worker_first = [
   "/api/*",
+  "/edge-api/products",
   "/manus-storage/*",
   "/",
   "/health",

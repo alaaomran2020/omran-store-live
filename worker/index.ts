@@ -289,6 +289,15 @@ export default {
       return handleProducts(request, env);
     }
 
+    // ---- مرآة الكتالوج خارج /api/*: نفس المعالج ونفس الكاش تمامًا.
+    // سبب وجودها: لو تملّك route قديم أكثر تحديدًا (مثل omrantoys.store/api/*)
+    // المسار الأساسي، يبقى هذا المسار يصل إلى هذا الـWorker عبر route
+    // omrantoys.store/* — فيستمر ظهور المنتجات حتى تُصحَّح الـroutes.
+    // العميل (productsClient.ts) يجرّب /api/products أولًا ثم هذه المرآة.
+    if (url.pathname === "/edge-api/products") {
+      return handleProducts(request, env);
+    }
+
     // ---- Facebook/Instagram product feed: answered at the edge, never
     // proxied. This keeps the storefront 100% Cloudflare — no origin server
     // is required for the public site.
