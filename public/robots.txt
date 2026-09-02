@@ -1,0 +1,12 @@
+# Omran Toys — omrantoys.store
+# الأساس فقط: لا فهرسة للوحة الإدارة أو المسارات الداخلية/الخاصة،
+# وصفحات المنتجات/التصنيفات الحالية والمستقبلة قابلة للفهرسة.
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /settings/
+Disallow: /api/
+Disallow: /manus-storage/
+
+Sitemap: https://omrantoys.store/sitemap.xml
