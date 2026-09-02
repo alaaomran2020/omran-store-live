@@ -4,6 +4,14 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  tailwindcss>nanoid: 3.3.7
+
+patchedDependencies:
+  wouter@3.7.1:
+    hash: 4e16e6ff3fde7d6c1024d3e0c8605dc9eb6afb690d0d49958c2f449091813072
+    path: patches/wouter@3.7.1.patch
+
 importers:
 
   .:
@@ -269,7 +277,7 @@ importers:
         version: 2.1.9(@types/node@24.7.0)(jsdom@30.0.1)(lightningcss@1.30.1)
       wouter:
         specifier: ^3.3.5
-        version: 3.7.1(react@19.2.1)
+        version: 3.7.1(patch_hash=4e16e6ff3fde7d6c1024d3e0c8605dc9eb6afb690d0d49958c2f449091813072)(react@19.2.1)
       wrangler:
         specifier: ^4.127.1
         version: 4.127.1(@cloudflare/workers-types@5.20260830.1)
@@ -9005,7 +9013,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20260828.1
       '@cloudflare/workerd-windows-64': 1.20260828.1
 
-  wouter@3.7.1(react@19.2.1):
+  wouter@3.7.1(patch_hash=4e16e6ff3fde7d6c1024d3e0c8605dc9eb6afb690d0d49958c2f449091813072)(react@19.2.1):
     dependencies:
       mitt: 3.0.1
       react: 19.2.1
