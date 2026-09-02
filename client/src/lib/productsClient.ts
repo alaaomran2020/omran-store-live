@@ -13,7 +13,10 @@ export type { Product, ProductsPayload } from "@shared/products";
  * ترتيب المحاولات (أول نجاح يفوز):
  *   1. `/api/products` — نفس الأصل، ويجيب عليه Cloudflare Worker.
  *      يُضاف معرّف زمني ويُعطّل كاش المتصفح لمنع استخدام استجابات النظام القديم.
- *   2. رابط CSV المنشور مباشرةً من المتصفح، إذا كان
+ *   2. `/edge-api/products` — مرآة نفس الكتالوج على نفس الأصل خارج `/api/*`؛
+ *      تصل إلى الـWorker الجديد عبر route النطاق حتى لو تملّك route قديم
+ *      أكثر تحديدًا مسار `/api/*` (انظر worker/index.ts + wrangler.toml).
+ *   3. رابط CSV المنشور مباشرةً من المتصفح، إذا كان
  *      `VITE_PRODUCTS_SHEET_URL` مضبوطًا وقت البناء.
  *
  * أي فشل يُترجم إلى حمولة فارغة بحالة error، وتعرض الصفحة حالة عربية واضحة
@@ -44,12 +47,13 @@ const empty = (status: ProductsPayload["status"]): ProductsPayload => ({
  * - cache: no-store لمنع المتصفح من إعادة استخدام بيانات النظام القديم.
  * - ترويسات no-cache لطلب أحدث استجابة من طبقات الوساطة.
  */
-async function fromSameOriginApi(
+async function fetchSameOrigin(
+  path: string,
   signal?: AbortSignal
 ): Promise<ProductsPayload | null> {
   try {
     const refresh = Date.now();
-    const apiUrl = `/api/products?refresh=${refresh}`;
+    const apiUrl = `${path}?refresh=${refresh}`;
 
     const res = await fetch(apiUrl, {
       method: "GET",
@@ -74,7 +78,7 @@ async function fromSameOriginApi(
     }
 
     if (data.status !== "ok") {
-      // الـWorker غير مضبوط أو المصدر غير متاح؛ جرّب رابط CSV المباشر.
+      // الـWorker غير مضبوط أو المصدر غير متاح؛ جرّب المصدر التالي.
       return null;
     }
 
@@ -87,6 +91,16 @@ async function fromSameOriginApi(
     return null;
   }
 }
+
+const fromSameOriginApi = (signal?: AbortSignal) =>
+  fetchSameOrigin("/api/products", signal);
+
+/**
+ * المرآة الاحتياطية على نفس الأصل: خارج `/api/*` فلا يملكها أي Worker قديم.
+ * نفس العقد تمامًا (`status === "ok"`) لأن نفس معالج الحافة يجيب.
+ */
+const fromEdgeMirror = (signal?: AbortSignal) =>
+  fetchSameOrigin("/edge-api/products", signal);
 
 /**
  * المسار الاحتياطي: قراءة Google Sheet المنشور بصيغة CSV مباشرةً.
@@ -127,6 +141,12 @@ export async function fetchProducts(
 
   if (viaApi) {
     return viaApi;
+  }
+
+  const viaMirror = await fromEdgeMirror(signal);
+
+  if (viaMirror) {
+    return viaMirror;
   }
 
   const viaCsv = await fromPublishedCsv(signal);
