@@ -1,11 +1,13 @@
 # نشر آمن: GitHub → Cloudflare Workers Assets → https://omrantoys.store
 #
-# القيم السرية لا تُكتب هنا ولا في أي ملف. تُقرأ وقت التشغيل فقط من
-# GitHub → Settings → Secrets and variables → Actions:
-#   CLOUDFLARE_API_TOKEN   — توكن بصلاحية Edit Cloudflare Workers
-#   CLOUDFLARE_ACCOUNT_ID  — Account ID من لوحة Cloudflare (Workers & Pages)
+# القيم السرية لا تُكتب هنا ولا في أي ملف. تُقرأ وقت التشغيل فقط من:
+# GitHub → Settings → Secrets and variables → Actions
 #
-# توكنات Meta لا تمر من هذا الـWorkflow؛ تُخزَّن كأسرار Worker:
+# الأسرار المطلوبة:
+#   CLOUDFLARE_API_TOKEN
+#   CLOUDFLARE_ACCOUNT_ID
+#
+# توكنات Meta لا تمر عبر هذا الـWorkflow، بل تُخزَّن كأسرار داخل Worker:
 #   wrangler secret put INSTAGRAM_ACCESS_TOKEN
 #   wrangler secret put FACEBOOK_PAGE_ID
 #   wrangler secret put FACEBOOK_PAGE_ACCESS_TOKEN
@@ -13,11 +15,11 @@
 name: Deploy to Cloudflare
 
 on:
-  # تشغيل يدوي من تبويب Actions (المسار الآمن للتحقق قبل تعويد الدفع التلقائي)
   workflow_dispatch:
-  # بعد نجاح الدمج إلى main: اختبارات ثم نشر ثم فحص الموقع
+
   push:
-    branches: [main]
+    branches:
+      - main
 
 concurrency:
   group: cloudflare-deploy
@@ -35,12 +37,16 @@ jobs:
     name: Typecheck and tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
@@ -55,51 +61,68 @@ jobs:
         run: pnpm test
 
   deploy:
-    name: Build, deploy, smoke-check
+    name: Build, deploy and smoke-check
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
-      - name: Require Cloudflare secrets
+      - name: Check required Cloudflare secrets
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
+
           missing=0
+
           if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
-            echo '::error::GitHub secret CLOUDFLARE_API_TOKEN is not set. Add it under Settings → Secrets and variables → Actions. Do not put the value in the repo.'
+            echo "::error::GitHub secret CLOUDFLARE_API_TOKEN is not configured."
             missing=1
           fi
+
           if [ -z "${CLOUDFLARE_ACCOUNT_ID}" ]; then
-            echo '::error::GitHub secret CLOUDFLARE_ACCOUNT_ID is not set. Add it under Settings → Secrets and variables → Actions. Do not put the value in the repo.'
+            echo "::error::GitHub secret CLOUDFLARE_ACCOUNT_ID is not configured."
             missing=1
           fi
-          exit "${missing}"
+
+          if [ "${missing}" -ne 0 ]; then
+            echo "::error::Add the missing secrets under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+          echo "Required Cloudflare secrets are configured."
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build client (Workers Assets payload)
+      - name: Build client assets
         run: pnpm exec vite build
 
-      - name: Confirm assets exist
+      - name: Confirm build assets exist
         run: |
           set -euo pipefail
+
           test -f dist/public/index.html
           test -d dist/public/assets
-          ls -lh dist/public dist/public/assets
 
-      - name: Deploy Worker + Assets
+          echo "Build assets are ready."
+          ls -lh dist/public
+          ls -lh dist/public/assets
+
+      - name: Deploy Worker and assets
         run: pnpm exec wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -110,21 +133,63 @@ jobs:
           SITE_URL: ${{ env.SITE_URL }}
         run: |
           set -euo pipefail
-          echo "Checking ${SITE_URL} after deploy"
 
-          curl -fsS --retry 8 --retry-delay 5 --retry-all-errors --max-time 25 \
-            -o /tmp/home.html "${SITE_URL}/"
+          echo "Checking ${SITE_URL} after deployment."
+
+          curl \
+            -fsS \
+            --retry 8 \
+            --retry-delay 5 \
+            --retry-all-errors \
+            --max-time 25 \
+            -o /tmp/home.html \
+            "${SITE_URL}/"
+
           grep -qiE '<html|<!doctype html' /tmp/home.html
-          echo "Homepage OK ($(wc -c < /tmp/home.html) bytes)"
+          echo "Homepage OK ($(wc -c < /tmp/home.html) bytes)."
 
-          curl -fsS --retry 8 --retry-delay 5 --retry-all-errors --max-time 25 \
-            -o /tmp/products.html "${SITE_URL}/products"
+          curl \
+            -fsS \
+            --retry 8 \
+            --retry-delay 5 \
+            --retry-all-errors \
+            --max-time 25 \
+            -o /tmp/products.html \
+            "${SITE_URL}/products"
+
           grep -qiE '<html|<!doctype html' /tmp/products.html
-          echo "Products page OK ($(wc -c < /tmp/products.html) bytes)"
+          echo "Products page OK ($(wc -c < /tmp/products.html) bytes)."
 
-          curl -fsS --retry 8 --retry-delay 5 --retry-all-errors --max-time 25 \
-            -D /tmp/products.hdr -o /tmp/products.json "${SITE_URL}/api/products"
-          python3 -c 'import json; d=json.load(open("/tmp/products.json")); assert isinstance(d.get("products"), list), d; print("API /api/products OK status=%r count=%s" % (d.get("status"), len(d["products"])))'
-          grep -i 'x-edge: *omran-store-live' /tmp/products.hdr
-          echo "Edge header OK"
-          echo "Live site smoke-check passed"
+          curl \
+            -fsS \
+            --retry 8 \
+            --retry-delay 5 \
+            --retry-all-errors \
+            --max-time 25 \
+            -D /tmp/products.hdr \
+            -o /tmp/products.json \
+            "${SITE_URL}/api/products"
+
+          python3 - <<'PY'
+          import json
+
+          with open("/tmp/products.json", encoding="utf-8") as file:
+              data = json.load(file)
+
+          products = data.get("products")
+
+          assert isinstance(products, list), (
+              "The API response does not contain a products list."
+          )
+
+          print(
+              "API /api/products OK:",
+              f"status={data.get('status')!r}",
+              f"count={len(products)}",
+          )
+          PY
+
+          grep -qiE '^x-edge:[[:space:]]*omran-store-live' /tmp/products.hdr
+
+          echo "Edge header OK."
+          echo "Live site smoke-check passed."
