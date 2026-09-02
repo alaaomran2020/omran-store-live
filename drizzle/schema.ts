@@ -122,11 +122,92 @@ export const productOverrides = mysqlTable("product_overrides", {
   updatedBy: varchar("updated_by", { length: 36 }),
 });
 
+// ===========================================================================
+// أساس الطلبات (WhatsApp-First Order Tracking) — نقل دلالي من مخطط D1 المرجعي
+// (omrantoys-store: migrations/0001_init.sql → orders/order_items) إلى MySQL.
+// لا Checkout كامل في هذه المرحلة: الطلب يُلتقط من استفسار واتساب ويُتابَع
+// بحالاته. لا تُسجَّل إيرادات من نقرة واتساب أبدًا — الإيراد من حالة البيع فقط.
+// ===========================================================================
+
+/** حالات الطلب المعتمدة (مرحلة الأساس). */
+export const ORDER_STATUSES = [
+  "new",
+  "qualified",
+  "confirmed",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "returned",
+] as const;
+
+export const PAYMENT_STATUSES = ["pending", "paid", "refunded"] as const;
+
+/** طلب واحد: عميل + هاتف + مصدر/UTM + حالة + شحن + إجمالي. */
+export const orders = mysqlTable(
+  "orders",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    /** رقم علني للاستعلام عبر واتساب بصيغة OMR-XXXX. */
+    orderNumber: varchar("order_number", { length: 20 }).notNull().unique(),
+    customerName: text("customer_name").notNull(),
+    /** بصيغة E.164 أو رقم محلي كما ورد من العميل. */
+    phone: varchar("phone", { length: 20 }).notNull(),
+    /** قناة الالتقاط: whatsapp / phone / branch / other. */
+    source: varchar("source", { length: 40 }).notNull().default("whatsapp"),
+    /** لقطة وسوم UTM عند الالتقاط (إن توفرت) — لقياس الأداء بالمصدر. */
+    utm: json("utm").$type<Record<string, string> | null>(),
+    status: mysqlEnum("status", [...ORDER_STATUSES]).default("new").notNull(),
+    paymentStatus: mysqlEnum("payment_status", [...PAYMENT_STATUSES])
+      .default("pending")
+      .notNull(),
+    /** المحافظة/المنطقة/العنوان/رسوم الشحن — JSON مرن لمرحلة الأساس. */
+    shipping: json("shipping").$type<{
+      governorate?: string;
+      area?: string;
+      address?: string;
+      fee?: number;
+    } | null>(),
+    /** إجمالي بالجنيه المصري؛ NULL حتى تأكيد البنود والأسعار. */
+    total: decimal("total", { precision: 12, scale: 2 }),
+    notes: text("notes"),
+    /** مدير الإنشاء (إن التقط عبر اللوحة)؛ NULL للاستفسارات الذاتية. */
+    createdBy: varchar("created_by", { length: 36 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [
+    index("idx_orders_phone").on(table.phone),
+    index("idx_orders_status").on(table.status, table.createdAt),
+  ]
+);
+
+/** بند طلب: لقطة اسم المنتج والسعر وقت التسجيل حتى لا يغيّر الشيت التاريخ. */
+export const orderItems = mysqlTable(
+  "order_items",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    orderId: varchar("order_id", { length: 36 })
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    /** product_id/SKU من الشيت وقت التسجيل؛ NULL لبند حر. */
+    productId: varchar("product_id", { length: 64 }),
+    nameSnapshot: text("name_snapshot").notNull(),
+    quantity: int("quantity").notNull().default(1),
+    /** سعر الوحدة بالجنيه المصري وقت التسجيل. */
+    unitPrice: decimal("unit_price", { precision: 12, scale: 2 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  table => [index("idx_order_items_order").on(table.orderId)]
+);
+
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type InsertAdminUser = typeof adminUsers.$inferInsert;
 export type AdminChallenge = typeof adminAuthChallenges.$inferSelect;
 export type AdminSession = typeof adminSessions.$inferSelect;
 export type AdminAuditRow = typeof adminAuditLog.$inferSelect;
 export type ProductOverrideRow = typeof productOverrides.$inferSelect;
-
-// TODO: Add your tables here
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = typeof orders.$inferInsert;
+export type OrderItem = typeof orderItems.$inferSelect;
+export type InsertOrderItem = typeof orderItems.$inferInsert;

@@ -3,9 +3,12 @@
 # Omran Store Live — edge layer (hybrid topology)
 #
 #   browser ──▶ Cloudflare edge (this worker)
+#                 ├── www.omrantoys.store/* → 301 دائم إلى omrantoys.store
+#                 │                    (نفس المسار + نفس الـquery)
+#                 ├── /health           → فحص صحة خفيف يُجاب من الحافة
 #                 ├── /assets/*, /*  → served straight from Workers Assets
-#                 │                    (never enters the worker: run_worker_first
-#                 │                     is scoped to the API globs below)
+#                 │                    (الأصول المُجزّأة لا تدخل الـWorker؛ مسارات
+#                 │                     المستندات فقط تمر عبره — run_worker_first)
 #                 ├── /api/products  → answered AT THE EDGE (worker/index.ts):
 #                 │                    Google Sheets (CSV منشور) + كاش 5 دقائق.
 #                 │                    الضبط الوحيد: PRODUCTS_SHEET_URL في [vars] بالأسفل.
@@ -56,9 +59,25 @@ directory = "./dist/public"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
 
-# Only API traffic pays the worker hop; every asset/HTML request is answered by
-# the asset worker directly. Negative rules ("!/…") stay with the asset layer.
-run_worker_first = ["/api/*", "/manus-storage/*"]
+# Only API traffic and *document* paths pay the worker hop; hashed assets
+# (js/css/images) are answered by the asset worker directly. Document paths are
+# included so the worker can enforce the www→apex 301 and serve /health before
+# the asset layer; SPA routes (/products/:slug, /categories/:slug) are covered
+# by wildcards so deep links on www redirect too.
+run_worker_first = [
+  "/api/*",
+  "/manus-storage/*",
+  "/",
+  "/health",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/products",
+  "/products/*",
+  "/categories/*",
+  "/admin",
+  "/admin/*",
+  "/settings/*",
+]
 
 # ---------------------------------------------------------------------------
 # Origin (= the container behind the Cloudflare Tunnel). Publicly resolvable

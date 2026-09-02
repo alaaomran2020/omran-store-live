@@ -1,0 +1,272 @@
+# نشر آمن: GitHub → Cloudflare Workers Assets → https://omrantoys.store
+#
+# القيم السرية لا تُكتب هنا ولا في أي ملف. تُقرأ وقت التشغيل فقط من:
+# GitHub → Settings → Secrets and variables → Actions
+#
+# الأسرار المطلوبة للنشر:
+#   CLOUDFLARE_API_TOKEN
+#   CLOUDFLARE_ACCOUNT_ID
+# اختياري (تجاوز ضيّق لحظر WAF على مسار /health فقط — يُضبط أيضًا في Cloudflare):
+#   SMOKE_SECRET
+#
+# قاعدة التحقق: 200 + استجابة صحية صالحة = نجاح.
+#   403 = فشل دائمًا إلا إذا نجح نفس الفحص عبر ترويسة SMOKE_SECRET السرية
+#         (أي أن تجاوز WAF الضيّق مضبوط فعلًا) — وإلا فشل صريح بإجراء خارجي.
+#   404 على /health = فشل. 522 / DNS / TLS / JSON غير صالح = فشل.
+#   إعادة التوجيه الدائمة المتوقعة من www = نجاح.
+#
+# توكنات Meta لا تمر عبر هذا الـWorkflow، بل تُخزَّن كأسرار داخل Worker:
+#   wrangler secret put INSTAGRAM_ACCESS_TOKEN
+#   wrangler secret put FACEBOOK_PAGE_ID
+#   wrangler secret put FACEBOOK_PAGE_ACCESS_TOKEN
+
+name: Deploy to Cloudflare
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+
+concurrency:
+  group: cloudflare-deploy-${{ github.event_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  SITE_URL: https://omrantoys.store
+  WWW_URL: https://www.omrantoys.store
+  PRODUCTION_URL: https://omrantoys.store
+  NODE_OPTIONS: --max-old-space-size=4096
+
+jobs:
+  quality:
+    name: Lint, typecheck and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type checks
+        run: pnpm check
+
+      - name: Tests
+        run: pnpm test
+
+  deploy:
+    name: Build, deploy and smoke-check
+    if: github.event_name != 'pull_request'
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Check required Cloudflare secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+
+          missing=0
+
+          if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
+            echo "::error::GitHub secret CLOUDFLARE_API_TOKEN is not configured."
+            missing=1
+          fi
+
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID}" ]; then
+            echo "::error::GitHub secret CLOUDFLARE_ACCOUNT_ID is not configured."
+            missing=1
+          fi
+
+          if [ "${missing}" -ne 0 ]; then
+            echo "::error::Add the missing secrets under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+          echo "Required Cloudflare secrets are configured."
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build client assets
+        run: pnpm exec vite build
+
+      - name: Confirm build assets exist
+        run: |
+          set -euo pipefail
+
+          test -f dist/public/index.html
+          test -d dist/public/assets
+          test -f dist/public/robots.txt
+          test -f dist/public/sitemap.xml
+          test -f dist/public/manifest.webmanifest
+          test -f dist/public/brand/logo.png
+          test -f dist/public/products/omran-product-01.jpg
+
+          echo "Build assets are ready (incl. brand kit, robots, sitemap)."
+
+      - name: Deploy Worker and assets
+        run: pnpm exec wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Smoke-check production domains
+        env:
+          SITE_URL: ${{ env.SITE_URL }}
+          WWW_URL: ${{ env.WWW_URL }}
+          SMOKE_SECRET: ${{ secrets.SMOKE_SECRET }}
+        run: |
+          set -euo pipefail
+
+          # ------------------------------------------------------------------
+          # قواعد صارمة: لا يُعتبر 403 نجاحًا عامًا. 403 فشل دائمًا إلا إذا
+          # أثبتنا أن تجاوز WAF الضيّق (ترويسة SMOKE_SECRET) مضبوط فعلًا على
+          # مسار /health فقط. 522/DNS/TLS/404-health/JSON غير صالح = فشل.
+          # ------------------------------------------------------------------
+
+          fetch() { # fetch <url> <body> <hdr> [extra curl args...]
+            curl -sS --connect-timeout 10 --max-time 25 \
+              -D "$3" -o "$2" -w '%{http_code}' "${@:4}" "$1" || true
+          }
+
+          is_cf_403() { grep -qiE '^server:[[:space:]]*cloudflare' "$1"; }
+
+          retry_status=""
+          fetch_with_retry() { # <url> <body> <hdr> [extra...]
+            local url="$1"; shift
+            for attempt in $(seq 1 12); do
+              retry_status="$(fetch "$url" "$@" )" || true
+              case "$retry_status" in
+                200|301|308|403|404) return 0 ;;
+              esac
+              echo "attempt ${attempt}/12 for ${url} → ${retry_status:-transport_error}; retrying."
+              sleep 5
+            done
+            return 0
+          }
+
+          waf_blocked_fail() { # <name>
+            echo "::error::$1: Cloudflare WAF denied the GitHub runner (403) and no working narrow bypass (SMOKE_SECRET header) is configured. EXTERNAL ACTION REQUIRED: add a Cloudflare WAF skip rule for /health limited to the smoke secret header — do not disable WAF."
+            exit 1
+          }
+
+          # ---- 1) /health على النطاق الأساسي: 200 + JSON صالح -------------
+          echo "Probe: apex /health"
+          fetch_with_retry "${SITE_URL}/health" /tmp/health.json /tmp/health.hdr
+          status="$retry_status"
+
+          if [ "$status" = "403" ]; then
+            if ! is_cf_403 /tmp/health.hdr; then
+              echo "::error::apex /health returned a non-Cloudflare 403."; exit 1
+            fi
+            if [ -n "${SMOKE_SECRET}" ]; then
+              status="$(fetch "${SITE_URL}/health" /tmp/health.json /tmp/health.hdr -H "X-Omran-Smoke: ${SMOKE_SECRET}")"
+            fi
+            if [ "$status" != "200" ]; then waf_blocked_fail "apex /health"; fi
+            echo "::warning::apex /health verified via narrow WAF bypass header."
+          fi
+
+          if [ "$status" != "200" ]; then
+            echo "::error::apex /health returned ${status} (522/DNS/TLS/404 all fail)."; exit 1
+          fi
+          python3 - /tmp/health.json <<'PY' || { echo "::error::invalid health JSON (status/service missing)."; exit 1; }
+          import json, sys
+          data = json.load(open(sys.argv[1], encoding="utf-8"))
+          assert data.get("status") == "ok", "health status must be ok"
+          assert data.get("service"), "health must identify the service"
+          print("health OK:", data)
+          PY
+
+
+          # ---- 2) www → apex: إعادة توجيه دائمة مع الحفاظ على المسار -------
+          echo "Probe: www permanent redirect"
+          fetch_with_retry "${WWW_URL}/products?utm=ci" /tmp/www.body /tmp/www.hdr
+          status="$retry_status"
+          if [ "$status" = "403" ] && is_cf_403 /tmp/www.hdr; then
+            echo "::error::www probe blocked by WAF (403); cannot verify redirect. EXTERNAL ACTION REQUIRED."; exit 1
+          fi
+          if [ "$status" != "301" ] && [ "$status" != "308" ]; then
+            echo "::error::www must permanently redirect (301/308), got ${status}."; exit 1
+          fi
+          loc="$(grep -iE '^location:' /tmp/www.hdr | head -1 | sed 's/^[Ll]ocation:[[:space:]]*//' | tr -d '\r')"
+          if [ "$loc" != "${SITE_URL}/products?utm=ci" ]; then
+            echo "::error::www redirect Location must preserve path+query; got: $loc"; exit 1
+          fi
+          echo "www redirect OK → $loc"
+
+          # ---- 3) /api/products: 200 + حمولة الجيل الحالي (status موجودة) --
+          echo "Probe: products API"
+          fetch_with_retry "${SITE_URL}/api/products" /tmp/products.json /tmp/products.hdr
+          status="$retry_status"
+          if [ "$status" = "403" ]; then
+            if ! is_cf_403 /tmp/products.hdr; then
+              echo "::error::products API returned a non-Cloudflare 403."; exit 1
+            fi
+            echo "::error::products API blocked by WAF (403) with no bypass for this path by design. EXTERNAL ACTION REQUIRED."; exit 1
+          fi
+          if [ "$status" != "200" ]; then
+            echo "::error::products API returned ${status}."; exit 1
+          fi
+          python3 - /tmp/products.json <<'PY' || { echo "::error::products API invalid or stale worker generation on production routes (payload lacks status field)."; exit 1; }
+          import json, sys
+          data = json.load(open(sys.argv[1], encoding="utf-8"))
+          assert isinstance(data.get("products"), list), "products list required"
+          assert "status" in data, "stale worker generation: payload lacks status field"
+          print("products API OK: count=", len(data["products"]), "status=", data["status"])
+          PY
+
+          # ---- 4) robots.txt و sitemap.xml: ملفات حقيقية لا SPA ------------
+          echo "Probe: robots.txt"
+          fetch_with_retry "${SITE_URL}/robots.txt" /tmp/robots.txt /tmp/robots.hdr
+          [ "$retry_status" = "200" ] || { echo "::error::robots.txt returned ${retry_status}."; exit 1; }
+          grep -q "User-agent:" /tmp/robots.txt || { echo "::error::robots.txt invalid."; exit 1; }
+          grep -qi "<html" /tmp/robots.txt && { echo "::error::robots.txt is SPA fallback HTML."; exit 1; }
+
+          echo "Probe: sitemap.xml"
+          fetch_with_retry "${SITE_URL}/sitemap.xml" /tmp/sitemap.xml /tmp/sitemap.hdr
+          [ "$retry_status" = "200" ] || { echo "::error::sitemap.xml returned ${retry_status}."; exit 1; }
+          grep -q "<urlset" /tmp/sitemap.xml || { echo "::error::sitemap.xml invalid."; exit 1; }
+
+          echo "Production smoke-check passed (strict)."
+
+      - name: Report production URL
+        run: |
+          echo "Deployment completed successfully."
+          echo "Production site: ${PRODUCTION_URL}"

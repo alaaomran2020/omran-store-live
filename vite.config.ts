@@ -104,6 +104,25 @@ function vitePluginManusDebugCollector(): Plugin {
     },
 
     configureServer(server: ViteDevServer) {
+      // أدوات التطوير فقط (dev): الملف لم يعد داخل publicDir القابل للنشر،
+      // فيُقدَّم يدويًا في بيئة التطوير وحدها ولا يصل أبدًا لناتج البناء.
+      server.middlewares.use("/__manus__/debug-collector.js", (_req, res) => {
+        const file = path.join(
+          PROJECT_ROOT,
+          "client",
+          "public",
+          "__manus__",
+          "debug-collector.js"
+        );
+        try {
+          res.writeHead(200, { "Content-Type": "text/javascript" });
+          res.end(fs.readFileSync(file, "utf-8"));
+        } catch {
+          res.writeHead(404);
+          res.end();
+        }
+      });
+
       // POST /__manus__/logs: Browser sends logs (written directly to files)
       server.middlewares.use("/__manus__/logs", (req, res, next) => {
         if (req.method !== "POST") {
@@ -164,8 +183,10 @@ function vitePluginManusDebugCollector(): Plugin {
 // it is the host editor's element-picker, not application code. `@builder.io/
 // vite-plugin-jsx-loc` likewise stamps `data-jsx-loc` source coordinates onto
 // every element (bundle bloat + leaked file paths). Both are marked
-// `apply: "serve"` so `vite build` skips them; `client/public` only holds the
-// dev log collector, so it is dropped from the build output too.
+// `apply: "serve"` so `vite build` skips them. The dev log collector lives in
+// `client/public/__manus__`, which is deliberately NOT the shipped publicDir,
+// and is served in dev through a middleware instead (see the plugin above), so
+// it is dropped from the build output too.
 // -----------------------------------------------------------------------------
 function devOnly(plugin: Plugin): Plugin {
   return { ...plugin, apply: "serve" };
@@ -289,16 +310,18 @@ export default defineConfig({
   },
   envDir: path.resolve(import.meta.dirname),
   root: path.resolve(import.meta.dirname, "client"),
-  // `client/public` holds only `__manus__/debug-collector.js` (dev tooling):
-  // keep serving it in dev, but never copy it into the deployable output.
-  publicDir: path.resolve(import.meta.dirname, "client", "public"),
+  // `public/` (جذر المشروع) هو دليل الأصول القابلة للنشر: الشعار والأيقونات
+  // وصور المنتجات الحقيقية وrobots.txt وsitemap.xml وmanifest — يُنسخ كما هو
+  // إلى dist/public ليُقدَّم من Workers Assets.
+  // أدوات التطوير (`client/public/__manus__`) خارج هذا الدليل وتُقدَّم عبر
+  // middleware في بيئة التطوير فقط (انظر vitePluginManusDebugCollector).
+  publicDir: path.resolve(import.meta.dirname, "public"),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-    // Emit no sourcemaps in the shipped client, and skip the publicDir copy
-    // (Vite >= 6) so dev-only assets stay out of dist/.
+    // Emit no sourcemaps in the shipped client.
     sourcemap: false,
-    copyPublicDir: false,
+    copyPublicDir: true,
     chunkSizeWarningLimit: 500,
   },
   server: {
