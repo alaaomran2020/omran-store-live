@@ -68,7 +68,7 @@ run_worker_first = ["/api/*", "/manus-storage/*"]
 # مثال:
 # PRODUCTS_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-xxxxxxxx/pub?gid=0&single=true&output=csv"
 # ---------------------------------------------------------------------------
-PRODUCTS_SHEET_URL = ""
+PRODUCTS_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLph4MyfmoeWcjJ3cMi-iDaM3dgt4_S57SvKr6wpQu8IbDKliduguIcvtp7E5o0ZoxN3ouNQoZo7dn/pub?gid=57015348&single=true&output=csv"
 ORIGIN_BASE_URL = "https://origin.omrantoys.store"
 # Ceiling for a single proxied request body; mirrors BODY_LIMIT on the container
 # so oversized payloads are rejected at the edge instead of reaching Node.
