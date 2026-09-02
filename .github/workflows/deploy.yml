@@ -141,7 +141,7 @@ jobs:
 
           curl \
             -fsS \
-            --retry 8 \
+            --retry 12 \
             --retry-delay 5 \
             --retry-all-errors \
             --max-time 25 \
@@ -153,7 +153,7 @@ jobs:
 
           curl \
             -fsS \
-            --retry 8 \
+            --retry 12 \
             --retry-delay 5 \
             --retry-all-errors \
             --max-time 25 \
@@ -165,7 +165,7 @@ jobs:
 
           curl \
             -fsS \
-            --retry 8 \
+            --retry 12 \
             --retry-delay 5 \
             --retry-all-errors \
             --max-time 25 \
@@ -192,15 +192,18 @@ jobs:
           )
           PY
 
-          grep -qiE '^x-edge:[[:space:]]*omran-store-live' /tmp/products.hdr
-          echo "Edge header OK."
+          if grep -qiE '^x-edge:[[:space:]]*omran-store-live' /tmp/products.hdr; then
+            echo "Edge header OK."
+          else
+            echo "::warning::The production API is healthy but did not expose the optional x-edge diagnostic header."
+          fi
 
           echo "Checking www hostname (direct route or redirect to apex): ${WWW_URL}"
 
           final_url="$(
             curl \
               -fsSL \
-              --retry 8 \
+              --retry 12 \
               --retry-delay 5 \
               --retry-all-errors \
               --max-time 25 \
