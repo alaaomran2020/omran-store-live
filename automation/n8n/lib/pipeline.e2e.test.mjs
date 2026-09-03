@@ -183,13 +183,13 @@ describe("الرحلة الكاملة: صورة → REVIEW → نشر → الم
     for (const id of before) expect(after.some(p => p.id === id)).toBe(true);
   });
 
-  it("منتج بلا سعر: null → «السعر عند الطلب» على الموقع بعد النشر", () => {
+  it("منتج بلا سعر: null → «للاستفسار والكميات» على الموقع بعد النشر", () => {
     const sheet = new FakeSheet(EXISTING);
     const result = intakeProduct(sheet, { caption: "", aiResponse: AI_OK });
     expect(result.row.price).toBe("");
     approve(sheet, result.row.id);
     const product = publicSite(sheet).find(p => p.id === result.row.id);
-    expect(product.price).toBeNull(); // الواجهة تعرضه "السعر عند الطلب"
+    expect(product.price).toBeNull(); // الواجهة تعرضه "للاستفسار والكميات"
   });
 
   it("منتج مكرر: تحذير في المعاينة ولا يُنشر تلقائيًا", () => {

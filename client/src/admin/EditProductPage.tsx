@@ -166,7 +166,7 @@ export default function EditProductPage({
                 value={price}
                 disabled={!perms.price}
                 onChange={e => setPrice(e.target.value)}
-                placeholder={product.price != null ? String(product.price) : "السعر عند الطلب"}
+                placeholder={product.price != null ? String(product.price) : "للاستفسار والكميات"}
               />
             </Field>
             <Field label="الحالة" hint={superAdmin ? "إظهار/إخفاء من المتجر" : "متاح للمدير العام فقط"}>

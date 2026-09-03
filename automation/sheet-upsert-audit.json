@@ -1,0 +1,18 @@
+{
+  "spreadsheet_id": "1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc",
+  "sheet": "products",
+  "gid": "57015348",
+  "generated_at": "2026-09-03T00:18:57.001Z",
+  "existing_count": 5,
+  "pilot_candidates": 3,
+  "to_insert": 3,
+  "duplicates_prevented": 0,
+  "duplicates": [],
+  "inserted_ids": [
+    "OT-00006",
+    "OT-00007",
+    "OT-00008"
+  ],
+  "sheet_url": "https://docs.google.com/spreadsheets/d/1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc/edit#gid=57015348",
+  "api_url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLph4MyfmoeWcjJ3cMi-iDaM3dgt4_S57SvKr6wpQu8IbDKliduguIcvtp7E5o0ZoxN3ouNQoZo7dn/pub?gid=57015348&single=true&output=csv"
+}

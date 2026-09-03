@@ -4,11 +4,12 @@ export const SOCIAL_EMBED_CONFIG = {
   facebookPageUrl: "https://www.facebook.com/profile.php?id=61590544803396&locale=ar_AR",
   /**
    * رقم واتساب المتجر بالصيغة الدولية بدون "+" (مثال: "2010XXXXXXXX").
-   * اتركه فارغًا لإخفاء زر "اطلب عبر واتساب" من بطاقات المنتجات.
-   * بديل بلا تعديل كود: اضبط `VITE_WHATSAPP_NUMBER` وقت البناء — تقرأه
-   * `client/src/lib/productFormat.ts` وتفضّله على هذا الثابت.
+   * الرقم الإنتاجي الحالي: +201555570269 (WhatsApp). يُستخدم كقيمة احتياطية
+   * عندما لا يكون `VITE_WHATSAPP_NUMBER` مضبوطًا وقت البناء.
+   * اتركه فارغًا فقط لإخفاء زر "اطلب عبر واتساب" تمامًا — لكن في الإنتاج
+   * يجب أن يكون مضبوطًا، وإلا لا يُعرض زر واتساب بدل عرض رقم خاطئ.
    */
-  whatsappNumber: "",
+  whatsappNumber: "201555570269",
 } as const;
 
 export function isOfficialMetaEmbedUrl(value: string): boolean {

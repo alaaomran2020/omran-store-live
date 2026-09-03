@@ -141,7 +141,7 @@ export function validateAiProduct(raw, options = {}) {
   const description = String(src.description ?? "").trim();
   if (description === "") problems.push("description_missing");
 
-  // سعر المستخدم أولًا، ثم سعر الـAI، وإلا null (يظهر "السعر عند الطلب")
+  // سعر المستخدم أولًا، ثم سعر الـAI، وإلا null (يظهر "للاستفسار والكميات")
   let price = null;
   if (options.userPrice !== null && options.userPrice !== undefined) {
     price = parsePrice(options.userPrice);
@@ -304,7 +304,7 @@ export function parseQuickEdit(text) {
 export function buildPreviewMessage(product, extra = {}) {
   const price =
     product.price === null || product.price === undefined
-      ? "السعر عند الطلب"
+      ? "للاستفسار والكميات"
       : `${product.price} جنيه`;
   const lines = [
     "🧸 منتج جديد",

@@ -137,5 +137,5 @@ export const isSuperAdmin = (admin: AdminInfo | null | undefined): boolean =>
 /** تنسيق الجنيه المصري */
 export const formatEGP = (value: number | null | undefined): string =>
   value == null
-    ? "السعر عند الطلب"
+    ? "للاستفسار والكميات"
     : `${Number(value).toLocaleString("ar-EG", { maximumFractionDigits: 2 })} ج.م`;

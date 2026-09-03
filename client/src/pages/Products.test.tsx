@@ -85,7 +85,7 @@ describe("كتالوج المنتجات (من Google Sheets)", () => {
 
     expect(screen.getByText("250 ج.م")).toBeTruthy();
     expect(screen.getByText("1,750 ج.م")).toBeTruthy();
-    expect(screen.getByText("السعر عند الطلب")).toBeTruthy();
+    expect(screen.getByText("للاستفسار والكميات")).toBeTruthy();
   });
 
   it("يحوّل صور Google Drive ويعرض بديلًا للمنتج بلا صورة", async () => {
@@ -162,8 +162,16 @@ describe("كتالوج المنتجات (من Google Sheets)", () => {
 
     const links = screen.getAllByRole("link", { name: /اطلب عبر واتساب/ }) as HTMLAnchorElement[];
     const text = decodeURIComponent(new URL(links[0].href).searchParams.get("text")!);
-    expect(text).toContain("مرحبًا، أريد الاستفسار عن منتج: سيارة أطفال سباق");
-    expect(links[0].href).toContain("wa.me/");
+    expect(text).toContain("مرحبًا، أريد الاستفسار عن هذا المنتج من عمران تويز.");
+    expect(text).toContain("المنتج: سيارة أطفال سباق");
+    expect(text).toContain("كود المنتج: 001");
+    expect(text).toContain("التصنيف: سيارات");
+    expect(text).toContain("السعر: 250 ج.م");
+    expect(text).toContain("رابط المنتج:");
+    // يتضمن رابط المنتج ويُشفّر بشكل صحيح
+    expect(links[0].href).toContain("wa.me/201000000000");
+    // تأكد أن الرابط يستخدم الرقم الصحيح ويحتوي على تشفير URL
+    expect(links[0].href).toContain("text=");
   });
 
   it("لا يعرض خطأ تقنيًا إذا تعذّر الوصول إلى Google Sheets", async () => {

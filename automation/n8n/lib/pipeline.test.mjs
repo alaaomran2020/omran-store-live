@@ -191,7 +191,7 @@ describe("buildPreviewMessage — رسالة المراجعة (قسم 11)", () =
     expect(msg).toContain("🟡 يحتاج مراجعة");
   });
 
-  it("سعر null → السعر عند الطلب، وتحذير التكرار يظهر", () => {
+  it("سعر null → للاستفسار والكميات، وتحذير التكرار يظهر", () => {
     const msg = buildPreviewMessage(
       { name: "x", price: null, category: "", description: "", confidence: 0.4 },
       {
@@ -201,7 +201,7 @@ describe("buildPreviewMessage — رسالة المراجعة (قسم 11)", () =
         lowConfidence: true,
       }
     );
-    expect(msg).toContain("السعر عند الطلب");
+    expect(msg).toContain("للاستفسار والكميات");
     expect(msg).toContain("⚠️ يبدو أن هذا المنتج موجود بالفعل.");
     expect(msg).toContain("الثقة منخفضة");
   });
