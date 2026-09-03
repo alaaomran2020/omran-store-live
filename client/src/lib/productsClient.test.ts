@@ -125,6 +125,11 @@ describe("productsClient fallback chain", () => {
       "OMR-IG-KIT-46",
       "OMR-IG-HC-104",
       "OMR-IG-SQ-01",
+      "OMR-RAW-001",
+      "OMR-RAW-002",
+      "OMR-RAW-003",
+      "OMR-RAW-004",
+      "OMR-RAW-005",
     ]);
     expect(calls).toEqual(["/api/products", "/edge-api/products"]);
   });
