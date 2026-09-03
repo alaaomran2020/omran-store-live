@@ -1,73 +1,34 @@
 #:schema node_modules/wrangler/config-schema.json
 # =============================================================================
-# Omran Store Live — edge layer (hybrid topology)
+# Omran Store Live — Product Engine / edge API
 #
-#   browser ──▶ Cloudflare edge (this worker)
-#                 ├── www.omrantoys.store/* → 301 دائم إلى omrantoys.store
-#                 │                    (نفس المسار + نفس الـquery)
-#                 ├── /health           → فحص صحة خفيف يُجاب من الحافة
-#                 ├── /assets/*, /*  → served straight from Workers Assets
-#                 │                    (الأصول المُجزّأة لا تدخل الـWorker؛ مسارات
-#                 │                     المستندات فقط تمر عبره — run_worker_first)
-#                 ├── /api/products  → answered AT THE EDGE (worker/index.ts):
-#                 │                    Google Sheets (CSV منشور) + كاش 5 دقائق.
-#                 │                    الضبط الوحيد: PRODUCTS_SHEET_URL في [vars] بالأسفل.
-#                 ├── /edge-api/products → مرآة نفس الكتالوج خارج /api/* (نفس
-#                 │                    المعالج والكاش)؛ تبقى تصل إلى هذا الـWorker
-#                 │                    عبر route النطاق حتى لو تملّك route قديم
-#                 │                    أكثر تحديدًا مسار /api/* (see productsClient.ts).
-#                 ├── /api/social/feed → answered AT THE EDGE (worker/index.ts):
-#                 │                    Facebook/Instagram Graph sync + 5-min cache.
-#                 │                    Secrets (set once, stored by Cloudflare):
-#                 │                      wrangler secret put INSTAGRAM_ACCESS_TOKEN
-#                 │                      wrangler secret put FACEBOOK_PAGE_ID
-#                 │                      wrangler secret put FACEBOOK_PAGE_ACCESS_TOKEN
-#                 └── other /api/*, /manus-storage/* → tunneled to the VPS container
+# Target split during storefront migration:
+#   omrantoys.store/*              -> existing edge app (rollback-safe apex)
+#   www.omrantoys.store/*          -> Cloudflare Pages storefront
+#   www.omrantoys.store/api/products -> this Product Engine worker
 #
-# The VPS keeps the MySQL/Node runtime (express + mysql2 cannot run on workerd);
-# the static client — which is 99% of the payload — is served from the edge.
-# The client needs no change: it already calls same-origin "/api/trpc"
-# (client/src/main.tsx) and `${window.location.origin}/api/oauth/callback`
-# (client/src/const.ts).
+# This intentionally removes the broad www wildcard from this Worker. Pages owns
+# the www HTML/assets while the more-specific /api/products route keeps the
+# Storefront's same-origin Product Engine contract alive.
 # =============================================================================
 
 name = "omran-store-live-edge"
 main = "worker/index.ts"
 
-# Production hostnames are managed as code. Both proxied DNS records are
-# intercepted by this Worker, so neither hostname falls through to a legacy
-# or unavailable origin.
 routes = [
   { pattern = "omrantoys.store/*", zone_name = "omrantoys.store" },
-  { pattern = "www.omrantoys.store/*", zone_name = "omrantoys.store" },
+  { pattern = "www.omrantoys.store/api/products", zone_name = "omrantoys.store" },
+  { pattern = "www.omrantoys.store/edge-api/products", zone_name = "omrantoys.store" },
 ]
 
-# Pinned deliberately: matches the compatibility baseline requested for the
-# platform move. `compatibility_date` gates the worker's runtime behaviour
-# (URL parsing, fetch semantics), not the build toolchain.
 compatibility_date = "2024-09-01"
-
-# NOTE ON `nodejs_compat`: intentionally NOT enabled. The router below speaks
-# only Web Standard APIs (Request/Response/Headers/fetch/AbortSignal). Turning
-# on the Node compatibility layer would allocate its polyfill graph on every
-# isolate boot for zero benefit — the opposite of the memory budget in scope.
 compatibility_flags = []
 
-# ---------------------------------------------------------------------------
-# Static client (built by `pnpm build` -> dist/public, 0.48 kB html + hashed
-# js/css). `not_found_handling` reproduces the Express SPA fallback so deep
-# links like /products resolve to index.html at the edge.
-# ---------------------------------------------------------------------------
 [assets]
 directory = "./dist/public"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
 
-# Only API traffic and *document* paths pay the worker hop; hashed assets
-# (js/css/images) are answered by the asset worker directly. Document paths are
-# included so the worker can enforce the www→apex 301 and serve /health before
-# the asset layer; SPA routes (/products/:slug, /categories/:slug) are covered
-# by wildcards so deep links on www redirect too.
 run_worker_first = [
   "/api/*",
   "/edge-api/products",
@@ -84,32 +45,8 @@ run_worker_first = [
   "/settings/*",
 ]
 
-# ---------------------------------------------------------------------------
-# Origin (= the container behind the Cloudflare Tunnel). Publicly resolvable
-# through Cloudflare's network but intentionally NOT the user-facing hostname:
-# pair it with `EDGE_ONLY=true` on the VPS so the tunnel origin answers nothing
-# except API paths, and gate it further with a WAF/Access rule on this hostname.
-# ---------------------------------------------------------------------------
 [vars]
-# ---------------------------------------------------------------------------
-# مصدر منتجات المتجر: رابط Google Sheet المنشور كـCSV.
-#   Google Sheets → File → Share → Publish to web → (الورقة) → Comma-separated values (.csv)
-# الصق الرابط هنا مرة واحدة فقط، ثم أعِد النشر (pnpm build && pnpm deploy:edge).
-# بعدها كل منتج جديد تضيفه كصف في الشيت يظهر تلقائيًا خلال ~5 دقائق
-# بلا GitHub ولا Deploy ولا مفتاح API. الرابط عام وليس سرًا.
-# مثال:
-# PRODUCTS_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-xxxxxxxx/pub?gid=0&single=true&output=csv"
-# ---------------------------------------------------------------------------
 PRODUCTS_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLph4MyfmoeWcjJ3cMi-iDaM3dgt4_S57SvKr6wpQu8IbDKliduguIcvtp7E5o0ZoxN3ouNQoZo7dn/pub?gid=57015348&single=true&output=csv"
 ORIGIN_BASE_URL = "https://origin.omrantoys.store"
-# Ceiling for a single proxied request body; mirrors BODY_LIMIT on the container
-# so oversized payloads are rejected at the edge instead of reaching Node.
 MAX_BODY_BYTES = "1048576"
-# tRPC batch + the OAuth code exchange complete in <1s; the generous default is
-# headroom for the admin/file endpoints, not an invitation to hang a request.
 ORIGIN_TIMEOUT_MS = "30000"
-
-# Tail sampling for incident triage is opt-in (it has a log-volume cost):
-# [observability]
-# enabled = true
-# head_sampling_rate = 0.05
