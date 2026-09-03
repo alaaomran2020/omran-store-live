@@ -1,22 +1,16 @@
 #:schema node_modules/wrangler/config-schema.json
 
 # =============================================================================
-# Omran Store Live — Product Engine / Edge API
+# Omran Store Live — Backend / Edge API only
 # =============================================================================
 #
-# Production architecture:
-#
+# Production ownership:
 #   omrantoys.store/*      -> Cloudflare Pages: omrantoys-live-app
 #   www.omrantoys.store/*  -> Cloudflare Pages: omrantoys-live-app
 #
-# The Worker handles API traffic only. It must never receive a broad storefront
-# route such as:
-#
+# This Worker owns API traffic only. Never add a broad storefront route such as:
 #   omrantoys.store/*
 #   www.omrantoys.store/*
-#
-# Adding either broad route would override Cloudflare Pages and could cause the
-# apex and www domains to display different storefront builds.
 # =============================================================================
 
 name = "omran-store-live-edge"
@@ -24,55 +18,15 @@ main = "worker/index.ts"
 compatibility_date = "2024-09-01"
 compatibility_flags = []
 
-# -----------------------------------------------------------------------------
-# Worker routes
-# -----------------------------------------------------------------------------
-#
-# Keep these routes API-specific so Cloudflare Pages remains responsible for
-# storefront HTML, assets, products, categories, admin UI, robots.txt and
-# sitemap.xml.
-#
-# Both apex and www use the same Worker for consistent same-origin API behavior.
-# -----------------------------------------------------------------------------
-
+# API-only zone routes. Both hostnames reach the same Worker implementation.
 routes = [
   { pattern = "omrantoys.store/api/*", zone_name = "omrantoys.store" },
   { pattern = "www.omrantoys.store/api/*", zone_name = "omrantoys.store" },
-
   { pattern = "omrantoys.store/edge-api/products", zone_name = "omrantoys.store" },
   { pattern = "www.omrantoys.store/edge-api/products", zone_name = "omrantoys.store" },
 ]
 
-# -----------------------------------------------------------------------------
-# Static assets
-# -----------------------------------------------------------------------------
-#
-# Assets remain available to the Worker runtime where required, but the public
-# storefront is served by the omrantoys-live-app Cloudflare Pages project.
-# -----------------------------------------------------------------------------
-
-[assets]
-directory = "./dist/public"
-binding = "ASSETS"
-not_found_handling = "single-page-application"
-
-# Only API endpoints are allowed to execute the Worker before static assets.
-# Storefront routes are intentionally excluded.
-run_worker_first = [
-  "/api/*",
-  "/edge-api/products",
-]
-
-# -----------------------------------------------------------------------------
-# Public runtime configuration
-# -----------------------------------------------------------------------------
-#
-# Never place passwords, API tokens, signing keys or other secrets in this
-# section. Store sensitive values using:
-#
-#   pnpm exec wrangler secret put SECRET_NAME
-# -----------------------------------------------------------------------------
-
+# Public runtime configuration only. Secrets stay in Cloudflare/GitHub secret stores.
 [vars]
 PRODUCTS_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLph4MyfmoeWcjJ3cMi-iDaM3dgt4_S57SvKr6wpQu8IbDKliduguIcvtp7E5o0ZoxN3ouNQoZo7dn/pub?gid=57015348&single=true&output=csv"
 ORIGIN_BASE_URL = "https://origin.omrantoys.store"
