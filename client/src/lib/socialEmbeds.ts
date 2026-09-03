@@ -3,12 +3,10 @@ export const SOCIAL_EMBED_CONFIG = {
   instagramFeaturedPostUrl: "https://www.instagram.com/p/DcTpBu2lOt8/",
   facebookPageUrl: "https://www.facebook.com/profile.php?id=61590544803396&locale=ar_AR",
   /**
-   * رقم واتساب المتجر بالصيغة الدولية بدون "+" (مثال: "2010XXXXXXXX").
-   * اتركه فارغًا لإخفاء زر "اطلب عبر واتساب" من بطاقات المنتجات.
-   * بديل بلا تعديل كود: اضبط `VITE_WHATSAPP_NUMBER` وقت البناء — تقرأه
-   * `client/src/lib/productFormat.ts` وتفضّله على هذا الثابت.
+   * رقم واتساب المتجر بالصيغة الدولية بدون "+".
+   * يمكن تجاوزه وقت البناء عبر `VITE_WHATSAPP_NUMBER`.
    */
-  whatsappNumber: "",
+  whatsappNumber: "201555570269",
 } as const;
 
 export function isOfficialMetaEmbedUrl(value: string): boolean {
