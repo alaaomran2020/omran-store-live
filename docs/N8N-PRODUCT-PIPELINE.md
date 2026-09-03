@@ -31,19 +31,25 @@ node automation/n8n/build-workflow.mjs && pnpm test
 
 ## 2) Google Sheets — الأعمدة النهائية
 
-نفس الشيت الحالي + **3 أعمدة تشغيلية فقط** تُضاف يدويًا مرة واحدة في نهاية الصف الأول:
+نفس الشيت الحالي + **4 أعمدة تشغيلية** تُضاف مرة واحدة في نهاية الصف الأول:
 
 ```
-id | name | price | category | description | image | active | sort_order | product_prompt | workflow_status | created_at | updated_at
+id | name | price | category | description | image | active | sort_order | product_prompt | workflow_status | qa_status | created_at | updated_at
 ```
 
 - الأعمدة التسعة الأولى **كما هي بلا أي تغيير** — الموقع يقرأها كالمعتاد.
 - `workflow_status`: `REVIEW / PUBLISHED / REJECTED` (و`DRAFT/ERROR` محجوزة).
-  **لا يؤثر على الموقع إطلاقًا** — الظهور محكوم حصريًا بعمود `active`
-  (مُثبت بالاختبار `server/products.pipeline.test.ts`).
-- `product_prompt` محفوظ كما هو للتوافق — الـPipeline لا تكتبه ولا تحذفه.
+- `qa_status`: `PASS / NEEDS_REVIEW / FAIL` — قرار الجودة.
+- 🛡️ **بوابة النشر الثلاثية (من 2026-09-03):** الظهور على الموقع يتطلب
+  `active=TRUE` + `workflow_status=PUBLISHED` + `qa_status=PASS` معًا.
+  الـPipeline تكتبها كلها صراحةً: الإنشاء `FALSE`+`REVIEW`+`NEEDS_REVIEW`،
+  وزر ✅ النشر `TRUE`+`PUBLISHED`+`PASS` (مُثبت بالاختبار
+  `server/products.pipeline.test.ts` و`products.publication-gate.test.ts`).
+  التفاصيل: `docs/PUBLICATION-GATE.md`.
+- `product_prompt` محفوظ كما هو للتوافق — الـPipeline لا تكتبه ولا تحذفه
+  (الموقع يقرأ منه دليل `qa=` القديم فقط كطبقة توافق مؤقتة).
 - ⚠️ قاعدة ذهبية: الـPipeline تكتب دائمًا `active=FALSE` صراحة عند الإنشاء،
-  لأن **الفارغ يعني معروضًا** في منطق الموقع الحالي.
+  لأن **الفارغ يعني معروضًا** في منطق عمود `active`.
 
 ## 3) Google Drive — البنية
 
@@ -103,12 +109,12 @@ OMRAN TOYS/
 `تجهيز التحليل` (caption + تصنيفات الموقع + base64) → `تحليل المنتج AI` (OpenAI vision, JSON mode) →
 `فحص النتيجة` (Validation + `OT-xxxxx` + كشف تكرار) → `هل التحليل صالح؟` →
 `رفع الصورة الأصلية` (Drive/originals) → `مشاركة الصورة` (anyone/reader) →
-`تجهيز الصف النهائي` → `إضافة المنتج` (append: `active=FALSE`, `workflow_status=REVIEW`) →
+`تجهيز الصف النهائي` → `إضافة المنتج` (append: `active=FALSE`, `workflow_status=REVIEW`, `qa_status=NEEDS_REVIEW`) →
 `معاينة المنتج` (Telegram + أزرار ✅/✏️/❌).
 
 **مسار الأزرار:**
 `قراءة الزر` → `إيقاف مؤشر الزر` → `الإجراء` (Switch) →
-- ✅ `نشر المنتج` (`active=TRUE`, `PUBLISHED`, `updated_at`) → `تأكيد النشر`
+- ✅ `نشر المنتج` (`active=TRUE`, `PUBLISHED`, `qa_status=PASS`, `updated_at`) → `تأكيد النشر`
 - ❌ `رفض المنتج` (`active=FALSE`, `REJECTED`) → `تأكيد الرفض`
 - ✏️ `طلب التعديل` (يحفظ حالة انتظار التعديل للمحادثة)
 

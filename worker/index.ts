@@ -225,13 +225,15 @@ async function handleProducts(request: Request, env: Env): Promise<Response> {
         products: applyOverridesToProducts(payload.products, manifest.overrides),
       };
     }
-    // Final Publication Guard — يمر ثانية فوق النتيجة بعد أي Overrides (لا
-    // يمكن لأي تجاوز اجتيازها) ويكون آخر قرار قبل الاستجابة العامة.
-    payload = {
-      ...payload,
-      products: applyPublicationGate(payload.products),
-    };
   }
+
+  // Final Publication Guard — يُطبَّق بعد أي تجاوزات وقبل الاستجابة: لا يصل
+  // إلى الزوار إلا ما يحقق active=true + workflowStatus=PUBLISHED + qaStatus=PASS.
+  // لا يستطيع أي Override تحويل NEEDS_REVIEW/REVIEW إلى منتج عام.
+  payload = {
+    ...payload,
+    products: applyPublicationGate(payload.products),
+  };
   return new Response(
     request.method === "HEAD" ? null : JSON.stringify(payload),
     {

@@ -11,22 +11,14 @@ import { parseProductsCsv } from "@shared/products";
  * التصنيفات، البحث، الفلاتر، التفاصيل، واتساب، المنتجات المخفية، بلا صورة).
  */
 
-/**
- * جميع الصفوف تحمل حالات النشر First-Class:
- *   active=true + PUBLISHED + PASS = يعرضه الزائر
- *   أي اختلاف = مستبعد (Fail-Closed).
- */
 const CSV = [
-  "id,name,price,category,description,image,active,sort_order,product_prompt,workflow_status,qa_status,source_drive_id,processed_image,review_reason",
-  "001,سيارة أطفال سباق,250,سيارات,سيارة بتصميم رياضي,https://drive.google.com/file/d/1CarFileId12345/view?usp=sharing,TRUE,1,PROMPT,PUBLISHED,PASS,,,",
-  "002,دباب كهربائي,1750,مركبات كهربائية,دباب ببطارية قابلة للشحن,https://cdn.example.com/bike.jpg,TRUE,2,PROMPT,PUBLISHED,PASS,,,",
-  "003,مكعبات تعليمية,180,ألعاب تعليمية,مكعبات ملونة,,TRUE,3,PROMPT,PUBLISHED,PASS,,,",
-  "004,عروسة قماش مخفية,320,عرائس,يجب ألا تظهر,https://cdn.example.com/doll.jpg,FALSE,4,PROMPT,PUBLISHED,PASS,,,",
-  "005,طقم مطبخ,اتصل بنا,ألعاب تقليدية,سعر غير صالح,https://cdn.example.com/kitchen.jpg,TRUE,,PROMPT,PUBLISHED,PASS,,,",
-  // غياب QA + PUBLISHED + active → مستبعد (قاعدة Fail-Closed)
-  "006,منتج بلا QA,999,أخرى,يجب ألا يظهر,,TRUE,5,PROMPT,PUBLISHED,,,",
-  // NEEDS_REVIEW + active → مستبعد
-  "007,منتج يحتاج مراجعة,999,أخرى,يجب ألا يظهر,,TRUE,6,PROMPT,NEEDS_REVIEW,NEEDS_REVIEW,,بانتظار صورة",
+  "id,name,price,category,description,image,active,sort_order,product_prompt,workflow_status,qa_status",
+  "001,سيارة أطفال سباق,250,سيارات,سيارة بتصميم رياضي,https://drive.google.com/file/d/1CarFileId12345/view?usp=sharing,TRUE,1,PROMPT,PUBLISHED,PASS",
+  "002,دباب كهربائي,1750,مركبات كهربائية,دباب ببطارية قابلة للشحن,https://cdn.example.com/bike.jpg,TRUE,2,PROMPT,PUBLISHED,PASS",
+  "003,مكعبات تعليمية,180,ألعاب تعليمية,مكعبات ملونة,,TRUE,3,PROMPT,PUBLISHED,PASS",
+  "004,عروسة قماش مخفية,320,عرائس,يجب ألا تظهر,https://cdn.example.com/doll.jpg,FALSE,4,PROMPT,PUBLISHED,PASS",
+  "005,طقم مطبخ,اتصل بنا,ألعاب تقليدية,سعر غير صالح,https://cdn.example.com/kitchen.jpg,TRUE,,PROMPT,PUBLISHED,PASS",
+  "006,صف قديم بلا دليل نشر,70,أخرى,صف legacy يجب ألا يظهر,,TRUE,5,PROMPT,,",
 ].join("\n");
 
 const payload = {

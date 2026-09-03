@@ -24,8 +24,7 @@ import {
 const COLUMNS = [
   "id", "name", "price", "category", "description", "image",
   "active", "sort_order", "product_prompt", "workflow_status",
-  "qa_status", "source_drive_id", "processed_image", "review_reason",
-  "created_at", "updated_at",
+  "qa_status", "created_at", "updated_at",
 ];
 
 class FakeSheet {
@@ -93,10 +92,7 @@ function intakeProduct(sheet, { caption, aiResponse }) {
     sort_order: "",
     product_prompt: "",
     workflow_status: "REVIEW",
-    qa_status: "REVIEW",
-    source_drive_id: `FAKE_DRIVE_${id}`,
-    processed_image: "",
-    review_reason: "بانتظار مراجعة بشرية قبل النشر",
+    qa_status: "NEEDS_REVIEW",
     created_at: now,
     updated_at: now,
   };
@@ -120,7 +116,6 @@ const approve = (sheet, id) =>
     active: "TRUE",
     workflow_status: "PUBLISHED",
     qa_status: "PASS",
-    review_reason: "",
     updated_at: "2026-09-02T12:05:00.000Z",
   });
 const reject = (sheet, id) =>
@@ -128,8 +123,6 @@ const reject = (sheet, id) =>
     id,
     active: "FALSE",
     workflow_status: "REJECTED",
-    qa_status: "FAILED",
-    review_reason: "رفض بواسطة المالك",
     updated_at: "2026-09-02T12:05:00.000Z",
   });
 
@@ -138,20 +131,26 @@ const publicSite = sheet => parseProductsCsv(sheet.toCsv());
 
 // --------------------------------- السيناريوهات ---------------------------------
 
+// الشيت الحالي بالصيغة الرسمية (workflow_status + qa_status) + صف legacy
+// قديم بلا أي دليل نشر — يجب أن يبقى معزولاً عن الزوار (Fail-Closed).
 const EXISTING = [
   {
     id: "001", name: "سيارة أطفال سباق", price: "250", category: "سيارات",
     description: "سيارة أطفال بتصميم رياضي", image: "", active: "TRUE",
-    sort_order: "1", product_prompt: "", workflow_status: "PUBLISHED",
-    qa_status: "PASS", source_drive_id: "", processed_image: "", review_reason: "",
-    created_at: "", updated_at: "",
+    sort_order: "1", product_prompt: "",
+    workflow_status: "PUBLISHED", qa_status: "PASS", created_at: "", updated_at: "",
   },
   {
     id: "002", name: "عروسة قماش كبيرة", price: "320", category: "عرائس",
     description: "عروسة قماش ناعمة", image: "", active: "TRUE",
-    sort_order: "2", product_prompt: "", workflow_status: "PUBLISHED",
-    qa_status: "PASS", source_drive_id: "", processed_image: "", review_reason: "",
-    created_at: "", updated_at: "",
+    sort_order: "2", product_prompt: "",
+    workflow_status: "PUBLISHED", qa_status: "PASS", created_at: "", updated_at: "",
+  },
+  {
+    id: "LEGACY-9", name: "منتج قديم بلا دليل", price: "99", category: "أخرى",
+    description: "صف من الجيل القديم: لا workflow ولا QA", image: "", active: "TRUE",
+    sort_order: "3", product_prompt: "",
+    workflow_status: "", qa_status: "", created_at: "", updated_at: "",
   },
 ];
 
@@ -242,6 +241,7 @@ describe("الرحلة الكاملة: صورة → REVIEW → نشر → الم
       price: String(quick.price),
       active: "FALSE",
       workflow_status: "REVIEW",
+      qa_status: "NEEDS_REVIEW",
       updated_at: "2026-09-02T12:10:00.000Z",
     });
 
@@ -262,6 +262,16 @@ describe("الرحلة الكاملة: صورة → REVIEW → نشر → الم
     expect(result.error).toBe("⚠️ تعذر تحليل المنتج.");
     expect(sheet.read().length).toBe(before);
     expect(publicSite(sheet)).toHaveLength(2);
+  });
+
+  it("صف legacy بلا workflow_status/qa_status يظل معزولاً عن الزوار (Fail-Closed)", () => {
+    const sheet = new FakeSheet(EXISTING);
+    const visible = publicSite(sheet).map(p => p.id);
+    expect(visible).toEqual(["001", "002"]); // LEGACY-9 غير عام رغم active=TRUE
+    const admin = parseProductsCsv(sheet.toCsv(), { includeInactive: true });
+    const legacy = admin.find(p => p.id === "LEGACY-9");
+    expect(legacy).toBeDefined();
+    expect(legacy.reviewReason).toContain("workflow_status");
   });
 
   it("تسلسل المعرفات لا يتصادم عبر منتجات متتالية", () => {

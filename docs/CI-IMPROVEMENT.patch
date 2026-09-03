@@ -1,5 +1,5 @@
 diff --git a/.github/workflows/deploy.yml b/.github/workflows/deploy.yml
-index 29a807f..6f010c7 100644
+index 29a807f..0413c4e 100644
 --- a/.github/workflows/deploy.yml
 +++ b/.github/workflows/deploy.yml
 @@ -1,5 +1,11 @@
@@ -93,42 +93,60 @@ index 29a807f..6f010c7 100644
            echo "Build assets are ready."
            ls -lh dist/public
            ls -lh dist/public/assets
-@@ -191,22 +224,22 @@ jobs:
-                 ;;
-               products-json)
-                 python3 - "${body}" <<'PY'
--          import json
--          import sys
--
--          with open(sys.argv[1], encoding="utf-8") as file:
--              data = json.load(file)
--
--          products = data.get("products")
--          assert isinstance(products, list), (
--              "The API response does not contain a products list."
--          )
--          print(
--              "API /api/products OK:",
--              f"status={data.get('status')!r}",
--              f"count={len(products)}",
--          )
--          PY
-+import json
-+import sys
+@@ -206,6 +239,48 @@ jobs:
+               f"status={data.get('status')!r}",
+               f"count={len(products)}",
+           )
++          PY
++                ;;
++              engine-json)
++                python3 - "${body}" <<'PY'
++          import json
++          import sys
 +
-+with open(sys.argv[1], encoding="utf-8") as file:
-+    data = json.load(file)
++          with open(sys.argv[1], encoding="utf-8") as file:
++              data = json.load(file)
 +
-+products = data.get("products")
-+assert isinstance(products, list), (
-+    "The API response does not contain a products list."
-+)
-+print(
-+    "API /api/products OK:",
-+    f"status={data.get('status')!r}",
-+    f"count={len(products)}",
-+)
-+PY
++          assert data.get("status") == "ok", (
++              f"Product Engine status is {data.get('status')!r}, expected 'ok'."
++          )
++          products = data.get("products")
++          assert isinstance(products, list), (
++              "The Product Engine response does not contain a products list."
++          )
++
++          # Publication Gate (Fail-Closed): every public product must satisfy
++          # active=true AND workflowStatus=PUBLISHED AND qaStatus=PASS. A 200 that
++          # leaks anything else is a FAILED release, not a warning.
++          violations = [
++              p.get("id")
++              for p in products
++              if not (
++                  p.get("active") is True
++                  and p.get("workflowStatus") == "PUBLISHED"
++                  and p.get("qaStatus") == "PASS"
++              )
++          ]
++          assert not violations, (
++              f"Publication Gate violated, non-public products leaked: {violations[:10]}"
++          )
++
++          ids = [p.get("id") for p in products]
++          assert len(ids) == len(set(ids)), "Duplicate product ids in public payload."
++
++          print(
++              "Product Engine OK:",
++              f"count={len(products)}",
++              "publication-gate=PASS",
++          )
+           PY
                  ;;
                *)
-                 echo "::error::Unknown probe expectation: ${expected}"
+@@ -221,6 +296,7 @@ jobs:
+           probe "Apex homepage" "${SITE_URL}/" /tmp/home.html /tmp/home.hdr html
+           probe "Products page" "${SITE_URL}/products" /tmp/products.html /tmp/products-page.hdr html
+           probe "Products API" "${SITE_URL}/api/products" /tmp/products.json /tmp/products-api.hdr products-json
++          probe "Product Engine mirror" "${SITE_URL}/edge-api/products" /tmp/engine.json /tmp/engine.hdr engine-json
+           probe "www homepage" "${WWW_URL}/" /tmp/www-home.html /tmp/www-home.hdr html
+ 
+           echo "Production-domain smoke-check passed."

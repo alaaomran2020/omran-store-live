@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   applyOverridesToProducts,
   applyPublicationGate,
+  isPubliclyVisible,
+  parseOperationalMetadata,
   parseProductsCsv,
   parseQaStatus,
   parseWorkflowStatus,
@@ -62,7 +64,7 @@ const baseProduct = (overrides: Partial<Product> = {}): Product => ({
   qaStatus: "PASS",
   sourceDriveId: null,
   processedImage: null,
-  reviewReason: "",
+  reviewReason: null,
   rowIndex: 1,
   ...overrides,
 });
@@ -207,10 +209,10 @@ describe("بوابة النشر — 12 حالات Regression", () => {
 
 describe("بوابة النشر — سلوك إضافي (Fail-Closed)", () => {
   it("قيمة حالة غير معروفة → غير معروف (لا يُفترض PASS/PUBLISHED)", () => {
-    expect(parseQaStatus("maybe ok")).toBe("");
-    expect(parseQaStatus("")).toBe("");
-    expect(parseWorkflowStatus("on shelf")).toBe("");
-    expect(parseWorkflowStatus("")).toBe("");
+    expect(parseQaStatus("maybe ok")).toBeNull();
+    expect(parseQaStatus("")).toBeNull();
+    expect(parseWorkflowStatus("on shelf")).toBeNull();
+    expect(parseWorkflowStatus("")).toBeNull();
   });
 
   it("active=true وحدها لا تكفي للنشر", () => {
@@ -233,12 +235,12 @@ describe("بوابة النشر — سلوك إضافي (Fail-Closed)", () => {
     expect(products.map(p => p.id)).toEqual(["A"]);
   });
 
-  it("acceptsNEEDS_REVIEW مع active=false يبقى في التشخيص ولا يُنشر", () => {
+  it("NEEDS_REVIEW مع active=false يبقى في التشخيص ولا يُنشر", () => {
     const csv = sheet([
       publishedRow({
         0: "HOLD-1",
         6: "FALSE",
-        9: "NEEDS_REVIEW",
+        9: "REVIEW",
         10: "NEEDS_REVIEW",
         11: "1AaBbCcDdEeFfGgHhIiJj",
         12: "/products/held.webp",
@@ -248,7 +250,7 @@ describe("بوابة النشر — سلوك إضافي (Fail-Closed)", () => {
     expect(parseProductsCsv(csv)).toHaveLength(0);
     const diag = parseProductsCsv(csv, { includeNonPublished: true });
     expect(diag).toHaveLength(1);
-    expect(diag[0].workflowStatus).toBe("NEEDS_REVIEW");
+    expect(diag[0].workflowStatus).toBe("REVIEW");
     expect(diag[0].qaStatus).toBe("NEEDS_REVIEW");
     expect(diag[0].sourceDriveId).toBe("1AaBbCcDdEeFfGgHhIiJj");
     expect(diag[0].reviewReason).toContain("غير مطابقة");
@@ -267,7 +269,7 @@ describe("طبقة compatibility القديمة (product_prompt)", () => {
     const diag = parseProductsCsv(csv, { includeNonPublished: true });
     expect(diag).toHaveLength(1);
     expect(diag[0].qaStatus).toBe("PASS"); // legacy qa token مقبول كـ metadata
-    expect(diag[0].workflowStatus).toBe(""); // لكن ليس نشرًا
+    expect(diag[0].workflowStatus).toBeNull(); // لكن ليس نشرًا
     expect(diag[0].sourceDriveId).toBe("1AaBbCcDdEeFfGgHhIiJjKkLl");
     expect(diag[0].processedImage).toBe("product-raw-1.webp");
     expect(diag[0].image).toContain("thumbnail?id=1AaBbCcDdEeFfGgHhIiJjKkLl");
@@ -292,9 +294,101 @@ describe("applyPublicationGate", () => {
       baseProduct({ id: "B", qaStatus: "REVIEW" }),
       baseProduct({ id: "C", workflowStatus: "NEEDS_REVIEW" }),
       baseProduct({ id: "D", active: false }),
-      baseProduct({ id: "E", qaStatus: "" }),
-      baseProduct({ id: "F", workflowStatus: "" }),
+      baseProduct({ id: "E", qaStatus: null }),
+      baseProduct({ id: "F", workflowStatus: null }),
     ];
     expect(applyPublicationGate(catalog).map(p => p.id)).toEqual(["A"]);
+  });
+});
+
+describe("طبقة التوافق — parseOperationalMetadata", () => {
+  it("تفك metadata الاستيراد الفعلي كما هي في الشيت الحي", () => {
+    const meta = parseOperationalMetadata(
+      "source_drive_id=1I_QGGoYTxq7zdfd5UgWFReB7MS9Tg36U; qa=PASS; processed=product-omr-raw-001-main.webp"
+    );
+    expect(meta).toEqual({
+      sourceDriveId: "1I_QGGoYTxq7zdfd5UgWFReB7MS9Tg36U",
+      qaStatus: "PASS",
+      processedImage: "product-omr-raw-001-main.webp",
+      reviewReason: null,
+    });
+  });
+
+  it("reason= الموثقة تُرفق بسبب العزل (دليل لا اجتهاد)", () => {
+    const meta = parseOperationalMetadata(
+      "source_drive_id=abc123; qa=NEEDS_REVIEW; processed=p.webp; reason=possible duplicate/variant of OMR-RAW-013; uniqueness not proven"
+    );
+    expect(meta.qaStatus).toBe("NEEDS_REVIEW");
+    expect(meta.reviewReason).toContain("possible duplicate/variant of OMR-RAW-013");
+  });
+
+  it("نص وصفي حر (برومبت عادي) لا يُفهم كدليل تشغيلي", () => {
+    const meta = parseOperationalMetadata(
+      "سيارة رياضية حمراء على خلفية بيضاء داخل مستودع"
+    );
+    expect(meta.qaStatus).toBeNull();
+    expect(meta.sourceDriveId).toBeNull();
+  });
+
+  it("العمود الصريح qa_status يعلو طبقة التوافق دائمًا", () => {
+    const csv = sheet([publishedRow({ 0: "C1", 8: "qa=PASS", 10: "NEEDS_REVIEW" })]);
+    expect(parseProductsCsv(csv)).toHaveLength(0); // العمود هو القرار
+    const diag = parseProductsCsv(csv, { includeNonPublished: true });
+    expect(diag[0].qaStatus).toBe("NEEDS_REVIEW");
+  });
+
+  it("الفارغ فقط في العمود يسمح بوراثة دليل الـmetadata (qa=PASS)", () => {
+    // هذا هو شكل الشيت الحي اليوم: qa=PASS داخل product_prompt
+    const csv = sheet([publishedRow({ 0: "RAW-1", 8: "source_drive_id=1X0k; qa=PASS; processed=p.webp" })]);
+    expect(parseProductsCsv(csv).map(p => p.id)).toEqual(["RAW-1"]);
+    const [product] = parseProductsCsv(csv);
+    expect(product.qaStatus).toBe("PASS");
+    expect(product.sourceDriveId).toBe("1X0k");
+    expect(product.processedImage).toBe("p.webp");
+  });
+});
+
+describe("كشف تكرار الأسماء بين المنتجات العامة", () => {
+  it("اسمان متطابقان بين مرشحين للنشر → كلاهما معزول duplicate_name", () => {
+    const csv = sheet([
+      publishedRow({ 0: "D1", 1: "سيارة سباق بالريموت" }),
+      publishedRow({ 0: "D2", 1: "سيارة سباق بالريموت" }),
+      publishedRow({ 0: "D3", 1: "منتج سليم" }),
+    ]);
+    expect(parseProductsCsv(csv).map(p => p.id)).toEqual(["D3"]);
+    const diag = parseProductsCsv(csv, { includeInactive: true });
+    expect(diag.find(p => p.id === "D1")!.reviewReason).toBe("duplicate_name");
+    expect(diag.find(p => p.id === "D2")!.reviewReason).toBe("duplicate_name");
+  });
+
+  it("تطبيع عربي: التشكيل/التطويل/الحالة لا تخفي التكرار", () => {
+    const csv = sheet([
+      publishedRow({ 0: "E1", 1: "عـروسة أميـرة" }),
+      publishedRow({ 0: "E2", 1: "عروسة  أميرة" }),
+    ]);
+    expect(parseProductsCsv(csv)).toHaveLength(0);
+  });
+
+  it("تكرار الاسم مع صف غير عام لا يعزل المنتج الموثق", () => {
+    // صف legacy بنفس اسم منتج موثق: الlegacy معزول بسببه الخاص، والموثق يبقى عامًا
+    const csv = sheet([
+      publishedRow({ 0: "F1", 1: "سيارة سباق بالريموت", 9: "", 10: "" }),
+      publishedRow({ 0: "F2", 1: "سيارة سباق بالريموت" }),
+    ]);
+    expect(parseProductsCsv(csv).map(p => p.id)).toEqual(["F2"]);
+    const diag = parseProductsCsv(csv, { includeInactive: true });
+    expect(diag.find(p => p.id === "F1")!.reviewReason).toBe("missing_workflow_status");
+  });
+});
+
+describe("عقد الحارس isPubliclyVisible / applyPublicationGate", () => {
+  it("ثلاثي المفاتيح صراحةً — أي خلل يعني غير عام", () => {
+    expect(isPubliclyVisible(baseProduct())).toBe(true);
+    expect(isPubliclyVisible(baseProduct({ active: false }))).toBe(false);
+    expect(isPubliclyVisible(baseProduct({ workflowStatus: "REVIEW" }))).toBe(false);
+    expect(isPubliclyVisible(baseProduct({ workflowStatus: null }))).toBe(false);
+    expect(isPubliclyVisible(baseProduct({ qaStatus: "NEEDS_REVIEW" }))).toBe(false);
+    expect(isPubliclyVisible(baseProduct({ qaStatus: null }))).toBe(false);
+    expect(isPubliclyVisible(baseProduct({ qaStatus: "FAIL" }))).toBe(false);
   });
 });

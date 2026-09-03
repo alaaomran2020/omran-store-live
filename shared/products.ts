@@ -18,28 +18,6 @@
 // النوع الموحّد
 // ---------------------------------------------------------------------------
 
-/**
- * حالة نشر المنتج (first-class field من الشيت).
- * فقط `PUBLISHED` تستوفي شرط النشر؛ أي قيمة أخرى (فارغة/غير معروفة) تُعامل
- * كغير منشورة (Fail-Closed).
- */
-export type ProductWorkflowStatus =
-  | ""
-  | "PUBLISHED"
-  | "REVIEW"
-  | "NEEDS_REVIEW"
-  | "REJECTED"
-  | "DRAFT";
-
-/** حالة مراجعة الجودة (first-class field من الشيت). فقط `PASS` تُنشر. */
-export type ProductQaStatus =
-  | ""
-  | "PASS"
-  | "NEEDS_REVIEW"
-  | "REVIEW"
-  | "PENDING"
-  | "FAILED";
-
 /** منتج واحد بعد التطبيع — مطابق تمامًا لأعمدة Google Sheet. */
 export type Product = {
   /** عمود `id`؛ يُولَّد من رقم الصف إن كان فارغًا. فريد دائمًا. */
@@ -63,24 +41,42 @@ export type Product = {
   /** عمود `product_prompt` — تشغيلي فقط (تجهيز الصورة بالـAI)، لا يُعرض للزائر. */
   productPrompt: string;
   /**
-   * عمود `workflow_status` — أول-فئة. حالة نشر المنتج من الشيت.
-   * لا تُشتق من product_prompt مطلقًا (Fail-Closed).
+   * عمود `workflow_status` — حالة النشر التشغيلية (First-Class Field).
+   * `REVIEW / PUBLISHED / REJECTED` (و`DRAFT/ERROR` محجوزة).
+   * `null` = العمود غائب أو بقيمة غير معروفة → **ليس** PUBLISHED (Fail-Closed).
    */
-  workflowStatus: ProductWorkflowStatus;
+  workflowStatus: WorkflowStatus | null;
   /**
-   * عمود `qa_status` — أول-فئة. حالة مراجعة الجودة من الشيت.
-   * لا يُفترض PASS عند غيابها (Fail-Closed).
+   * عمود `qa_status` — قرار الجودة (First-Class Field): `PASS / NEEDS_REVIEW / FAIL`.
+   * `null` = لا دليل QA (عمود غائب + لا `qa=` في بيانات product_prompt
+   * التشغيلية القديمة) → **ليس** PASS (Fail-Closed).
    */
-  qaStatus: ProductQaStatus;
-  /** عمود `source_drive_id` — مُعرّف ملف/صورة المصدر في Google Drive (إن وُثّق). */
+  qaStatus: QaStatus | null;
+  /**
+   * معرّف ملف Google Drive الأصلي للصورة (من بيانات `source_drive_id=` التشغيلية)
+   * — دليل المصدر. `null` إن لم يوجد.
+   */
   sourceDriveId: string | null;
-  /** عمود `processed_image` — رابط/مسار الصورة المعالَجة المعتمدة (إن وُثّق). */
+  /**
+   * اسم ملف الصورة المعالَجة (من بيانات `processed=` التشغيلية) — دليل فقط،
+   * **ليس** رابط عرض؛ لا يُشتق منه أي URL غير مؤكد.
+   */
   processedImage: string | null;
-  /** عمود `review_reason` — سبب المراجعة/الرفض (تشخيصي، لا يُعرض للزائر). */
-  reviewReason: string;
+  /**
+   * سبب عدم النشر للمنتجات غير العامة (admin/diagnostics):
+   * `inactive` / `missing_workflow_status` / `workflow_status_review` / …
+   * `null` للمنتجات العامة. لا يُخترع سبب — يُشتق من الحقول فقط.
+   */
+  reviewReason: string | null;
   /** رقم الصف في الشيت (1 = أول صف بيانات) — يحفظ الترتيب الطبيعي. */
   rowIndex: number;
 };
+
+/** حالات النشر المعتمدة في عمود `workflow_status`. */
+export type WorkflowStatus = "REVIEW" | "PUBLISHED" | "REJECTED" | "DRAFT" | "ERROR";
+
+/** قرارات الجودة المعتمدة في عمود `qa_status`. */
+export type QaStatus = "PASS" | "NEEDS_REVIEW" | "FAIL";
 
 export type ProductsStatus = "ok" | "not_configured" | "error";
 
@@ -92,7 +88,12 @@ export type ProductsPayload = {
   fetchedAt: string;
 };
 
-/** أسماء أعمدة الشيت بالترتيب المتفق عليه (تُستخدم أيضًا كترتيب افتراضي بلا رأس). */
+/**
+ * أسماء أعمدة الشيت بالترتيب المتفق عليه (تُستخدم أيضًا كترتيب افتراضي بلا رأس).
+ * الأعمدة التشغيلية `workflow_status` و`qa_status` مُلحقة في النهاية فقط،
+ * فتبقى مواضع الأعمدة التسعة الأصلية ثابتة للشيتات القديمة بلا صف عناوين
+ * (توافق رجعي كامل).
+ */
 export const PRODUCT_COLUMNS = [
   "id",
   "name",
@@ -248,93 +249,147 @@ export function parseSortOrder(raw: string | undefined): number | null {
 }
 
 // ---------------------------------------------------------------------------
-// 3-bis) حقول النشر First-Class (workflow_status / qa_status / source evidence)
+// 2.5) الحالة التشغيلية (Publication Gate)
 //
-// Fail-Closed هو القاعدة الوحيدة:
-//   - غياب القيمة أو قيمة غير معروفة → "" (تُستبعد لاحقًا من Public API).
-//   - لا نعرّف "منشور" افتراضيًا لأي صف — حتى لو كان active=true.
+// القاعدة الرسمية للنشر (Fail-Closed — لا يوجد مسار افتراضي مفتوح):
+//   PUBLIC = active === true
+//            AND workflow_status === "PUBLISHED"
+//            AND qa_status === "PASS"
+// غياب أي مفتاح = غير منشور. لا يُشتق PASS أو PUBLISHED من الفراغ أبدًا.
 // ---------------------------------------------------------------------------
 
-const WORKFLOW_STATUSES: ReadonlySet<string> = new Set([
-  "PUBLISHED",
+const WORKFLOW_STATUSES: readonly WorkflowStatus[] = [
   "REVIEW",
-  "NEEDS_REVIEW",
+  "PUBLISHED",
   "REJECTED",
   "DRAFT",
-]);
+  "ERROR",
+];
 
-/** يحوّل نص workflow_status إلى قيمة معتمدة؛ غير المعروف → "" (Fail-Closed). */
+const QA_ALIASES: Record<string, QaStatus> = {
+  pass: "PASS",
+  ok: "PASS",
+  approved: "PASS",
+  needs_review: "NEEDS_REVIEW",
+  review: "NEEDS_REVIEW",
+  "needs-review": "NEEDS_REVIEW",
+  pending: "NEEDS_REVIEW",
+  fail: "FAIL",
+  failed: "FAIL",
+  reject: "FAIL",
+  rejected: "FAIL",
+};
+
+const normalizeKey = (value: string): string =>
+  toLatinDigits(value)
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+
+/**
+ * `workflow_status`: يقبل REVIEW/PUBLISHED/REJECTED/DRAFT/ERROR بأي حالة أحرف
+ * أو فواصل. أي قيمة أخرى — أو فراغ — → `null` (**ليس** PUBLISHED).
+ */
 export function parseWorkflowStatus(
   raw: string | undefined
-): ProductWorkflowStatus {
-  const text = clean(raw).toUpperCase();
-  if (text === "") return "";
-  return WORKFLOW_STATUSES.has(text)
-    ? (text as ProductWorkflowStatus)
-    : "";
-}
-
-const QA_STATUSES: ReadonlySet<string> = new Set([
-  "PASS",
-  "NEEDS_REVIEW",
-  "REVIEW",
-  "PENDING",
-  "FAILED",
-]);
-
-/** يحوّل نص qa_status إلى قيمة معتمدة؛ غير المعروف → "" (Fail-Closed). */
-export function parseQaStatus(raw: string | undefined): ProductQaStatus {
-  const text = clean(raw).toUpperCase();
-  if (text === "") return "";
-  return QA_STATUSES.has(text) ? (text as ProductQaStatus) : "";
+): WorkflowStatus | null {
+  const text = normalizeKey(clean(raw)).toUpperCase();
+  if (text === "") return null;
+  return (WORKFLOW_STATUSES as readonly string[]).includes(text)
+    ? (text as WorkflowStatus)
+    : null;
 }
 
 /**
- * استخراج tokens قديمة من product_prompt (طبقة compatibility محافظة فقط):
- *   source_drive_id=<id>; qa=PASS; processed=file.webp
- *
- * تُستخدم فقط عند غياب العمود First-Class المقابل، وكل قيمة تُمرَّر عبر نفس
- * مصادقة القيم (parseQaStatus). لا تُشتق workflow_status من هنا أبدًا:
- * النشر يتطلب عمود `workflow_status` صريحًا في الشيت.
+ * `qa_status`: يقبل PASS/NEEDS_REVIEW/FAIL ومرادفاتها.
+ * أي قيمة أخرى — أو فراغ — → `null` (**ليس** PASS).
  */
-export function parseLegacyPromptMetadata(
-  productPrompt: string
-): {
+export function parseQaStatus(raw: string | undefined): QaStatus | null {
+  const text = normalizeKey(clean(raw));
+  if (text === "") return null;
+  return QA_ALIASES[text] ?? null;
+}
+
+/**
+ * طبقة توافق محافظة (مؤقتة) لبيانات `product_prompt` التشغيلية القديمة.
+ *
+ * الاستيراد الآلي السابق كان يكتب حالة التشغيل كأزواج `key=value;` داخل عمود
+ * `product_prompt` نفسه، بالشكل الموثق:
+ *   `source_drive_id=<ID>; qa=PASS; processed=<file>; reason=<نص السبب>`
+ *
+ * القواعد:
+ *   - تُقرأ المفاتيح المعروفة فقط؛ أي نص حر (برومبت وصفي عادي) لا ينتج شيئًا.
+ *   - هذه طبقة سقوط فقط: عمود `qa_status` الصريح (إن وُجد) يعلوها دائمًا.
+ *   - لا تُخترع أي قيمة: لا `qa=` → لا رأي جودة → `null` (غير منشور).
+ */
+export type OperationalMetadata = {
   sourceDriveId: string | null;
-  qaStatus: ProductQaStatus;
+  qaStatus: QaStatus | null;
   processedImage: string | null;
-} {
-  const prompt = clean(productPrompt);
-  const sourceDriveId =
-    prompt.match(/source_drive_id=([A-Za-z0-9_-]{10,})/)?.[1] ?? null;
-  const processedImage =
-    prompt.match(/processed=([^\s;]+)/)?.[1] ?? null;
-  const qaStatus =
-    parseQaStatus(prompt.match(/qa=(PASS|NEEDS_REVIEW|REVIEW|PENDING|FAILED)/i)?.[1]) ??
-    "";
-  return { sourceDriveId, qaStatus, processedImage };
+  reviewReason: string | null;
+};
+
+export function parseOperationalMetadata(
+  prompt: string | undefined | null
+): OperationalMetadata {
+  const empty: OperationalMetadata = {
+    sourceDriveId: null,
+    qaStatus: null,
+    processedImage: null,
+    reviewReason: null,
+  };
+  const text = clean(prompt ?? "");
+  if (text === "" || !text.includes("=")) return empty;
+
+  const out: OperationalMetadata = { ...empty };
+  for (const part of text.split(";")) {
+    const eq = part.indexOf("=");
+    if (eq <= 0) continue;
+    const key = normalizeKey(part.slice(0, eq));
+    const value = part.slice(eq + 1).trim();
+    if (value === "") continue;
+    if (key === "source_drive_id" || key === "source_driveid") {
+      out.sourceDriveId = value;
+    } else if (key === "qa") {
+      out.qaStatus = parseQaStatus(value);
+    } else if (key === "processed" || key === "processed_image") {
+      out.processedImage = value;
+    } else if (key === "reason" || key === "review_reason") {
+      out.reviewReason = value;
+    }
+  }
+  return out;
 }
 
 /**
- * بوابة النشر النهائية — آخر خطوة قبل أي Public response.
- *
- * PUBLIC PRODUCT = active === true
- *                  AND workflowStatus === "PUBLISHED"
- *                  AND qaStatus === "PASS"
- *
- * كل شيء آخر يُستبعد. تعمل فوق أي مجموعة منتجات (بعد Overrides أيضًا) ولا
- * يمكن لأي تجاوز تجاوزها لأنها لا تقبل حقول نشر — فقط تصفية صارمة.
+ * المفتاح المُطبَّع لكشف تكرار أسماء المنتجات بين المرشحين للنشر:
+ * بلا مسافات زائدة، بلا تشكيل/تطويل عربي، بلا حساسية لحالة الأحرف.
  */
-export function applyPublicationGate(products: readonly Product[]): Product[] {
-  return products.filter(
-    product =>
-      product.active === true &&
-      product.workflowStatus === "PUBLISHED" &&
-      product.qaStatus === "PASS"
+export function normalizeProductName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+/** هل يحقق المنتج بوابة النشر الثلاثية؟ (active + PUBLISHED + PASS) */
+export function isPubliclyVisible(product: Product): boolean {
+  return (
+    product.active === true &&
+    product.workflowStatus === "PUBLISHED" &&
+    product.qaStatus === "PASS"
   );
 }
 
-// الأعمدة التشغيلية تُقرأ بأسمائها من خريطة العناوين — لا فهارس ثابتة مطلوبة.
+/**
+ * Final Publication Guard — يُطبَّق **بعد** أي تجاوزات مدراء وقبل إرسال أي
+ * استجابة API عامة. لا يمكن لأي Override تحويل منتج غير عام (NEEDS_REVIEW /
+ * REVIEW / qaStatus != PASS / غير فعّال) إلى منتج عام عبر هذه البوابة.
+ */
+export function applyPublicationGate(products: readonly Product[]): Product[] {
+  return products.filter(isPubliclyVisible);
+}
 
 // ---------------------------------------------------------------------------
 // 3) صور Google Drive
@@ -452,28 +507,30 @@ const HEADER_ALIASES: Record<string, (typeof PRODUCT_COLUMNS)[number]> = {
   prompt: "product_prompt",
   البرومبت: "product_prompt",
   workflow_status: "workflow_status",
+  workflowstatus: "workflow_status",
   workflow: "workflow_status",
-  workflow_status_en: "workflow_status",
+  publish_status: "workflow_status",
   حالة_النشر: "workflow_status",
-  حالة_الموافقة: "workflow_status",
+  "حالة النشر": "workflow_status",
+  المرحلة: "workflow_status",
   qa_status: "qa_status",
   qa: "qa_status",
-  qa_status_en: "qa_status",
-  حالة_المراجعة: "qa_status",
-  حالة_الجودة: "qa_status",
+  quality_status: "qa_status",
+  quality: "qa_status",
+  "حالة الجودة": "qa_status",
+  الجودة: "qa_status",
   source_drive_id: "source_drive_id",
-  drive_id: "source_drive_id",
-  source_drive_file_id: "source_drive_id",
-  معرف_المصدر: "source_drive_id",
+  sourcedriveid: "source_drive_id",
+  source_id: "source_drive_id",
+  المصدر: "source_drive_id",
   processed_image: "processed_image",
-  processed_image_url: "processed_image",
+  processedimage: "processed_image",
   processed: "processed_image",
-  الصورة_المعالجة: "processed_image",
+  المعالجة: "processed_image",
   review_reason: "review_reason",
-  hold_reason: "review_reason",
-  reason: "review_reason",
+  reviewreason: "review_reason",
   سبب_المراجعة: "review_reason",
-  سبب_الرفض: "review_reason",
+  "سبب المراجعة": "review_reason",
 };
 
 /** هل يبدو الصف الأول رأسًا للأعمدة؟ (وإلا نفترض الترتيب القياسي). */
@@ -501,17 +558,16 @@ const DEFAULT_INDEX: Record<string, number> = Object.fromEntries(
 /**
  * يحوّل نص CSV إلى منتجات مطبَّعة.
  *
- * متسامح عمدًا: صف بلا اسم، أو بأعمدة ناقصة/زائدة، أو بسعر غير صالح، أو
- * برابط صورة تالف — لا يوقف بقية الكتالوج.
+ * وضعان:
+ *   - **الوضع العام (الافتراضي)**: بوابة النشر الثلاثية Fail-Closed — لا يُعاد
+ *     إلا ما يحقق `active=true` + `workflow_status=PUBLISHED` + `qa_status=PASS`
+ *     (مع دليل QA من طبقة توافق `product_prompt` التشغيلية القديمة إن وُجد).
+ *     أي مفتاح غائب أو بقيمة أخرى → المنتج **غير عام**.
+ *   - **وضع الإدارة/التشخيص** (`includeInactive: true`): كل الصفوف بلا استثناء
+ *     مع `reviewReason` يوضح سبب عدم النشر — لمراجعة المالك لا للزوار.
  *
- * الوضع الافتراضي = PUBLIC MODE: لا يعيد إلا
- *   active === true AND workflow_status === "PUBLISHED" AND qa_status === "PASS"
- * أي صف بلا حالة نشر صريحة أو بلا PASS يُستبعد (Fail-Closed).
- *
- * وضع التشخيص/الإدارة (يقرأ كل الصفوف بلا بوابة النشر):
- *   - `includeInactive: true`  (متوافق مع الاستخدام التاريخي للاختبار)
- *   - `includeNonPublished: true`
- * يستخدمان فقط في admin/diagnostics — أبدًا في Public API.
+ * متسامح عمدًا: صف بلا اسم، أو بأعمدة ناقصة/زائدة، أو بسعر غير صالح، أو برابط
+ * صورة تالف — لا يوقف بقية الكتالوج.
  */
 export function parseProductsCsv(
   csv: string,
@@ -529,8 +585,6 @@ export function parseProductsCsv(
     return position === undefined ? "" : clean(row[position]);
   };
 
-  const diagnostics =
-    options.includeInactive === true || options.includeNonPublished === true;
   const seen = new Set<string>();
   const products: Product[] = [];
 
@@ -541,7 +595,6 @@ export function parseProductsCsv(
     if (name === "") return;
 
     const active = parseActive(at(row, "active"));
-    if (!diagnostics && !active) return;
 
     const rawId = at(row, "id");
     let id = rawId === "" ? `row-${rowIndex}` : rawId;
@@ -550,13 +603,18 @@ export function parseProductsCsv(
 
     const imageSource = at(row, "image") || null;
     const productPrompt = at(row, "product_prompt");
-    // أول-فئة من الشيت؛ الطبقة القديمة من product_prompt تُستخدم فقط عندما
-    // يكون العمود الفعلي فارغًا، ولا تمنح أبدًا حالة نشر.
+
+    // الحالة التشغيلية: الأعمدة الصريحة أولًا (First-Class)، ثم طبقة توافق
+    // metadata القديمة داخل product_prompt — بلا اختراع أي قيمة.
     const workflowStatus = parseWorkflowStatus(at(row, "workflow_status"));
-    const rawQa = at(row, "qa_status");
-    const legacy = parseLegacyPromptMetadata(productPrompt);
-    // عمود غير فارغ لكن قيمته غير معتمدة = غير معروف (لا نكمل وراءه بالطبقة القديمة).
-    const qaStatus = rawQa === "" ? legacy.qaStatus : parseQaStatus(rawQa);
+    const metadata = parseOperationalMetadata(productPrompt);
+    const qaStatus =
+      parseQaStatus(at(row, "qa_status")) ?? metadata.qaStatus;
+    const sourceDriveId = at(row, "source_drive_id") || metadata.sourceDriveId;
+    const processedImage =
+      at(row, "processed_image") || metadata.processedImage;
+    const evidenceReason =
+      at(row, "review_reason") || metadata.reviewReason;
 
     products.push({
       id,
@@ -571,15 +629,63 @@ export function parseProductsCsv(
       productPrompt,
       workflowStatus,
       qaStatus,
-      sourceDriveId: at(row, "source_drive_id") || legacy.sourceDriveId,
-      processedImage: at(row, "processed_image") || legacy.processedImage,
-      reviewReason: at(row, "review_reason"),
+      sourceDriveId,
+      processedImage,
+      // يبدأ كالدليل الموثق (review_reason/reason=…) ثم يُعاد تركيبه أدناه
+      reviewReason: evidenceReason,
       rowIndex,
     });
   });
 
-  const sorted = sortProducts(products);
-  return diagnostics ? sorted : applyPublicationGate(sorted);
+  // ---- كشف تكرار الأسماء بين المرشحين للنشر فقط (Fail-Closed):
+  // نسختان عامتان بنفس الاسم = شك في الهوية/التكرار → تُعزل **كلها** للمراجعة
+  // ولا يُخمَّن أيها "الصحيح". التكرار مع صفوف غير عامة أصلاً لا يضر المنتج
+  // الموثق (الصف غير العام معزول بسببه الخاص).
+  const publicCandidates = products.filter(
+    p => p.active && p.workflowStatus === "PUBLISHED" && p.qaStatus === "PASS"
+  );
+  const nameCounts = new Map<string, number>();
+  for (const product of publicCandidates) {
+    const key = normalizeProductName(product.name);
+    nameCounts.set(key, (nameCounts.get(key) ?? 0) + 1);
+  }
+
+  for (const product of products) {
+    const gatePasses =
+      product.active &&
+      product.workflowStatus === "PUBLISHED" &&
+      product.qaStatus === "PASS";
+    const duplicateName =
+      gatePasses &&
+      (nameCounts.get(normalizeProductName(product.name)) ?? 0) > 1;
+
+    if (gatePasses && !duplicateName) continue; // عام — reviewReason = null
+
+    // سبب ميكانيكي مشتق من الحقول فقط (بلا اختراع)
+    let reason: string;
+    if (!product.active) reason = "inactive";
+    else if (product.workflowStatus === null) reason = "missing_workflow_status";
+    else if (product.workflowStatus !== "PUBLISHED")
+      reason = `workflow_status_${product.workflowStatus.toLowerCase()}`;
+    else if (product.qaStatus === null) reason = "missing_qa_status";
+    else if (product.qaStatus !== "PASS")
+      reason = `qa_status_${product.qaStatus.toLowerCase()}`;
+    else reason = "duplicate_name";
+
+    // سبب موثق (عمود review_reason أو reason=… في الـmetadata القديمة) يُحتفظ
+    // به من مرحلة التحليل ويُضم كما هو — دليل لا اجتهاد
+    const evidence = product.reviewReason;
+    product.reviewReason = evidence ? `${reason} — ${evidence}` : reason;
+  }
+
+  // الوضع العام: الصفوف العامة فقط. وضع الإدارة/التشخيص: كل شيء للمراجعة.
+  const diagnostics =
+    options.includeInactive === true || options.includeNonPublished === true;
+  const visible = diagnostics
+    ? products
+    : products.filter(p => p.reviewReason === null);
+
+  return sortProducts(visible);
 }
 
 /**
@@ -758,10 +864,11 @@ export type OverridesManifest = {
 
 /**
  * يدمج تجاوزات المدراء فوق كتالوج الشيت. الحقل `null`/غير الموجود في التجاوز
- * يعني "بلا تعديل" فيبقى من الشيت. `active` يمكنه إخفاء منتج (false) أو
- * نظريًا إظهاره (true)، لكن Final Publication Guard يُطبَّق بعد الدمج فورًا:
- * لا يستطيع Override تحويل NEEDS_REVIEW / REVIEW / qa≠PASS / بلا PUBLISHED
- * إلى منتج Public — التجاوز ليس مجالًا لبيانات النشر.
+ * يعني "بلا تعديل" فيبقى من الشيت. `active` يمكنه إخفاء منتج (false)؛ أما
+ * "إظهار" منتج (true) فلا يمكنه تجاوز بوابة النشر: حقول التشغيل
+ * (workflowStatus/qaStatus/reviewReason) لا يمسّها التجاوز إطلاقًا، ويجب أن
+ * يلي هذا الدمجَ دائمًا `applyPublicationGuard` قبل أي استجابة API عامة.
+ * المنتجات غير الموجودة في الشيت تُتجاهل (لا يُخترع منتج).
  */
 export function applyOverridesToProducts(
   products: Product[],
@@ -778,8 +885,7 @@ export function applyOverridesToProducts(
       out.push(product);
       continue;
     }
-    // إخفاء عبر اللوحة: يُحذف من الكتالوج العام (يبقى في الـadmin بعلامة —
-    // Gate يُطبق لاحقًا على المسار العام فقط، واللوحة تحتاج رؤية المخفي).
+    // إخفاء عبر اللوحة: يُحذف من الكتالوج العام (يبقى في الـadmin بعلامة).
     if (o.active === false) continue;
 
     out.push({
@@ -794,9 +900,6 @@ export function applyOverridesToProducts(
       active: o.active === true ? true : product.active,
     });
   }
-  // ملاحظة أمنية: هذه الدالة دمج فقط (تُستخدم أيضًا في admin/diagnostics).
-  // Final Publication Guard تُطبق على المسار العام بعدها — worker/index.ts
-  // و fetchProductsPayload (وضع public) — ولا يمكن لأي Override اجتيازها.
   return out;
 }
 
