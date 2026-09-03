@@ -1,24 +1,18 @@
 import type { Product } from "@shared/products";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 
-/**
- * تنسيق العرض ورسالة واتساب — دوال نقية قابلة للاختبار (productFormat.test.ts).
- */
-
-/** أرقام لاتينية مع فاصل آلاف عربي مصري + العملة، مثل: 1,250 ج.م */
 const numberFormatter = new Intl.NumberFormat("ar-EG-u-nu-latn", {
   maximumFractionDigits: 2,
 });
 
 export const CURRENCY_LABEL = "ج.م";
+export const INQUIRY_PRICE_LABEL = "للاستفسار والكميات";
 
-/** السعر الفارغ/غير الصالح لا يكسر البطاقة: يظهر "السعر عند الطلب". */
 export function formatPrice(price: number | null): string {
-  if (price === null || !Number.isFinite(price)) return "السعر عند الطلب";
+  if (price === null || !Number.isFinite(price)) return INQUIRY_PRICE_LABEL;
   return `${numberFormatter.format(price)} ${CURRENCY_LABEL}`;
 }
 
-/** رقم واتساب المتجر: من متغيّر البيئة إن وُجد، وإلا من ثابت الموقع الحالي. */
 export function whatsappNumber(): string {
   const fromEnv =
     (import.meta.env.VITE_WHATSAPP_NUMBER as string | undefined) ?? "";
@@ -28,26 +22,28 @@ export function whatsappNumber(): string {
   );
 }
 
-/**
- * نص الاستفسار — يستخدم اسم المنتج كما هو مكتوب في Google Sheets حرفيًا.
- * يُرجع null إذا لم يُضبط رقم واتساب (فيختفي الزر بدل أن يقود لرابط مكسور).
- */
 export function buildWhatsAppUrl(
-  product: Pick<Product, "name" | "price">,
+  product: Pick<Product, "id" | "name" | "price" | "category">,
   options: { number?: string; pageUrl?: string } = {}
 ): string | null {
   const number = (options.number ?? whatsappNumber()).replace(/[^\d]/g, "");
   if (!number) return null;
 
-  const lines = [`مرحبًا، أريد الاستفسار عن منتج: ${product.name}`];
-  if (product.price !== null)
-    lines.push(`السعر المعروض: ${formatPrice(product.price)}`);
-  if (options.pageUrl) lines.push(options.pageUrl);
+  const lines = [
+    `مرحبًا، أريد الاستفسار عن المنتج: ${product.name}`,
+    `كود المنتج: ${product.id}`,
+  ];
+  if (product.category) lines.push(`التصنيف: ${product.category}`);
+  lines.push(
+    product.price === null
+      ? INQUIRY_PRICE_LABEL
+      : `السعر المعروض: ${formatPrice(product.price)}`
+  );
+  if (options.pageUrl) lines.push(`رابط المنتج: ${options.pageUrl}`);
 
   return `https://wa.me/${number}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
-/** رابط مباشر لبطاقة منتج (يفتح نافذة التفاصيل عند الزيارة). */
 export function productPermalink(productId: string, origin?: string): string {
   const base =
     origin ??
