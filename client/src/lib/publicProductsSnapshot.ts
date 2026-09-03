@@ -3,14 +3,13 @@ import type { Product } from "@shared/products";
 /**
  * Last-known-good public catalog snapshot.
  *
- * This is deliberately small and fail-closed: only products that were verified
- * as active=true + workflow_status=PUBLISHED + qa_status=PASS are included.
- * The live API / edge mirror / published Google Sheet remain authoritative and
- * are attempted first. This snapshot exists only to prevent the storefront from
- * collapsing to an empty catalog when Cloudflare challenges or upstream network
- * failures temporarily block every live source.
+ * Only products verified as active=true + workflow_status=PUBLISHED + qa_status=PASS
+ * are included. Live API / edge mirror / published Google Sheet remain authoritative
+ * and are attempted first. The snapshot prevents a temporary Cloudflare/upstream
+ * outage from collapsing the storefront to an empty catalog.
  *
- * Source of truth: automation/db-publication-plan-2026-09-03.csv
+ * Source of truth: Omran Trading Master Database / products sheet.
+ * Visual QA expanded on 2026-09-03 for OMR-RAW-001..005.
  */
 export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
   {
@@ -30,7 +29,7 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     sourceDriveId: null,
     processedImage: "/products/processed/product-kitchen-46pcs-main.webp",
     reviewReason: null,
-    rowIndex: 2,
+    rowIndex: 1,
   },
   {
     id: "OMR-IG-HC-104",
@@ -49,7 +48,7 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     sourceDriveId: null,
     processedImage: "/products/processed/product-home-chef-104pcs-main.webp",
     reviewReason: null,
-    rowIndex: 3,
+    rowIndex: 2,
   },
   {
     id: "OMR-IG-SQ-01",
@@ -68,6 +67,101 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     sourceDriveId: null,
     processedImage: "/products/processed/product-ot-00001-main.webp",
     reviewReason: null,
+    rowIndex: 3,
+  },
+  {
+    id: "OMR-RAW-001",
+    name: "محلول فقاعات صابون",
+    price: null,
+    category: "ألعاب خارجية وفقاعات",
+    description:
+      "محلول فقاعات صابون للأطفال بعبوة 250 مل كما هو ظاهر على العبوة، مناسب لألعاب الفقاعات والأنشطة الخارجية.",
+    image: "https://drive.google.com/thumbnail?id=1dtiEbbptINTXxtQAwpkKpI2fxBAxYbLm&sz=w1000",
+    imageSource: "https://drive.google.com/uc?export=view&id=1dtiEbbptINTXxtQAwpkKpI2fxBAxYbLm",
+    active: true,
+    sortOrder: 5,
+    productPrompt: "",
+    workflowStatus: "PUBLISHED",
+    qaStatus: "PASS",
+    sourceDriveId: "1I_QGGoYTxq7zdfd5UgWFReB7MS9Tg36U",
+    processedImage: "https://drive.google.com/uc?export=view&id=1dtiEbbptINTXxtQAwpkKpI2fxBAxYbLm",
+    reviewReason: null,
     rowIndex: 4,
+  },
+  {
+    id: "OMR-RAW-002",
+    name: "حقيبة رسم وتلوين زرقاء",
+    price: null,
+    category: "ألعاب تعليمية وفنية",
+    description:
+      "حقيبة رسم وتلوين زرقاء تضم مجموعة متنوعة من أقلام التلوين والألوان وأدوات الرسم مرتبة داخل حقيبة.",
+    image: "https://drive.google.com/thumbnail?id=1ORWMwfpwHgF-Usqg1oBvzCx4FIVhj18T&sz=w1000",
+    imageSource: "https://drive.google.com/uc?export=view&id=1ORWMwfpwHgF-Usqg1oBvzCx4FIVhj18T",
+    active: true,
+    sortOrder: 6,
+    productPrompt: "",
+    workflowStatus: "PUBLISHED",
+    qaStatus: "PASS",
+    sourceDriveId: "1Sdozgd1CS2oAtJcUN-fjIhQzmAq_AuVl",
+    processedImage: "https://drive.google.com/uc?export=view&id=1ORWMwfpwHgF-Usqg1oBvzCx4FIVhj18T",
+    reviewReason: null,
+    rowIndex: 5,
+  },
+  {
+    id: "OMR-RAW-003",
+    name: "حقيبة رسم وتلوين وردية",
+    price: null,
+    category: "ألعاب تعليمية وفنية",
+    description:
+      "حقيبة رسم وتلوين وردية تضم مجموعة متنوعة من أقلام التلوين والألوان وأدوات الرسم مرتبة داخل حقيبة.",
+    image: "https://drive.google.com/thumbnail?id=13TDSnLvR07wTBesPQcHb6jTZYtjIxwKT&sz=w1000",
+    imageSource: "https://drive.google.com/uc?export=view&id=13TDSnLvR07wTBesPQcHb6jTZYtjIxwKT",
+    active: true,
+    sortOrder: 7,
+    productPrompt: "",
+    workflowStatus: "PUBLISHED",
+    qaStatus: "PASS",
+    sourceDriveId: "1pM9lcH17V7pCw9l_6_hC4hPrPoDCNZVn",
+    processedImage: "https://drive.google.com/uc?export=view&id=13TDSnLvR07wTBesPQcHb6jTZYtjIxwKT",
+    reviewReason: null,
+    rowIndex: 6,
+  },
+  {
+    id: "OMR-RAW-004",
+    name: "بيانو أطفال بشكل كلب",
+    price: null,
+    category: "ألعاب موسيقية",
+    description:
+      "بيانو أطفال بتصميم كلب لطيف مع مفاتيح موسيقية وعناصر تفاعلية ظاهرة بالعبوة.",
+    image: "https://drive.google.com/thumbnail?id=1SZxh2FDS3GOpt9RkBDdg9R1Vv0ecI4oZ&sz=w1000",
+    imageSource: "https://drive.google.com/uc?export=view&id=1SZxh2FDS3GOpt9RkBDdg9R1Vv0ecI4oZ",
+    active: true,
+    sortOrder: 8,
+    productPrompt: "",
+    workflowStatus: "PUBLISHED",
+    qaStatus: "PASS",
+    sourceDriveId: "16HLRBn8l6aRKSTnE17sDyfaZNSFNC-cP",
+    processedImage: "https://drive.google.com/uc?export=view&id=1SZxh2FDS3GOpt9RkBDdg9R1Vv0ecI4oZ",
+    reviewReason: null,
+    rowIndex: 7,
+  },
+  {
+    id: "OMR-RAW-005",
+    name: "Rabbit Piano بيانو أطفال",
+    price: null,
+    category: "ألعاب موسيقية",
+    description:
+      "Rabbit Piano للأطفال بتصميم أرنب، يضم مفاتيح موسيقية وعناصر تفاعلية كما هو ظاهر على العبوة.",
+    image: "https://drive.google.com/thumbnail?id=1z_jLgW6E1cOc8TVxImwf8qb7POrcQC8b&sz=w1000",
+    imageSource: "https://drive.google.com/uc?export=view&id=1z_jLgW6E1cOc8TVxImwf8qb7POrcQC8b",
+    active: true,
+    sortOrder: 9,
+    productPrompt: "",
+    workflowStatus: "PUBLISHED",
+    qaStatus: "PASS",
+    sourceDriveId: "1YTUycmB_vORBD4n29HkhZoZ1vpxJT29y",
+    processedImage: "https://drive.google.com/uc?export=view&id=1z_jLgW6E1cOc8TVxImwf8qb7POrcQC8b",
+    reviewReason: null,
+    rowIndex: 8,
   },
 ];
