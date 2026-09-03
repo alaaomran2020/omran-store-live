@@ -5,10 +5,6 @@ import { buildWhatsAppUrl, formatPrice } from "@/lib/productFormat";
 import { trackEvent } from "@/lib/analytics";
 import { MessageCircle, X } from "lucide-react";
 
-/**
- * تفاصيل المنتج — نافذة داخل نفس الصفحة (بلا تغيير في الروتينج أو الـSEO
- * الحالي) مع رابط قابل للمشاركة `?product=<id>` تديره صفحة المنتجات.
- */
 export function ProductDetailsDialog({
   product,
   onClose,
@@ -34,6 +30,18 @@ export function ProductDetailsDialog({
   const waUrl = buildWhatsAppUrl(product, {
     pageUrl: typeof window === "undefined" ? undefined : window.location.href,
   });
+
+  const trackWhatsAppInquiry = () => {
+    trackEvent("whatsapp_product_inquiry", {
+      product_id: product.id,
+      sku: product.id,
+      product_name: product.name,
+      category: product.category || "",
+      price_mode: product.price === null ? "inquiry" : "priced",
+      page_location: typeof window === "undefined" ? "" : window.location.href,
+      cta_location: "product_details",
+    });
+  };
 
   return (
     <div
@@ -75,20 +83,12 @@ export function ProductDetailsDialog({
 
           <div className="flex flex-col gap-4">
             {product.category && (
-              <span className="inline-flex w-fit rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-900">
-                {product.category}
-              </span>
+              <span className="inline-flex w-fit rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-900">{product.category}</span>
             )}
-            <h2 className="text-2xl font-black leading-9 text-emerald-950 sm:text-3xl">
-              {product.name}
-            </h2>
-            <p className="text-2xl font-black text-orange-700">
-              {formatPrice(product.price)}
-            </p>
+            <h2 className="text-2xl font-black leading-9 text-emerald-950 sm:text-3xl">{product.name}</h2>
+            <p className="text-2xl font-black text-orange-700">{formatPrice(product.price)}</p>
             {product.description && (
-              <p className="text-sm leading-8 text-stone-600">
-                {product.description}
-              </p>
+              <p className="text-sm leading-8 text-stone-600">{product.description}</p>
             )}
 
             <div className="mt-auto flex flex-col gap-2 pt-2">
@@ -97,21 +97,13 @@ export function ProductDetailsDialog({
                   href={waUrl}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={() =>
-                    trackEvent("whatsapp_click", {
-                      product: product.name,
-                      id: product.id,
-                      from: "details",
-                    })
-                  }
+                  onClick={trackWhatsAppInquiry}
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#25d366] px-5 py-3 text-sm font-black text-white transition hover:bg-[#1eb857]"
                 >
                   <MessageCircle size={18} aria-hidden="true" /> اطلب عبر واتساب
                 </a>
               ) : (
-                <p className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-bold text-stone-600">
-                  للاستفسار عن هذا المنتج تواصل معنا عبر صفحاتنا الرسمية.
-                </p>
+                <p className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-bold text-stone-600">للاستفسار عن هذا المنتج تواصل معنا عبر صفحاتنا الرسمية.</p>
               )}
               <button
                 type="button"
