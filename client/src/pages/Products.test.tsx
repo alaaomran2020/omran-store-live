@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Products from "@/pages/Products";
+import { PUBLIC_PRODUCTS_SNAPSHOT } from "@/lib/publicProductsSnapshot";
 import { parseProductsCsv } from "@shared/products";
 
 /**
@@ -179,17 +180,10 @@ describe("كتالوج المنتجات (من Google Sheets)", () => {
     );
     renderCatalog();
 
-    await waitFor(() => expect(cards()).toHaveLength(8));
-    expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual([
-      "OMR-IG-KIT-46",
-      "OMR-IG-HC-104",
-      "OMR-IG-SQ-01",
-      "OMR-RAW-001",
-      "OMR-RAW-002",
-      "OMR-RAW-003",
-      "OMR-RAW-004",
-      "OMR-RAW-005",
-    ]);
+    await waitFor(() => expect(cards()).toHaveLength(PUBLIC_PRODUCTS_SNAPSHOT.length));
+    expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(
+      PUBLIC_PRODUCTS_SNAPSHOT.map(product => product.id)
+    );
     expect(screen.queryByText(/network down/)).toBeNull();
     expect(screen.queryByText("المتجر قيد التجهيز — المنتجات قادمة قريبًا")).toBeNull();
   });
