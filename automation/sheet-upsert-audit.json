@@ -2,17 +2,22 @@
   "spreadsheet_id": "1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc",
   "sheet": "products",
   "gid": "57015348",
-  "generated_at": "2026-09-03T00:18:57.001Z",
-  "existing_count": 5,
-  "pilot_candidates": 3,
-  "to_insert": 3,
-  "duplicates_prevented": 0,
+  "generated_at": "2026-09-03T00:40:08.581Z",
+  "existing_source": "local_file:automation/sheet-snapshot-2026-09-03.csv",
+  "existing_count": 1,
+  "candidates": 5,
+  "planned_inserts": 3,
+  "planned_updates": 1,
+  "duplicates_skipped": 0,
+  "held_for_review": 1,
   "duplicates": [],
-  "inserted_ids": [
-    "OT-00006",
-    "OT-00007",
-    "OT-00008"
+  "held": [
+    {
+      "id": "OMR-IG-SQ-01",
+      "name": "لعبة الاسكوشي بأشكال وألوان متنوعة",
+      "reason": "تعارض صورة STAGE 1 مع المنتج — لا يُنشر حتى توفر صورة موثقة"
+    }
   ],
-  "sheet_url": "https://docs.google.com/spreadsheets/d/1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc/edit#gid=57015348",
-  "api_url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLph4MyfmoeWcjJ3cMi-iDaM3dgt4_S57SvKr6wpQu8IbDKliduguIcvtp7E5o0ZoxN3ouNQoZo7dn/pub?gid=57015348&single=true&output=csv"
+  "applied": false,
+  "mode": "PLANNED"
 }

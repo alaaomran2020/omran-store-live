@@ -1,0 +1,72 @@
+{
+  "generated_at": "2026-09-03T00:40:08.472Z",
+  "fidelity_policy": "conservative-only: exif-rotate, square canvas (white), no crop, no upscale, no generative steps",
+  "note": "PENDING_VISUAL_QA = السكربت لا يصدر حكمًا بصريًا؛ المالك/الفريق يراجع المخرجات قبل النشر.",
+  "entries": [
+    {
+      "product_id": "OMR-IG-KIT-46",
+      "candidate_product": "مطبخ ألعاب للأطفال — 46 قطعة",
+      "primary_raw": "/home/user/omran-store-live/automation/raw-local/omran-product-01.jpg",
+      "raw_hashes": [
+        {
+          "file": "automation/raw-local/omran-product-01.jpg",
+          "dhash": "1111100011000100110101001110100011111000111110001101100011011100"
+        },
+        {
+          "file": "automation/raw-local/omran-product-02.jpg",
+          "dhash": "1011001111001100110101001011010011010010100100101101000001001101"
+        }
+      ],
+      "input_dimensions": "1200x1200",
+      "output_dimensions": "1200x1200",
+      "output_file": "public/products/processed/product-kitchen-46pcs-main.webp",
+      "public_url": "/products/processed/product-kitchen-46pcs-main.webp",
+      "size_kb": "87.0",
+      "transform": "exif-rotate + square-canvas(white) + webp q82 — بدون قص/upscale/توليد",
+      "qa_status": "PENDING_VISUAL_QA",
+      "status": "OK"
+    },
+    {
+      "product_id": "OMR-IG-HC-104",
+      "candidate_product": "مطبخ Home Chef للأطفال — 104 قطعة",
+      "primary_raw": "/home/user/omran-store-live/automation/raw-local/omran-product-03.jpg",
+      "raw_hashes": [
+        {
+          "file": "automation/raw-local/omran-product-03.jpg",
+          "dhash": "1110011011001000110110001101110011111000110110001111100011000000"
+        },
+        {
+          "file": "automation/raw-local/omran-product-04.jpg",
+          "dhash": "1100010011001000110110001101110011011000111110001111000011000100"
+        }
+      ],
+      "input_dimensions": "1200x1200",
+      "output_dimensions": "1200x1200",
+      "output_file": "public/products/processed/product-home-chef-104pcs-main.webp",
+      "public_url": "/products/processed/product-home-chef-104pcs-main.webp",
+      "size_kb": "104.8",
+      "transform": "exif-rotate + square-canvas(white) + webp q82 — بدون قص/upscale/توليد",
+      "qa_status": "PENDING_VISUAL_QA",
+      "status": "OK"
+    },
+    {
+      "product_id": "OT-00001",
+      "candidate_product": "ألعاب حيوانات بلاستيك صغيرة بألوان متنوعة",
+      "primary_raw": "/home/user/omran-store-live/automation/raw-local/omran-product-05.jpg",
+      "raw_hashes": [
+        {
+          "file": "automation/raw-local/omran-product-05.jpg",
+          "dhash": "0010001111001100110011001111010010010110100100101001000000101100"
+        }
+      ],
+      "input_dimensions": "1200x1200",
+      "output_dimensions": "1200x1200",
+      "output_file": "public/products/processed/product-ot-00001-main.webp",
+      "public_url": "/products/processed/product-ot-00001-main.webp",
+      "size_kb": "130.9",
+      "transform": "exif-rotate + square-canvas(white) + webp q82 — بدون قص/upscale/توليد",
+      "qa_status": "PENDING_VISUAL_QA",
+      "status": "OK"
+    }
+  ]
+}

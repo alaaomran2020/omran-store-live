@@ -1,6 +1,20 @@
+diff --git a/.github/workflows/deploy.yml b/.github/workflows/deploy.yml
+index 29a807f..6f010c7 100644
 --- a/.github/workflows/deploy.yml
 +++ b/.github/workflows/deploy.yml
-@@ -21,9 +21,13 @@ on:
+@@ -1,5 +1,11 @@
+ # نشر آمن: GitHub → Cloudflare Workers Assets → https://omrantoys.store
+ #
++# الفصل الصارم بين CI Validation وProduction Deployment:
++#   - `ci`: يعمل بأمان على كل Pull Request (install, lint, typecheck, tests, build) —
++#     لا ينشر شيئًا إطلاقًا.
++#   - `deploy`: يعمل فقط عند push إلى main أو تشغيل يدوي (workflow_dispatch) —
++#     ممنوع نشر Pull Request مباشر على Production.
++#
+ # القيم السرية لا تُكتب هنا ولا في أي ملف. تُقرأ وقت التشغيل فقط من:
+ # GitHub → Settings → Secrets and variables → Actions
+ #
+@@ -21,9 +27,13 @@ on:
      branches:
        - main
  
@@ -16,18 +30,18 @@
  
  permissions:
    contents: read
-@@ -35,8 +39,8 @@ env:
+@@ -35,8 +45,8 @@ env:
    NODE_OPTIONS: --max-old-space-size=4096
  
  jobs:
 -  test:
 -    name: Typecheck and tests
 +  ci:
-+    name: CI — lint, typecheck, tests, build
++    name: CI — install, lint, typecheck, tests, build
      runs-on: ubuntu-latest
      timeout-minutes: 15
  
-@@ -56,15 +60,40 @@ jobs:
+@@ -56,15 +66,40 @@ jobs:
        - name: Install dependencies
          run: pnpm install --no-frozen-lockfile
  
@@ -52,7 +66,7 @@
 +          ls -lh dist/public
 +          ls -lh dist/public/assets
 +
-+  # Backwards compatibility: keep job id "test" as alias for required checks
++  # Backwards compatibility: keep job id "test" for required-checks naming
 +  test:
 +    name: Typecheck and tests (alias)
 +    needs: ci
@@ -62,9 +76,59 @@
 +
    deploy:
      name: Build, deploy and smoke-check
--    needs: test
-+    needs: ci
-+    # Deploy فقط عند push إلى main أو تشغيل يدوي، لا عند Pull Request
-+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+     needs: test
++    # Deploy فقط عند push إلى main أو تشغيل يدوي — أبدًا لا عند Pull Request
++    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
      runs-on: ubuntu-latest
      timeout-minutes: 15
+ 
+@@ -116,10 +151,8 @@ jobs:
+       - name: Confirm build assets exist
+         run: |
+           set -euo pipefail
+-
+           test -f dist/public/index.html
+           test -d dist/public/assets
+-
+           echo "Build assets are ready."
+           ls -lh dist/public
+           ls -lh dist/public/assets
+@@ -191,22 +224,22 @@ jobs:
+                 ;;
+               products-json)
+                 python3 - "${body}" <<'PY'
+-          import json
+-          import sys
+-
+-          with open(sys.argv[1], encoding="utf-8") as file:
+-              data = json.load(file)
+-
+-          products = data.get("products")
+-          assert isinstance(products, list), (
+-              "The API response does not contain a products list."
+-          )
+-          print(
+-              "API /api/products OK:",
+-              f"status={data.get('status')!r}",
+-              f"count={len(products)}",
+-          )
+-          PY
++import json
++import sys
++
++with open(sys.argv[1], encoding="utf-8") as file:
++    data = json.load(file)
++
++products = data.get("products")
++assert isinstance(products, list), (
++    "The API response does not contain a products list."
++)
++print(
++    "API /api/products OK:",
++    f"status={data.get('status')!r}",
++    f"count={len(products)}",
++)
++PY
+                 ;;
+               *)
+                 echo "::error::Unknown probe expectation: ${expected}"

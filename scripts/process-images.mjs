@@ -1,11 +1,18 @@
 #!/usr/bin/env node
 /**
- * OMRAN TOYS — Product Image Processing (Stage 7 & 8)
- * Fidelity first: conservative edits only.
- * - No generative reconstruction
- * - Allow: crop, straighten, white balance, exposure, mild contrast, mild sharpen, noise reduction, square canvas, safe background cleanup (not altering product)
- * - Reject any AI background removal that touches product
- * - Output: WebP square 1:1, target 1600x1600 if source allows, otherwise no upscaling
+ * OMRAN TOYS — Product Image Processing (Stage 7)
+ *
+ * PRODUCT FIDELITY = CRITICAL. معالجة محافظة فقط:
+ *   - EXIF auto-orient (rotate)
+ *   - مربع 1:1 بدون قص (canvas أبيض عند الحاجة) — لا crop للمنتج
+ *   - بدون upscale: الارتفاع/العرض النهائي ≤ min(1600, جانب المصدر)
+ *   - لا normalize ولا sharpen ولا إزالة خلفية ولا أي خطوة توليدية
+ *   - WebP quality 82
+ *
+ * مناهض للاختلاق (anti-fabrication):
+ *   - لا يُعالج أي صورة بدون سجل موثق في automation/product-metadata.json
+ *   - لا يُطلق اسم/وصف/سعر من هذه السكربت — البيانات من الملف الموثق فقط
+ *   - qa_status في المانيفست = PENDING_VISUAL_QA دائمًا (التحقق البصري قرار بشري)
  *
  * Usage: node scripts/process-images.mjs
  */
@@ -13,174 +20,142 @@ import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 
-const INPUT_DIR = "public/products";
 const OUTPUT_DIR = "public/products/processed";
-const PUBLIC_BASE = "/products/processed";
+const METADATA_FILE = "automation/product-metadata.json";
+const MANIFEST_FILE = "automation/process-manifest.json";
 
-async function ensureOut() {
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+/** dHash 64-bit بسيط (9×8 grayscale) للتوثيق وكشف التكرار. */
+async function dhash64(file) {
+  const { data } = await sharp(file)
+    .rotate()
+    .grayscale()
+    .resize(9, 8, { fit: "fill" })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  let h = "";
+  for (let y = 0; y < 8; y++) {
+    for (let x = 0; x < 8; x++) {
+      h += data[y * 9 + x] > data[y * 9 + x + 1] ? "1" : "0";
+    }
+  }
+  return h;
 }
 
-async function processImage(inputPath, outputPath, productId) {
+async function processImage(inputPath, outputPath) {
   const meta = await sharp(inputPath).metadata();
-  console.log(`\nProcessing ${path.basename(inputPath)}: ${meta.width}x${meta.height} ${meta.format}`);
-  const sourceWidth = meta.width || 1200;
-  const sourceHeight = meta.height || 1200;
-  const minSide = Math.min(sourceWidth, sourceHeight);
-  // Target: 1600 if source >=1600, else keep source size but square, max 1200 for current assets (no upscale > source)
-  // Spec: "Target 1600x1600 فقط عندما تسمح جودة المصدر. ممنوع Upscaling مبالغ فيه"
-  let target = 1600;
-  if (minSide < 1600) {
-    // use minSide but capped to nearest hundred? keep original minSide, but not exceeding 1200 for these assets.
-    // Ensure square: we will resize to minSide if <1600, or 1600 if >=1600
-    target = minSide;
-    // Round down to nearest even to avoid subpixel issues
-    target = Math.floor(target / 2) * 2;
-    // Also ensure not exceeding 1600 and not below 800 for quality?
-    if (target > 1600) target = 1600;
-    if (target < 800) target = minSide; // keep as is for very small sources
+  const w = meta.width ?? 0;
+  const h = meta.height ?? 0;
+  if (!w || !h) throw new Error(`invalid_dimensions ${w}x${h}`);
+
+  // بدون upscale: الهدف = أصغر جبين بين 1600 وأكبر جانب في المصدر
+  const target = Math.min(1600, Math.max(w, h));
+  const square = w === h;
+
+  if (square) {
+    await sharp(inputPath)
+      .rotate()
+      .resize(target, target, { withoutEnlargement: true, kernel: sharp.kernel.lanczos3 })
+      .webp({ quality: 82, effort: 4, smartSubsample: true })
+      .toFile(outputPath);
+  } else {
+    // fit inside square (لا قص) ثم توسيط على كanvas أبيض
+    const resized = await sharp(inputPath)
+      .rotate()
+      .resize(target, target, {
+        fit: "inside",
+        withoutEnlargement: true,
+        kernel: sharp.kernel.lanczos3,
+      })
+      .toBuffer();
+    await sharp(resized)
+      .resize(target, target, { fit: "contain", background: { r: 255, g: 255, b: 255 } })
+      .webp({ quality: 82, effort: 4, smartSubsample: true })
+      .toFile(outputPath);
   }
-  console.log(`  -> target square ${target}x${target} (no upscale beyond source)`);
 
-  // Conservative processing: 
-  // - resize to cover square without distortion (crop to square if not square)
-  // - no background removal, just white balance via normalize + mild sharpen
-  // - webp with high quality to preserve fidelity
-  const pipeline = sharp(inputPath)
-    .rotate() // auto-orient based on EXIF
-    .resize(target, target, {
-      fit: "cover",
-      position: "centre",
-      withoutEnlargement: true, // never upscale
-      kernel: sharp.kernel.lanczos3,
-    })
-    // mild contrast: normalize slightly? Use linear for exposure correction minimal
-    .normalize() // stretches histogram gently - approximates white balance
-    // mild sharpen: moderate sigma
-    .sharpen({ sigma: 0.8, m1: 0.5, m2: 2, x1: 2, y2: 10, y3: 20 })
-    // ensure sRGB, remove alpha if any
-    .toColorspace("srgb");
-
-  await pipeline.webp({ quality: 82, effort: 4, smartSubsample: true }).toFile(outputPath);
   const outMeta = await sharp(outputPath).metadata();
-  console.log(`  -> wrote ${outputPath}: ${outMeta.width}x${outMeta.height} ${outMeta.format} ${(fs.statSync(outputPath).size/1024).toFixed(1)}KB`);
-  return { target, outputPath, outMeta };
+  return { inWidth: w, inHeight: h, outWidth: outMeta.width, outHeight: outMeta.height };
 }
 
 async function main() {
-  await ensureOut();
-  const files = fs.readdirSync(INPUT_DIR).filter(f => /^omran-product-0[1-5]\.jpg$/.test(f));
-  console.log(`Found ${files.length} RAW images in ${INPUT_DIR}`);
-  // Simulate inventory mapping: these are UNIQUE products (no duplicates for pilot)
-  const inventory = [];
-  const productMap = [];
+  if (!fs.existsSync(METADATA_FILE)) {
+    console.error(`Missing ${METADATA_FILE} — لا بيانات موثقة؛ لا معالجة بلا سجل.`);
+    process.exit(1);
+  }
+  const metadata = JSON.parse(fs.readFileSync(METADATA_FILE, "utf-8"));
+  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-  // Hardcoded product data for pilot (verified visually, no invented fields)
-  const pilotProducts = [
-    {
-      file: "omran-product-01.jpg",
-      product_id: "OT-00006",
-      name: "لعبة سيارة سباق للأطفال",
-      category: "سيارات",
-      description: "سيارة سباق للأطفال بتصميم رياضي وألوان جذابة، مناسبة للعب التخيلي.",
-      price: null, // will show للاستفسار والكميات - no invented price
-    },
-    {
-      file: "omran-product-02.jpg",
-      product_id: "OT-00007",
-      name: "دباب كهربائي صغير للأطفال — إصدار محسن",
-      category: "مركبات كهربائية",
-      description: "دباب كهربائي صغير للأطفال ببطارية قابلة للشحن، تصميم آمن ومحسن للأعمار الصغيرة.",
-      price: null,
-    },
-    {
-      file: "omran-product-03.jpg",
-      product_id: "OT-00008",
-      name: "مكعبات تعليمية ملونة",
-      category: "ألعاب تعليمية",
-      description: "مكعبات تعليمية ملونة لتنمية مهارات البناء والتركيز والإبداع.",
-      price: null,
-    },
-  ];
+  const entries = [];
+  for (const product of metadata.products) {
+    const raws = Array.isArray(product.raw_images) ? product.raw_images : [];
+    const outName = product.processed_image
+      ? path.basename(String(product.processed_image))
+      : null;
+    if (raws.length === 0 || !outName) {
+      console.log(`SKIP ${product.id} (${product.name}) — بلا صور خام/مخرجات محددة (لا اختلاق)`);
+      continue;
+    }
+    const primary = path.resolve(raws[0]);
+    if (!fs.existsSync(primary)) {
+      console.error(`MISSING RAW ${primary} for ${product.id} — FAIL لهذا المنتج فقط، نستمر بالبقية`);
+      entries.push({
+        product_id: product.id,
+        candidate_product: product.name,
+        status: "FAILED",
+        error: `raw_missing:${primary}`,
+      });
+      continue;
+    }
 
-  // Only process pilot batch 3 products (Stage 12)
-  for (const p of pilotProducts) {
-    const input = path.join(INPUT_DIR, p.file);
-    const outputFile = `product-${p.product_id}-main.webp`;
-    const output = path.join(OUTPUT_DIR, outputFile);
+    // توثيق تكرار الصور الخام للمنتج الواحد (لا ينشر المنتج مرتين)
+    const rawHashes = [];
+    for (const r of raws) {
+      const rp = path.resolve(r);
+      if (fs.existsSync(rp)) rawHashes.push({ file: r, dhash: await dhash64(rp) });
+    }
+
+    const outPath = path.join(OUTPUT_DIR, outName);
     try {
-      const res = await processImage(input, output, p.product_id);
-      const publicUrl = `${PUBLIC_BASE}/${outputFile}`;
-      inventory.push({
-        source_file: p.file,
-        source_file_id: `local-${p.file}`, // would be driveFileId in real pipeline
-        product_id: p.product_id,
-        candidate_product: p.name,
-        duplicate_status: "unique",
-        group_id: p.product_id,
-        confidence: 1.0,
-        qa_status: "PASS",
-        price_mode: "inquiry",
-        processed_image: publicUrl,
-        local_output: output,
-        dimensions: `${res.outMeta.width}x${res.outMeta.height}`,
-        size_kb: (fs.statSync(output).size/1024).toFixed(1),
+      const dims = await processImage(primary, outPath);
+      const sizeKb = (fs.statSync(outPath).size / 1024).toFixed(1);
+      console.log(
+        `PROCESSED ${product.id} (${product.name}): ${dims.inWidth}x${dims.inHeight} -> ${dims.outWidth}x${dims.outHeight} ${sizeKb}KB [no-crop, no-upscale, no-generative]`
+      );
+      entries.push({
+        product_id: product.id,
+        candidate_product: product.name,
+        primary_raw: primary,
+        raw_hashes: rawHashes,
+        input_dimensions: `${dims.inWidth}x${dims.inHeight}`,
+        output_dimensions: `${dims.outWidth}x${dims.outHeight}`,
+        output_file: `public/products/processed/${outName}`,
+        public_url: product.processed_image,
+        size_kb: sizeKb,
+        transform: "exif-rotate + square-canvas(white) + webp q82 — بدون قص/upscale/توليد",
+        qa_status: "PENDING_VISUAL_QA",
+        status: "OK",
       });
-      productMap.push({
-        ...p,
-        image: publicUrl,
-        imageSource: publicUrl,
-        active: true,
-      });
-      console.log(`QA PASS: ${p.product_id} ${p.name} — fidelity preserved, no generative alteration`);
     } catch (e) {
-      console.error(`FAILED ${p.product_id}:`, e);
-      inventory.push({
-        source_file: p.file,
-        product_id: p.product_id,
-        candidate_product: p.name,
-        duplicate_status: "error",
-        qa_status: "FAIL",
-        error: String(e),
-      });
+      console.error(`FAILED ${product.id}: ${e.message}`);
+      entries.push({ product_id: product.id, candidate_product: product.name, status: "FAILED", error: String(e) });
     }
   }
 
-  // Write inventory
-  fs.writeFileSync("automation/product-inventory.json", JSON.stringify({ generated_at: new Date().toISOString(), total_raw: files.length, pilot_processed: inventory.length, inventory }, null, 2), "utf-8");
-  console.log("\nInventory written to automation/product-inventory.json");
-
-  // Write pilot sheet rows (CSV) for upsert
-  const csvHeader = "id,name,price,category,description,image,active,sort_order,product_prompt,workflow_status,created_at,updated_at";
-  const now = new Date().toISOString();
-  const rows = productMap.map((pm, idx) => {
-    // price blank => للاستفسار والكميات UI
-    // sort_order after existing 005: 6,7,8
-    const sortOrder = 6 + idx;
-    const escaped = (v) => `"${String(v).replace(/"/g, '""')}"`;
-    return [
-      pm.product_id,
-      escaped(pm.name),
-      "", // price blank
-      pm.category,
-      escaped(pm.description),
-      pm.image,
-      "TRUE",
-      sortOrder,
-      "", // product_prompt not needed for published
-      "PUBLISHED",
-      now,
-      now,
-    ].join(",");
-  });
-  const csvContent = [csvHeader, ...rows].join("\n");
-  fs.writeFileSync("automation/pilot-sheet-upsert.csv", csvContent, "utf-8");
-  console.log("Pilot sheet CSV written to automation/pilot-sheet-upsert.csv");
-  console.log(csvContent);
-
-  // Copy processed images to dist/public for verification if build exists
-  // also ensure public dir will be copied to dist on build via copyPublicDir
-  console.log("\nDone. To verify locally: pnpm build && pnpm preview or check dist/public/products/processed");
+  const manifest = {
+    generated_at: new Date().toISOString(),
+    fidelity_policy: "conservative-only: exif-rotate, square canvas (white), no crop, no upscale, no generative steps",
+    note: "PENDING_VISUAL_QA = السكربت لا يصدر حكمًا بصريًا؛ المالك/الفريق يراجع المخرجات قبل النشر.",
+    entries,
+  };
+  fs.writeFileSync(MANIFEST_FILE, JSON.stringify(manifest, null, 2), "utf-8");
+  console.log(`\nManifest written to ${MANIFEST_FILE}`);
+  const ok = entries.filter(e => e.status === "OK").length;
+  const failed = entries.filter(e => e.status === "FAILED").length;
+  console.log(`Done: ${ok} processed, ${failed} failed`);
+  if (failed > 0) process.exitCode = 1;
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+main().catch(e => {
+  console.error(e);
+  process.exit(1);
+});
