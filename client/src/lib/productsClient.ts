@@ -4,48 +4,39 @@ import {
   type Product,
   type ProductsPayload,
 } from "@shared/products";
+import { PUBLIC_PRODUCTS_SNAPSHOT } from "./publicProductsSnapshot";
 
 export type { Product, ProductsPayload } from "@shared/products";
 
 /**
  * مصدر منتجات المتجر في المتصفح.
  *
- * ترتيب المحاولات (أول نجاح يفوز):
+ * ترتيب المحاولات (أول مصدر صالح وغير فارغ يفوز):
  *   1. `/api/products` — نفس الأصل، ويجيب عليه Cloudflare Worker.
- *      يُضاف معرّف زمني ويُعطّل كاش المتصفح لمنع استخدام استجابات النظام القديم.
- *   2. `/edge-api/products` — مرآة نفس الكتالوج على نفس الأصل خارج `/api/*`؛
- *      تصل إلى الـWorker الجديد عبر route النطاق حتى لو تملّك route قديم
- *      أكثر تحديدًا مسار `/api/*` (انظر worker/index.ts + wrangler.toml).
- *   3. رابط CSV المنشور مباشرةً من المتصفح، إذا كان
- *      `VITE_PRODUCTS_SHEET_URL` مضبوطًا وقت البناء.
- *
- * أي فشل يُترجم إلى حمولة فارغة بحالة error، وتعرض الصفحة حالة عربية واضحة
- * بدل إظهار خطأ تقني للزائر.
+ *   2. `/edge-api/products` — مرآة نفس الكتالوج على نفس الأصل خارج `/api/*`.
+ *   3. رابط CSV المنشور مباشرةً من Google Sheets إذا كان مضبوطًا وقت البناء.
+ *   4. Last-known-good snapshot موثّق داخل الـbuild، حتى لا ينهار المتجر إلى
+ *      كتالوج فارغ عند Cloudflare Challenge أو عطل شبكي مؤقت.
  */
 
-/**
- * رابط Google Sheet العام وقت البناء.
- * `NEXT_PUBLIC_PRODUCTS_SHEET_URL` مقبول كمرادف للتوافق مع الإعدادات السابقة.
- */
+/** رابط Google Sheet العام وقت البناء. */
 export const SHEET_URL: string =
   (import.meta.env.VITE_PRODUCTS_SHEET_URL as string | undefined) ??
   (import.meta.env.NEXT_PUBLIC_PRODUCTS_SHEET_URL as string | undefined) ??
   "";
 
-/** إنشاء استجابة فارغة آمنة عند تعذر جميع مصادر البيانات. */
-const empty = (status: ProductsPayload["status"]): ProductsPayload => ({
-  products: [],
-  status,
-  fetchedAt: new Date().toISOString(),
-});
+function snapshotPayload(): ProductsPayload {
+  return {
+    products: PUBLIC_PRODUCTS_SNAPSHOT.map(product => ({ ...product })),
+    status: "ok",
+    fetchedAt: new Date().toISOString(),
+  };
+}
 
 /**
  * قراءة المنتجات من Cloudflare Worker على نفس النطاق.
- *
- * نستخدم:
- * - قيمة refresh متغيرة لتجاوز أي استجابة قديمة مخزنة حسب عنوان URL.
- * - cache: no-store لمنع المتصفح من إعادة استخدام بيانات النظام القديم.
- * - ترويسات no-cache لطلب أحدث استجابة من طبقات الوساطة.
+ * الاستجابة `status=ok` مع `products=[]` لا تعتبر نجاحًا للواجهة؛ لدينا منتجات
+ * موثقة منشورة، لذا القائمة الفارغة تعني مصدرًا stale/غير متزامن وننتقل للبديل.
  */
 async function fetchSameOrigin(
   path: string,
@@ -67,20 +58,11 @@ async function fetchSameOrigin(
       },
     });
 
-    if (!res.ok) {
-      return null;
-    }
+    if (!res.ok) return null;
 
     const data = (await res.json()) as Partial<ProductsPayload>;
-
-    if (!Array.isArray(data.products)) {
-      return null;
-    }
-
-    if (data.status !== "ok") {
-      // الـWorker غير مضبوط أو المصدر غير متاح؛ جرّب المصدر التالي.
-      return null;
-    }
+    if (!Array.isArray(data.products) || data.status !== "ok") return null;
+    if (data.products.length === 0) return null;
 
     return {
       products: data.products as Product[],
@@ -95,25 +77,17 @@ async function fetchSameOrigin(
 const fromSameOriginApi = (signal?: AbortSignal) =>
   fetchSameOrigin("/api/products", signal);
 
-/**
- * المرآة الاحتياطية على نفس الأصل: خارج `/api/*` فلا يملكها أي Worker قديم.
- * نفس العقد تمامًا (`status === "ok"`) لأن نفس معالج الحافة يجيب.
- */
 const fromEdgeMirror = (signal?: AbortSignal) =>
   fetchSameOrigin("/edge-api/products", signal);
 
-/**
- * المسار الاحتياطي: قراءة Google Sheet المنشور بصيغة CSV مباشرةً.
- */
+/** قراءة Google Sheet المنشور بصيغة CSV مباشرةً. */
 async function fromPublishedCsv(
   signal?: AbortSignal
 ): Promise<ProductsPayload | null> {
-  if (!SHEET_URL) {
-    return null;
-  }
+  if (!SHEET_URL) return null;
 
   try {
-    return await fetchProductsPayload(SHEET_URL, (url, init) =>
+    const payload = await fetchProductsPayload(SHEET_URL, (url, init) =>
       fetch(url, {
         ...init,
         signal: signal ?? init?.signal,
@@ -125,40 +99,31 @@ async function fromPublishedCsv(
         },
       })
     );
+
+    if (payload.status !== "ok" || payload.products.length === 0) return null;
+    return payload;
   } catch {
     return null;
   }
 }
 
-/**
- * الواجهة الوحيدة التي تستخدمها صفحة المنتجات.
- * لا ترمي استثناءً للمكوّن أو للزائر.
- */
+/** الواجهة الوحيدة التي تستخدمها صفحة المنتجات. */
 export async function fetchProducts(
   signal?: AbortSignal
 ): Promise<ProductsPayload> {
   const viaApi = await fromSameOriginApi(signal);
-
-  if (viaApi) {
-    return viaApi;
-  }
+  if (viaApi) return viaApi;
 
   const viaMirror = await fromEdgeMirror(signal);
-
-  if (viaMirror) {
-    return viaMirror;
-  }
+  if (viaMirror) return viaMirror;
 
   const viaCsv = await fromPublishedCsv(signal);
+  if (viaCsv) return viaCsv;
 
-  if (viaCsv) {
-    return viaCsv;
-  }
-
-  return empty(SHEET_URL ? "error" : "not_configured");
+  // Fail-open للعرض فقط ببيانات سبق أن اجتازت بوابة النشر الثلاثية.
+  // لا نعرض أي منتج NEEDS_REVIEW ولا نخترع بيانات جديدة.
+  return snapshotPayload();
 }
 
-/**
- * يستخدم في الاختبارات فقط لتحويل CSV إلى منتجات بنفس منطق الموقع.
- */
+/** يستخدم في الاختبارات فقط لتحويل CSV إلى منتجات بنفس منطق الموقع. */
 export { parseProductsCsv };
