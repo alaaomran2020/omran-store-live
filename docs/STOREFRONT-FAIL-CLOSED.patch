@@ -1,0 +1,333 @@
+From b7aad1222abf55c47bc51db525d4a38f41502e06 Mon Sep 17 00:00:00 2001
+From: "arena-ai-coding-agent[bot]"
+ <arena-ai-coding-agent[bot]@users.noreply.github.com>
+Date: Thu, 3 Sep 2026 03:36:01 +0000
+Subject: [PATCH] =?UTF-8?q?fix(storefront):=20fail-closed=20catalog=20?=
+ =?UTF-8?q?=E2=80=94=20Product=20Engine=20only,=20no=20fabricated=20fallba?=
+ =?UTF-8?q?ck?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- StoreContext: remove legacyFallback as catalog source; engine payload is the
+  only displayed data; on engine failure use engine cache or empty (no invented
+  SKU/stock/brand/age). src/data/products.js stays as archive only.
+- productEngine.js: strict payload validation (status==='ok'), passthrough of
+  first-class publication fields (workflowStatus/qaStatus/sourceDriveId/
+  processedImage/reviewReason).
+- gateway functions/api/products.js: validate upstream, fallback to
+  /edge-api/products mirror, never return stale/no-status payloads.
+- pr-quality.yml: regressions extended (fail-closed + gateway).
+---
+ .github/workflows/pr-quality.yml |  26 +++++++-
+ functions/api/products.js        | 101 +++++++++++++++++++++++--------
+ src/context/StoreContext.jsx     |  25 ++++----
+ src/data/products.js             |   7 +++
+ src/lib/productEngine.js         |  26 +++++++-
+ 5 files changed, 143 insertions(+), 42 deletions(-)
+
+diff --git a/.github/workflows/pr-quality.yml b/.github/workflows/pr-quality.yml
+index 806e810..1135094 100644
+--- a/.github/workflows/pr-quality.yml
++++ b/.github/workflows/pr-quality.yml
+@@ -32,11 +32,15 @@ jobs:
+           assert.equal(inquiry.price, null);
+           assert.equal(inquiry.stock, null);
+           assert.equal(inquiry.sku, '');
++          assert.equal(inquiry.workflowStatus, '');
++          assert.equal(inquiry.qaStatus, '');
+ 
+-          const priced = adaptEngineProduct({ id: 'P-2', name: 'منتج مسعر', price: 350, category: 'toys', active: true });
++          const priced = adaptEngineProduct({ id: 'P-2', name: 'منتج مسعر', price: 350, category: 'toys', active: true, workflowStatus: 'PUBLISHED', qaStatus: 'PASS' });
+           assert.equal(priced.price, 350);
+           assert.equal(priced.retail_price, 350);
+           assert.equal(priced.stock, null);
++          assert.equal(priced.workflowStatus, 'PUBLISHED');
++          assert.equal(priced.qaStatus, 'PASS');
+ 
+           assert.equal(adaptEngineProduct({ id: '', name: 'invalid' }), null);
+           assert.equal(adaptEngineProduct({ id: 'P-3', name: '' }), null);
+@@ -61,7 +65,25 @@ jobs:
+           assert.match(source, /const checkoutEligible = cart\.length > 0 && cart\.every/);
+           assert.match(source, /if \(!checkoutEligible\)/);
+           assert.doesNotMatch(source, /const stockLimit = Number\(product\.stock\) > 0 \? Number\(product\.stock\) : 0/);
+-          console.log('StoreContext capability regression: PASS');
++          // Fail-Closed: لا legacyFallback ولا كتالوج مختلق عند تعذر المحرك
++          assert.doesNotMatch(source, /legacyFallback/);
++          assert.match(source, /unavailable/);
++          console.log('StoreContext capability + fail-closed regression: PASS');
++
++      - name: Regression — gateway is transparent + fail-closed
++        shell: bash
++        run: |
++          set -euo pipefail
++          node --input-type=module <<'NODE'
++          import assert from 'node:assert/strict';
++          import fs from 'node:fs';
++          const gw = fs.readFileSync('functions/api/products.js', 'utf8');
++          assert.match(gw, /isEnginePayloadValid/);
++          assert.match(gw, /edge-api\/products/);
++          assert.match(gw, /x-storefront-gateway/);
++          assert.match(gw, /status === 'ok'|status: 'ok'/);
++          console.log('Storefront gateway regression: PASS');
++          NODE
+           NODE
+       - name: Regression — critical storefront surfaces compile
+         shell: bash
+diff --git a/functions/api/products.js b/functions/api/products.js
+index 2b4bec0..1022437 100644
+--- a/functions/api/products.js
++++ b/functions/api/products.js
+@@ -1,4 +1,37 @@
+-const PRODUCT_ENGINE_URL = 'https://omrantoys.store/api/products';
++/**
++ * Storefront same-origin gateway: /api/products
++ *
++ * شفاف تمامًا: يعيد جسم الـProduct Engine كما هو (بدون اختلاق أو تحوير حقول).
++ * ترتيب المحاولات:
++ *   1. https://omrantoys.store/api/products        (المسار الأساسي)
++ *   2. https://omrantoys.store/edge-api/products   (مرآة — نفس محرك الحافة)
++ * القبول فقط لو body = { status: 'ok', products: [...] }.
++ * أي رد قديم/stale بلا status، أو غير صالح، أو خطأ → لا نعرض بيانات غير موثقة.
++ */
++const PRIMARY_ENGINE_URL = 'https://omrantoys.store/api/products';
++const MIRROR_ENGINE_URL = 'https://omrantoys.store/edge-api/products';
++const REQUEST_TIMEOUT_MS = 8000;
++
++function isEnginePayloadValid(payload) {
++  return Boolean(payload && payload.status === 'ok' && Array.isArray(payload.products));
++}
++
++async function fetchEngine(url, method, signal) {
++  const response = await fetch(url, {
++    method,
++    headers: { accept: 'application/json' },
++    signal,
++    redirect: 'follow',
++  });
++  const text = await response.text();
++  let body = null;
++  try {
++    body = text ? JSON.parse(text) : null;
++  } catch {
++    body = null;
++  }
++  return { response, body, source: url };
++}
+ 
+ export async function onRequest(context) {
+   const request = context.request;
+@@ -10,33 +43,51 @@ export async function onRequest(context) {
+   }
+ 
+   const controller = new AbortController();
+-  const timer = setTimeout(() => controller.abort(), 8000);
++  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
++
++  const errorResponse = (message) => new Response(JSON.stringify({
++    products: [],
++    status: 'error',
++    fetchedAt: new Date().toISOString(),
++    error: message,
++  }), {
++    status: 502,
++    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-storefront-gateway': 'pages' },
++  });
++
+   try {
+-    const upstream = await fetch(PRODUCT_ENGINE_URL, {
+-      method: request.method,
+-      headers: { accept: 'application/json' },
+-      signal: controller.signal,
+-      redirect: 'follow',
+-    });
+-    const headers = new Headers();
+-    headers.set('content-type', upstream.headers.get('content-type') || 'application/json; charset=utf-8');
+-    headers.set('cache-control', upstream.ok ? 'public, max-age=60' : 'no-store');
+-    headers.set('x-storefront-gateway', 'pages');
+-    return new Response(request.method === 'HEAD' ? null : upstream.body, {
+-      status: upstream.status,
+-      headers,
+-    });
++    // 1) المسار الأساسي لـ Product Engine
++    let attempt = await fetchEngine(PRIMARY_ENGINE_URL, request.method, controller.signal);
++    if (attempt.response.ok && isEnginePayloadValid(attempt.body)) {
++      const headers = new Headers();
++      headers.set('content-type', attempt.response.headers.get('content-type') || 'application/json; charset=utf-8');
++      headers.set('cache-control', 'public, max-age=60');
++      headers.set('x-storefront-gateway', 'pages');
++      headers.set('x-storefront-source', 'product-engine');
++      return new Response(request.method === 'HEAD' ? null : JSON.stringify(attempt.body), {
++        status: attempt.response.status,
++        headers,
++      });
++    }
++
++    // 2) المرآة الـedge (نفس العقد) — لا نعرض ردًا بلا status أبدًا
++    attempt = await fetchEngine(MIRROR_ENGINE_URL, request.method, controller.signal);
++    if (attempt.response.ok && isEnginePayloadValid(attempt.body)) {
++      const headers = new Headers();
++      headers.set('content-type', attempt.response.headers.get('content-type') || 'application/json; charset=utf-8');
++      headers.set('cache-control', 'public, max-age=60');
++      headers.set('x-storefront-gateway', 'pages');
++      headers.set('x-storefront-source', 'edge-mirror');
++      return new Response(request.method === 'HEAD' ? null : JSON.stringify(attempt.body), {
++        status: attempt.response.status,
++        headers,
++      });
++    }
++
++    return errorResponse('product_engine_unavailable_or_invalid');
+   } catch (error) {
+     const timeout = error instanceof Error && error.name === 'AbortError';
+-    return new Response(JSON.stringify({
+-      products: [],
+-      status: 'error',
+-      fetchedAt: new Date().toISOString(),
+-      error: timeout ? 'product_engine_timeout' : 'product_engine_unavailable',
+-    }), {
+-      status: 502,
+-      headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
+-    });
++    return errorResponse(timeout ? 'product_engine_timeout' : 'product_engine_unreachable');
+   } finally {
+     clearTimeout(timer);
+   }
+diff --git a/src/context/StoreContext.jsx b/src/context/StoreContext.jsx
+index 5aa183a..24d0080 100644
+--- a/src/context/StoreContext.jsx
++++ b/src/context/StoreContext.jsx
+@@ -1,5 +1,4 @@
+ import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+-import { initialProducts } from '../data/products';
+ import { fetchStorefrontProducts } from '../lib/productEngine';
+ import { calculateShippingCost, calculateCartWeight, calculateCartVolume } from '../lib/shippingCalculator';
+ import { track, EVENTS } from '../lib/analytics';
+@@ -7,11 +6,12 @@ import { track, EVENTS } from '../lib/analytics';
+ const StoreContext = createContext();
+ const CATALOG_CACHE_KEY = 'omran_toys_products';
+ 
+-const legacyFallback = initialProducts.map(product => ({
+-  ...product,
+-  retail_price: product.price ?? null,
+-  catalogSource: 'legacy-fallback',
+-}));
++/**
++ * Fail-Closed: لا نعرض أبدًا كتالوجًا مصنوعًا يدويًا كـ fallback.
++ * المصدر الوحيد للعرض = Product Engine (Google Sheet بعد بوابات النشر).
++ * عند تعذر المحرك: نعرض آخر نسخة موثقة من المحرك نفسه (cache) أو لا شيء.
++ * ملف src/data/products.js يبقى أرشيفًا مرجعيًا — ليس مصدر عرض.
++ */
+ 
+ const hasKnownPrice = product => Number.isFinite(product?.price) || Number.isFinite(product?.retail_price);
+ const getKnownPrice = product => Number.isFinite(product?.price)
+@@ -23,8 +23,8 @@ const getKnownStock = product => Number.isFinite(product?.stock)
+   : Number.isFinite(product?.stock_quantity) ? product.stock_quantity : null;
+ 
+ export const StoreProvider = ({ children }) => {
+-  const [products, setProducts] = useState(legacyFallback);
+-  const [catalogState, setCatalogState] = useState({ source: 'legacy-fallback', status: 'loading', fetchedAt: null, error: null });
++  const [products, setProducts] = useState([]);
++  const [catalogState, setCatalogState] = useState({ source: 'uninitialized', status: 'loading', fetchedAt: null, error: null });
+ 
+   const [cart, setCart] = useState(() => { try { return JSON.parse(localStorage.getItem('omran_toys_cart') || '[]'); } catch { return []; } });
+   const [wishlist, setWishlist] = useState(() => { try { return JSON.parse(localStorage.getItem('omran_toys_wishlist') || '[]'); } catch { return []; } });
+@@ -58,7 +58,7 @@ export const StoreProvider = ({ children }) => {
+     setTimeout(() => setToast(null), 4000);
+   };
+ 
+-  // Product Engine is authoritative. Cache/legacy data is only an availability fallback.
++  // Product Engine is the ONLY catalog source. Cache is engine-originated only.
+   useEffect(() => {
+     const controller = new AbortController();
+     fetchStorefrontProducts({ signal: controller.signal })
+@@ -71,12 +71,13 @@ export const StoreProvider = ({ children }) => {
+         if (error?.name === 'AbortError') return;
+         let cached = null;
+         try { cached = JSON.parse(localStorage.getItem(CATALOG_CACHE_KEY) || 'null'); } catch { cached = null; }
+-        if (Array.isArray(cached) && cached.length) {
++        if (Array.isArray(cached) && cached.length && cached.every(item => item?.catalogSource === 'product-engine')) {
+           setProducts(cached);
+           setCatalogState({ source: 'cache-fallback', status: 'degraded', fetchedAt: null, error: error?.message || 'Product Engine unavailable' });
+         } else {
+-          setProducts(legacyFallback);
+-          setCatalogState({ source: 'legacy-fallback', status: 'degraded', fetchedAt: null, error: error?.message || 'Product Engine unavailable' });
++          // Fail-Closed: لا منتجات مختلقة. صفحة فارغة + حالة واضحة أفضل من كتالوج مزيف.
++          setProducts([]);
++          setCatalogState({ source: 'unavailable', status: 'degraded', fetchedAt: null, error: error?.message || 'Product Engine unavailable' });
+         }
+       });
+     return () => controller.abort();
+diff --git a/src/data/products.js b/src/data/products.js
+index 718a0ec..63fadfc 100644
+--- a/src/data/products.js
++++ b/src/data/products.js
+@@ -1,3 +1,10 @@
++/**
++ * ⚠️ ARCHIVE ONLY — ليس مصدر عرض.
++ * الكتالوج المعروض يأتي حصريًا من Product Engine (/api/products ← Google Sheet)
++ * عبر src/lib/productEngine.js + StoreContext. هذه البيانات التاريخية (SKU/stock/
++ * عمر/ماركة/أبعاد مُفترضة) لا تُعرض للزائر ولا تُستخدم fallback (Fail-Closed).
++ * تُحفظ كمرجع للتحقق فقط — لا تعديل هنا إلا بإشراف موثّق.
++ */
+ export const initialProducts = [
+   {
+     id: 1001,
+diff --git a/src/lib/productEngine.js b/src/lib/productEngine.js
+index c5d8a47..48a7543 100644
+--- a/src/lib/productEngine.js
++++ b/src/lib/productEngine.js
+@@ -48,10 +48,30 @@ export function adaptEngineProduct(product) {
+     sortOrder: Number.isFinite(product.sortOrder) ? product.sortOrder : null,
+     productPrompt: asText(product.productPrompt),
+     rowIndex: Number.isFinite(product.rowIndex) ? product.rowIndex : null,
++    // حقول النشر أول-فئة (تصل من Product Engine البوابة) — تُمرَّر كما هي
++    workflowStatus: asText(product.workflowStatus),
++    qaStatus: asText(product.qaStatus),
++    sourceDriveId: asText(product.sourceDriveId) || null,
++    processedImage: asText(product.processedImage) || null,
++    reviewReason: asText(product.reviewReason),
+     catalogSource: 'product-engine',
+   };
+ }
+ 
++/**
++ * Strict Product Engine payload validation (Fail-Closed):
++ * - `status === 'ok'` مطلوب (الرد القديم/stale بلا status يُرفض فورًا)
++ * - `products` مصفوفة ومؤكدة
++ * أي شك → نحن لا نعرض شيئًا بدل أن نعرض بيانات غير موثقة.
++ */
++function isValidEnginePayload(payload) {
++  return Boolean(
++    payload &&
++    payload.status === 'ok' &&
++    Array.isArray(payload.products)
++  );
++}
++
+ export async function fetchStorefrontProducts({
+   endpoint = PRODUCT_ENGINE_ENDPOINT,
+   signal,
+@@ -69,8 +89,8 @@ export async function fetchStorefrontProducts({
+     if (!response.ok) throw new Error(`Product Engine HTTP ${response.status}`);
+ 
+     const payload = await response.json();
+-    if (!payload || !Array.isArray(payload.products)) {
+-      throw new Error('Invalid Product Engine payload');
++    if (!isValidEnginePayload(payload)) {
++      throw new Error('Invalid Product Engine payload (status must be "ok")');
+     }
+ 
+     const products = payload.products
+@@ -80,7 +100,7 @@ export async function fetchStorefrontProducts({
+ 
+     return {
+       products,
+-      status: payload.status || 'ok',
++      status: payload.status,
+       fetchedAt: payload.fetchedAt || new Date().toISOString(),
+     };
+   } finally {
+-- 
+2.39.5
+
