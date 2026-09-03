@@ -1,12 +1,4 @@
-/**
- * تتبّع أحداث خفيف جدًا.
- *
- * الموقع يحقن وسم Umami اختياريًا وقت البناء (`vitePluginOptionalAnalytics` في
- * vite.config.ts) عندما تكون `VITE_ANALYTICS_ENDPOINT` و`VITE_ANALYTICS_WEBSITE_ID`
- * مضبوطتين. هذه الدالة تستدعي ذلك الوسم إن وُجد فقط — بلا أي مكتبة جديدة، وبلا
- * أي خدمة خارجية، ولا تفشل أبدًا إن كان التتبّع معطّلًا أو محجوبًا.
- */
-
+/** تتبع أحداث خفيف عبر Umami إن كان مفعّلًا. */
 type UmamiWindow = Window & {
   umami?: { track?: (event: string, data?: Record<string, unknown>) => void };
 };
@@ -16,6 +8,7 @@ export type ProductEvent =
   | "product_search"
   | "product_filter"
   | "whatsapp_click"
+  | "whatsapp_product_inquiry"
   | "product_share";
 
 export function trackEvent(
@@ -26,6 +19,6 @@ export function trackEvent(
   try {
     (window as UmamiWindow).umami?.track?.(event, data);
   } catch {
-    // التتبّع مسألة ثانوية: لا يجوز أن يكسر تفاعل المستخدم أبدًا.
+    // التتبع لا يجوز أن يكسر تفاعل المستخدم.
   }
 }
