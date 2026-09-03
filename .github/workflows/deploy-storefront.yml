@@ -64,7 +64,7 @@ jobs:
       - name: Build storefront
         run: pnpm build
 
-      - name: Assert published products are bundled
+      - name: Assert verified product snapshot is bundled
         shell: bash
         run: |
           set -euo pipefail
@@ -72,21 +72,29 @@ jobs:
           test -f dist/public/products/processed/product-kitchen-46pcs-main.webp
           test -f dist/public/products/processed/product-home-chef-104pcs-main.webp
           test -f dist/public/products/processed/product-ot-00001-main.webp
-          for product_id in \
-            OMR-IG-KIT-46 \
-            OMR-IG-HC-104 \
-            OMR-IG-SQ-01 \
-            OMR-RAW-001 \
-            OMR-RAW-002 \
-            OMR-RAW-003 \
-            OMR-RAW-004 \
-            OMR-RAW-005; do
-            grep -R -q "${product_id}" dist/public/assets || {
-              echo "::error::Missing verified product in storefront bundle: ${product_id}"
-              exit 1
-            }
-          done
-          echo 'Storefront product bundle: PASS (8 verified public products; 3 local images + 5 verified Drive images)'
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import subprocess
+
+          source = Path('client/src/lib/publicProductsSnapshot.ts').read_text(encoding='utf-8')
+          product_ids = re.findall(r'^\s*id:\s*"([^"]+)"', source, flags=re.MULTILINE)
+          assert product_ids, 'verified snapshot contains no product IDs'
+          assert len(product_ids) == len(set(product_ids)), f'duplicate snapshot product IDs: {product_ids}'
+
+          assets = Path('dist/public/assets')
+          assert assets.is_dir(), 'built assets directory is missing'
+          built_text = '\n'.join(
+              p.read_text(encoding='utf-8', errors='ignore')
+              for p in assets.rglob('*') if p.is_file()
+          )
+          missing = [product_id for product_id in product_ids if product_id not in built_text]
+          assert not missing, f'missing verified products in storefront bundle: {missing}'
+
+          Path('/tmp/public-product-count').write_text(str(len(product_ids)), encoding='utf-8')
+          print(f'Storefront product bundle: PASS ({len(product_ids)} verified public products)')
+          PY
 
       - name: Deploy Cloudflare Pages production
         run: pnpm exec wrangler pages deploy dist/public --project-name=omrantoys-live-app --branch=main --commit-dirty=true
@@ -98,4 +106,4 @@ jobs:
         run: |
           echo "Storefront project: omrantoys-live-app"
           echo "Commit: ${GITHUB_SHA}"
-          echo "Expected public products: 8"
+          echo "Verified public products: $(cat /tmp/public-product-count)"
