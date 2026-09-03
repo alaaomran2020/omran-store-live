@@ -4,10 +4,6 @@ import { buildWhatsAppUrl, formatPrice } from "@/lib/productFormat";
 import { trackEvent } from "@/lib/analytics";
 import { Info, MessageCircle } from "lucide-react";
 
-/**
- * بطاقة المنتج — نفس لغة التصميم الحالية للموقع (زوايا 1.75rem، حدود stone،
- * ألوان emerald/orange، RTL) مع بيانات قادمة من Google Sheets بدل منشورات Meta.
- */
 export function ProductCard({
   product,
   onOpenDetails,
@@ -16,6 +12,18 @@ export function ProductCard({
   onOpenDetails: (product: Product) => void;
 }) {
   const waUrl = buildWhatsAppUrl(product);
+
+  const trackWhatsAppInquiry = () => {
+    trackEvent("whatsapp_product_inquiry", {
+      product_id: product.id,
+      sku: product.id,
+      product_name: product.name,
+      category: product.category || "",
+      price_mode: product.price === null ? "inquiry" : "priced",
+      page_location: typeof window === "undefined" ? "" : window.location.href,
+      cta_location: "product_card",
+    });
+  };
 
   return (
     <article
@@ -42,16 +50,10 @@ export function ProductCard({
       </button>
 
       <div className="flex flex-1 flex-col gap-3 p-5">
-        <h3 className="line-clamp-2 text-lg font-black leading-8 text-emerald-950">
-          {product.name}
-        </h3>
-        <p className="text-base font-black text-orange-700">
-          {formatPrice(product.price)}
-        </p>
+        <h3 className="line-clamp-2 text-lg font-black leading-8 text-emerald-950">{product.name}</h3>
+        <p className="text-base font-black text-orange-700">{formatPrice(product.price)}</p>
         {product.description && (
-          <p className="line-clamp-3 text-sm leading-7 text-stone-600">
-            {product.description}
-          </p>
+          <p className="line-clamp-3 text-sm leading-7 text-stone-600">{product.description}</p>
         )}
 
         <div className="mt-auto flex flex-col gap-2 pt-2">
@@ -60,13 +62,7 @@ export function ProductCard({
               href={waUrl}
               target="_blank"
               rel="noreferrer"
-              onClick={() =>
-                trackEvent("whatsapp_click", {
-                  product: product.name,
-                  id: product.id,
-                  from: "card",
-                })
-              }
+              onClick={trackWhatsAppInquiry}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[#25d366] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#1eb857]"
             >
               <MessageCircle size={17} aria-hidden="true" /> اطلب عبر واتساب
