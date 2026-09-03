@@ -1,28 +1,14 @@
-# نشر آمن: GitHub → Cloudflare Workers Assets → https://omrantoys.store
-#
-# القيم السرية لا تُكتب هنا ولا في أي ملف. تُقرأ وقت التشغيل فقط من:
-# GitHub → Settings → Secrets and variables → Actions
-#
-# الأسرار المطلوبة:
-#   CLOUDFLARE_API_TOKEN
-#   CLOUDFLARE_ACCOUNT_ID
-#
-# توكنات Meta لا تمر عبر هذا الـWorkflow، بل تُخزَّن كأسرار داخل Worker:
-#   wrangler secret put INSTAGRAM_ACCESS_TOKEN
-#   wrangler secret put FACEBOOK_PAGE_ID
-#   wrangler secret put FACEBOOK_PAGE_ACCESS_TOKEN
-
-name: Deploy to Cloudflare
+name: Deploy Edge API to Cloudflare
 
 on:
   workflow_dispatch:
-
+  pull_request:
+    branches: [main]
   push:
-    branches:
-      - main
+    branches: [main]
 
 concurrency:
-  group: cloudflare-deploy
+  group: omran-edge-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -31,14 +17,13 @@ permissions:
 env:
   SITE_URL: https://omrantoys.store
   WWW_URL: https://www.omrantoys.store
-  PRODUCTION_URL: https://omrantoys.store
   NODE_OPTIONS: --max-old-space-size=4096
 
 jobs:
-  test:
-    name: Typecheck and tests
+  quality:
+    name: Lint, typecheck, tests and build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -46,6 +31,8 @@ jobs:
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.1
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -53,8 +40,11 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+      - name: Install dependencies reproducibly
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
 
       - name: Type checks
         run: pnpm check
@@ -62,11 +52,43 @@ jobs:
       - name: Tests
         run: pnpm test
 
+      - name: Build
+        run: pnpm build
+
+      - name: Validate Worker configuration
+        run: pnpm exec wrangler deploy --dry-run --outdir /tmp/wrangler-dry-run
+
+      - name: Assert API-only Worker routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('wrangler.toml').read_text(encoding='utf-8')
+          required = [
+              'omrantoys.store/api/*',
+              'www.omrantoys.store/api/*',
+              'omrantoys.store/edge-api/products',
+              'www.omrantoys.store/edge-api/products',
+          ]
+          for route in required:
+              assert route in text, f'missing required route: {route}'
+          forbidden = [
+              '{ pattern = "omrantoys.store/*"',
+              '{ pattern = "www.omrantoys.store/*"',
+              '[assets]',
+          ]
+          for token in forbidden:
+              assert token not in text, f'forbidden storefront ownership in Worker config: {token}'
+          print('API-only Worker configuration: PASS')
+          PY
+
   deploy:
-    name: Build, deploy and smoke-check
-    needs: test
+    name: Deploy Worker and verify production APIs
+    needs: quality
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -74,6 +96,8 @@ jobs:
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.1
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -87,145 +111,87 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN}" || { echo '::error::CLOUDFLARE_API_TOKEN is not configured'; exit 1; }
+          test -n "${CLOUDFLARE_ACCOUNT_ID}" || { echo '::error::CLOUDFLARE_ACCOUNT_ID is not configured'; exit 1; }
+          echo 'Required Cloudflare secret names are configured.'
 
-          missing=0
+      - name: Install dependencies reproducibly
+        run: pnpm install --frozen-lockfile
 
-          if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
-            echo "::error::GitHub secret CLOUDFLARE_API_TOKEN is not configured."
-            missing=1
-          fi
-
-          if [ -z "${CLOUDFLARE_ACCOUNT_ID}" ]; then
-            echo "::error::GitHub secret CLOUDFLARE_ACCOUNT_ID is not configured."
-            missing=1
-          fi
-
-          if [ "${missing}" -ne 0 ]; then
-            echo "::error::Add the missing secrets under Settings → Secrets and variables → Actions."
-            exit 1
-          fi
-
-          echo "Required Cloudflare secrets are configured."
-
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Build client assets
-        run: pnpm exec vite build
-
-      - name: Confirm build assets exist
-        run: |
-          set -euo pipefail
-
-          test -f dist/public/index.html
-          test -d dist/public/assets
-
-          echo "Build assets are ready."
-          ls -lh dist/public
-          ls -lh dist/public/assets
-
-      - name: Deploy Worker and assets
+      - name: Deploy API Worker only
         run: pnpm exec wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Smoke-check production domains
+      - name: Verify production Product API on apex and www
         env:
           SITE_URL: ${{ env.SITE_URL }}
           WWW_URL: ${{ env.WWW_URL }}
         run: |
           set -euo pipefail
-
-          # Cloudflare may intentionally return 403 to GitHub-hosted runner IPs
-          # before a request reaches the Worker. That must not be confused with
-          # an origin outage. A Cloudflare-authenticated 403 proves DNS + TLS +
-          # edge reachability; 522 and every other unexpected status still fail.
-          probe() {
-            local name="$1"
-            local url="$2"
-            local body="$3"
-            local headers="$4"
-            local expected="$5"
-            local status=""
-
-            for attempt in $(seq 1 12); do
-              status="$(
-                curl \
-                  -sS \
-                  -L \
-                  --connect-timeout 10 \
-                  --max-time 25 \
-                  -D "${headers}" \
-                  -o "${body}" \
-                  -w '%{http_code}' \
-                  "${url}" || true
-              )"
-
-              if [ "${status}" = "200" ] || [ "${status}" = "403" ]; then
-                break
-              fi
-
-              echo "${name}: attempt ${attempt}/12 returned ${status:-transport_error}; retrying."
-              sleep 5
-            done
-
-            if [ "${status}" = "403" ]; then
-              if ! grep -qiE '^server:[[:space:]]*cloudflare' "${headers}"; then
-                echo "::error::${name} returned a non-Cloudflare 403."
-                return 1
-              fi
-
-              echo "::warning::${name} is reachable through Cloudflare, but Cloudflare security denied this GitHub runner (403)."
-              return 0
-            fi
-
-            if [ "${status}" != "200" ]; then
-              echo "::error::${name} returned unexpected status ${status:-transport_error}."
-              return 1
-            fi
-
-            case "${expected}" in
-              html)
-                grep -qiE '<html|<!doctype html' "${body}"
-                ;;
-              products-json)
-                python3 - "${body}" <<'PY'
-          import json
-          import sys
-
-          with open(sys.argv[1], encoding="utf-8") as file:
-              data = json.load(file)
-
-          products = data.get("products")
-          assert isinstance(products, list), (
-              "The API response does not contain a products list."
-          )
-          print(
-              "API /api/products OK:",
-              f"status={data.get('status')!r}",
-              f"count={len(products)}",
-          )
+          for base in "${SITE_URL}" "${WWW_URL}"; do
+            url="${base}/api/products"
+            body="$(mktemp)"
+            headers="$(mktemp)"
+            status="$(curl -sS --connect-timeout 10 --max-time 30 -D "${headers}" -o "${body}" -w '%{http_code}' "${url}")"
+            test "${status}" = '200' || { echo "::error::${url} returned ${status}; expected 200"; cat "${headers}"; exit 1; }
+            python3 - "${body}" <<'PY'
+          import json, sys
+          data = json.load(open(sys.argv[1], encoding='utf-8'))
+          assert data.get('status') == 'ok', f"status must be ok, got {data.get('status')!r}"
+          products = data.get('products')
+          assert isinstance(products, list), 'products must be a list'
+          bad = []
+          for p in products:
+              if not (
+                  p.get('active') is True
+                  and p.get('workflowStatus') == 'PUBLISHED'
+                  and p.get('qaStatus') == 'PASS'
+              ):
+                  bad.append(p.get('id') or p.get('product_id') or '<unknown>')
+          assert not bad, f'publication gate violation: {bad}'
+          print(f'Product API publication gate: PASS ({len(products)} products)')
           PY
-                ;;
-              *)
-                echo "::error::Unknown probe expectation: ${expected}"
-                return 1
-                ;;
-            esac
+          done
 
-            echo "${name} OK (200, $(wc -c < "${body}") bytes)."
-          }
-
-          echo "Checking real production hostnames after deployment."
-          probe "Apex homepage" "${SITE_URL}/" /tmp/home.html /tmp/home.hdr html
-          probe "Products page" "${SITE_URL}/products" /tmp/products.html /tmp/products-page.hdr html
-          probe "Products API" "${SITE_URL}/api/products" /tmp/products.json /tmp/products-api.hdr products-json
-          probe "www homepage" "${WWW_URL}/" /tmp/www-home.html /tmp/www-home.hdr html
-
-          echo "Production-domain smoke-check passed."
-
-      - name: Report production URL
+      - name: Verify apex and www Product IDs are identical
+        env:
+          SITE_URL: ${{ env.SITE_URL }}
+          WWW_URL: ${{ env.WWW_URL }}
         run: |
-          echo "Deployment completed successfully."
-          echo "Production site: ${PRODUCTION_URL}"
+          set -euo pipefail
+          curl -fsS "${SITE_URL}/api/products" -o /tmp/apex-products.json
+          curl -fsS "${WWW_URL}/api/products" -o /tmp/www-products.json
+          python3 - <<'PY'
+          import json
+          a = json.load(open('/tmp/apex-products.json', encoding='utf-8'))['products']
+          w = json.load(open('/tmp/www-products.json', encoding='utf-8'))['products']
+          ids = lambda xs: [p.get('id') or p.get('product_id') for p in xs]
+          assert ids(a) == ids(w), f'apex/www product IDs differ: {ids(a)} != {ids(w)}'
+          print('Apex/www Product API parity: PASS')
+          PY
+
+      - name: Verify unauthorized Admin and Leads never return 530/HTML
+        env:
+          SITE_URL: ${{ env.SITE_URL }}
+        run: |
+          set -euo pipefail
+          for path in /api/admin/auth/me /api/leads; do
+            body="$(mktemp)"
+            headers="$(mktemp)"
+            status="$(curl -sS --connect-timeout 10 --max-time 30 -D "${headers}" -o "${body}" -w '%{http_code}' "${SITE_URL}${path}")"
+            if [ "${status}" = '530' ] || [ "${status}" = '502' ] || [ "${status}" = '504' ]; then
+              echo "::error::${path} origin is unavailable (${status})"
+              cat "${body}"
+              exit 1
+            fi
+            case "${status}" in 401|403) ;; *) echo "::error::${path} returned ${status}; expected 401 or 403"; cat "${body}"; exit 1;; esac
+            grep -qi '^content-type:.*application/json' "${headers}" || { echo "::error::${path} did not return JSON"; cat "${headers}"; exit 1; }
+          done
+
+      - name: Report deployment
+        run: |
+          echo "Worker: omran-store-live-edge"
+          echo "Commit: ${GITHUB_SHA}"
+          echo "Production API: ${SITE_URL}/api/products"
