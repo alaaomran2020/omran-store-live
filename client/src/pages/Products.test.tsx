@@ -42,7 +42,6 @@ const cards = () => screen.getAllByTestId("product-card");
 
 beforeEach(() => {
   window.history.replaceState({}, "", "/");
-  // رقم واتساب اختباري: الزر يظهر فقط عندما يكون الرقم مضبوطًا.
   vi.stubEnv("VITE_WHATSAPP_NUMBER", "201000000000");
   vi.stubGlobal(
     "fetch",
@@ -73,9 +72,8 @@ describe("كتالوج المنتجات (من Google Sheets)", () => {
       "001",
       "002",
       "003",
-      "005", // بلا sort_order → بعد المرتّبة، حسب ترتيب الشيت
+      "005",
     ]);
-    // المنتج المخفي (active = FALSE) لا يظهر للزائر إطلاقًا
     expect(screen.queryByText("عروسة قماش مخفية")).toBeNull();
     expect(screen.getByTestId("product-count").textContent).toContain("4 من 4");
   });
@@ -100,7 +98,6 @@ describe("كتالوج المنتجات (من Google Sheets)", () => {
     expect((screen.getByAltText("دباب كهربائي") as HTMLImageElement).src).toBe(
       "https://cdn.example.com/bike.jpg"
     );
-    // بلا صورة → لوحة بديلة، لا صورة مكسورة
     expect(screen.queryByAltText("مكعبات تعليمية")).toBeNull();
     expect(screen.getByLabelText("لا توجد صورة للمنتج مكعبات تعليمية")).toBeTruthy();
   });
@@ -169,13 +166,11 @@ describe("كتالوج المنتجات (من Google Sheets)", () => {
     expect(text).toContain("التصنيف: سيارات");
     expect(text).toContain("السعر: 250 ج.م");
     expect(text).toContain("رابط المنتج:");
-    // يتضمن رابط المنتج ويُشفّر بشكل صحيح
     expect(links[0].href).toContain("wa.me/201000000000");
-    // تأكد أن الرابط يستخدم الرقم الصحيح ويحتوي على تشفير URL
     expect(links[0].href).toContain("text=");
   });
 
-  it("لا يعرض خطأ تقنيًا إذا تعذّر الوصول إلى Google Sheets", async () => {
+  it("يعرض آخر كتالوج موثّق إذا تعطلت كل مصادر الشبكة", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => {
@@ -183,10 +178,14 @@ describe("كتالوج المنتجات (من Google Sheets)", () => {
       })
     );
     renderCatalog();
-    await waitFor(() =>
-      expect(screen.getByText("المتجر قيد التجهيز — المنتجات قادمة قريبًا")).toBeTruthy()
-    );
+
+    await waitFor(() => expect(cards()).toHaveLength(3));
+    expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual([
+      "OMR-IG-KIT-46",
+      "OMR-IG-HC-104",
+      "OMR-IG-SQ-01",
+    ]);
     expect(screen.queryByText(/network down/)).toBeNull();
-    expect(screen.queryByTestId("product-card")).toBeNull();
+    expect(screen.queryByText("المتجر قيد التجهيز — المنتجات قادمة قريبًا")).toBeNull();
   });
 });
