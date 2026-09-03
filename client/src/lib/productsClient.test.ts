@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchProducts } from "./productsClient";
+import { PUBLIC_PRODUCTS_SNAPSHOT } from "./publicProductsSnapshot";
 
 /**
  * سلسلة المحاولات في productsClient:
@@ -9,7 +10,12 @@ import { fetchProducts } from "./productsClient";
 
 type Route = {
   match: (url: string) => boolean;
-  respond: () => { ok: boolean; status: number; json: () => Promise<unknown>; text?: () => Promise<string> };
+  respond: () => {
+    ok: boolean;
+    status: number;
+    json: () => Promise<unknown>;
+    text?: () => Promise<string>;
+  };
 };
 
 function stubFetch(routes: Route[]) {
@@ -86,11 +92,19 @@ describe("productsClient fallback chain", () => {
     const calls = stubFetch([
       {
         match: url => url.includes("/api/products"),
-        respond: () => ({ ok: true, status: 200, json: async () => ({ status: "ok", products: [] }) }),
+        respond: () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({ status: "ok", products: [] }),
+        }),
       },
       {
         match: url => url.includes("/edge-api/products"),
-        respond: () => ({ ok: true, status: 200, json: async () => ({ status: "ok", products: [] }) }),
+        respond: () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({ status: "ok", products: [] }),
+        }),
       },
     ]);
 
@@ -121,16 +135,9 @@ describe("productsClient fallback chain", () => {
     const payload = await fetchProducts();
 
     expect(payload.status).toBe("ok");
-    expect(payload.products.map(p => p.id)).toEqual([
-      "OMR-IG-KIT-46",
-      "OMR-IG-HC-104",
-      "OMR-IG-SQ-01",
-      "OMR-RAW-001",
-      "OMR-RAW-002",
-      "OMR-RAW-003",
-      "OMR-RAW-004",
-      "OMR-RAW-005",
-    ]);
+    expect(payload.products.map(product => product.id)).toEqual(
+      PUBLIC_PRODUCTS_SNAPSHOT.map(product => product.id)
+    );
     expect(calls).toEqual(["/api/products", "/edge-api/products"]);
   });
 });
