@@ -179,11 +179,16 @@ describe("كتالوج المنتجات (من Google Sheets)", () => {
     );
     renderCatalog();
 
-    await waitFor(() => expect(cards()).toHaveLength(3));
+    await waitFor(() => expect(cards()).toHaveLength(8));
     expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual([
       "OMR-IG-KIT-46",
       "OMR-IG-HC-104",
       "OMR-IG-SQ-01",
+      "OMR-RAW-001",
+      "OMR-RAW-002",
+      "OMR-RAW-003",
+      "OMR-RAW-004",
+      "OMR-RAW-005",
     ]);
     expect(screen.queryByText(/network down/)).toBeNull();
     expect(screen.queryByText("المتجر قيد التجهيز — المنتجات قادمة قريبًا")).toBeNull();
