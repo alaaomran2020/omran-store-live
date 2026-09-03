@@ -42,14 +42,20 @@ describe("Product API on apex and www", () => {
     const apexBody = (await apex.json()) as {
       products: unknown[];
       status: string;
+      fetchedAt?: string;
     };
     const wwwBody = (await www.json()) as {
       products: unknown[];
       status: string;
+      fetchedAt?: string;
     };
 
-    expect(apexBody).toEqual({ products: [], status: "not_configured" });
-    expect(wwwBody).toEqual(apexBody);
+    expect(apexBody.status).toBe("not_configured");
+    expect(wwwBody.status).toBe(apexBody.status);
+    expect(apexBody.products).toEqual([]);
+    expect(wwwBody.products).toEqual(apexBody.products);
+    expect(typeof apexBody.fetchedAt).toBe("string");
+    expect(typeof wwwBody.fetchedAt).toBe("string");
     expect(apex.headers.get("x-edge")).toBe("omran-store-live");
     expect(www.headers.get("x-edge")).toBe("omran-store-live");
   });
