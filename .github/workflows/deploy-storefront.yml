@@ -72,10 +72,21 @@ jobs:
           test -f dist/public/products/processed/product-kitchen-46pcs-main.webp
           test -f dist/public/products/processed/product-home-chef-104pcs-main.webp
           test -f dist/public/products/processed/product-ot-00001-main.webp
-          grep -R -q 'OMR-IG-KIT-46' dist/public/assets
-          grep -R -q 'OMR-IG-HC-104' dist/public/assets
-          grep -R -q 'OMR-IG-SQ-01' dist/public/assets
-          echo 'Storefront product bundle: PASS (3 verified public products + images)'
+          for product_id in \
+            OMR-IG-KIT-46 \
+            OMR-IG-HC-104 \
+            OMR-IG-SQ-01 \
+            OMR-RAW-001 \
+            OMR-RAW-002 \
+            OMR-RAW-003 \
+            OMR-RAW-004 \
+            OMR-RAW-005; do
+            grep -R -q "${product_id}" dist/public/assets || {
+              echo "::error::Missing verified product in storefront bundle: ${product_id}"
+              exit 1
+            }
+          done
+          echo 'Storefront product bundle: PASS (8 verified public products; 3 local images + 5 verified Drive images)'
 
       - name: Deploy Cloudflare Pages production
         run: pnpm exec wrangler pages deploy dist/public --project-name=omrantoys-live-app --branch=main --commit-dirty=true
@@ -87,4 +98,4 @@ jobs:
         run: |
           echo "Storefront project: omrantoys-live-app"
           echo "Commit: ${GITHUB_SHA}"
-          echo "Expected public products: 3"
+          echo "Expected public products: 8"
