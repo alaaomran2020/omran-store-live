@@ -15,7 +15,6 @@ import {
   RefreshCw,
   Search,
   Share2,
-  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { whatsappNumber } from "@/lib/productFormat";
@@ -150,7 +149,9 @@ export default function Products() {
       <header className="border-b border-stone-200/80 bg-[#f7f3ec]/90 backdrop-blur">
         <div className="container flex min-h-20 items-center justify-between gap-4">
           <a href="/products" className="text-xl font-black tracking-tight text-emerald-950">عمران للألعاب</a>
-          <nav className="flex items-center gap-4 text-sm font-bold text-stone-600"><a href="#feed" className="hover:text-emerald-800">المنتجات</a><a href="/settings/social" className="inline-flex items-center gap-1.5 rounded-full border border-stone-300 px-3 py-1.5 hover:border-emerald-700 hover:text-emerald-800"><ShieldCheck size={15} /> الإعدادات</a></nav>
+          <nav className="flex items-center gap-4 text-sm font-bold text-stone-600">
+            <a href="#feed" className="hover:text-emerald-800">المنتجات</a>
+          </nav>
         </div>
       </header>
       <main>
