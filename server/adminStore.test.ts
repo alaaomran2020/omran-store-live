@@ -20,11 +20,15 @@ const seed = {
 
 const makeStore = () => new MemoryAdminStore(seed);
 
+/**
+ * صفوف الإدارة: تقرأ بحقول النشر أول-فئة (تشخيصيًا) حتى تكون الدمج/الإخفاء
+ * قابلاً للاختبار؛ بوابة النشر النهائية تُطبق عند Public API وليس هنا.
+ */
 const baseProducts: Product[] = parseProductsCsv(
   [
-    "id,name,price,category,description,image,active,sort_order",
-    "p1,لعبة سيارة,100,سيارات,سيارة حمراء,https://img.example.com/a.jpg,TRUE,1",
-    "p2,دمية,250,عرائس,دمية ناعمة,,TRUE,2",
+    "id,name,price,category,description,image,active,sort_order,workflow_status,qa_status",
+    "p1,لعبة سيارة,100,سيارات,سيارة حمراء,https://img.example.com/a.jpg,TRUE,1,PUBLISHED,PASS",
+    "p2,دمية,250,عرائس,دمية ناعمة,,TRUE,2,PUBLISHED,PASS",
   ].join("\n"),
   { includeInactive: true }
 );
@@ -147,7 +151,7 @@ describe("applyOverridesToProducts — دمج تجاوزات المدراء", ()
 
   it("active=true يُظهر منتجًا مخفيًا في الشيت (includeInactive)", () => {
     const hiddenProducts = parseProductsCsv(
-      ["id,name,active", "p9,منتج مخفي,FALSE"].join("\n"),
+      ["id,name,active,workflow_status,qa_status", "p9,منتج مخفي,FALSE,PUBLISHED,PASS"].join("\n"),
       { includeInactive: true }
     );
     const merged = applyOverridesToProducts(hiddenProducts, [

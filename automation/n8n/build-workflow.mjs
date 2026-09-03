@@ -189,6 +189,7 @@ const row = {
   sort_order: "",
   product_prompt: "",           // محفوظ للتوافق — لا يُخترع محتواه
   workflow_status: "REVIEW",
+  qa_status: "NEEDS_REVIEW",    // بلا قرار جودة بعد — بوابة النشر Fail-Closed
   created_at: now,
   updated_at: now,
 };
@@ -310,6 +311,7 @@ if (fields.price !== undefined && fields.price !== null) {
 }
 row.active = "FALSE";              // يظل تحت المراجعة حتى الضغط على نشر
 row.workflow_status = "REVIEW";
+row.qa_status = "NEEDS_REVIEW";    // التعديل يعيد المنتج لطابور المراجعة
 row.updated_at = new Date().toISOString();
 
 const sd = $getWorkflowStaticData('global');
@@ -574,6 +576,7 @@ addNode({
         sort_order: "={{ $json.row.sort_order }}",
         product_prompt: "={{ $json.row.product_prompt }}",
         workflow_status: "={{ $json.row.workflow_status }}",
+        qa_status: "={{ $json.row.qa_status }}",
         created_at: "={{ $json.row.created_at }}",
         updated_at: "={{ $json.row.updated_at }}",
       },
@@ -654,6 +657,7 @@ addNode({
         id: APPROVE_ID,
         active: "TRUE",
         workflow_status: "PUBLISHED",
+        qa_status: "PASS",
         updated_at: "={{ new Date().toISOString() }}",
       },
       matchingColumns: ["id"],
@@ -811,6 +815,7 @@ addNode({
         sort_order: "={{ $json.row.sort_order }}",
         product_prompt: "={{ $json.row.product_prompt }}",
         workflow_status: "={{ $json.row.workflow_status }}",
+        qa_status: "={{ $json.row.qa_status }}",
         created_at: "={{ $json.row.created_at }}",
         updated_at: "={{ $json.row.updated_at }}",
       },

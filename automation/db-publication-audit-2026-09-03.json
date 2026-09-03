@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-09-03T03:30:00Z",
+  "policy": "PUBLIC = active=true AND workflow_status=PUBLISHED AND qa_status=PASS (Fail-Closed)",
+  "visual_qa": {
+    "performer": "agent-arena-session",
+    "inputs_verified": [
+      "automation/raw-local/omran-product-01.jpg -> KITCHEN COUNTER 46 PCS (مطابق للتغليف)",
+      "automation/raw-local/omran-product-02.jpg -> Pinching House squishies (اسكوشي)",
+      "automation/raw-local/omran-product-03.jpg -> HOME CHEF 104 PCS (مطابق للتغليف)",
+      "automation/raw-local/omran-product-04.jpg -> HOME CHEF 104 PCS (زاوية بديلة)",
+      "automation/raw-local/omran-product-05.jpg -> Pinching House squishies (اسكوشي)"
+    ],
+    "processed_matches": {
+      "product-kitchen-46pcs-main.webp": "omran-product-01 (VERIFIED_IDENTICAL)",
+      "product-home-chef-104pcs-main.webp": "omran-product-03 (VERIFIED_IDENTICAL)",
+      "product-ot-00001-main.webp": "omran-product-05 (VERIFIED_IDENTICAL) — الصورة تخص الاسكوشي وليست حيوانات"
+    },
+    "corrections_to_previous_audit": [
+      "previous note '01=02 same product' غير صحيح: 02 = اسكوشي (منتج آخر)",
+      "OT-00001 (حيوانات بلاستيك) أرفق بصورة اسكوشي → NEEDS_REVIEW (عدم تطابق اسم/صورة)",
+      "OMR-IG-SQ-01 كان HOLD بسبب 'صورة خاطئة' — الصورة الصحيحة موجودة فعليًا (omran-product-02/05) → يمكن نشره"
+    ]
+  },
+  "plan": {
+    "file": "automation/db-publication-plan-2026-09-03.csv",
+    "published": 3,
+    "needs_review": 2,
+    "applied": false,
+    "reason_not_applied": "كتابة Google Sheet تتطلب GOOGLE_SERVICE_ACCOUNT_JSON (لم يكن متاحًا في البيئة) — انظر BREAKER"
+  }
+}

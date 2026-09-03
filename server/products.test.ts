@@ -18,7 +18,10 @@ import {
 } from "@shared/products";
 
 const HEADER =
-  "id,name,price,category,description,image,active,sort_order,product_prompt";
+  "id,name,price,category,description,image,active,sort_order,product_prompt,workflow_status,qa_status";
+
+/** كل صف عام في هذه الاختبارات يحمل المفاتيح الثلاثة الصريحة. */
+const pub = (cells: string) => `${cells},PUBLISHED,PASS`;
 
 const csv = (...rows: string[]) => [HEADER, ...rows].join("\n");
 
@@ -77,9 +80,7 @@ describe("تحويل الأنواع", () => {
 describe("parseProductsCsv", () => {
   it("يقرأ صفًا كاملًا بالأنواع الصحيحة", () => {
     const [product] = parseProductsCsv(
-      csv(
-        '001,سيارة أطفال سباق,250,سيارات,وصف المنتج,https://cdn.example.com/car.jpg,TRUE,1,"برومبت"'
-      )
+      csv(pub('001,سيارة أطفال سباق,250,سيارات,وصف المنتج,https://cdn.example.com/car.jpg,TRUE,1,"برومبت"'))
     );
     expect(product).toMatchObject<Partial<Product>>({
       id: "001",
@@ -96,11 +97,11 @@ describe("parseProductsCsv", () => {
 
   it("يخفي المنتجات inactive عن الموقع العام", () => {
     const products = parseProductsCsv(
-      csv("1,معروض,10,ألعاب,,,TRUE,1,", "2,مخفي,10,ألعاب,,,FALSE,2,")
+      csv(pub("1,معروض,10,ألعاب,,,TRUE,1,"), pub("2,مخفي,10,ألعاب,,,FALSE,2,"))
     );
     expect(products.map(p => p.name)).toEqual(["معروض"]);
     expect(
-      parseProductsCsv(csv("2,مخفي,10,ألعاب,,,FALSE,2,"), {
+      parseProductsCsv(csv(pub("2,مخفي,10,ألعاب,,,FALSE,2,")), {
         includeInactive: true,
       })
     ).toHaveLength(1);
@@ -109,11 +110,11 @@ describe("parseProductsCsv", () => {
   it("لا ينكسر مع صفوف تالفة أو ناقصة أو فارغة", () => {
     const products = parseProductsCsv(
       csv(
-        ",,,,,,,,", // صف فارغ تمامًا
+        ",,,,,,,,,,", // صف فارغ تمامًا
         "9", // أعمدة ناقصة جدًا
-        "10,منتج بلا سعر,,,,,,,", // بلا سعر ولا صورة
-        "11,منتج بسعر تالف,abc,ألعاب,وصف,,,,",
-        "12,منتج بأعمدة زائدة,50,ألعاب,وصف,,TRUE,5,برومبت,زيادة,زيادة أخرى"
+        pub("10,منتج بلا سعر,,,,,,,"), // بلا سعر ولا صورة
+        pub("11,منتج بسعر تالف,abc,ألعاب,وصف,,,,"),
+        "12,منتج بأعمدة زائدة,50,ألعاب,وصف,,TRUE,5,برومبت,PUBLISHED,PASS,زيادة,زيادة أخرى"
       )
     );
     expect(products.map(p => p.name)).toEqual([
@@ -128,7 +129,7 @@ describe("parseProductsCsv", () => {
 
   it("يولّد معرّفًا للصفوف بلا id ويفض تكرار المعرّفات", () => {
     const products = parseProductsCsv(
-      csv(",منتج أ,10,,,,,,", "007,منتج ب,10,,,,,,", "007,منتج ج,10,,,,,,")
+      csv(pub(",منتج أ,10,,,,,,"), pub("007,منتج ب,10,,,,,,"), pub("007,منتج ج,10,,,,,,"))
     );
     const ids = products.map(p => p.id);
     expect(new Set(ids).size).toBe(3);
@@ -138,10 +139,10 @@ describe("parseProductsCsv", () => {
   it("يرتّب حسب sort_order ثم حسب ترتيب الشيت للصفوف بلا ترتيب", () => {
     const products = parseProductsCsv(
       csv(
-        "a,ثالث,10,,,,,3,",
-        "b,بلا ترتيب أول,10,,,,,,",
-        "c,أول,10,,,,,1,",
-        "d,بلا ترتيب ثانٍ,10,,,,,,"
+        pub("a,ثالث,10,,,,,3,"),
+        pub("b,بلا ترتيب أول,10,,,,,,"),
+        pub("c,أول,10,,,,,1,"),
+        pub("d,بلا ترتيب ثانٍ,10,,,,,,")
       )
     );
     expect(products.map(p => p.name)).toEqual([
@@ -153,14 +154,14 @@ describe("parseProductsCsv", () => {
   });
 
   it("يقبل شيتًا بلا صف عناوين (الترتيب القياسي للأعمدة)", () => {
-    const products = parseProductsCsv("001,منتج بلا رأس,99,ألعاب,وصف,,TRUE,1,");
+    const products = parseProductsCsv("001,منتج بلا رأس,99,ألعاب,وصف,,TRUE,1,,PUBLISHED,PASS");
     expect(products).toHaveLength(1);
     expect(products[0].price).toBe(99);
   });
 
   it("يقبل أعمدة بأسماء عربية أو بترتيب مختلف", () => {
     const products = parseProductsCsv(
-      ["الاسم,السعر,التصنيف,الصورة,الحالة", "لعبة,75,ألعاب,,TRUE"].join("\n")
+      ["الاسم,السعر,التصنيف,الصورة,الحالة,حالة النشر,الجودة", "لعبة,75,ألعاب,,TRUE,PUBLISHED,PASS"].join("\n")
     );
     expect(products[0]).toMatchObject({
       name: "لعبة",
@@ -172,8 +173,8 @@ describe("parseProductsCsv", () => {
   it("يستخرج التصنيفات ويبحث في الاسم والوصف والتصنيف", () => {
     const products = parseProductsCsv(
       csv(
-        "1,سيارة سباق,10,سيارات,لعبة سريعة,,TRUE,1,",
-        "2,مكعبات,20,تعليمية,بناء,,TRUE,2,"
+        pub("1,سيارة سباق,10,سيارات,لعبة سريعة,,TRUE,1,"),
+        pub("2,مكعبات,20,تعليمية,بناء,,TRUE,2,")
       )
     );
     expect(productCategories(products)).toEqual(["سيارات", "تعليمية"]);
@@ -286,7 +287,7 @@ describe("fetchProductsPayload", () => {
 
   it("يقرأ الشيت ويحوّله لمنتجات", async () => {
     const payload = await fetchProductsPayload(url, async () =>
-      okResponse(csv("1,لعبة,50,ألعاب,وصف,,TRUE,1,"))
+      okResponse(csv(pub("1,لعبة,50,ألعاب,وصف,,TRUE,1,")))
     );
     expect(payload.status).toBe("ok");
     expect(payload.products).toHaveLength(1);
