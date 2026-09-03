@@ -18,6 +18,30 @@ export type AdminInfo = {
   permissions: string[];
 };
 
+export type LeadStatus =
+  | "new"
+  | "qualified"
+  | "confirmed"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled"
+  | "returned";
+
+export type LeadRecord = {
+  id: string;
+  reference: string;
+  customerName: string;
+  phone: string;
+  source: string;
+  utm: Record<string, string> | null;
+  status: LeadStatus;
+  notes: string | null;
+  total: number | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export class ApiError extends Error {
   status: number;
   payload: Record<string, unknown> | null;
@@ -111,6 +135,21 @@ export const patchAdminProduct = (
     { method: "PATCH", body: fields }
   );
 
+/** Leads — القراءة والإدارة محمية بجلسة المدير على الخادم. */
+export const fetchLeads = ({ limit = 50, offset = 0 }: { limit?: number; offset?: number } = {}) =>
+  request<{ leads: LeadRecord[]; limit: number; offset: number }>(
+    `/api/leads?limit=${limit}&offset=${offset}`
+  );
+
+export const patchLead = (
+  id: string,
+  fields: { status?: LeadStatus; notes?: string | null }
+) =>
+  request<{ ok: boolean; lead: LeadRecord }>(
+    `/api/leads/${encodeURIComponent(id)}`,
+    { method: "PATCH", body: fields }
+  );
+
 /** سجل نشاطي الأخير */
 export const fetchMyActivity = () =>
   request<{ rows: { action: string; entityType: string | null; entityId: string | null; outcome: string; createdAt: string }[] }>(
@@ -133,6 +172,12 @@ export const editableFields = (admin: AdminInfo | null | undefined) => ({
 
 export const isSuperAdmin = (admin: AdminInfo | null | undefined): boolean =>
   !!admin && admin.role === "super_admin";
+
+export const canReadLeads = (admin: AdminInfo | null | undefined): boolean =>
+  isSuperAdmin(admin) || can(admin, "leads.read") || can(admin, "leads.manage");
+
+export const canManageLeads = (admin: AdminInfo | null | undefined): boolean =>
+  isSuperAdmin(admin) || can(admin, "leads.manage");
 
 /** تنسيق الجنيه المصري */
 export const formatEGP = (value: number | null | undefined): string =>

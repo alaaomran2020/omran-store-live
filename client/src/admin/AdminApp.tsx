@@ -3,20 +3,21 @@
  *
  * "Route Protection" في الواجهة: يفحص الجلسة عبر GET /api/admin/auth/me قبل
  * رسم أي شاشة، ويحوّل غير المصادَقين لشاشة الدخول. هذا حارس UX — الحماية
- * الحقيقية محصورة في الخادم (server/adminRoutes.ts) لأن أي طلب بلا جلسة
- * صالحة يُرفض بـ 401 قبل لمس قاعدة البيانات.
+ * الحقيقية محصورة في الخادم لأن أي طلب بلا جلسة صالحة يُرفض قبل لمس البيانات.
  *
  * التوجيه عبر wouter (مسارات حقيقية):
  *   /admin/login            شاشة الدخول عبر واتساب
  *   /admin/products         قائمة المنتجات
  *   /admin/products/:id     تعديل منتج (الصلاحيات المحدودة)
+ *   /admin/leads            قراءة وإدارة Leads حسب الصلاحيات
  */
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import type { AdminInfo } from "@/lib/adminApi";
-import { fetchMe, logout as apiLogout } from "@/lib/adminApi";
+import { canReadLeads, fetchMe, logout as apiLogout } from "@/lib/adminApi";
 import AdminLoginPage from "./AdminLoginPage";
 import AdminProductsPage from "./AdminProductsPage";
+import AdminLeadsPage from "./AdminLeadsPage";
 import EditProductPage from "./EditProductPage";
 import { RoleBadge, Spinner } from "./ui";
 
@@ -88,6 +89,10 @@ export default function AdminApp() {
     screen = <DeniedScreen navigate={navigate} />;
   } else if (location === "/admin/products" || location === "/admin/products/") {
     screen = <AdminProductsPage navigate={navigate} />;
+  } else if (location === "/admin/leads" || location === "/admin/leads/") {
+    screen = canReadLeads(session.admin)
+      ? <AdminLeadsPage />
+      : <ForbiddenScreen navigate={navigate} />;
   } else if (/^\/admin\/products\/[^/]+\/?$/.test(location)) {
     const id = decodeURIComponent(location.replace(/\/$/, "").split("/").pop() ?? "");
     screen = <EditProductPage id={id} navigate={navigate} />;
@@ -126,6 +131,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const admin = session.admin;
   const isLimited = admin?.role === "limited_admin";
   const [location] = useLocation();
+  const showLeads = canReadLeads(admin);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -161,12 +167,17 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* شريط تنقل مقصود بقوة: المنتجات فقط للدور المحدود */}
+      {/* التنقل يظهر فقط ما تسمح به الصلاحيات الحالية. */}
       <nav className="border-b-2 border-ink-deep bg-slate-900/60">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-2">
           <NavLink active={location === "/admin/products"} onClick={() => navigate("/admin/products")}>
             المنتجات
           </NavLink>
+          {showLeads ? (
+            <NavLink active={location === "/admin/leads"} onClick={() => navigate("/admin/leads")}>
+              Leads
+            </NavLink>
+          ) : null}
           <span className="mx-1 font-mono text-slate-700">|</span>
           <span className="inline-flex cursor-not-allowed items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-600 line-through">
             الطلبات
@@ -237,6 +248,25 @@ function DeniedScreen({ navigate }: { navigate: (to: string) => void }) {
         <p className="mt-2 text-sm text-slate-400">
           يُجري النظام تحويلك إلى تسجيل الدخول عبر واتساب…
         </p>
+      </div>
+    </div>
+  );
+}
+
+function ForbiddenScreen({ navigate }: { navigate: (to: string) => void }) {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center px-4">
+      <div className="max-w-md border-2 border-red-600 bg-slate-900 p-8 text-center shadow-[4px_4px_0_0_#050A18]">
+        <div className="font-mono text-[10px] tracking-[0.3em] text-red-400 uppercase">
+          403 — Forbidden
+        </div>
+        <div className="mt-3 text-lg font-black text-slate-100">لا تملك صلاحية Leads</div>
+        <button
+          onClick={() => navigate("/admin/products")}
+          className="mt-4 border-2 border-electric px-4 py-2 text-xs font-black text-electric transition-colors hover:bg-electric hover:text-white"
+        >
+          العودة للمنتجات
+        </button>
       </div>
     </div>
   );

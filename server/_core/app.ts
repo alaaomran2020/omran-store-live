@@ -9,6 +9,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { registerSocialFeedRoute } from "../socialFeed";
 import { registerProductsRoute } from "../products";
+import { registerLeadsRoutes } from "../leads";
 import {
   registerAdminRoutes,
   registerWhatsappWebhook,
@@ -69,6 +70,10 @@ export function buildApp(): Express {
 
   // لوحة إدارة المدراء: واتساب OTP + RBAC (مساراتها تحمل مُحلِّل JSON خاصًا).
   registerAdminRoutes(app);
+
+  // Leads: POST عام لالتقاط الاستفسار، GET/PATCH محميان بجلسة المدير.
+  // يجب تسجيل المسار صراحةً هنا حتى لا تسقط /api/leads إلى SPA HTML.
+  registerLeadsRoutes(app);
 
   // Container/orchestrator liveness probe. Deliberately dependency-free (no DB,
   // no upstream calls) so an outage downstream can't trigger a restart loop.
