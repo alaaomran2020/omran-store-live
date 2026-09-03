@@ -8,6 +8,7 @@ on:
       - "client/**"
       - "public/**"
       - "shared/**"
+      - "scripts/generate-public-products-snapshot.ts"
       - "vite.config.ts"
       - "package.json"
       - "pnpm-lock.yaml"
@@ -55,6 +56,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Refresh verified snapshot from Master Database
+        run: pnpm exec tsx scripts/generate-public-products-snapshot.ts
+
       - name: Quality gates
         run: |
           pnpm lint
@@ -76,10 +80,13 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
-          import subprocess
 
           source = Path('client/src/lib/publicProductsSnapshot.ts').read_text(encoding='utf-8')
-          product_ids = re.findall(r'^\s*id:\s*"([^"]+)"', source, flags=re.MULTILINE)
+          product_ids = re.findall(
+              r'^\s*(?:"id"|id):\s*"([^"]+)"',
+              source,
+              flags=re.MULTILINE,
+          )
           assert product_ids, 'verified snapshot contains no product IDs'
           assert len(product_ids) == len(set(product_ids)), f'duplicate snapshot product IDs: {product_ids}'
 
