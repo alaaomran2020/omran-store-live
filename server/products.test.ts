@@ -18,9 +18,15 @@ import {
 } from "@shared/products";
 
 const HEADER =
-  "id,name,price,category,description,image,active,sort_order,product_prompt";
+  "id,name,price,category,description,image,active,sort_order,product_prompt,workflow_status,qa_status,source_drive_id,processed_image,review_reason";
 
-const csv = (...rows: string[]) => [HEADER, ...rows].join("\n");
+/**
+ * سطور اختبار قصيرة (9 أعمدة) تُكمَّل تلقائيًا بحقول النشر المعتمدة:
+ * active=true + PUBLISHED + PASS — وإلا كان الوضع العام يستبعدها (Fail-Closed).
+ * الصفوف التي تختبر صراحةً حالة النشر تمرَّر ببياناتها الكاملة.
+ */
+const csv = (...rows: string[]) =>
+  [HEADER, ...rows.map(row => `${row},PUBLISHED,PASS,,,`)].join("\n");
 
 describe("parseCsv", () => {
   it("يتعامل مع الاقتباس والفواصل والأسطر داخل الحقول", () => {
@@ -113,7 +119,9 @@ describe("parseProductsCsv", () => {
         "9", // أعمدة ناقصة جدًا
         "10,منتج بلا سعر,,,,,,,", // بلا سعر ولا صورة
         "11,منتج بسعر تالف,abc,ألعاب,وصف,,,,",
-        "12,منتج بأعمدة زائدة,50,ألعاب,وصف,,TRUE,5,برومبت,زيادة,زيادة أخرى"
+        // صف بأعمدة زائدة: يُكتب بحقول نشر كاملة حتى لا تُصبح الأعمدة الزائدة
+        // حالات نشر غير معروفة فيُستبعد (سلوك Fail-Closed صحيح لكنه خارج هذا الاختبار)
+        "12,منتج بأعمدة زائدة,50,ألعاب,وصف,,TRUE,5,برومبت,PUBLISHED,PASS,,,,زيادة,زيادة أخرى"
       )
     );
     expect(products.map(p => p.name)).toEqual([
@@ -153,14 +161,19 @@ describe("parseProductsCsv", () => {
   });
 
   it("يقبل شيتًا بلا صف عناوين (الترتيب القياسي للأعمدة)", () => {
-    const products = parseProductsCsv("001,منتج بلا رأس,99,ألعاب,وصف,,TRUE,1,");
+    const products = parseProductsCsv(
+      "001,منتج بلا رأس,99,ألعاب,وصف,,TRUE,1,,PUBLISHED,PASS,,,"
+    );
     expect(products).toHaveLength(1);
     expect(products[0].price).toBe(99);
   });
 
   it("يقبل أعمدة بأسماء عربية أو بترتيب مختلف", () => {
     const products = parseProductsCsv(
-      ["الاسم,السعر,التصنيف,الصورة,الحالة", "لعبة,75,ألعاب,,TRUE"].join("\n")
+      [
+        "الاسم,السعر,التصنيف,الصورة,الحالة,حالة_النشر,حالة_المراجعة",
+        "لعبة,75,ألعاب,,TRUE,PUBLISHED,PASS",
+      ].join("\n")
     );
     expect(products[0]).toMatchObject({
       name: "لعبة",
@@ -368,6 +381,11 @@ describe("sortProducts", () => {
       active: true,
       sortOrder,
       productPrompt: "",
+      workflowStatus: "PUBLISHED",
+      qaStatus: "PASS",
+      sourceDriveId: null,
+      processedImage: null,
+      reviewReason: "",
       rowIndex,
     });
     const sorted = sortProducts([

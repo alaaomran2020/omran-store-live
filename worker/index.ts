@@ -7,6 +7,7 @@ import {
 } from "../shared/socialFeed";
 import {
   applyOverridesToProducts,
+  applyPublicationGate,
   createProductsCache,
   fetchProductsPayload,
   type OverridesManifest,
@@ -224,6 +225,12 @@ async function handleProducts(request: Request, env: Env): Promise<Response> {
         products: applyOverridesToProducts(payload.products, manifest.overrides),
       };
     }
+    // Final Publication Guard — يمر ثانية فوق النتيجة بعد أي Overrides (لا
+    // يمكن لأي تجاوز اجتيازها) ويكون آخر قرار قبل الاستجابة العامة.
+    payload = {
+      ...payload,
+      products: applyPublicationGate(payload.products),
+    };
   }
   return new Response(
     request.method === "HEAD" ? null : JSON.stringify(payload),
@@ -234,6 +241,8 @@ async function handleProducts(request: Request, env: Env): Promise<Response> {
         "cache-control":
           payload.status === "ok" ? "public, max-age=60" : "no-store",
         "x-edge": "omran-store-live",
+        "x-publication-gate":
+          payload.status === "ok" ? "active+published+pass" : "not-applied",
       },
     }
   );

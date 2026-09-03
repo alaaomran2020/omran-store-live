@@ -24,6 +24,7 @@ import {
 const COLUMNS = [
   "id", "name", "price", "category", "description", "image",
   "active", "sort_order", "product_prompt", "workflow_status",
+  "qa_status", "source_drive_id", "processed_image", "review_reason",
   "created_at", "updated_at",
 ];
 
@@ -92,6 +93,10 @@ function intakeProduct(sheet, { caption, aiResponse }) {
     sort_order: "",
     product_prompt: "",
     workflow_status: "REVIEW",
+    qa_status: "REVIEW",
+    source_drive_id: `FAKE_DRIVE_${id}`,
+    processed_image: "",
+    review_reason: "بانتظار مراجعة بشرية قبل النشر",
     created_at: now,
     updated_at: now,
   };
@@ -114,6 +119,8 @@ const approve = (sheet, id) =>
     id,
     active: "TRUE",
     workflow_status: "PUBLISHED",
+    qa_status: "PASS",
+    review_reason: "",
     updated_at: "2026-09-02T12:05:00.000Z",
   });
 const reject = (sheet, id) =>
@@ -121,6 +128,8 @@ const reject = (sheet, id) =>
     id,
     active: "FALSE",
     workflow_status: "REJECTED",
+    qa_status: "FAILED",
+    review_reason: "رفض بواسطة المالك",
     updated_at: "2026-09-02T12:05:00.000Z",
   });
 
@@ -133,12 +142,16 @@ const EXISTING = [
   {
     id: "001", name: "سيارة أطفال سباق", price: "250", category: "سيارات",
     description: "سيارة أطفال بتصميم رياضي", image: "", active: "TRUE",
-    sort_order: "1", product_prompt: "", workflow_status: "", created_at: "", updated_at: "",
+    sort_order: "1", product_prompt: "", workflow_status: "PUBLISHED",
+    qa_status: "PASS", source_drive_id: "", processed_image: "", review_reason: "",
+    created_at: "", updated_at: "",
   },
   {
     id: "002", name: "عروسة قماش كبيرة", price: "320", category: "عرائس",
     description: "عروسة قماش ناعمة", image: "", active: "TRUE",
-    sort_order: "2", product_prompt: "", workflow_status: "", created_at: "", updated_at: "",
+    sort_order: "2", product_prompt: "", workflow_status: "PUBLISHED",
+    qa_status: "PASS", source_drive_id: "", processed_image: "", review_reason: "",
+    created_at: "", updated_at: "",
   },
 ];
 

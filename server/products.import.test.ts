@@ -7,9 +7,14 @@ import { canonicalCategory } from "@shared/taxonomy";
 
 /**
  * يتحقق من ملف الاستيراد الحقيقي (بيانات منتجات موثّقة نُقلت من المستودع
- * المرجعي) عبر نفس المحلّل الذي يستخدمه الـWorker والـExpress — بلا اختراع
- * بيانات: أي حقل ناقص يجب أن يبقى ناقصًا وموثّقًا في التقرير.
+ * المرجعي) عبر نفس محلّل الإنتاج — بلا اختراع بيانات.
+ *
+ * ملاحظة سياسة (Fail-Closed): هذا الملف قديم ويحمل 9 أعمدة فقط بلا
+ * workflow_status / qa_status — لذلك في الوضع العام (Public) يعود صفرًا:
+ * البيانات القديمة بدون source evidence + حالات نشر صريحة لا تُنشر.
+ * في وضع التشخيص نقرأها كاملة ونتحقق من سلامة القيم (لا فقد للبيانات).
  */
+
 const CSV_PATH = path.resolve(
   import.meta.dirname,
   "..",
@@ -18,10 +23,10 @@ const CSV_PATH = path.resolve(
 );
 
 const csv = fs.readFileSync(CSV_PATH, "utf-8");
-const products = parseProductsCsv(csv);
 
-describe("ملف استيراد المنتجات الحقيقية", () => {
-  it("أربعة منتجات فعّالة بمعرّفات فريدة (SKU حقيقي)", () => {
+describe("ملف استيراد المنتجات الحقيقية (legacy)", () => {
+  it("يُقرأ بوضع التشخيص: أربعة منتجات بمعرّفات فريدة (SKU حقيقي)", () => {
+    const products = parseProductsCsv(csv, { includeNonPublished: true });
     expect(products).toHaveLength(4);
     const ids = products.map(product => product.id);
     expect(new Set(ids).size).toBe(4);
@@ -31,6 +36,7 @@ describe("ملف استيراد المنتجات الحقيقية", () => {
   });
 
   it("كل منتج له اسم وسعر EGP صالح وتصنيف معروف", () => {
+    const products = parseProductsCsv(csv, { includeNonPublished: true });
     for (const product of products) {
       expect(product.name.length, product.id).toBeGreaterThan(0);
       expect(product.price, product.id).toBeTypeOf("number");
@@ -42,9 +48,8 @@ describe("ملف استيراد المنتجات الحقيقية", () => {
   });
 
   it("المنتجات المنقولة لها صور حقيقية على النطاق الأساسي", () => {
-    const ported = products.filter(product =>
-      product.id.startsWith("OMR-")
-    );
+    const products = parseProductsCsv(csv, { includeNonPublished: true });
+    const ported = products.filter(product => product.id.startsWith("OMR-"));
     expect(ported).toHaveLength(3);
     for (const product of ported) {
       expect(product.image, product.id).toMatch(
@@ -54,13 +59,24 @@ describe("ملف استيراد المنتجات الحقيقية", () => {
   });
 
   it("منتج الشيت الحالي (id=1) بلا صورة — موثّق كناقص وليس مختلَقًا", () => {
+    const products = parseProductsCsv(csv, { includeNonPublished: true });
     const rcCar = products.find(product => product.id === "1");
     expect(rcCar).toBeDefined();
     expect(rcCar!.image).toBeNull();
   });
 
   it("ترتيب العرض عبر sort_order تصاعديًا", () => {
+    const products = parseProductsCsv(csv, { includeNonPublished: true });
     const orders = products.map(product => product.sortOrder);
     expect(orders).toEqual([1, 2, 3, 4]);
+  });
+
+  it("PUBLIC GATE: الملف القديم بلا حالات أول-فئة → لا يُنشر شيء (Fail-Closed)", () => {
+    expect(parseProductsCsv(csv)).toHaveLength(0);
+    // ما دام لا توجد workflow_status/qa_status في الشيت، لا توجد استثناءات.
+    for (const product of parseProductsCsv(csv, { includeNonPublished: true })) {
+      expect(product.workflowStatus).toBe("");
+      expect(product.qaStatus).toBe("");
+    }
   });
 });

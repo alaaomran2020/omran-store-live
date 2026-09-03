@@ -47,6 +47,10 @@ const COLUMNS = [
   "sort_order",
   "product_prompt",
   "workflow_status",
+  "qa_status",
+  "source_drive_id",
+  "processed_image",
+  "review_reason",
   "created_at",
   "updated_at",
 ];
@@ -224,8 +228,8 @@ async function applyViaSheetsApi(insertRows, updateOps) {
     const value = await sheetsApi(
       "PUT",
       access_token,
-      `values/${encodeURIComponent(`${SHEET_NAME}!A${op.row}:L${op.row}`)}`,
-      { valueInputOption: "RAW", range: `${SHEET_NAME}!A${op.row}:L${op.row}`, values: [op.values] }
+      `values/${encodeURIComponent(`${SHEET_NAME}!A${op.row}:P${op.row}`)}`,
+      { valueInputOption: "RAW", range: `${SHEET_NAME}!A${op.row}:P${op.row}`, values: [op.values] }
     );
     applied.push({ action: "update", id: op.id, row: op.row, updatedCells: value.updates?.updatedCells });
   }
@@ -233,8 +237,8 @@ async function applyViaSheetsApi(insertRows, updateOps) {
     const value = await sheetsApi(
       "POST",
       access_token,
-      `values/${encodeURIComponent(`${SHEET_NAME}!A:L`)}`,
-      { valueInputOption: "RAW", range: `${SHEET_NAME}!A:L`, insertDataOption: "INSERT_ROWS", values: insertRows }
+      `values/${encodeURIComponent(`${SHEET_NAME}!A:P`)}`,
+      { valueInputOption: "RAW", range: `${SHEET_NAME}!A:P`, insertDataOption: "INSERT_ROWS", values: insertRows }
     );
     applied.push({ action: "append", count: insertRows.length, updatedRange: value.updates?.updatedRange });
   }
