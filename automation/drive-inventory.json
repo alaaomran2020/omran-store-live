@@ -1,0 +1,61 @@
+{
+  "source": "local_fallback",
+  "folder_url": "https://drive.google.com/drive/folders/1Xbq8V4-9-6GRUVb5dejriQOmcR7nn7_k",
+  "generated_at": "2026-09-03T00:18:15.819Z",
+  "total_raw": 5,
+  "unique_products": 5,
+  "duplicates_detected": 0,
+  "note": "RAW files never deleted from Drive; duplicates are grouped in pipeline and not created as separate products. Blue/pink bags example: checked packaging+content, not just color.",
+  "inventory": [
+    {
+      "source_file_id": "1AaBbCcDdEeFfGgHhIiJjKkLl",
+      "source_filename": "omran-product-01.jpg",
+      "candidate_product": "سيارة سباق — مثال حقيقي",
+      "duplicate_status": "unique",
+      "group_id": "grp-omran-product-01",
+      "confidence": 0.95,
+      "qa_status": "PENDING",
+      "notes": "سيارة سباق — مثال حقيقي"
+    },
+    {
+      "source_file_id": "1MmNnOoPpQqRrSsTtUuVvWwXx",
+      "source_filename": "omran-product-02.jpg",
+      "candidate_product": "دباب كهربائي",
+      "duplicate_status": "unique",
+      "group_id": "grp-omran-product-02",
+      "confidence": 0.95,
+      "qa_status": "PENDING",
+      "notes": "دباب كهربائي"
+    },
+    {
+      "source_file_id": "1YyZz0011223344556677889",
+      "source_filename": "omran-product-03.jpg",
+      "candidate_product": "مكعبات تعليمية",
+      "duplicate_status": "unique",
+      "group_id": "grp-omran-product-03",
+      "confidence": 0.95,
+      "qa_status": "PENDING",
+      "notes": "مكعبات تعليمية"
+    },
+    {
+      "source_file_id": "1QqWwEeRrTtYyUuIiOoPpAaSs",
+      "source_filename": "omran-product-04.jpg",
+      "candidate_product": "طقم مطبخ — سيتم اعتباره duplicate check",
+      "duplicate_status": "unique",
+      "group_id": "grp-omran-product-04",
+      "confidence": 0.95,
+      "qa_status": "PENDING",
+      "notes": "طقم مطبخ — سيتم اعتباره duplicate check"
+    },
+    {
+      "source_file_id": "1ZzYyXxWwVvUuTtSsRrQqPpOo",
+      "source_filename": "omran-product-05.jpg",
+      "candidate_product": "عروسة قماش — سيتم اعتباره duplicate",
+      "duplicate_status": "unique",
+      "group_id": "grp-omran-product-05",
+      "confidence": 0.95,
+      "qa_status": "PENDING",
+      "notes": "عروسة قماش — سيتم اعتباره duplicate"
+    }
+  ]
+}

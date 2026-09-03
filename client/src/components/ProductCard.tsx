@@ -1,7 +1,7 @@
 import type { Product } from "@shared/products";
 import { ProductImage } from "@/components/ProductImage";
-import { buildWhatsAppUrl, formatPrice } from "@/lib/productFormat";
-import { trackEvent } from "@/lib/analytics";
+import { buildWhatsAppUrl, formatPrice, productPermalink } from "@/lib/productFormat";
+import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Info, MessageCircle } from "lucide-react";
 
 /**
@@ -15,7 +15,21 @@ export function ProductCard({
   product: Product;
   onOpenDetails: (product: Product) => void;
 }) {
-  const waUrl = buildWhatsAppUrl(product);
+  // نبني رابط واتساب مع permalink للمنتج (Stage 2) — يتضمن كل حقول الرسالة المطلوبة
+  const waUrl = buildWhatsAppUrl(product, {
+    pageUrl:
+      typeof window !== "undefined"
+        ? productPermalink(product.id, window.location.origin + window.location.pathname)
+        : undefined,
+  });
+
+  const handleWhatsAppClick = () => {
+    try {
+      trackWhatsAppInquiry(product, "product_card");
+    } catch {
+      // analytics failure يجب ألا يمنع فتح WhatsApp أبدًا
+    }
+  };
 
   return (
     <article
@@ -60,13 +74,7 @@ export function ProductCard({
               href={waUrl}
               target="_blank"
               rel="noreferrer"
-              onClick={() =>
-                trackEvent("whatsapp_click", {
-                  product: product.name,
-                  id: product.id,
-                  from: "card",
-                })
-              }
+              onClick={handleWhatsAppClick}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[#25d366] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#1eb857]"
             >
               <MessageCircle size={17} aria-hidden="true" /> اطلب عبر واتساب

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import type { Product } from "@shared/products";
 import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, formatPrice } from "@/lib/productFormat";
-import { trackEvent } from "@/lib/analytics";
+import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { MessageCircle, X } from "lucide-react";
 
 /**
@@ -34,6 +34,14 @@ export function ProductDetailsDialog({
   const waUrl = buildWhatsAppUrl(product, {
     pageUrl: typeof window === "undefined" ? undefined : window.location.href,
   });
+
+  const handleWhatsAppClick = () => {
+    try {
+      trackWhatsAppInquiry(product, "product_details");
+    } catch {
+      // analytics failure لا يمنع فتح WhatsApp
+    }
+  };
 
   return (
     <div
@@ -97,13 +105,7 @@ export function ProductDetailsDialog({
                   href={waUrl}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={() =>
-                    trackEvent("whatsapp_click", {
-                      product: product.name,
-                      id: product.id,
-                      from: "details",
-                    })
-                  }
+                  onClick={handleWhatsAppClick}
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#25d366] px-5 py-3 text-sm font-black text-white transition hover:bg-[#1eb857]"
                 >
                   <MessageCircle size={18} aria-hidden="true" /> اطلب عبر واتساب

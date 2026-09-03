@@ -1,0 +1,52 @@
+{
+  "generated_at": "2026-09-03T00:16:54.967Z",
+  "total_raw": 5,
+  "pilot_processed": 3,
+  "inventory": [
+    {
+      "source_file": "omran-product-01.jpg",
+      "source_file_id": "local-omran-product-01.jpg",
+      "product_id": "OT-00006",
+      "candidate_product": "لعبة سيارة سباق للأطفال",
+      "duplicate_status": "unique",
+      "group_id": "OT-00006",
+      "confidence": 1,
+      "qa_status": "PASS",
+      "price_mode": "inquiry",
+      "processed_image": "/products/processed/product-OT-00006-main.webp",
+      "local_output": "public/products/processed/product-OT-00006-main.webp",
+      "dimensions": "1200x1200",
+      "size_kb": "109.9"
+    },
+    {
+      "source_file": "omran-product-02.jpg",
+      "source_file_id": "local-omran-product-02.jpg",
+      "product_id": "OT-00007",
+      "candidate_product": "دباب كهربائي صغير للأطفال — إصدار محسن",
+      "duplicate_status": "unique",
+      "group_id": "OT-00007",
+      "confidence": 1,
+      "qa_status": "PASS",
+      "price_mode": "inquiry",
+      "processed_image": "/products/processed/product-OT-00007-main.webp",
+      "local_output": "public/products/processed/product-OT-00007-main.webp",
+      "dimensions": "1200x1200",
+      "size_kb": "170.9"
+    },
+    {
+      "source_file": "omran-product-03.jpg",
+      "source_file_id": "local-omran-product-03.jpg",
+      "product_id": "OT-00008",
+      "candidate_product": "مكعبات تعليمية ملونة",
+      "duplicate_status": "unique",
+      "group_id": "OT-00008",
+      "confidence": 1,
+      "qa_status": "PASS",
+      "price_mode": "inquiry",
+      "processed_image": "/products/processed/product-OT-00008-main.webp",
+      "local_output": "public/products/processed/product-OT-00008-main.webp",
+      "dimensions": "1200x1200",
+      "size_kb": "129.1"
+    }
+  ]
+}

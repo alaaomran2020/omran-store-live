@@ -171,7 +171,7 @@ const clean = (value: string | undefined): string => (value ?? "").trim();
 
 /**
  * سعر آمن: يقبل "250" و"250.50" و"1,250" و"٢٥٠" و"250 ج.م".
- * أي شيء آخر (فارغ، نص، سالب) → null، ويعرضه الموقع كـ"السعر عند الطلب".
+ * أي شيء آخر (فارغ، نص، سالب) → null، ويعرضه الموقع كـ"للاستفسار والكميات".
  */
 export function parsePrice(raw: string | undefined): number | null {
   const text = toLatinDigits(clean(raw))
@@ -251,7 +251,8 @@ export function toDisplayableImageUrl(
   if (url === "") return null;
   const id = driveFileId(url);
   if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w${width}`;
-  // نقبل http/https فقط؛ أي شيء آخر (javascript:, data:) يُرفض.
+  // نقبل http/https والمسارات النسبية من نفس الأصل (مثل /products/...) — تُستخدم للصور المعالجة المُستضافة على Workers Assets
+  if (url.startsWith("/")) return url;
   if (!/^https?:\/\//i.test(url)) return null;
   return url;
 }
