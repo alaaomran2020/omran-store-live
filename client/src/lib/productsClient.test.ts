@@ -4,14 +4,12 @@ import { fetchProducts } from "./productsClient";
 
 /**
  * سلسلة المحاولات في productsClient:
- *   /api/products → /edge-api/products → رابط CSV المباشر.
- * هنا نتحقق من الترتيب: المسار الأساسي المسموم (route قديم بلا status)
- * يُرفض، فتنجح المرآة، ولا يُجرَّب رابط CSV أصلًا.
+ *   /api/products → /edge-api/products → CSV → validated snapshot.
  */
 
 type Route = {
   match: (url: string) => boolean;
-  respond: () => { ok: boolean; status: number; json: () => Promise<unknown> };
+  respond: () => { ok: boolean; status: number; json: () => Promise<unknown>; text?: () => Promise<string> };
 };
 
 function stubFetch(routes: Route[]) {
@@ -33,26 +31,14 @@ afterEach(() => {
 });
 
 describe("productsClient fallback chain", () => {
-  it("يتخطى /api/products القديم (بلا status) ويحمل من المرآة", async () => {
+  it("يتخطى /api/products القديم ويحمل من المرآة", async () => {
     const calls = stubFetch([
       {
-        // رد النظام القديم فعليًا على الإنتاج: products بلا status.
         match: url => url.includes("/api/products"),
         respond: () => ({
           ok: true,
           status: 200,
-          json: async () => ({
-            products: [
-              {
-                id: "1",
-                name: "سيارة سباق بالريموت",
-                price: 350,
-                image_url: "",
-                category: "",
-                stock: 10,
-              },
-            ],
-          }),
+          json: async () => ({ products: [{ id: "legacy", name: "قديم" }] }),
         }),
       },
       {
@@ -65,16 +51,21 @@ describe("productsClient fallback chain", () => {
             fetchedAt: new Date().toISOString(),
             products: [
               {
-                id: "1",
-                name: "سيارة سباق بالريموت",
+                id: "P-1",
+                name: "منتج موثّق",
                 price: 350,
-                category: "",
-                description: "سيارة أطفال سريعة",
+                category: "ألعاب",
+                description: "",
                 image: null,
                 imageSource: null,
                 active: true,
                 sortOrder: 1,
                 productPrompt: "",
+                workflowStatus: "PUBLISHED",
+                qaStatus: "PASS",
+                sourceDriveId: null,
+                processedImage: null,
+                reviewReason: null,
                 rowIndex: 1,
               },
             ],
@@ -87,52 +78,54 @@ describe("productsClient fallback chain", () => {
 
     expect(payload.status).toBe("ok");
     expect(payload.products).toHaveLength(1);
-    expect(payload.products[0].name).toBe("سيارة سباق بالريموت");
-    // المسار الأساسي ثم المرآة — بلا محاولة CSV.
+    expect(payload.products[0].id).toBe("P-1");
     expect(calls).toEqual(["/api/products", "/edge-api/products"]);
   });
 
-  it("إذا فشل المساران same-origin ينتقل إلى CSV المدمج", async () => {
+  it("لا يعتبر status=ok مع قائمة فارغة نجاحًا ويكمل إلى البدائل", async () => {
     const calls = stubFetch([
       {
         match: url => url.includes("/api/products"),
-        respond: () => ({
-          ok: false,
-          status: 502,
-          json: async () => ({}),
-        }),
+        respond: () => ({ ok: true, status: 200, json: async () => ({ status: "ok", products: [] }) }),
       },
       {
         match: url => url.includes("/edge-api/products"),
-        respond: () => ({
-          ok: false,
-          status: 502,
-          json: async () => ({}),
-        }),
-      },
-      {
-        match: url => url.includes("docs.google.com"),
-        respond: () => ({
-          ok: true,
-          status: 200,
-          json: async () => {
-            throw new Error("CSV لا يُقرأ كـJSON");
-          },
-          text: async () =>
-            [
-              "id,name,price,category,description,image,active,sort_order,product_prompt",
-              "1,دمية دب,120,,دب قطيري,,،,1,",
-            ].join("\n"),
-        }),
+        respond: () => ({ ok: true, status: 200, json: async () => ({ status: "ok", products: [] }) }),
       },
     ]);
 
-    // بلا رابط مدمج في بيئة node الاختبارية (SHEET_URL فارغ وقت تحميل الوحدة):
-    // حمولة فارغة بحالة not_configured بعد استنفاد المسارات same-origin.
     const payload = await fetchProducts();
 
-    expect(payload.status).toBe("not_configured");
-    expect(payload.products).toEqual([]);
+    expect(payload.status).toBe("ok");
+    expect(payload.products.length).toBeGreaterThan(0);
+    for (const product of payload.products) {
+      expect(product.active).toBe(true);
+      expect(product.workflowStatus).toBe("PUBLISHED");
+      expect(product.qaStatus).toBe("PASS");
+    }
+    expect(calls).toEqual(["/api/products", "/edge-api/products"]);
+  });
+
+  it("إذا فشلت المصادر الحية كلها يستخدم snapshot الموثّق بدل كتالوج فارغ", async () => {
+    const calls = stubFetch([
+      {
+        match: url => url.includes("/api/products"),
+        respond: () => ({ ok: false, status: 502, json: async () => ({}) }),
+      },
+      {
+        match: url => url.includes("/edge-api/products"),
+        respond: () => ({ ok: false, status: 502, json: async () => ({}) }),
+      },
+    ]);
+
+    const payload = await fetchProducts();
+
+    expect(payload.status).toBe("ok");
+    expect(payload.products.map(p => p.id)).toEqual([
+      "OMR-IG-KIT-46",
+      "OMR-IG-HC-104",
+      "OMR-IG-SQ-01",
+    ]);
     expect(calls).toEqual(["/api/products", "/edge-api/products"]);
   });
 });
