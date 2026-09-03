@@ -1,0 +1,70 @@
+--- a/.github/workflows/deploy.yml
++++ b/.github/workflows/deploy.yml
+@@ -21,9 +21,13 @@ on:
+     branches:
+       - main
+ 
++  pull_request:
++    branches:
++      - main
++
+ concurrency:
+-  group: cloudflare-deploy
+-  cancel-in-progress: false
++  group: cloudflare-deploy-${{ github.ref }}
++  cancel-in-progress: true
+ 
+ permissions:
+   contents: read
+@@ -35,8 +39,8 @@ env:
+   NODE_OPTIONS: --max-old-space-size=4096
+ 
+ jobs:
+-  test:
+-    name: Typecheck and tests
++  ci:
++    name: CI — lint, typecheck, tests, build
+     runs-on: ubuntu-latest
+     timeout-minutes: 15
+ 
+@@ -56,15 +60,40 @@ jobs:
+       - name: Install dependencies
+         run: pnpm install --no-frozen-lockfile
+ 
++      - name: Lint (oxlint)
++        run: pnpm lint
++
+       - name: Type checks
+         run: pnpm check
+ 
+       - name: Tests
+         run: pnpm test
+ 
++      - name: Build client assets
++        run: pnpm exec vite build
++
++      - name: Confirm build assets exist
++        run: |
++          set -euo pipefail
++          test -f dist/public/index.html
++          test -d dist/public/assets
++          echo "Build assets are ready."
++          ls -lh dist/public
++          ls -lh dist/public/assets
++
++  # Backwards compatibility: keep job id "test" as alias for required checks
++  test:
++    name: Typecheck and tests (alias)
++    needs: ci
++    runs-on: ubuntu-latest
++    steps:
++      - run: echo "CI already passed in job 'ci'"
++
+   deploy:
+     name: Build, deploy and smoke-check
+-    needs: test
++    needs: ci
++    # Deploy فقط عند push إلى main أو تشغيل يدوي، لا عند Pull Request
++    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+     runs-on: ubuntu-latest
+     timeout-minutes: 15
