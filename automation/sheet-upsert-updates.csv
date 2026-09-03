@@ -1,0 +1,2 @@
+excel_row,id,name,price,category,description,image,active,sort_order,product_prompt,workflow_status,created_at,updated_at
+2,1,سيارة سباق بالريموت,350,تحكم عن بعد وروبوتات,سيارة أطفال سريعة قابلة للتحكم عن بعد,,TRUE,1,,,,

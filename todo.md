@@ -45,3 +45,21 @@
 - [x] تحديث بطاقات المنتجات والتفاصيل والبحث وفلاتر التصنيفات وواتساب (باسم المنتج من الشيت) وأحداث التحليلات، مع الحفاظ على تصميم الموقع وRTL والتجربة على الهاتف.
 - [x] اختبارات Vitest شاملة (61): تحليل CSV، الصفوف التالفة، السعر غير الصالح، المنتجات المخفية، بلا صورة، الترتيب، روابط Drive، الكاش، وواجهة الكتالوج في jsdom.
 - [x] دليل تشغيلي بالعربية `docs/GOOGLE-SHEETS-PRODUCTS.md` + نموذج `docs/sample-products.csv` لإضافة منتج من الهاتف في أقل من دقيقتين.
+
+## 2026-09-03 — Execution Run: Data Integrity + PR-safe CI + Pipeline Correction
+
+- [x] فحص جنائي كامل (main, product-inquiry-fix, 12 PR, Actions, Production ×4, شيت حي, مجلد Drive) — الحقيقة: شيت حي بمنتج واحد فقط، و32 RAW في Drive.
+- [x] إزالة البيانات الوهمية: 3 WebP بأسماء غير مطابقة (OT-00006..8) + 6 ملفات بأعـدات Drive مختلقة (1AaBbCcDd...) — RAW محفوظ في automation/raw-local/ (5 ملفات).
+- [x] dedup حقيقي: dHash على الصور الخمس (03↔04 hamming=6) + نص العبوة → 5 ملفات = 3 منتجات فريدة.
+- [x] معالجة محافظة 3 صور (no crop / no upscale / no generative) → public/products/processed/*.webp + process-manifest.json (PENDING_VISUAL_QA).
+- [x] فهرس RAW حقيقي 32 ملفًا (معرّفات Drive فعلية): automation/raw-inventory.json.
+- [x] تصحيحات بيانات موثقة: تصنيف «ألعاب مطبخ» للمطبخين بدل «دمى وشخصيات أبطال»، UPDATE تصنيف السيارة الموثق، OMR-IG-SQ-01 و OT-00001 → NEEDS_REVIEW/HOLD (لا نشر بمعلومات غير موثقة).
+- [x] سكربتات pipeline مصححة: inventory-drive (dHash + Drive API JWT قراءة فقط + منع اختلاق أسماء)، process-images (من metadata موثق فقط)، upsert-sheet (UPSERT حقيقي: id→update، name/image→skip، JWT Sheets API v4، وضع PLAN بشفافية applied=false).
+- [x] خطة Upsert جاهزة على snapshot حقيقي: sheet-upsert-plan.csv (3 إضافات) + sheet-upsert-updates.csv (صف 2) + audit (PLANNED).
+- [x] CI: تحسين مُجهَّز كاتش جاهز `docs/CI-IMPROVEMENT.patch` — job `ci` على كل PR (install/lint/typecheck/test/build) + `deploy` فقط push→main/يدوي (لا نشر من PR). (تطبيق Arena بلا صلاحية `workflows` — المالك يطبّقه قبل/عند الدمج.)
+- [x] Tests: buildWhatsAppInquiryPayload (price_mode×cta_location×sku×payload) + trackWhatsAppInquiry (inquiry + legacy click، فشل آمن) — analytics.test.ts.
+- [x] SEO: canonical في index.html. الواجهة: footer بتواصل واتساب عام حقيقي ومعلومات ثقة (بلا أرقام مختلقة).
+- [x] وثيقة حالة صادقة: docs/RAW-PRODUCTS-IMPORT-HANDOFF.md (BLOCKERS B1-B4 بإجراءات بشرية محددة).
+- [ ] BLOCKER B1: تنزيل 32 RAW + dedup بصري + metadata (بيئة بشبكة Google) → توسيع الكتالوج.
+- [ ] BLOCKER B2: تطبيق plan/updates على الشيت (يدوي أو SERVICE_ACCOUNT) → نشر 2 مطبخ + تحديث السيارة.
+- [ ] BLOCKER B3: Merge PR → main → Cloudflare deploy → إعادة smoke tests.

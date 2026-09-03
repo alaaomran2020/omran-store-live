@@ -42,31 +42,48 @@ export function trackEvent(
 }
 
 /**
- * Helper: build and fire whatsapp_product_inquiry event with correct payload.
- * المحاولة لا ترمي أبدًا — الفشل لا يمنع فتح واتساب (مستدعى من onClick قبل الانتقال).
+ * Pure builder لحمولة حدث whatsapp_product_inquiry — قابل للاختبار بلا DOM.
+ *
+ * القواعد (Stage 15):
+ *   - sku: الـSKU الحقيقي إن وُجد، وإلا product_id (لا اختلاق SKU تجاري).
+ *   - price_mode: "priced" فقط لسعر رقمي صالح، وإلا "inquiry".
+ *   - cta_location: product_card | product_details (موقع الزر المصدر).
+ */
+export function buildWhatsAppInquiryPayload(
+  product: { id: string; name: string; category?: string; price: number | null; sku?: string | null },
+  ctaLocation: WhatsAppProductInquiryPayload["cta_location"],
+  pageLocation: string = typeof window !== "undefined" ? window.location.href : ""
+): WhatsAppProductInquiryPayload {
+  const priceMode =
+    product.price !== null && Number.isFinite(product.price) ? "priced" : "inquiry";
+  const sku = (product.sku?.trim() || product.id || "").trim() || product.id;
+  return {
+    product_id: product.id,
+    sku,
+    product_name: product.name,
+    category: (product.category || "").trim(),
+    price_mode: priceMode,
+    page_location: pageLocation,
+    cta_location: ctaLocation,
+  };
+}
+
+/**
+ * يبني حمولة whatsapp_product_inquiry ويطلقها (وكذلك الحدث القديم للتوافق).
+ * المحاولة لا ترمي أبدًا — فشل التتبع لا يمنع فتح واتساب (يُستدعى من onClick قبل الانتقال).
  */
 export function trackWhatsAppInquiry(
   product: { id: string; name: string; category?: string; price: number | null; sku?: string | null },
   ctaLocation: WhatsAppProductInquiryPayload["cta_location"]
 ): void {
-  const priceMode = product.price !== null && Number.isFinite(product.price) ? "priced" : "inquiry";
-  const sku = (product.sku?.trim() || product.id || "").trim();
-  const payload: WhatsAppProductInquiryPayload & Record<string, unknown> = {
-    product_id: product.id,
-    sku: sku || product.id,
-    product_name: product.name,
-    category: (product.category || "").trim(),
-    price_mode: priceMode,
-    page_location: typeof window !== "undefined" ? window.location.href : "",
-    cta_location: ctaLocation,
-  };
+  const payload = buildWhatsAppInquiryPayload(product, ctaLocation);
   // نرسل الحدث الجديد المطلوب إنتاجيًا
   trackEvent("whatsapp_product_inquiry", payload as Record<string, unknown>);
   // نحتفظ بالحدث القديم للتوافق مع لوحات Umami الحالية
   trackEvent("whatsapp_click", {
-    product: product.name,
-    id: product.id,
+    product: payload.product_name,
+    id: payload.product_id,
     from: ctaLocation === "product_card" ? "card" : "details",
-    price_mode: priceMode,
+    price_mode: payload.price_mode,
   });
 }

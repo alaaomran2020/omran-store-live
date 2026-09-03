@@ -11,12 +11,14 @@ import { shareProductsPage, type ProductShareOutcome } from "@/lib/productShare"
 import {
   Facebook,
   Instagram,
+  MessageCircle,
   RefreshCw,
   Search,
   Share2,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import { whatsappNumber } from "@/lib/productFormat";
 
 /**
  * صفحة المنتجات — نفس التصميم والوظائف، لكن مصدر البيانات صار Google Sheets
@@ -25,6 +27,14 @@ import {
  */
 
 const ALL = "__all__";
+
+/** تواصل عام مع المتجر (ليس منتجًا محددًا) — يُعرض فقط إذا كان رقم المتجر مضبوطًا. */
+const storeWhatsAppUrl = (() => {
+  const number = whatsappNumber();
+  if (!number) return null;
+  const text = encodeURIComponent("مرحبًا، أريد الاستفسار عن منتجات عمران تويز.");
+  return `https://wa.me/${number}?text=${text}`;
+})();
 
 export default function Products() {
   const [shareOutcome, setShareOutcome] = useState<ProductShareOutcome | null>(null);
@@ -255,6 +265,31 @@ export default function Products() {
             </div>
           </div>
         </section>
+
+        <footer className="border-t border-stone-200 bg-emerald-950 py-10 text-emerald-50">
+          <div className="container flex flex-col items-center gap-5 text-center sm:flex-row sm:justify-between sm:text-right">
+            <div>
+              <p className="text-lg font-black">عمران للألعاب</p>
+              <p className="mt-2 max-w-md text-sm leading-7 text-emerald-200">
+                كتالوج محدَّث أولًا بأول — الطلب والاستفسار مباشرة عبر واتساب، بلا حسابات وبلا
+                خطوات معقدة. الأسعار والتوفر تُحدَّث من إدارة المتجر وتظهر خلال دقائق.
+              </p>
+            </div>
+            {storeWhatsAppUrl && (
+              <a
+                href={storeWhatsAppUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-[#25d366] px-6 py-3 text-sm font-black text-white transition hover:bg-[#1eb857]"
+              >
+                <MessageCircle size={18} aria-hidden="true" /> تواصل معنا عبر واتساب
+              </a>
+            )}
+          </div>
+          <div className="container mt-6 border-t border-emerald-900 pt-4 text-center text-xs font-bold text-emerald-300/80">
+            © 2026 عمران للألعاب — جميع الحقوق محفوظة
+          </div>
+        </footer>
       </main>
 
       <ProductDetailsDialog product={openProduct} onClose={handleCloseDetails} />
