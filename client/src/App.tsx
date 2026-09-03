@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
 import Products from "@/pages/Products";
 import { Route, Switch } from "wouter";
@@ -29,7 +30,7 @@ function Router() {
   return (
     <Suspense fallback={<RouteLoadingFallback />}>
       <Switch>
-        <Route path={"/"} component={Products} />
+        <Route path={"/"} component={Home} />
         <Route path={"/products"} component={Products} />
         <Route path={"/settings/social"} component={SocialSettings} />
         <Route path={"/admin"} component={AdminApp} />
