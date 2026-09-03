@@ -56,7 +56,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Refresh verified snapshot from Master Database
+      - name: Refresh catalog and stage verified product images
         run: pnpm exec tsx scripts/generate-public-products-snapshot.ts
 
       - name: Quality gates
@@ -68,14 +68,11 @@ jobs:
       - name: Build storefront
         run: pnpm build
 
-      - name: Assert verified product snapshot is bundled
+      - name: Assert verified catalog and images are bundled
         shell: bash
         run: |
           set -euo pipefail
           test -f dist/public/index.html
-          test -f dist/public/products/processed/product-kitchen-46pcs-main.webp
-          test -f dist/public/products/processed/product-home-chef-104pcs-main.webp
-          test -f dist/public/products/processed/product-ot-00001-main.webp
 
           python3 - <<'PY'
           from pathlib import Path
@@ -87,8 +84,27 @@ jobs:
               source,
               flags=re.MULTILINE,
           )
+          images = re.findall(
+              r'^\s*"image":\s*"([^"]+)"',
+              source,
+              flags=re.MULTILINE,
+          )
+
           assert product_ids, 'verified snapshot contains no product IDs'
           assert len(product_ids) == len(set(product_ids)), f'duplicate snapshot product IDs: {product_ids}'
+          assert len(images) == len(product_ids), (
+              f'every public product must have exactly one image: {len(images)} images / {len(product_ids)} products'
+          )
+
+          remote_images = [image for image in images if not image.startswith('/products/processed/')]
+          assert not remote_images, f'public products still depend on remote image URLs: {remote_images}'
+
+          missing_images = []
+          for image in images:
+              path = Path('dist/public') / image.lstrip('/')
+              if not path.is_file() or path.stat().st_size < 1024:
+                  missing_images.append(image)
+          assert not missing_images, f'missing/invalid product image assets: {missing_images}'
 
           assets = Path('dist/public/assets')
           assert assets.is_dir(), 'built assets directory is missing'
@@ -96,11 +112,15 @@ jobs:
               p.read_text(encoding='utf-8', errors='ignore')
               for p in assets.rglob('*') if p.is_file()
           )
-          missing = [product_id for product_id in product_ids if product_id not in built_text]
-          assert not missing, f'missing verified products in storefront bundle: {missing}'
+          missing_products = [product_id for product_id in product_ids if product_id not in built_text]
+          assert not missing_products, f'missing verified products in storefront bundle: {missing_products}'
 
           Path('/tmp/public-product-count').write_text(str(len(product_ids)), encoding='utf-8')
-          print(f'Storefront product bundle: PASS ({len(product_ids)} verified public products)')
+          Path('/tmp/public-image-count').write_text(str(len(images)), encoding='utf-8')
+          print(
+              f'Storefront bundle: PASS ({len(product_ids)} verified products, '
+              f'{len(images)} same-origin images)'
+          )
           PY
 
       - name: Deploy Cloudflare Pages production
@@ -114,3 +134,4 @@ jobs:
           echo "Storefront project: omrantoys-live-app"
           echo "Commit: ${GITHUB_SHA}"
           echo "Verified public products: $(cat /tmp/public-product-count)"
+          echo "Same-origin product images: $(cat /tmp/public-image-count)"
