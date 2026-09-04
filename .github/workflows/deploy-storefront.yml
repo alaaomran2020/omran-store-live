@@ -2,19 +2,31 @@ name: Deploy Storefront to Cloudflare Pages
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "client/**"
+      - "public/**"
+      - "shared/**"
+      - "scripts/**"
+      - "vite.config.ts"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/deploy-storefront.yml"
   push:
     branches: [main]
     paths:
       - "client/**"
       - "public/**"
       - "shared/**"
+      - "scripts/**"
       - "vite.config.ts"
       - "package.json"
       - "pnpm-lock.yaml"
       - ".github/workflows/deploy-storefront.yml"
 
 concurrency:
-  group: omran-storefront-production
+  group: omran-storefront-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -24,10 +36,10 @@ env:
   NODE_OPTIONS: --max-old-space-size=4096
 
 jobs:
-  deploy-storefront:
-    name: Build, validate and deploy storefront
+  validate-storefront:
+    name: Validate storefront integration
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -42,17 +54,11 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Check Cloudflare credentials
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          set -euo pipefail
-          test -n "${CLOUDFLARE_API_TOKEN}" || { echo '::error::CLOUDFLARE_API_TOKEN is not configured'; exit 1; }
-          test -n "${CLOUDFLARE_ACCOUNT_ID}" || { echo '::error::CLOUDFLARE_ACCOUNT_ID is not configured'; exit 1; }
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Repository integration audit
+        run: node scripts/integration-audit.mjs
 
       - name: Quality gates
         run: |
@@ -118,6 +124,41 @@ jobs:
           )
           PY
 
+  deploy-storefront:
+    name: Deploy storefront production
+    if: github.event_name != 'pull_request'
+    needs: validate-storefront
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build storefront
+        run: pnpm build
+
+      - name: Check Cloudflare credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN}" || { echo '::error::CLOUDFLARE_API_TOKEN is not configured'; exit 1; }
+          test -n "${CLOUDFLARE_ACCOUNT_ID}" || { echo '::error::CLOUDFLARE_ACCOUNT_ID is not configured'; exit 1; }
+
       - name: Deploy Cloudflare Pages production
         run: pnpm exec wrangler pages deploy dist/public --project-name=omrantoys-live-app --branch=main --commit-dirty=true
         env:
@@ -128,5 +169,3 @@ jobs:
         run: |
           echo "Storefront project: omrantoys-live-app"
           echo "Commit: ${GITHUB_SHA}"
-          echo "Verified public products: $(cat /tmp/public-product-count)"
-          echo "Same-origin product images: $(cat /tmp/public-image-count)"
