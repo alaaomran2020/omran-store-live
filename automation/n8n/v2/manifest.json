@@ -1,0 +1,40 @@
+{
+  "name": "Omran n8n AI Agent Playbook v2",
+  "version": "2.0.0",
+  "timezone": "Africa/Cairo",
+  "currency": "EGP",
+  "spreadsheet": {
+    "id": "1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc",
+    "title": "قاعدة بيانات عمران تويز الرئيسية",
+    "tabs": {
+      "intake": "إدخال المنتجات",
+      "catalog": "كتالوج النشر الآلي",
+      "media": "الوسائط",
+      "employees": "الموظفون",
+      "audit": "سجل التدقيق",
+      "ai_commands": "أوامر الذكاء الاصطناعي",
+      "analytics": "أحداث التحليلات",
+      "settings": "الإعدادات"
+    }
+  },
+  "github": {
+    "repository": "alaaomran2020/omran-store-live",
+    "catalog_path": "public/data/products.generated.json"
+  },
+  "publication_gate": {
+    "active": true,
+    "workflow_status": "PUBLISHED",
+    "qa_status": "PASS",
+    "price_required": false,
+    "quantity_required": false
+  },
+  "stages": [
+    "INTAKE",
+    "VALIDATION",
+    "IMAGE_PROCESSING",
+    "ADMIN_APPROVAL",
+    "PUBLICATION_GUARD",
+    "CATALOG_SYNC",
+    "AUDIT"
+  ]
+}
