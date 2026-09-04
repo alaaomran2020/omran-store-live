@@ -1,0 +1,83 @@
+{
+  "name": "OMRAN v2 — Admin Approval & Publication Gate",
+  "nodes": [
+    {
+      "parameters": {"rule": {"interval": [{"field": "minutes", "minutesInterval": 5}]}},
+      "id": "v2-approval-trigger",
+      "name": "فحص الاعتمادات",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {"__rl": true, "value": "1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc", "mode": "id"},
+        "sheetName": {"__rl": true, "value": "إدخال المنتجات", "mode": "name"},
+        "options": {}
+      },
+      "id": "v2-read-intake",
+      "name": "قراءة إدخال المنتجات",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [240, 0],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const driveId = u => { const s=String(u||''); const m=s.match(/[?&]id=([^&]+)/)||s.match(/\\/d\\/([^/]+)/); return m?m[1]:''; };\nreturn $input.all().filter(i => { const r=i.json; return String(r['بوابة المراجعة']||'').toUpperCase()==='PASS' && String(r['جاهزية الترقية']||'').toUpperCase()==='PUBLISHED' && String(r['حالة سير العمل']||'').toUpperCase()==='PUBLISHED' && String(r['حالة الجودة']||'').toUpperCase()==='PASS' && String(r['معرف المنتج المنشور']||'').trim() && String(r['اسم المنتج بالعربية']||'').trim() && String(r['رابط الصورة']||'').trim(); }).map(i=>{ const r=i.json; const id=String(r['معرف المنتج المنشور']).trim(); const image=String(r['رابط الصورة']).trim(); return {json:{id,name:r['اسم المنتج بالعربية'],price:r['سعر البيع بالجنيه']||'',category:r['التصنيف']||'',description:'',image,active:'TRUE',sort_order:'',product_prompt:'',workflow_status:'PUBLISHED',qa_status:'PASS',source_drive_id:driveId(image),processed_image:image,review_reason:r['سبب المراجعة']||'ADMIN_APPROVED',sku:r['رمز المخزون']||'',approved_by:r['راجع بواسطة']||'',approved_at:r['وقت المراجعة']||new Date().toISOString()}};});"
+      },
+      "id": "v2-enforce-gate",
+      "name": "تطبيق بوابة النشر",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 0]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {"__rl": true, "value": "1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc", "mode": "id"},
+        "sheetName": {"__rl": true, "value": "كتالوج النشر الآلي", "mode": "name"},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "name": "={{ $json.name }}",
+            "price": "={{ $json.price }}",
+            "category": "={{ $json.category }}",
+            "description": "={{ $json.description }}",
+            "image": "={{ $json.image }}",
+            "active": "={{ $json.active }}",
+            "sort_order": "={{ $json.sort_order }}",
+            "product_prompt": "={{ $json.product_prompt }}",
+            "workflow_status": "={{ $json.workflow_status }}",
+            "qa_status": "={{ $json.qa_status }}",
+            "source_drive_id": "={{ $json.source_drive_id }}",
+            "processed_image": "={{ $json.processed_image }}",
+            "review_reason": "={{ $json.review_reason }}",
+            "sku": "={{ $json.sku }}"
+          },
+          "matchingColumns": ["id"]
+        },
+        "options": {}
+      },
+      "id": "v2-upsert-catalog",
+      "name": "ترقية إلى كتالوج النشر",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [780, 0],
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "connections": {
+    "فحص الاعتمادات": {"main": [[{"node": "قراءة إدخال المنتجات", "type": "main", "index": 0}]]},
+    "قراءة إدخال المنتجات": {"main": [[{"node": "تطبيق بوابة النشر", "type": "main", "index": 0}]]},
+    "تطبيق بوابة النشر": {"main": [[{"node": "ترقية إلى كتالوج النشر", "type": "main", "index": 0}]]}
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {"executionOrder": "v1", "timezone": "Africa/Cairo"},
+  "versionId": "omran-v2-admin-approval-20260904",
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": [{"id": "omran-v2", "name": "Omran v2"}]
+}
