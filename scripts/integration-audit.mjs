@@ -18,6 +18,7 @@ const required = [
   "shared/productIntake.ts",
   "public/robots.txt",
   "public/sitemap.xml",
+  ".env.example",
   ".github/workflows/deploy-storefront.yml",
 ];
 
@@ -56,6 +57,13 @@ if (exists("client/src/lib/publicProductsSnapshot.ts")) {
   }
 }
 
+if (exists(".env.example")) {
+  const env = read(".env.example");
+  for (const forbidden of ["DATABASE_URL", "MYSQL_", "ORIGIN_BASE_URL", "JWT_SECRET", "PORT=", "WORKER SECRET", "Cloudflare Tunnel"]) {
+    assert(!env.includes(forbidden), `static live env template contains obsolete runtime setting: ${forbidden}`);
+  }
+}
+
 for (const obsolete of ["server", "worker", "docker-compose.yml"]) {
   assert(!exists(obsolete), `obsolete API/VPS artifact must not return to live repo: ${obsolete}`);
 }
@@ -67,4 +75,4 @@ if (errors.length) {
 }
 
 console.log("Integration audit: PASS");
-console.log("Storefront routes, product publication guard, intake contract and bundled images are coherent.");
+console.log("Routes, publication guard, intake contract, static env and bundled product images are coherent.");
