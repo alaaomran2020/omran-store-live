@@ -1,0 +1,64 @@
+{
+  "name": "Omran Product Intake — Telegram to Store",
+  "version": 1,
+  "principles": {
+    "no_vps": true,
+    "no_custom_backend": true,
+    "no_secrets_in_repo": true,
+    "source_of_truth": "Google Sheets",
+    "image_storage": "Google Drive",
+    "staff_channel": "Telegram"
+  },
+  "staff_required_fields": [
+    "photo",
+    "purchase_price",
+    "sale_price",
+    "quantity"
+  ],
+  "staff_optional_fields": [
+    "barcode",
+    "employee_note"
+  ],
+  "flow": [
+    "telegram_watch_updates",
+    "validate_photo_and_commercial_facts",
+    "parse_purchase_sale_quantity_barcode",
+    "download_telegram_photo",
+    "search_product_by_barcode",
+    "search_product_by_secondary_identity_if_needed",
+    "ai_enrich_name_category_description_without_inventing_commercial_facts",
+    "generate_or_reuse_sku",
+    "upload_photo_to_google_drive",
+    "upsert_products",
+    "upsert_inventory",
+    "append_price_history",
+    "append_audit_log",
+    "apply_publication_gate",
+    "telegram_confirmation"
+  ],
+  "publication_gate": {
+    "new_product_defaults": {
+      "active": false,
+      "workflow_status": "REVIEW",
+      "qa_status": "NEEDS_REVIEW"
+    },
+    "public_when": {
+      "active": true,
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS"
+    }
+  },
+  "inventory": {
+    "default_low_stock_threshold": 3,
+    "statuses": {
+      "0": "OUT_OF_STOCK",
+      "1..3": "LOW_STOCK",
+      "4+": "IN_STOCK"
+    }
+  },
+  "barcode": {
+    "primary_match_key_when_present": true,
+    "create_new_product_when_not_found": true,
+    "prevent_duplicate_creation_when_found": true
+  }
+}
