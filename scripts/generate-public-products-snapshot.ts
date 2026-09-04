@@ -143,6 +143,15 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
+async function findExistingGeneratedImage(product: Product): Promise<string | null> {
+  const base = `/products/processed/generated/product-${safeProductSlug(product.id)}-main`;
+  for (const extension of ["webp", "jpg", "png", "gif", "avif"]) {
+    const publicPath = `${base}.${extension}`;
+    if (await fileExists(publicPathToFile(publicPath))) return publicPath;
+  }
+  return null;
+}
+
 async function downloadVerifiedImage(
   product: Product,
   sourceUrl: string,
@@ -201,6 +210,7 @@ async function localizeProductImages(products: Product[]): Promise<Product[]> {
 
   const localized: Product[] = [];
   let staged = 0;
+  let reused = 0;
 
   for (const product of products) {
     const image = product.image!;
@@ -209,6 +219,14 @@ async function localizeProductImages(products: Product[]): Promise<Product[]> {
       const existingFile = publicPathToFile(image);
       if (await fileExists(existingFile)) {
         localized.push(product);
+        reused += 1;
+        continue;
+      }
+
+      const generatedFallback = await findExistingGeneratedImage(product);
+      if (generatedFallback) {
+        localized.push({ ...product, image: generatedFallback, processedImage: generatedFallback });
+        reused += 1;
         continue;
       }
 
@@ -233,11 +251,22 @@ async function localizeProductImages(products: Product[]): Promise<Product[]> {
       throw new Error(`Unsupported image source for ${product.id}: ${image}`);
     }
 
+    // The sheet may still contain the original Drive URL while CI already has a
+    // visually verified same-origin asset committed for this product. Prefer the
+    // committed asset and only hit Drive for genuinely new products.
+    const generatedFallback = await findExistingGeneratedImage(product);
+    if (generatedFallback) {
+      localized.push({ ...product, image: generatedFallback, processedImage: generatedFallback });
+      reused += 1;
+      continue;
+    }
+
     const localPath = await downloadVerifiedImage(product, image);
     localized.push({ ...product, image: localPath, processedImage: localPath });
     staged += 1;
   }
 
+  console.log(`Reused ${reused} verified same-origin product images`);
   console.log(`Staged ${staged} remote product images into Cloudflare Pages assets`);
   return localized;
 }
