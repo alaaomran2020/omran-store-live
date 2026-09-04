@@ -14,6 +14,8 @@ const required = [
   "client/src/pages/Home.tsx",
   "client/src/pages/Products.tsx",
   "client/src/pages/ProductIntake.tsx",
+  "client/src/lib/productIntakeClient.ts",
+  "client/src/lib/analytics.ts",
   "client/src/lib/publicProductsSnapshot.ts",
   "shared/products.ts",
   "shared/productIntake.ts",
@@ -41,6 +43,29 @@ if (exists("client/src/admin/AdminAccess.tsx")) {
   assert(!admin.includes('VITE_ADMIN_AUTH_URL'), "admin must not depend on a custom auth API");
   assert(!admin.includes('sessionStorage'), "admin must not trust a browser-only session token");
   assert(!admin.includes('localStorage') || !admin.includes('admin-session'), "admin must not trust a local admin session");
+}
+
+if (exists("client/src/pages/ProductIntake.tsx")) {
+  const intakePage = read("client/src/pages/ProductIntake.tsx");
+  assert(intakePage.includes("submitProductIntake"), "product intake must submit to the operations gateway");
+  assert(!intakePage.includes("localStorage"), "product intake must not persist operational drafts in localStorage");
+  assert(!intakePage.includes("exportDrafts"), "product intake must not use CSV export as the operational handoff");
+}
+
+if (exists("client/src/lib/productIntakeClient.ts")) {
+  const intakeClient = read("client/src/lib/productIntakeClient.ts");
+  assert(intakeClient.includes("FormData"), "product intake gateway must send the product image as multipart data");
+  assert(intakeClient.includes('form.append("photo"'), "product intake gateway must include the original photo");
+  assert(intakeClient.includes("NEEDS_REVIEW"), "product intake gateway must fail closed to NEEDS_REVIEW");
+}
+
+if (exists("client/src/lib/analytics.ts")) {
+  const analytics = read("client/src/lib/analytics.ts");
+  assert(analytics.includes('"whatsapp_conversion"'), "analytics must expose the canonical WhatsApp conversion event");
+  assert(analytics.includes("WHATSAPP_CONVERSION_WEBHOOK"), "WhatsApp conversions must be persisted to the operations ledger");
+  assert(analytics.includes("product_id"), "conversion tracking must include product_id");
+  assert(analytics.includes("sku"), "conversion tracking must include SKU");
+  assert(analytics.includes("category"), "conversion tracking must include category");
 }
 
 if (exists("shared/productIntake.ts")) {
@@ -104,4 +129,4 @@ if (errors.length) {
 }
 
 console.log("Integration audit: PASS");
-console.log("Routes, Cloudflare Access admin guard, publication guard, intake contract, static architecture, environment and bundled product images are coherent.");
+console.log("Routes, Cloudflare Access admin guard, publication guard, operational intake, conversion tracking, static architecture, environment and bundled product images are coherent.");
