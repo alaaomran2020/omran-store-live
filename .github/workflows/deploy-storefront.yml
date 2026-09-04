@@ -2,6 +2,8 @@ name: Deploy Storefront to Cloudflare Pages
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
   pull_request:
     branches: [main]
     paths:
