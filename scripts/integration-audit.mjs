@@ -16,6 +16,7 @@ const required = [
   "client/src/pages/ProductIntake.tsx",
   "client/src/lib/productIntakeClient.ts",
   "client/src/lib/analytics.ts",
+  "client/src/lib/makeGateway.ts",
   "client/src/lib/publicProductsSnapshot.ts",
   "shared/products.ts",
   "shared/productIntake.ts",
@@ -62,10 +63,16 @@ if (exists("client/src/lib/productIntakeClient.ts")) {
 if (exists("client/src/lib/analytics.ts")) {
   const analytics = read("client/src/lib/analytics.ts");
   assert(analytics.includes('"whatsapp_conversion"'), "analytics must expose the canonical WhatsApp conversion event");
-  assert(analytics.includes("WHATSAPP_CONVERSION_WEBHOOK"), "WhatsApp conversions must be persisted to the operations ledger");
+  assert(analytics.includes("MAKE_GATEWAY_URL"), "WhatsApp conversions must use the unified Make operations gateway");
   assert(analytics.includes("product_id"), "conversion tracking must include product_id");
   assert(analytics.includes("sku"), "conversion tracking must include SKU");
   assert(analytics.includes("category"), "conversion tracking must include category");
+}
+
+if (exists("client/src/lib/makeGateway.ts")) {
+  const gateway = read("client/src/lib/makeGateway.ts");
+  assert(gateway.includes("hook.eu1.make.com"), "unified Make gateway URL must be configured");
+  assert(gateway.includes("catalog"), "unified Make gateway must expose the catalog action URL");
 }
 
 if (exists("shared/productIntake.ts")) {
@@ -129,4 +136,4 @@ if (errors.length) {
 }
 
 console.log("Integration audit: PASS");
-console.log("Routes, Cloudflare Access admin guard, publication guard, operational intake, conversion tracking, static architecture, environment and bundled product images are coherent.");
+console.log("Routes, Cloudflare Access admin guard, publication guard, operational intake, unified Make gateway, conversion tracking, static architecture, environment and bundled product images are coherent.");
