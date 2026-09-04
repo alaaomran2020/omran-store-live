@@ -35,8 +35,6 @@ const verified = (product: SnapshotProduct): Product => ({
   reviewReason: null,
 });
 
-const driveImage = (id: string) =>
-  `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
 const driveSource = (id: string) =>
   `https://drive.google.com/uc?export=view&id=${id}`;
 
@@ -90,11 +88,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     category: "ألعاب خارجية وفقاعات",
     description:
       "محلول فقاعات صابون للأطفال بعبوة 250 مل كما هو ظاهر على العبوة، مناسب لألعاب الفقاعات والأنشطة الخارجية.",
-    image: driveImage("1dtiEbbptINTXxtQAwpkKpI2fxBAxYbLm"),
+    image: "/products/processed/generated/product-omr-raw-001-main.webp",
     imageSource: driveSource("1dtiEbbptINTXxtQAwpkKpI2fxBAxYbLm"),
     sortOrder: 5,
     sourceDriveId: "1I_QGGoYTxq7zdfd5UgWFReB7MS9Tg36U",
-    processedImage: driveSource("1dtiEbbptINTXxtQAwpkKpI2fxBAxYbLm"),
+    processedImage: "/products/processed/generated/product-omr-raw-001-main.webp",
     rowIndex: 4,
   }),
   verified({
@@ -104,11 +102,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     category: "ألعاب تعليمية وفنية",
     description:
       "حقيبة رسم وتلوين زرقاء تضم مجموعة متنوعة من أقلام التلوين والألوان وأدوات الرسم مرتبة داخل حقيبة.",
-    image: driveImage("1ORWMwfpwHgF-Usqg1oBvzCx4FIVhj18T"),
+    image: "/products/processed/generated/product-omr-raw-002-main.webp",
     imageSource: driveSource("1ORWMwfpwHgF-Usqg1oBvzCx4FIVhj18T"),
     sortOrder: 6,
     sourceDriveId: "1Sdozgd1CS2oAtJcUN-fjIhQzmAq_AuVl",
-    processedImage: driveSource("1ORWMwfpwHgF-Usqg1oBvzCx4FIVhj18T"),
+    processedImage: "/products/processed/generated/product-omr-raw-002-main.webp",
     rowIndex: 5,
   }),
   verified({
@@ -118,11 +116,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     category: "ألعاب تعليمية وفنية",
     description:
       "حقيبة رسم وتلوين وردية تضم مجموعة متنوعة من أقلام التلوين والألوان وأدوات الرسم مرتبة داخل حقيبة.",
-    image: driveImage("13TDSnLvR07wTBesPQcHb6jTZYtjIxwKT"),
+    image: "/products/processed/generated/product-omr-raw-003-main.webp",
     imageSource: driveSource("13TDSnLvR07wTBesPQcHb6jTZYtjIxwKT"),
     sortOrder: 7,
     sourceDriveId: "1pM9lcH17V7pCw9l_6_hC4hPrPoDCNZVn",
-    processedImage: driveSource("13TDSnLvR07wTBesPQcHb6jTZYtjIxwKT"),
+    processedImage: "/products/processed/generated/product-omr-raw-003-main.webp",
     rowIndex: 6,
   }),
   verified({
@@ -132,11 +130,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     category: "ألعاب موسيقية",
     description:
       "بيانو أطفال بتصميم كلب لطيف مع مفاتيح موسيقية وعناصر تفاعلية ظاهرة بالعبوة.",
-    image: driveImage("1SZxh2FDS3GOpt9RkBDdg9R1Vv0ecI4oZ"),
+    image: "/products/processed/generated/product-omr-raw-004-main.webp",
     imageSource: driveSource("1SZxh2FDS3GOpt9RkBDdg9R1Vv0ecI4oZ"),
     sortOrder: 8,
     sourceDriveId: "16HLRBn8l6aRKSTnE17sDyfaZNSFNC-cP",
-    processedImage: driveSource("1SZxh2FDS3GOpt9RkBDdg9R1Vv0ecI4oZ"),
+    processedImage: "/products/processed/generated/product-omr-raw-004-main.webp",
     rowIndex: 7,
   }),
   verified({
@@ -146,11 +144,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     category: "ألعاب موسيقية",
     description:
       "Rabbit Piano للأطفال بتصميم أرنب، يضم مفاتيح موسيقية وعناصر تفاعلية كما هو ظاهر على العبوة.",
-    image: driveImage("1z_jLgW6E1cOc8TVxImwf8qb7POrcQC8b"),
+    image: "/products/processed/generated/product-omr-raw-005-main.webp",
     imageSource: driveSource("1z_jLgW6E1cOc8TVxImwf8qb7POrcQC8b"),
     sortOrder: 9,
     sourceDriveId: "1YTUycmB_vORBD4n29HkhZoZ1vpxJT29y",
-    processedImage: driveSource("1z_jLgW6E1cOc8TVxImwf8qb7POrcQC8b"),
+    processedImage: "/products/processed/generated/product-omr-raw-005-main.webp",
     rowIndex: 8,
   }),
   verified({
@@ -160,11 +158,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     category: "عرائس وألعاب بنات",
     description:
       "عروسة أطفال مع مجسم كلب أليف وإكسسوارات لعب ظاهرة داخل العبوة. موضح على العبوة أنها مناسبة لعمر 3 سنوات فأكثر.",
-    image: driveImage("1WmeT2WM1bICSV4Rjpug56QcKGMErSr1v"),
+    image: "/products/processed/generated/product-omr-raw-006-main.webp",
     imageSource: driveSource("1WmeT2WM1bICSV4Rjpug56QcKGMErSr1v"),
     sortOrder: 10,
     sourceDriveId: "1o1mToFYNDPH63LW51wpIxPocB-G1U8wz",
-    processedImage: driveSource("1WmeT2WM1bICSV4Rjpug56QcKGMErSr1v"),
+    processedImage: "/products/processed/generated/product-omr-raw-006-main.webp",
     rowIndex: 9,
   }),
   verified({
@@ -174,11 +172,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     category: "عرائس وألعاب بنات",
     description:
       "عروسة Dream Girl بفستان مزخرف مع حقيبة صغيرة كإكسسوار، كما يظهر داخل العبوة. موضح على العبوة أنها مناسبة لعمر 3 سنوات فأكثر.",
-    image: driveImage("1hPd8kbo1rTHrtBqB8WWP-0VvjQ4YY2Sz"),
+    image: "/products/processed/generated/product-omr-raw-007-main.webp",
     imageSource: driveSource("1hPd8kbo1rTHrtBqB8WWP-0VvjQ4YY2Sz"),
     sortOrder: 11,
     sourceDriveId: "1Pj8la4jAnm7DXCSB0YJDAW27cs_cKA-U",
-    processedImage: driveSource("1hPd8kbo1rTHrtBqB8WWP-0VvjQ4YY2Sz"),
+    processedImage: "/products/processed/generated/product-omr-raw-007-main.webp",
     rowIndex: 10,
   }),
   verified({
@@ -188,11 +186,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     category: "عرائس وألعاب بنات",
     description:
       "طقم عرائس عائلي يضم أربع شخصيات بملابس متناسقة داخل عبوة Fashion، كما هو ظاهر بالصورة. موضح على العبوة أنها مناسبة لعمر 3 سنوات فأكثر.",
-    image: driveImage("1kYmIS3wPoq9po4YGyh8CIv6M8O8CUw_p"),
+    image: "/products/processed/generated/product-omr-raw-008-main.webp",
     imageSource: driveSource("1kYmIS3wPoq9po4YGyh8CIv6M8O8CUw_p"),
     sortOrder: 12,
     sourceDriveId: "1xdLyrMzA0GDxlk2DpXi-Hb8ZfUo9yqxC",
-    processedImage: driveSource("1kYmIS3wPoq9po4YGyh8CIv6M8O8CUw_p"),
+    processedImage: "/products/processed/generated/product-omr-raw-008-main.webp",
     rowIndex: 11,
   }),
   verified({
@@ -202,11 +200,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     category: "ألعاب تعليمية وذهنية",
     description:
       "Magnetic Force Chess لعبة تحدي مغناطيسية بلوحة وكرات معدنية كما يظهر على العبوة، مناسبة للعب الذهني والتحدي.",
-    image: driveImage("1kR-HMHQp0JltOSmVtolsd073JqesLngW"),
+    image: "/products/processed/generated/product-omr-raw-010-main.webp",
     imageSource: driveSource("1kR-HMHQp0JltOSmVtolsd073JqesLngW"),
     sortOrder: 13,
     sourceDriveId: "14-0b1Xsqvpi--nu8MIrZkQQBjpB7zAIZ",
-    processedImage: driveSource("1kR-HMHQp0JltOSmVtolsd073JqesLngW"),
+    processedImage: "/products/processed/generated/product-omr-raw-010-main.webp",
     rowIndex: 12,
   }),
   verified({
@@ -216,11 +214,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     category: "سيارات وطائرات ريموت",
     description:
       "طائرة لعبة بالريموت بتصميم مقاتلة مع مراوح مدمجة ووحدة تحكم لاسلكية، كما يظهر على العبوة والصورة.",
-    image: driveImage("1v2V_v6GidoqTbwEbPh9tv4xd3stiDz4R"),
+    image: "/products/processed/generated/product-omr-raw-011-main.webp",
     imageSource: driveSource("1v2V_v6GidoqTbwEbPh9tv4xd3stiDz4R"),
     sortOrder: 14,
     sourceDriveId: "1GppbeR4M1VDBw6OVUmv9hkLJcDF0NnzF",
-    processedImage: driveSource("1v2V_v6GidoqTbwEbPh9tv4xd3stiDz4R"),
+    processedImage: "/products/processed/generated/product-omr-raw-011-main.webp",
     rowIndex: 13,
   }),
 ];

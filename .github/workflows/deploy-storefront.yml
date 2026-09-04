@@ -8,11 +8,9 @@ on:
       - "client/**"
       - "public/**"
       - "shared/**"
-      - "scripts/generate-public-products-snapshot.ts"
       - "vite.config.ts"
       - "package.json"
       - "pnpm-lock.yaml"
-      - ".env.production"
       - ".github/workflows/deploy-storefront.yml"
 
 concurrency:
@@ -56,9 +54,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Refresh catalog and stage verified product images
-        run: pnpm exec tsx scripts/generate-public-products-snapshot.ts
-
       - name: Quality gates
         run: |
           pnpm lint
@@ -85,7 +80,7 @@ jobs:
               flags=re.MULTILINE,
           )
           images = re.findall(
-              r'^\s*"image":\s*"([^"]+)"',
+              r'^\s*(?:"image"|image):\s*"([^"]+)"',
               source,
               flags=re.MULTILINE,
           )

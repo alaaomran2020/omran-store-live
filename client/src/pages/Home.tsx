@@ -125,7 +125,7 @@ export default function Home() {
             </div>
             <div className="rounded-2xl border border-stone-200 bg-white p-6">
               <p className="text-lg font-black text-emerald-950">كتالوج يتحدث باستمرار</p>
-              <p className="mt-2 text-sm leading-7 text-stone-600">المنتجات المنشورة تظهر من قاعدة المنتجات المعتمدة بعد اجتياز بوابة المراجعة.</p>
+              <p className="mt-2 text-sm leading-7 text-stone-600">نعرض داخل الموقع المنتجات التي تمت مراجعة بياناتها وصورها فقط.</p>
             </div>
             <div className="rounded-2xl border border-stone-200 bg-white p-6">
               <p className="text-lg font-black text-emerald-950">مناسب للقطاعي والكميات</p>
