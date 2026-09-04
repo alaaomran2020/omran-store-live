@@ -1,6 +1,5 @@
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { parse } from "dotenv";
 import { fetchProductsPayload, isPubliclyVisible, type Product } from "../shared/products";
 
 const ROOT = resolve(import.meta.dirname, "..");
@@ -17,9 +16,31 @@ const MIME_EXTENSION: Record<string, string> = {
   "image/avif": "avif",
 };
 
+function parseEnvFile(text: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const index = trimmed.indexOf("=");
+    if (index <= 0) continue;
+    const key = trimmed.slice(0, index).trim();
+    let value = trimmed.slice(index + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    out[key] = value;
+  }
+  return out;
+}
+
 async function readSheetUrl(): Promise<string> {
-  const envText = await readFile(ENV_FILE, "utf8");
-  const fileEnv = parse(envText);
+  let fileEnv: Record<string, string> = {};
+  try {
+    fileEnv = parseEnvFile(await readFile(ENV_FILE, "utf8"));
+  } catch {
+    // CI supplies PRODUCTS_SHEET_URL directly; a missing local env file is valid there.
+  }
+
   const url =
     process.env.PRODUCTS_SHEET_URL ||
     process.env.VITE_PRODUCTS_SHEET_URL ||
