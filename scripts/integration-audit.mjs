@@ -10,6 +10,7 @@ const assert = (condition, message) => { if (!ok(condition)) errors.push(message
 
 const required = [
   "client/src/App.tsx",
+  "client/src/admin/AdminAccess.tsx",
   "client/src/pages/Home.tsx",
   "client/src/pages/Products.tsx",
   "client/src/pages/ProductIntake.tsx",
@@ -29,7 +30,17 @@ if (exists("client/src/App.tsx")) {
   const app = read("client/src/App.tsx");
   assert(app.includes('path={"/"}'), "home route is not wired");
   assert(app.includes('path={"/products"}'), "products route is not wired");
+  assert(app.includes('path={"/admin"}'), "admin route is not wired");
   assert(app.includes('path={"/admin/product-intake"}'), "product intake route is not wired");
+}
+
+if (exists("client/src/admin/AdminAccess.tsx")) {
+  const admin = read("client/src/admin/AdminAccess.tsx");
+  assert(admin.includes('/cdn-cgi/access/get-identity'), "admin must verify Cloudflare Access identity");
+  assert(admin.includes('/cdn-cgi/access/logout'), "admin logout must use Cloudflare Access logout");
+  assert(!admin.includes('VITE_ADMIN_AUTH_URL'), "admin must not depend on a custom auth API");
+  assert(!admin.includes('sessionStorage'), "admin must not trust a browser-only session token");
+  assert(!admin.includes('localStorage') || !admin.includes('admin-session'), "admin must not trust a local admin session");
 }
 
 if (exists("shared/productIntake.ts")) {
@@ -60,7 +71,7 @@ if (exists("client/src/lib/publicProductsSnapshot.ts")) {
 
 if (exists(".env.example")) {
   const env = read(".env.example");
-  for (const forbidden of ["DATABASE_URL=", "MYSQL_DATABASE=", "MYSQL_USER=", "ORIGIN_BASE_URL=", "JWT_SECRET=", "PORT="]) {
+  for (const forbidden of ["DATABASE_URL=", "MYSQL_DATABASE=", "MYSQL_USER=", "ORIGIN_BASE_URL=", "JWT_SECRET=", "PORT=", "VITE_ADMIN_AUTH_URL="]) {
     assert(!env.includes(forbidden), `static live env template contains obsolete runtime setting: ${forbidden}`);
   }
 }
@@ -70,6 +81,7 @@ if (exists("docs/CURRENT-ARCHITECTURE.md")) {
   assert(architecture.includes("omran-store-live"), "architecture contract must identify the live repository");
   assert(architecture.includes("omrantoys-live-app"), "architecture contract must identify the Cloudflare Pages project");
   assert(architecture.includes("Static Vite storefront only"), "architecture contract must remain static-only");
+  assert(architecture.includes("Cloudflare Access"), "architecture contract must document admin edge authentication");
 }
 
 for (const obsolete of [
@@ -92,4 +104,4 @@ if (errors.length) {
 }
 
 console.log("Integration audit: PASS");
-console.log("Routes, publication guard, intake contract, static architecture, environment and bundled product images are coherent.");
+console.log("Routes, Cloudflare Access admin guard, publication guard, intake contract, static architecture, environment and bundled product images are coherent.");
