@@ -1,0 +1,11 @@
+# Products
+id,name,price,category,description,image,active,sort_order,product_prompt,workflow_status,qa_status,source_drive_id,processed_image,review_reason
+
+# Inventory
+product_id,sku,barcode,available_qty,low_stock_threshold,reorder_qty,inventory_status,last_updated
+
+# Price_History
+product_id,sku,barcode,purchase_price,sale_price,qty_received,recorded_at,source,operator
+
+# Audit_Log
+event_id,event_type,product_id,sku,barcode,actor,source,details,status,created_at
