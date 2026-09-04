@@ -64,6 +64,14 @@ jobs:
         run: |
           pnpm exec esbuild scripts/generate-public-products-snapshot.ts --bundle --platform=node --format=esm --outfile=/tmp/generate-public-products-snapshot.mjs
           node /tmp/generate-public-products-snapshot.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          source = Path('client/src/lib/publicProductsSnapshot.ts').read_text(encoding='utf-8')
+          count = len(re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', source, flags=re.MULTILINE))
+          assert count >= 27, f'catalog regression blocked: {count} products < verified baseline 27'
+          print(f'Catalog regression guard: PASS ({count} products)')
+          PY
 
       - name: Repository integration audit
         run: node scripts/integration-audit.mjs
@@ -100,6 +108,7 @@ jobs:
           )
 
           assert product_ids, 'verified snapshot contains no product IDs'
+          assert len(product_ids) >= 27, f'catalog regression blocked: {len(product_ids)} products < verified baseline 27'
           assert len(product_ids) == len(set(product_ids)), f'duplicate snapshot product IDs: {product_ids}'
           assert len(images) == len(product_ids), (
               f'every public product must have exactly one image: {len(images)} images / {len(product_ids)} products'
@@ -159,6 +168,14 @@ jobs:
         run: |
           pnpm exec esbuild scripts/generate-public-products-snapshot.ts --bundle --platform=node --format=esm --outfile=/tmp/generate-public-products-snapshot.mjs
           node /tmp/generate-public-products-snapshot.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          source = Path('client/src/lib/publicProductsSnapshot.ts').read_text(encoding='utf-8')
+          count = len(re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', source, flags=re.MULTILINE))
+          assert count >= 27, f'catalog regression blocked before deploy: {count} products < verified baseline 27'
+          print(f'Pre-deploy catalog guard: PASS ({count} products)')
+          PY
 
       - name: Build storefront
         run: pnpm build
