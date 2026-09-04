@@ -5,16 +5,23 @@ import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
  * تنسيق العرض ورسالة واتساب — دوال نقية قابلة للاختبار (productFormat.test.ts).
  */
 
-/** أرقام لاتينية مع فاصل آلاف عربي مصري + العملة، مثل: 1,250 ج.م */
+/**
+ * وضع تجاري مؤقت: الأسعار والكميات غير جاهزة بعد.
+ * عند تحويله إلى true لاحقًا تعود الأسعار المؤكدة للعرض بدون تغيير بيانات المنتجات.
+ */
+export const SHOW_CATALOG_PRICES = false;
+export const PRICE_ENQUIRY_LABEL = "اسأل عن السعر والتوافر";
+
 const numberFormatter = new Intl.NumberFormat("ar-EG-u-nu-latn", {
   maximumFractionDigits: 2,
 });
 
 export const CURRENCY_LABEL = "ج.م";
 
-/** السعر الفارغ/غير الصالح لا يكسر البطاقة: يظهر "للاستفسار والكميات". */
+/** أثناء وضع إخفاء الأسعار لا يظهر أي رقم حتى لو كان موجودًا في المصدر. */
 export function formatPrice(price: number | null): string {
-  if (price === null || !Number.isFinite(price)) return "للاستفسار والكميات";
+  if (!SHOW_CATALOG_PRICES) return PRICE_ENQUIRY_LABEL;
+  if (price === null || !Number.isFinite(price)) return PRICE_ENQUIRY_LABEL;
   return `${numberFormatter.format(price)} ${CURRENCY_LABEL}`;
 }
 
@@ -22,32 +29,12 @@ export function formatPrice(price: number | null): string {
 export function whatsappNumber(): string {
   const fromEnv =
     (import.meta.env.VITE_WHATSAPP_NUMBER as string | undefined) ?? "";
-  return (fromEnv || SOCIAL_EMBED_CONFIG.whatsappNumber || "").replace(
-    /[^\d]/g,
-    ""
-  );
+  return (fromEnv || SOCIAL_EMBED_CONFIG.whatsappNumber || "").replace(/[^\d]/g, "");
 }
 
-/**
- * نص الاستفسار — يستخدم اسم المنتج كما هو مكتوب في Google Sheets حرفيًا.
- * يُرجع null إذا لم يُضبط رقم واتساب (فيختفي الزر بدل أن يقود لرابط مكسور).
- *
- * الصيغة المطلوبة إنتاجيًا (Stage 2):
- *   مرحبًا، أريد الاستفسار عن هذا المنتج من عمران تويز.
- *   المنتج: {product_name}
- *   كود المنتج: {sku OR product_id}
- *   التصنيف: {category}
- *   السعر: {price OR "للاستفسار والكميات"}
- *   رابط المنتج: {page_url}
- *
- * كل الحقول تُشفَّر بـ encodeURIComponent عبر معامل wa.me text.
- * لا يُعرض رقم خاطئ إذا لم يوجد Environment Variable — يُرجع null ويختفي الزر.
- */
 export function buildWhatsAppUrl(
   product: Pick<Product, "name" | "price"> &
-    Partial<Pick<Product, "id" | "category">> & {
-      sku?: string | null;
-    },
+    Partial<Pick<Product, "id" | "category">> & { sku?: string | null },
   options: { number?: string; pageUrl?: string } = {}
 ): string | null {
   const number = (options.number ?? whatsappNumber()).replace(/[^\d]/g, "");
@@ -58,39 +45,23 @@ export function buildWhatsAppUrl(
     (product as { id?: string }).id?.trim() ||
     "";
   const category = (product as { category?: string }).category?.trim() || "";
-  const priceText =
-    product.price !== null && Number.isFinite(product.price as number)
-      ? formatPrice(product.price as number)
-      : "للاستفسار والكميات";
+  const priceText = formatPrice(product.price);
 
-  // رابط المنتج: المُمرَّر صراحةً > مُولَّد من id إن أمكن > window.location.href كملاذ أخير
   let pageUrl = (options.pageUrl ?? "").trim();
   if (!pageUrl) {
     const pid = (product as { id?: string }).id;
     if (pid) {
       try {
         pageUrl = productPermalink(pid);
-        if (
-          pageUrl.startsWith("?") &&
-          typeof window !== "undefined" &&
-          window.location?.href
-        ) {
+        if (pageUrl.startsWith("?") && typeof window !== "undefined" && window.location?.href) {
           pageUrl = window.location.href.split("?")[0] + pageUrl;
         }
-        if (pageUrl.startsWith("?") && typeof window !== "undefined") {
-          pageUrl = window.location.href;
-        }
+        if (pageUrl.startsWith("?") && typeof window !== "undefined") pageUrl = window.location.href;
       } catch {
         pageUrl = "";
       }
     }
-    if (
-      !pageUrl &&
-      typeof window !== "undefined" &&
-      window.location?.href
-    ) {
-      pageUrl = window.location.href;
-    }
+    if (!pageUrl && typeof window !== "undefined" && window.location?.href) pageUrl = window.location.href;
   }
 
   const lines = [
