@@ -1,10 +1,10 @@
 /**
  * Lightweight, fail-safe storefront analytics.
  * Umami remains optional; WhatsApp conversions are also persisted to the
- * operational Analytics_Events ledger through a narrow Make webhook.
+ * operational Analytics_Events ledger through the unified Make gateway.
  */
 
-const WHATSAPP_CONVERSION_WEBHOOK = "https://hook.eu1.make.com/qq87neltq7g7uftz8q38tpbghsjo5r7s";
+import { MAKE_GATEWAY_URL } from "./makeGateway";
 
 type UmamiWindow = Window & {
   umami?: { track?: (event: string, data?: Record<string, unknown>) => void };
@@ -77,7 +77,7 @@ function persistWhatsAppConversion(payload: WhatsAppProductInquiryPayload): void
       utm_campaign: pageUrl.searchParams.get("utm_campaign") || "",
     });
 
-    void fetch(WHATSAPP_CONVERSION_WEBHOOK, {
+    void fetch(MAKE_GATEWAY_URL, {
       method: "POST",
       mode: "no-cors",
       keepalive: true,
