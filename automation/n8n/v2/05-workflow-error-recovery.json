@@ -1,0 +1,76 @@
+{
+  "name": "OMRAN v2 — Workflow Error Recovery",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "v2-error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const e=$json.execution||{}; const w=$json.workflow||{}; const err=e.error||$json.error||{}; const now=new Date().toISOString(); const safe=String(err.message||'Unknown workflow error').slice(0,500); return [{json:{event_id:`ERR-${Date.now()}`,timestamp:now,action:'WORKFLOW_ERROR',entity_type:'N8N_WORKFLOW',entity_id:String(w.id||w.name||'unknown'),field:'execution',old_value:'',new_value:String(e.id||''),actor:'n8n-v2-error-recovery',notes:`${safe} | lastNode=${e.lastNodeExecuted||''} | url=${e.url||''}`,telegram_text:`🚨 OMRAN n8n error\\nWorkflow: ${w.name||w.id||'unknown'}\\nNode: ${e.lastNodeExecuted||'unknown'}\\nError: ${safe}`}}];"
+      },
+      "id": "v2-sanitize-error",
+      "name": "تنقية الخطأ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {"__rl": true, "value": "1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc", "mode": "id"},
+        "sheetName": {"__rl": true, "value": "سجل التدقيق", "mode": "name"},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "معرف الحدث": "={{ $json.event_id }}",
+            "التوقيت": "={{ $json.timestamp }}",
+            "الإجراء": "={{ $json.action }}",
+            "نوع الكيان": "={{ $json.entity_type }}",
+            "معرف الكيان": "={{ $json.entity_id }}",
+            "الحقل": "={{ $json.field }}",
+            "القيمة القديمة": "={{ $json.old_value }}",
+            "القيمة الجديدة": "={{ $json.new_value }}",
+            "المنفذ": "={{ $json.actor }}",
+            "ملاحظات": "={{ $json.notes }}"
+          },
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "v2-error-audit",
+      "name": "تسجيل الخطأ",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [500, -80],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_ADMIN_CHAT_ID }}",
+        "text": "={{ $('تنقية الخطأ').first().json.telegram_text }}",
+        "additionalFields": {}
+      },
+      "id": "v2-error-telegram",
+      "name": "تنبيه الإدارة",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [500, 100],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Error Trigger": {"main": [[{"node": "تنقية الخطأ", "type": "main", "index": 0}]]},
+    "تنقية الخطأ": {"main": [[{"node": "تسجيل الخطأ", "type": "main", "index": 0}, {"node": "تنبيه الإدارة", "type": "main", "index": 0}]]}
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {"executionOrder": "v1", "timezone": "Africa/Cairo"},
+  "versionId": "omran-v2-error-recovery-20260904",
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": [{"id": "omran-v2", "name": "Omran v2"}]
+}
