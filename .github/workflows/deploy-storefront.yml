@@ -34,6 +34,7 @@ permissions:
 
 env:
   NODE_OPTIONS: --max-old-space-size=4096
+  PRODUCTS_SHEET_URL: https://docs.google.com/spreadsheets/d/e/2PACX-1vTLph4MyfmoeWcjJ3cMi-iDaM3dgt4_S57SvKr6wpQu8IbDKliduguIcvtp7E5o0ZoxN3ouNQoZo7dn/pub?gid=57015348&single=true&output=csv
 
 jobs:
   validate-storefront:
@@ -56,6 +57,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate approved public catalog snapshot
+        run: pnpm exec vite-node scripts/generate-public-products-snapshot.ts
 
       - name: Repository integration audit
         run: node scripts/integration-audit.mjs
@@ -129,7 +133,7 @@ jobs:
     if: github.event_name != 'pull_request'
     needs: validate-storefront
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -146,6 +150,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate approved public catalog snapshot
+        run: pnpm exec vite-node scripts/generate-public-products-snapshot.ts
 
       - name: Build storefront
         run: pnpm build
@@ -169,3 +176,4 @@ jobs:
         run: |
           echo "Storefront project: omrantoys-live-app"
           echo "Commit: ${GITHUB_SHA}"
+          echo "Catalog source: Omran Trading Master Database / published products view"
