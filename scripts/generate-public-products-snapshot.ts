@@ -16,6 +16,24 @@ const MIME_EXTENSION: Record<string, string> = {
   "image/avif": "avif",
 };
 
+const PUBLISHED_HEADER_ALIASES: Record<string, string> = {
+  "معرف المنتج": "id",
+  "اسم المنتج": "name",
+  السعر: "price",
+  التصنيف: "category",
+  الوصف: "description",
+  "صورة المنتج": "image",
+  نشط: "active",
+  "ترتيب العرض": "sort_order",
+  "موجه الصورة": "product_prompt",
+  "حالة النشر": "workflow_status",
+  "حالة الجودة": "qa_status",
+  "معرف المصدر في درايف": "source_drive_id",
+  "الصورة المعالجة": "processed_image",
+  "سبب المراجعة": "review_reason",
+  "رمز المخزون": "sku",
+};
+
 function parseEnvFile(text: string): Record<string, string> {
   const out: Record<string, string> = {};
   for (const line of text.split(/\r?\n/)) {
@@ -31,6 +49,21 @@ function parseEnvFile(text: string): Record<string, string> {
     out[key] = value;
   }
   return out;
+}
+
+function normalizePublishedCsvHeaders(csv: string): string {
+  const newline = csv.indexOf("\n");
+  const headerLine = newline === -1 ? csv : csv.slice(0, newline);
+  const rest = newline === -1 ? "" : csv.slice(newline);
+  const normalized = headerLine
+    .replace(/^\uFEFF/, "")
+    .split(",")
+    .map(cell => {
+      const raw = cell.trim().replace(/^"|"$/g, "").replace(/""/g, '"');
+      return PUBLISHED_HEADER_ALIASES[raw] ?? raw;
+    })
+    .join(",");
+  return `${normalized}${rest}`;
 }
 
 async function readSheetUrl(): Promise<string> {
@@ -209,9 +242,20 @@ function renderSnapshot(products: Product[]): string {
 
 async function main() {
   const sheetUrl = await readSheetUrl();
-  const payload = await fetchProductsPayload(sheetUrl, (url, init) => fetch(url, init), {
-    timeoutMs: 20_000,
-  });
+  const payload = await fetchProductsPayload(
+    sheetUrl,
+    async (url, init) => {
+      const response = await fetch(url, init);
+      if (!response.ok) return response;
+      const text = await response.text();
+      return new Response(normalizePublishedCsvHeaders(text), {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
+    },
+    { timeoutMs: 20_000 }
+  );
 
   if (payload.status !== "ok") {
     throw new Error(`Products source is not healthy: ${payload.status}`);
