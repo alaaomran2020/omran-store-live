@@ -1,13 +1,16 @@
 // @vitest-environment node
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchProducts } from "./productsClient";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "./publicProductsSnapshot";
+import { makeCatalogUrl } from "./makeGateway";
 
-describe("static products client", () => {
-  it("يعيد الكتالوج المحلي فقط دون أي طلب شبكة", async () => {
-    const fetchMock = vi.fn(() => {
-      throw new Error("The static storefront must not fetch product data");
-    });
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("products client", () => {
+  it("يحاول الكتالوج الحي ثم يعود للـSnapshot عند تعذر الشبكة", async () => {
+    const fetchMock = vi.fn(() => Promise.reject(new Error("gateway unavailable")));
     vi.stubGlobal("fetch", fetchMock);
 
     const payload = await fetchProducts();
@@ -16,19 +19,71 @@ describe("static products client", () => {
     expect(payload.products.map(product => product.id)).toEqual(
       PUBLIC_PRODUCTS_SNAPSHOT.map(product => product.id)
     );
-    expect(fetchMock).not.toHaveBeenCalled();
-    vi.unstubAllGlobals();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      makeCatalogUrl(),
+      expect.objectContaining({ method: "GET", cache: "no-store" })
+    );
   });
 
-  it("لا يحتوي إلا على منتجات اجتازت بوابة النشر وصور محلية", async () => {
+  it("يستخدم الكتالوج الحي عندما يرجع منتجات منشورة ومجتازة QA", async () => {
+    const liveRow = [
+      "LIVE-001",
+      "منتج حي",
+      "",
+      "ألعاب",
+      "وصف",
+      "/products/processed/product-kitchen-46pcs-main.webp",
+      "TRUE",
+      "1",
+      "",
+      "PUBLISHED",
+      "PASS",
+      "",
+      "/products/processed/product-kitchen-46pcs-main.webp",
+      "",
+      "SKU-LIVE-001",
+    ];
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          values: [
+            [
+              "id",
+              "name",
+              "price",
+              "category",
+              "description",
+              "image",
+              "active",
+              "sort_order",
+              "product_prompt",
+              "workflow_status",
+              "qa_status",
+              "source_drive_id",
+              "processed_image",
+              "review_reason",
+              "sku",
+            ],
+            liveRow,
+          ],
+        }),
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
     const { products } = await fetchProducts();
 
-    expect(products.length).toBeGreaterThan(0);
-    for (const product of products) {
-      expect(product.active).toBe(true);
-      expect(product.workflowStatus).toBe("PUBLISHED");
-      expect(product.qaStatus).toBe("PASS");
-      expect(product.image).toMatch(/^\/products\/processed\//);
-    }
+    expect(products).toHaveLength(1);
+    expect(products[0]).toMatchObject({
+      id: "LIVE-001",
+      sku: "SKU-LIVE-001",
+      active: true,
+      workflowStatus: "PUBLISHED",
+      qaStatus: "PASS",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
