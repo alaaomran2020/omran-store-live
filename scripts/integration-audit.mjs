@@ -19,6 +19,7 @@ const required = [
   "public/robots.txt",
   "public/sitemap.xml",
   ".env.example",
+  "docs/CURRENT-ARCHITECTURE.md",
   ".github/workflows/deploy-storefront.yml",
 ];
 
@@ -64,8 +65,24 @@ if (exists(".env.example")) {
   }
 }
 
-for (const obsolete of ["server", "worker", "docker-compose.yml"]) {
-  assert(!exists(obsolete), `obsolete API/VPS artifact must not return to live repo: ${obsolete}`);
+if (exists("docs/CURRENT-ARCHITECTURE.md")) {
+  const architecture = read("docs/CURRENT-ARCHITECTURE.md");
+  assert(architecture.includes("omran-store-live"), "architecture contract must identify the live repository");
+  assert(architecture.includes("omrantoys-live-app"), "architecture contract must identify the Cloudflare Pages project");
+  assert(architecture.includes("Static Vite storefront only"), "architecture contract must remain static-only");
+}
+
+for (const obsolete of [
+  "server",
+  "worker",
+  "docker-compose.yml",
+  "docs/PLATFORM-AUDIT.md",
+  "docs/PRODUCTION-ROUTING-FIX.md",
+  "docs/META-SYNC-SETUP.md",
+  "docs/N8N-PRODUCT-PIPELINE.md",
+  "docs/WHATSAPP-ADMIN-AUTH.md",
+]) {
+  assert(!exists(obsolete), `obsolete architecture artifact must not return to live repo: ${obsolete}`);
 }
 
 if (errors.length) {
@@ -75,4 +92,4 @@ if (errors.length) {
 }
 
 console.log("Integration audit: PASS");
-console.log("Routes, publication guard, intake contract, static env and bundled product images are coherent.");
+console.log("Routes, publication guard, intake contract, static architecture, environment and bundled product images are coherent.");
