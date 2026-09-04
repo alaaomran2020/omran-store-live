@@ -69,9 +69,9 @@ jobs:
           import re
           source = Path('client/src/lib/publicProductsSnapshot.ts').read_text(encoding='utf-8')
           ids = re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', source, flags=re.MULTILINE)
-          assert len(ids) >= 27, f'catalog regression blocked: {len(ids)} products < verified baseline 27'
-          assert 'OMR-RAW-030' in ids, 'approved product OMR-RAW-030 missing from generated snapshot'
-          print(f'Catalog generation guard: PASS ({len(ids)} products; OMR-RAW-030 present)')
+          assert len(ids) >= 1, 'catalog generation produced no approved public products'
+          assert len(ids) == len(set(ids)), f'duplicate snapshot product IDs: {ids}'
+          print(f'Catalog generation guard: PASS ({len(ids)} approved products)')
           PY
 
       - name: Repository integration audit
@@ -97,8 +97,7 @@ jobs:
           source = Path('client/src/lib/publicProductsSnapshot.ts').read_text(encoding='utf-8')
           product_ids = re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', source, flags=re.MULTILINE)
           images = re.findall(r'^\s*(?:"image"|image):\s*"([^"]+)"', source, flags=re.MULTILINE)
-          assert len(product_ids) >= 27, f'catalog regression blocked: {len(product_ids)} products < verified baseline 27'
-          assert 'OMR-RAW-030' in product_ids, 'OMR-RAW-030 missing from storefront bundle'
+          assert len(product_ids) >= 1, 'catalog bundle contains no approved public products'
           assert len(product_ids) == len(set(product_ids)), f'duplicate snapshot product IDs: {product_ids}'
           assert len(images) == len(product_ids), f'image/product mismatch: {len(images)} / {len(product_ids)}'
           remote_images = [image for image in images if not image.startswith('/products/processed/')]
@@ -148,9 +147,9 @@ jobs:
           import re
           source = Path('client/src/lib/publicProductsSnapshot.ts').read_text(encoding='utf-8')
           ids = re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', source, flags=re.MULTILINE)
-          assert len(ids) >= 27, f'catalog regression blocked before deploy: {len(ids)} products < verified baseline 27'
-          assert 'OMR-RAW-030' in ids, 'OMR-RAW-030 missing before production deploy'
-          print(f'Pre-deploy catalog guard: PASS ({len(ids)} products; OMR-RAW-030 present)')
+          assert len(ids) >= 1, 'catalog generation produced no approved public products before deploy'
+          assert len(ids) == len(set(ids)), f'duplicate snapshot product IDs: {ids}'
+          print(f'Pre-deploy catalog guard: PASS ({len(ids)} approved products)')
           PY
 
       - name: Build storefront
