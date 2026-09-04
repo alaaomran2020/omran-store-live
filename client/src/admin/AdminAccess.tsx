@@ -1,164 +1,157 @@
-import { useState } from "react";
-import { LockKeyhole, MessageCircle, ShieldCheck, UserPlus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LogOut, MessageCircle, ShieldCheck, UserPlus } from "lucide-react";
 import { BrutalCard, Field, Notice, PageTitle, PrimaryButton, TextInput } from "@/admin/ui";
 import ProductIntake from "@/pages/ProductIntake";
 import { whatsappNumber } from "@/lib/productFormat";
 
-const SESSION_KEY = "omran-admin-session-v1";
-const AUTH_URL = ((import.meta.env.VITE_ADMIN_AUTH_URL as string | undefined) ?? "").replace(/\/$/, "");
+type AccessIdentity = {
+  email?: string;
+  name?: string;
+  id?: string;
+};
 
-type Mode = "login" | "request";
+type AccessState = "checking" | "allowed" | "denied";
 
-function saveSession(token: string) {
-  sessionStorage.setItem(SESSION_KEY, token);
-}
+const IDENTITY_URL = "/cdn-cgi/access/get-identity";
+const LOGOUT_URL = "/cdn-cgi/access/logout";
 
-function hasSession() {
-  return Boolean(sessionStorage.getItem(SESSION_KEY));
+async function readAccessIdentity(): Promise<AccessIdentity | null> {
+  try {
+    const response = await fetch(IDENTITY_URL, {
+      credentials: "include",
+      cache: "no-store",
+      headers: { accept: "application/json" },
+    });
+
+    if (!response.ok) return null;
+
+    const data = (await response.json().catch(() => null)) as AccessIdentity | null;
+    if (!data || (!data.email && !data.name && !data.id)) return null;
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 export default function AdminAccess() {
-  const [authenticated, setAuthenticated] = useState(() => hasSession());
-  const [mode, setMode] = useState<Mode>("login");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [accessState, setAccessState] = useState<AccessState>("checking");
+  const [identity, setIdentity] = useState<AccessIdentity | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [mobile, setMobile] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
 
-  if (authenticated) return <ProductIntake />;
+  useEffect(() => {
+    let cancelled = false;
 
-  const login = async () => {
-    setMessage("");
-    if (!username.trim() || !password) return;
-    if (!AUTH_URL) {
-      setMessage("تم قفل لوحة الإدارة بأمان، لكن موفر المصادقة المركزي لم يتم ربطه بعد. لن يتم قبول أي دخول محلي غير آمن.");
-      return;
-    }
-    setBusy(true);
-    try {
-      const response = await fetch(`${AUTH_URL}/login`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ username: username.trim(), password }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data?.token) {
-        setMessage(data?.message || "بيانات الدخول غير صحيحة أو الحساب غير معتمد من الأدمن.");
-        return;
-      }
-      saveSession(String(data.token));
-      setAuthenticated(true);
-    } catch {
-      setMessage("تعذر الاتصال بخدمة الدخول. لوحة الإدارة ستظل مقفلة لحماية البيانات.");
-    } finally {
-      setBusy(false);
-    }
-  };
+    readAccessIdentity().then(result => {
+      if (cancelled) return;
+      setIdentity(result);
+      setAccessState(result ? "allowed" : "denied");
+    });
 
-  const requestAccess = async () => {
-    setMessage("");
-    if (!username.trim() || !displayName.trim() || !mobile.trim()) return;
-    const payload = {
-      username: username.trim(),
-      displayName: displayName.trim(),
-      mobile: mobile.trim(),
-      whatsapp: (whatsapp || mobile).trim(),
+    return () => {
+      cancelled = true;
     };
+  }, []);
 
-    if (AUTH_URL) {
-      setBusy(true);
-      try {
-        const response = await fetch(`${AUTH_URL}/request-access`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await response.json().catch(() => ({}));
-        setMessage(response.ok ? "تم إرسال الطلب. لن يعمل الحساب قبل موافقة الأدمن." : data?.message || "تعذر إرسال الطلب.");
-      } catch {
-        setMessage("تعذر إرسال الطلب إلكترونيًا. استخدم زر واتساب لإرسال بيانات الطلب للأدمن.");
-      } finally {
-        setBusy(false);
-      }
-      return;
-    }
+  if (accessState === "allowed" && identity) {
+    return (
+      <div className="relative">
+        <div dir="rtl" className="absolute left-4 top-4 z-50 flex items-center gap-2">
+          <span className="hidden border-2 border-emerald-700 bg-emerald-950/90 px-3 py-2 text-xs font-black text-emerald-200 sm:inline-block">
+            {identity.email || identity.name || "موظف معتمد"}
+          </span>
+          <a
+            href={LOGOUT_URL}
+            className="inline-flex items-center gap-2 border-2 border-slate-700 bg-slate-950 px-3 py-2 text-xs font-black text-slate-100"
+          >
+            <LogOut size={15} /> خروج
+          </a>
+        </div>
+        <ProductIntake />
+      </div>
+    );
+  }
+
+  const requestAccess = () => {
+    setMessage("");
+    if (!displayName.trim() || !mobile.trim()) return;
 
     const number = whatsappNumber();
     if (!number) {
-      setMessage("سجل الموظف جاهز، لكن رقم واتساب الإدارة غير مضبوط بالموقع.");
+      setMessage("رقم واتساب الإدارة غير مضبوط بالموقع. لا يمكن إرسال الطلب الآن.");
       return;
     }
+
     const text = [
       "طلب دخول لوحة إدارة عمران تويز",
-      `الاسم: ${payload.displayName}`,
-      `اسم المستخدم المطلوب: ${payload.username}`,
-      `الموبايل: ${payload.mobile}`,
-      `واتساب: ${payload.whatsapp}`,
-      "الحالة المطلوبة: PENDING حتى موافقة الأدمن",
-    ].join("\n");
+      `الاسم: ${displayName.trim()}`,
+      username.trim() ? `اسم المستخدم المقترح: ${username.trim()}` : null,
+      `الموبايل: ${mobile.trim()}`,
+      `واتساب: ${(whatsapp || mobile).trim()}`,
+      "المطلوب: إضافة الموظف إلى Cloudflare Access Policy الخاصة بمسار /admin بعد موافقة الأدمن.",
+      "الحالة: PENDING حتى الموافقة.",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
     window.open(`https://wa.me/${number}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
-    setMessage("تم تجهيز طلب الموظف عبر واتساب. الحساب يظل PENDING حتى موافقة الأدمن.");
+    setMessage("تم تجهيز طلب الانضمام عبر واتساب. لن تفتح لوحة الإدارة قبل موافقة الأدمن في Cloudflare Access.");
   };
 
   return (
     <main dir="rtl" className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100">
       <div className="mx-auto max-w-xl">
-        <PageTitle title="دخول لوحة الإدارة" subtitle="شركة عمران التجارية — دخول الموظفين المعتمدين فقط" />
-        <Notice kind="warn" className="mb-5">
-          لا يتم حفظ كلمة المرور في المتصفح أو Google Sheets. أي موظف جديد يجب أن يكون APPROVED قبل الدخول.
-        </Notice>
-        <BrutalCard className="p-5">
-          <div className="mb-5 flex gap-2">
-            <button onClick={() => { setMode("login"); setMessage(""); }} className={`flex-1 border-2 px-3 py-3 text-sm font-black ${mode === "login" ? "border-electric" : "border-slate-700"}`}>
-              <LockKeyhole className="mx-auto mb-1" size={18} /> تسجيل الدخول
-            </button>
-            <button onClick={() => { setMode("request"); setMessage(""); }} className={`flex-1 border-2 px-3 py-3 text-sm font-black ${mode === "request" ? "border-electric" : "border-slate-700"}`}>
-              <UserPlus className="mx-auto mb-1" size={18} /> طلب حساب موظف
-            </button>
-          </div>
+        <PageTitle title="لوحة الإدارة محمية" subtitle="شركة عمران التجارية — وصول الموظفين المعتمدين فقط" />
 
-          <div className="space-y-4">
-            {mode === "request" && (
-              <Field label="اسم الموظف">
-                <TextInput value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="الاسم الكامل" />
-              </Field>
-            )}
-            <Field label="اسم المستخدم">
-              <TextInput value={username} onChange={e => setUsername(e.target.value)} placeholder="username" dir="ltr" autoComplete="username" />
-            </Field>
-            {mode === "login" ? (
-              <Field label="كلمة المرور">
-                <TextInput value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="••••••••" dir="ltr" autoComplete="current-password" />
-              </Field>
-            ) : (
-              <>
+        {accessState === "checking" ? (
+          <BrutalCard className="p-5">
+            <Notice kind="info">جاري التحقق من جلسة Cloudflare Access...</Notice>
+          </BrutalCard>
+        ) : (
+          <>
+            <Notice kind="warn" className="mb-5">
+              تم رفض الوصول افتراضيًا. لوحة الإدارة لا تقبل كلمات مرور مخزنة داخل الواجهة ولا أي جلسة محلية قابلة للتزوير.
+            </Notice>
+
+            <BrutalCard className="p-5">
+              <div className="mb-5 flex items-start gap-3 border-2 border-emerald-800 bg-emerald-950/40 p-4">
+                <ShieldCheck className="mt-0.5 shrink-0 text-emerald-300" size={22} />
+                <div>
+                  <h2 className="font-black">المصادقة عبر Cloudflare Access</h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-300">
+                    إذا كنت موظفًا معتمدًا، افتح رابط الإدارة من جديد وسجّل الدخول من صفحة Cloudflare Access. الموافقة على الموظفين تتم خارج المتصفح وعلى مستوى الدومين.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Field label="اسم الموظف">
+                  <TextInput value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="الاسم الكامل" />
+                </Field>
+                <Field label="اسم المستخدم المقترح" hint="اختياري — المرجع الأساسي في Access يكون البريد/الهوية المعتمدة">
+                  <TextInput value={username} onChange={e => setUsername(e.target.value)} placeholder="username" dir="ltr" autoComplete="username" />
+                </Field>
                 <Field label="رقم الموبايل">
                   <TextInput value={mobile} onChange={e => setMobile(e.target.value)} placeholder="01xxxxxxxxx" dir="ltr" inputMode="tel" />
                 </Field>
                 <Field label="رقم واتساب" hint="اتركه فارغًا إذا كان نفس رقم الموبايل">
                   <TextInput value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="01xxxxxxxxx" dir="ltr" inputMode="tel" />
                 </Field>
-              </>
-            )}
-          </div>
+              </div>
 
-          {message ? <div className="mt-4 border-2 border-amber-500/50 bg-amber-500/10 p-3 text-sm">{message}</div> : null}
+              {message ? <div className="mt-4 border-2 border-amber-500/50 bg-amber-500/10 p-3 text-sm">{message}</div> : null}
 
-          <div className="mt-5">
-            {mode === "login" ? (
-              <PrimaryButton onClick={login} disabled={busy || !username.trim() || !password}>
-                <ShieldCheck size={17} /> {busy ? "جاري التحقق..." : "دخول آمن"}
-              </PrimaryButton>
-            ) : (
-              <PrimaryButton onClick={requestAccess} disabled={busy || !username.trim() || !displayName.trim() || !mobile.trim()}>
-                <MessageCircle size={17} /> {busy ? "جاري الإرسال..." : "إرسال طلب الانضمام"}
-              </PrimaryButton>
-            )}
-          </div>
-        </BrutalCard>
+              <div className="mt-5">
+                <PrimaryButton onClick={requestAccess} disabled={!displayName.trim() || !mobile.trim()}>
+                  <UserPlus size={17} /> <MessageCircle size={17} /> طلب اعتماد موظف
+                </PrimaryButton>
+              </div>
+            </BrutalCard>
+          </>
+        )}
       </div>
     </main>
   );

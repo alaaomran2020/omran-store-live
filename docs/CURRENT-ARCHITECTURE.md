@@ -16,7 +16,7 @@
 المشروع الحالي لا يستخدم ولا يحتاج:
 
 - Backend server
-- Public/private application API
+- Custom application API
 - VPS
 - MySQL
 - Docker / docker-compose
@@ -24,6 +24,38 @@
 - Cloudflare Worker runtime
 
 أي إعادة إدخال لأي من هذه العناصر إلى مسار Production تحتاج قرار معماري جديد صريح، ولا تعتبر جزءًا من المعمارية الحالية.
+
+## Admin Security Architecture
+
+مسارات الإدارة:
+
+- `/admin`
+- `/admin/product-intake`
+
+الحماية المعتمدة هي **Cloudflare Access** على مستوى الدومين، وليست كلمة مرور داخل JavaScript وليست جلسة مخزنة في `localStorage` أو `sessionStorage`.
+
+قواعد الأمان:
+
+1. Cloudflare Access يجب أن يحمي المسارين `/admin*` قبل وصول الطلب إلى Cloudflare Pages.
+2. سياسة Access تحتوي فقط على الموظفين الذين وافق عليهم الأدمن.
+3. هوية المستخدم يتم التحقق منها داخل الواجهة عبر `/cdn-cgi/access/get-identity`.
+4. إذا لم ترجع Cloudflare هوية صالحة، لوحة الإدارة تعمل Fail Closed ولا تعرض Product Intake.
+5. تسجيل الخروج يستخدم `/cdn-cgi/access/logout`.
+6. لا يوجد `VITE_ADMIN_AUTH_URL` ولا Custom Auth API ولا كلمات مرور مخزنة داخل الواجهة.
+7. طلبات الموظفين الجدد يمكن تجهيزها عبر WhatsApp، لكن إضافة الموظف الفعلية تتم في Cloudflare Access Policy فقط بعد موافقة الأدمن.
+
+### Cloudflare Access production policy
+
+يجب إنشاء Self-hosted Access Application على `omrantoys.store/admin*`، وإن كان `www` مستخدمًا للوصول الإداري فيجب إضافة تطبيق أو hostname مطابق له أيضًا.
+
+السياسة الموصى بها:
+
+- Decision: Allow
+- Include: البريد/الهوية المعتمدة للموظف فقط
+- Session duration: قصيرة نسبيًا للوحة الإدارة
+- Block by default لأي مستخدم غير موجود في سياسة Allow
+
+هذه الحماية لا تحتاج VPS ولا Backend دائم. Cloudflare Access هو طبقة المصادقة الخارجية الوحيدة لمسار الإدارة.
 
 ## Storefront Integration
 
