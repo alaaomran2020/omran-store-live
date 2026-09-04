@@ -59,7 +59,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate approved public catalog snapshot
-        run: pnpm exec vite-node scripts/generate-public-products-snapshot.ts
+        run: |
+          pnpm exec esbuild scripts/generate-public-products-snapshot.ts --bundle --platform=node --format=esm --outfile=/tmp/generate-public-products-snapshot.mjs
+          node /tmp/generate-public-products-snapshot.mjs
 
       - name: Repository integration audit
         run: node scripts/integration-audit.mjs
@@ -152,7 +154,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate approved public catalog snapshot
-        run: pnpm exec vite-node scripts/generate-public-products-snapshot.ts
+        run: |
+          pnpm exec esbuild scripts/generate-public-products-snapshot.ts --bundle --platform=node --format=esm --outfile=/tmp/generate-public-products-snapshot.mjs
+          node /tmp/generate-public-products-snapshot.mjs
 
       - name: Build storefront
         run: pnpm build
