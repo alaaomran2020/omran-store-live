@@ -1,7 +1,10 @@
 /**
  * Lightweight, fail-safe storefront analytics.
- * Umami remains optional; tracking must never block the customer journey.
+ * Umami remains optional; WhatsApp conversions are also persisted to the
+ * operational Analytics_Events ledger through a narrow Make webhook.
  */
+
+const WHATSAPP_CONVERSION_WEBHOOK = "https://hook.eu1.make.com/qq87neltq7g7uftz8q38tpbghsjo5r7s";
 
 type UmamiWindow = Window & {
   umami?: { track?: (event: string, data?: Record<string, unknown>) => void };
@@ -53,13 +56,43 @@ export function buildWhatsAppInquiryPayload(
   };
 }
 
+function persistWhatsAppConversion(payload: WhatsAppProductInquiryPayload): void {
+  if (typeof window === "undefined" || typeof fetch === "undefined") return;
+
+  try {
+    const pageUrl = new URL(payload.page_location || window.location.href, window.location.origin);
+    const body = new URLSearchParams({
+      event_id: `WA-${Date.now()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+      event_at: new Date().toISOString(),
+      product_id: payload.product_id,
+      sku: payload.sku,
+      product_name: payload.product_name,
+      category: payload.category,
+      price_mode: payload.price_mode,
+      cta_location: payload.cta_location,
+      page_location: payload.page_location,
+      referrer: typeof document !== "undefined" ? document.referrer : "",
+      utm_source: pageUrl.searchParams.get("utm_source") || "",
+      utm_medium: pageUrl.searchParams.get("utm_medium") || "",
+      utm_campaign: pageUrl.searchParams.get("utm_campaign") || "",
+    });
+
+    void fetch(WHATSAPP_CONVERSION_WEBHOOK, {
+      method: "POST",
+      mode: "no-cors",
+      keepalive: true,
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body,
+    }).catch(() => undefined);
+  } catch {
+    // The conversion click must continue even if the operational ledger is unavailable.
+  }
+}
+
 /**
  * A WhatsApp CTA click is the storefront's primary conversion event.
- * It is recorded three ways:
- * - whatsapp_conversion: canonical funnel conversion
- * - whatsapp_product_inquiry: detailed product inquiry event
- * - whatsapp_click: legacy compatibility for existing dashboards
- * This measures click-to-WhatsApp conversion, not a completed sale inside WhatsApp.
+ * It is recorded in the first-party Analytics_Events ledger and, when enabled,
+ * in Umami. This measures click-to-WhatsApp conversion, not a completed sale.
  */
 export function trackWhatsAppInquiry(
   product: { id: string; name: string; category?: string; price: number | null; sku?: string | null },
@@ -67,6 +100,7 @@ export function trackWhatsAppInquiry(
 ): void {
   const payload = buildWhatsAppInquiryPayload(product, ctaLocation);
 
+  persistWhatsAppConversion(payload);
   trackEvent("whatsapp_conversion", {
     ...payload,
     conversion_stage: "whatsapp_click",
