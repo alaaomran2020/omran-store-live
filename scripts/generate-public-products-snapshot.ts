@@ -2,7 +2,7 @@ import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fetchProductsPayload, isPubliclyVisible, type Product } from "../shared/products";
 
-const ROOT = resolve(import.meta.dirname, "..");
+const ROOT = process.cwd();
 const ENV_FILE = resolve(ROOT, ".env.production");
 const OUTPUT_FILE = resolve(ROOT, "client/src/lib/publicProductsSnapshot.ts");
 const PUBLIC_DIR = resolve(ROOT, "public");
