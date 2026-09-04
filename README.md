@@ -7,6 +7,7 @@
 - صور المنتجات داخل `public/products/processed/`.
 - الطلب والاستفسار عبر واتساب مباشرةً.
 - النشر الوحيد من `.github/workflows/deploy-storefront.yml` إلى Cloudflare Pages.
+- لا توجد شفرة خادم أو Worker أو migrations داخل المشروع.
 
 ## التشغيل
 
