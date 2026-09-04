@@ -1,11 +1,10 @@
 /**
- * تتبّع أحداث خفيف جدًا.
- *
- * الموقع يحقن وسم Umami اختياريًا وقت البناء (`vitePluginOptionalAnalytics` في
- * vite.config.ts) عندما تكون `VITE_ANALYTICS_ENDPOINT` و`VITE_ANALYTICS_WEBSITE_ID`
- * مضبوطتين. هذه الدالة تستدعي ذلك الوسم إن وُجد فقط — بلا أي مكتبة جديدة، وبلا
- * أي خدمة خارجية، ولا تفشل أبدًا إن كان التتبّع معطّلًا أو محجوبًا.
+ * Lightweight, fail-safe storefront analytics.
+ * Umami remains optional; WhatsApp conversions are also persisted to the
+ * operational Analytics_Events ledger through a narrow Make webhook.
  */
+
+const WHATSAPP_CONVERSION_WEBHOOK = "https://hook.eu1.make.com/qq87neltq7g7uftz8q38tpbghsjo5r7s";
 
 type UmamiWindow = Window & {
   umami?: { track?: (event: string, data?: Record<string, unknown>) => void };
@@ -17,6 +16,7 @@ export type ProductEvent =
   | "product_filter"
   | "whatsapp_click"
   | "whatsapp_product_inquiry"
+  | "whatsapp_conversion"
   | "product_share";
 
 export type WhatsAppProductInquiryPayload = {
@@ -29,33 +29,21 @@ export type WhatsAppProductInquiryPayload = {
   cta_location: "product_card" | "product_details";
 };
 
-export function trackEvent(
-  event: ProductEvent,
-  data: Record<string, unknown> = {}
-): void {
+export function trackEvent(event: ProductEvent, data: Record<string, unknown> = {}): void {
   if (typeof window === "undefined") return;
   try {
     (window as UmamiWindow).umami?.track?.(event, data);
   } catch {
-    // التتبّع مسألة ثانوية: لا يجوز أن يكسر تفاعل المستخدم أبدًا.
+    // Analytics is non-critical and must never break a customer action.
   }
 }
 
-/**
- * Pure builder لحمولة حدث whatsapp_product_inquiry — قابل للاختبار بلا DOM.
- *
- * القواعد (Stage 15):
- *   - sku: الـSKU الحقيقي إن وُجد، وإلا product_id (لا اختلاق SKU تجاري).
- *   - price_mode: "priced" فقط لسعر رقمي صالح، وإلا "inquiry".
- *   - cta_location: product_card | product_details (موقع الزر المصدر).
- */
 export function buildWhatsAppInquiryPayload(
   product: { id: string; name: string; category?: string; price: number | null; sku?: string | null },
   ctaLocation: WhatsAppProductInquiryPayload["cta_location"],
   pageLocation: string = typeof window !== "undefined" ? window.location.href : ""
 ): WhatsAppProductInquiryPayload {
-  const priceMode =
-    product.price !== null && Number.isFinite(product.price) ? "priced" : "inquiry";
+  const priceMode = product.price !== null && Number.isFinite(product.price) ? "priced" : "inquiry";
   const sku = (product.sku?.trim() || product.id || "").trim() || product.id;
   return {
     product_id: product.id,
@@ -68,21 +56,61 @@ export function buildWhatsAppInquiryPayload(
   };
 }
 
+function persistWhatsAppConversion(payload: WhatsAppProductInquiryPayload): void {
+  if (typeof window === "undefined" || typeof fetch === "undefined") return;
+
+  try {
+    const pageUrl = new URL(payload.page_location || window.location.href, window.location.origin);
+    const body = new URLSearchParams({
+      event_id: `WA-${Date.now()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+      event_at: new Date().toISOString(),
+      product_id: payload.product_id,
+      sku: payload.sku,
+      product_name: payload.product_name,
+      category: payload.category,
+      price_mode: payload.price_mode,
+      cta_location: payload.cta_location,
+      page_location: payload.page_location,
+      referrer: typeof document !== "undefined" ? document.referrer : "",
+      utm_source: pageUrl.searchParams.get("utm_source") || "",
+      utm_medium: pageUrl.searchParams.get("utm_medium") || "",
+      utm_campaign: pageUrl.searchParams.get("utm_campaign") || "",
+    });
+
+    void fetch(WHATSAPP_CONVERSION_WEBHOOK, {
+      method: "POST",
+      mode: "no-cors",
+      keepalive: true,
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body,
+    }).catch(() => undefined);
+  } catch {
+    // The conversion click must continue even if the operational ledger is unavailable.
+  }
+}
+
 /**
- * يبني حمولة whatsapp_product_inquiry ويطلقها (وكذلك الحدث القديم للتوافق).
- * المحاولة لا ترمي أبدًا — فشل التتبع لا يمنع فتح واتساب (يُستدعى من onClick قبل الانتقال).
+ * A WhatsApp CTA click is the storefront's primary conversion event.
+ * It is recorded in the first-party Analytics_Events ledger and, when enabled,
+ * in Umami. This measures click-to-WhatsApp conversion, not a completed sale.
  */
 export function trackWhatsAppInquiry(
   product: { id: string; name: string; category?: string; price: number | null; sku?: string | null },
   ctaLocation: WhatsAppProductInquiryPayload["cta_location"]
 ): void {
   const payload = buildWhatsAppInquiryPayload(product, ctaLocation);
-  // نرسل الحدث الجديد المطلوب إنتاجيًا
+
+  persistWhatsAppConversion(payload);
+  trackEvent("whatsapp_conversion", {
+    ...payload,
+    conversion_stage: "whatsapp_click",
+  });
   trackEvent("whatsapp_product_inquiry", payload as Record<string, unknown>);
-  // نحتفظ بالحدث القديم للتوافق مع لوحات Umami الحالية
   trackEvent("whatsapp_click", {
     product: payload.product_name,
     id: payload.product_id,
+    sku: payload.sku,
+    category: payload.category,
     from: ctaLocation === "product_card" ? "card" : "details",
     price_mode: payload.price_mode,
   });

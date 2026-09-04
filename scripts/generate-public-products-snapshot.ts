@@ -1,9 +1,13 @@
-import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { parse } from "dotenv";
-import { fetchProductsPayload, isPubliclyVisible, type Product } from "../shared/products";
+import {
+  fetchProductsPayload,
+  isPubliclyVisible,
+  toDisplayableImageUrl,
+  type Product,
+} from "../shared/products";
 
-const ROOT = resolve(import.meta.dirname, "..");
+const ROOT = process.cwd();
 const ENV_FILE = resolve(ROOT, ".env.production");
 const OUTPUT_FILE = resolve(ROOT, "client/src/lib/publicProductsSnapshot.ts");
 const PUBLIC_DIR = resolve(ROOT, "public");
@@ -17,9 +21,64 @@ const MIME_EXTENSION: Record<string, string> = {
   "image/avif": "avif",
 };
 
+const PUBLISHED_HEADER_ALIASES: Record<string, string> = {
+  "معرف المنتج": "id",
+  "اسم المنتج": "name",
+  السعر: "price",
+  التصنيف: "category",
+  الوصف: "description",
+  "صورة المنتج": "image",
+  نشط: "active",
+  "ترتيب العرض": "sort_order",
+  "موجه الصورة": "product_prompt",
+  "حالة النشر": "workflow_status",
+  "حالة الجودة": "qa_status",
+  "معرف المصدر في درايف": "source_drive_id",
+  "الصورة المعالجة": "processed_image",
+  "سبب المراجعة": "review_reason",
+  "رمز المخزون": "sku",
+};
+
+function parseEnvFile(text: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const index = trimmed.indexOf("=");
+    if (index <= 0) continue;
+    const key = trimmed.slice(0, index).trim();
+    let value = trimmed.slice(index + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    out[key] = value;
+  }
+  return out;
+}
+
+function normalizePublishedCsvHeaders(csv: string): string {
+  const newline = csv.indexOf("\n");
+  const headerLine = newline === -1 ? csv : csv.slice(0, newline);
+  const rest = newline === -1 ? "" : csv.slice(newline);
+  const normalized = headerLine
+    .replace(/^\uFEFF/, "")
+    .split(",")
+    .map(cell => {
+      const raw = cell.trim().replace(/^"|"$/g, "").replace(/""/g, '"');
+      return PUBLISHED_HEADER_ALIASES[raw] ?? raw;
+    })
+    .join(",");
+  return `${normalized}${rest}`;
+}
+
 async function readSheetUrl(): Promise<string> {
-  const envText = await readFile(ENV_FILE, "utf8");
-  const fileEnv = parse(envText);
+  let fileEnv: Record<string, string> = {};
+  try {
+    fileEnv = parseEnvFile(await readFile(ENV_FILE, "utf8"));
+  } catch {
+    // CI supplies PRODUCTS_SHEET_URL directly; a missing local env file is valid there.
+  }
+
   const url =
     process.env.PRODUCTS_SHEET_URL ||
     process.env.VITE_PRODUCTS_SHEET_URL ||
@@ -84,12 +143,22 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
+async function findExistingGeneratedImage(product: Product): Promise<string | null> {
+  const base = `/products/processed/generated/product-${safeProductSlug(product.id)}-main`;
+  for (const extension of ["webp", "jpg", "png", "gif", "avif"]) {
+    const publicPath = `${base}.${extension}`;
+    if (await fileExists(publicPathToFile(publicPath))) return publicPath;
+  }
+  return null;
+}
+
 async function downloadVerifiedImage(
   product: Product,
   sourceUrl: string,
   preferredPublicPath?: string
 ): Promise<string> {
-  const response = await fetch(sourceUrl, {
+  const displayUrl = toDisplayableImageUrl(sourceUrl) ?? sourceUrl;
+  const response = await fetch(displayUrl, {
     redirect: "follow",
     signal: AbortSignal.timeout(30_000),
     headers: {
@@ -135,11 +204,13 @@ async function downloadVerifiedImage(
 }
 
 async function localizeProductImages(products: Product[]): Promise<Product[]> {
-  await rm(GENERATED_IMAGE_DIR, { recursive: true, force: true });
+  // Preserve the last-known-good same-origin assets. New approved products are
+  // added or refreshed, but a transient Drive issue cannot erase existing catalog images.
   await mkdir(GENERATED_IMAGE_DIR, { recursive: true });
 
   const localized: Product[] = [];
   let staged = 0;
+  let reused = 0;
 
   for (const product of products) {
     const image = product.image!;
@@ -148,6 +219,14 @@ async function localizeProductImages(products: Product[]): Promise<Product[]> {
       const existingFile = publicPathToFile(image);
       if (await fileExists(existingFile)) {
         localized.push(product);
+        reused += 1;
+        continue;
+      }
+
+      const generatedFallback = await findExistingGeneratedImage(product);
+      if (generatedFallback) {
+        localized.push({ ...product, image: generatedFallback, processedImage: generatedFallback });
+        reused += 1;
         continue;
       }
 
@@ -172,11 +251,22 @@ async function localizeProductImages(products: Product[]): Promise<Product[]> {
       throw new Error(`Unsupported image source for ${product.id}: ${image}`);
     }
 
+    // The sheet may still contain the original Drive URL while CI already has a
+    // visually verified same-origin asset committed for this product. Prefer the
+    // committed asset and only hit Drive for genuinely new products.
+    const generatedFallback = await findExistingGeneratedImage(product);
+    if (generatedFallback) {
+      localized.push({ ...product, image: generatedFallback, processedImage: generatedFallback });
+      reused += 1;
+      continue;
+    }
+
     const localPath = await downloadVerifiedImage(product, image);
     localized.push({ ...product, image: localPath, processedImage: localPath });
     staged += 1;
   }
 
+  console.log(`Reused ${reused} verified same-origin product images`);
   console.log(`Staged ${staged} remote product images into Cloudflare Pages assets`);
   return localized;
 }
@@ -188,9 +278,20 @@ function renderSnapshot(products: Product[]): string {
 
 async function main() {
   const sheetUrl = await readSheetUrl();
-  const payload = await fetchProductsPayload(sheetUrl, (url, init) => fetch(url, init), {
-    timeoutMs: 20_000,
-  });
+  const payload = await fetchProductsPayload(
+    sheetUrl,
+    async (url, init) => {
+      const response = await fetch(url, init);
+      if (!response.ok) return response;
+      const text = await response.text();
+      return new Response(normalizePublishedCsvHeaders(text), {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
+    },
+    { timeoutMs: 20_000 }
+  );
 
   if (payload.status !== "ok") {
     throw new Error(`Products source is not healthy: ${payload.status}`);
