@@ -60,22 +60,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify committed catalog baseline and inspect live feed
+      - name: Generate approved public catalog snapshot
         run: |
+          pnpm exec esbuild scripts/generate-public-products-snapshot.ts --bundle --platform=node --format=esm --outfile=/tmp/generate-public-products-snapshot.mjs
+          node /tmp/generate-public-products-snapshot.mjs
           python3 - <<'PY'
           from pathlib import Path
           import re
           source = Path('client/src/lib/publicProductsSnapshot.ts').read_text(encoding='utf-8')
-          count = len(re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', source, flags=re.MULTILINE))
-          assert count >= 27, f'committed catalog regression: {count} products < verified baseline 27'
-          print(f'Committed catalog baseline: PASS ({count} products)')
+          ids = re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', source, flags=re.MULTILINE)
+          assert len(ids) >= 27, f'catalog regression blocked: {len(ids)} products < verified baseline 27'
+          assert 'OMR-RAW-030' in ids, 'approved product OMR-RAW-030 missing from generated snapshot'
+          print(f'Catalog generation guard: PASS ({len(ids)} products; OMR-RAW-030 present)')
           PY
-          curl -fsSL "$PRODUCTS_SHEET_URL" -o /tmp/public-products-feed.csv || true
-          if grep -q 'OMR-RAW-030' /tmp/public-products-feed.csv 2>/dev/null; then
-            echo 'Published feed contains OMR-RAW-030'
-          else
-            echo 'Published feed has not refreshed to OMR-RAW-030 yet; preserving committed verified snapshot'
-          fi
 
       - name: Repository integration audit
         run: node scripts/integration-audit.mjs
@@ -94,24 +91,14 @@ jobs:
         run: |
           set -euo pipefail
           test -f dist/public/index.html
-
           python3 - <<'PY'
           from pathlib import Path
           import re
-
           source = Path('client/src/lib/publicProductsSnapshot.ts').read_text(encoding='utf-8')
-          product_ids = re.findall(
-              r'^\s*(?:"id"|id):\s*"([^"]+)"',
-              source,
-              flags=re.MULTILINE,
-          )
-          images = re.findall(
-              r'^\s*(?:"image"|image):\s*"([^"]+)"',
-              source,
-              flags=re.MULTILINE,
-          )
-
+          product_ids = re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', source, flags=re.MULTILINE)
+          images = re.findall(r'^\s*(?:"image"|image):\s*"([^"]+)"', source, flags=re.MULTILINE)
           assert len(product_ids) >= 27, f'catalog regression blocked: {len(product_ids)} products < verified baseline 27'
+          assert 'OMR-RAW-030' in product_ids, 'OMR-RAW-030 missing from storefront bundle'
           assert len(product_ids) == len(set(product_ids)), f'duplicate snapshot product IDs: {product_ids}'
           assert len(images) == len(product_ids), f'image/product mismatch: {len(images)} / {len(product_ids)}'
           remote_images = [image for image in images if not image.startswith('/products/processed/')]
@@ -122,6 +109,10 @@ jobs:
               if not path.is_file() or path.stat().st_size < 1024:
                   missing_images.append(image)
           assert not missing_images, f'missing/invalid product image assets: {missing_images}'
+          assets = Path('dist/public/assets')
+          built_text = '\n'.join(p.read_text(encoding='utf-8', errors='ignore') for p in assets.rglob('*') if p.is_file())
+          missing_products = [product_id for product_id in product_ids if product_id not in built_text]
+          assert not missing_products, f'missing verified products in storefront bundle: {missing_products}'
           print(f'Storefront bundle: PASS ({len(product_ids)} verified products, {len(images)} same-origin images)')
           PY
 
@@ -148,15 +139,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify committed catalog before deploy
+      - name: Generate approved public catalog snapshot
         run: |
+          pnpm exec esbuild scripts/generate-public-products-snapshot.ts --bundle --platform=node --format=esm --outfile=/tmp/generate-public-products-snapshot.mjs
+          node /tmp/generate-public-products-snapshot.mjs
           python3 - <<'PY'
           from pathlib import Path
           import re
           source = Path('client/src/lib/publicProductsSnapshot.ts').read_text(encoding='utf-8')
-          count = len(re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', source, flags=re.MULTILINE))
-          assert count >= 27, f'catalog regression blocked before deploy: {count} products < verified baseline 27'
-          print(f'Pre-deploy committed catalog guard: PASS ({count} products)')
+          ids = re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', source, flags=re.MULTILINE)
+          assert len(ids) >= 27, f'catalog regression blocked before deploy: {len(ids)} products < verified baseline 27'
+          assert 'OMR-RAW-030' in ids, 'OMR-RAW-030 missing before production deploy'
+          print(f'Pre-deploy catalog guard: PASS ({len(ids)} products; OMR-RAW-030 present)')
           PY
 
       - name: Build storefront
@@ -181,4 +175,4 @@ jobs:
         run: |
           echo "Storefront project: omrantoys-live-app"
           echo "Commit: ${GITHUB_SHA}"
-          echo "Catalog source: committed last-known-good snapshot while published feed refreshes"
+          echo "Catalog source: automatic publication catalog mirrored to public storefront feed"
