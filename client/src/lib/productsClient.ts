@@ -1,12 +1,27 @@
-import type { ProductsPayload } from "@shared/products";
+import type { Product, ProductsPayload, QaStatus, WorkflowStatus } from "@shared/products";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "./publicProductsSnapshot";
+import { makeCatalogUrl } from "./makeGateway";
 
 export type { Product, ProductsPayload } from "@shared/products";
 
-/**
- * مصدر المنتجات الوحيد للمتجر الثابت.
- * لا API، ولا Worker، ولا قاعدة بيانات، ولا طلبات شبكة لتحميل الكتالوج.
- */
+const CATALOG_TIMEOUT_MS = 8_000;
+const PRODUCT_COLUMNS = [
+  "id",
+  "name",
+  "price",
+  "category",
+  "description",
+  "image",
+  "active",
+  "sort_order",
+  "product_prompt",
+  "workflow_status",
+  "qa_status",
+  "source_drive_id",
+  "processed_image",
+  "review_reason",
+  "sku",
+] as const;
 
 function snapshotPayload(): ProductsPayload {
   return {
@@ -16,7 +31,147 @@ function snapshotPayload(): ProductsPayload {
   };
 }
 
-/** الواجهة الوحيدة التي تستخدمها صفحة المنتجات. */
+function text(value: unknown): string {
+  return typeof value === "string" ? value.trim() : String(value ?? "").trim();
+}
+
+function nullableText(value: unknown): string | null {
+  const valueText = text(value);
+  return valueText || null;
+}
+
+function parsePrice(value: unknown): number | null {
+  const normalized = text(value)
+    .replace(/[٬,\s]/g, "")
+    .replace(/٫/g, ".")
+    .replace(/[^0-9.-]/g, "");
+  if (!normalized) return null;
+  const price = Number(normalized);
+  return Number.isFinite(price) && price >= 0 ? price : null;
+}
+
+function parseActive(value: unknown): boolean {
+  const normalized = text(value).toLowerCase();
+  return !["false", "0", "no", "n", "off", "لا", "مخفي", "غير متاح"].includes(normalized);
+}
+
+function parseSortOrder(value: unknown): number | null {
+  const normalized = text(value);
+  if (!normalized) return null;
+  const sortOrder = Number(normalized);
+  return Number.isFinite(sortOrder) ? sortOrder : null;
+}
+
+function workflowStatus(value: unknown): WorkflowStatus | null {
+  const normalized = text(value).toUpperCase();
+  return ["REVIEW", "PUBLISHED", "REJECTED", "DRAFT", "ERROR"].includes(normalized)
+    ? (normalized as WorkflowStatus)
+    : null;
+}
+
+function qaStatus(value: unknown): QaStatus | null {
+  const normalized = text(value).toUpperCase();
+  return ["PASS", "NEEDS_REVIEW", "FAIL"].includes(normalized)
+    ? (normalized as QaStatus)
+    : null;
+}
+
+function mapRow(row: unknown[], rowIndex: number, header: string[]): Product | null {
+  const values = Object.fromEntries(
+    PRODUCT_COLUMNS.map(column => {
+      const index = header.indexOf(column);
+      return [column, index >= 0 ? row[index] : undefined];
+    })
+  ) as Record<(typeof PRODUCT_COLUMNS)[number], unknown>;
+
+  const name = text(values.name);
+  if (!name) return null;
+
+  return {
+    id: text(values.id) || `row-${rowIndex}`,
+    sku: nullableText(values.sku),
+    name,
+    price: parsePrice(values.price),
+    category: text(values.category),
+    description: text(values.description),
+    image: nullableText(values.image),
+    imageSource: nullableText(values.image),
+    active: parseActive(values.active),
+    sortOrder: parseSortOrder(values.sort_order),
+    productPrompt: text(values.product_prompt),
+    workflowStatus: workflowStatus(values.workflow_status),
+    qaStatus: qaStatus(values.qa_status),
+    sourceDriveId: nullableText(values.source_drive_id),
+    processedImage: nullableText(values.processed_image),
+    reviewReason: nullableText(values.review_reason),
+    rowIndex,
+  };
+}
+
+function normalizeCatalogPayload(payload: unknown): Product[] {
+  if (!payload || typeof payload !== "object") return [];
+  const values = (payload as { values?: unknown }).values;
+  if (!Array.isArray(values) || values.length === 0) return [];
+
+  const rows = values.filter(Array.isArray) as unknown[][];
+  if (rows.length === 0) return [];
+
+  const firstRow = rows[0].map(text);
+  const hasHeader = firstRow.some(value => PRODUCT_COLUMNS.includes(value as (typeof PRODUCT_COLUMNS)[number]));
+  const header = hasHeader ? firstRow : [...PRODUCT_COLUMNS];
+  const dataRows = hasHeader ? rows.slice(1) : rows;
+
+  return dataRows
+    .map((row, index) => mapRow(row, index + 1, header))
+    .filter((product): product is Product => product !== null)
+    .filter(product => product.active && product.workflowStatus === "PUBLISHED" && product.qaStatus === "PASS")
+    .sort((a, b) => {
+      if (a.sortOrder !== null && b.sortOrder !== null) return a.sortOrder - b.sortOrder;
+      if (a.sortOrder !== null) return -1;
+      if (b.sortOrder !== null) return 1;
+      return a.rowIndex - b.rowIndex;
+    });
+}
+
+async function fetchLiveCatalog(): Promise<ProductsPayload> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), CATALOG_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(makeCatalogUrl(), {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+      cache: "no-store",
+    });
+
+    if (!response.ok) throw new Error(`Catalog gateway returned ${response.status}`);
+
+    const body = await response.json();
+    const products = normalizeCatalogPayload(body);
+
+    return {
+      products,
+      status: products.length > 0 ? "ok" : "not_configured",
+      fetchedAt: new Date().toISOString(),
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Loads the live publication catalog through the unified Make gateway.
+ * If Make or Google Sheets is temporarily unavailable, the bundled snapshot
+ * remains a fail-safe fallback so the storefront never renders empty by outage.
+ */
 export async function fetchProducts(): Promise<ProductsPayload> {
+  try {
+    const live = await fetchLiveCatalog();
+    if (live.products.length > 0) return live;
+  } catch {
+    // Fall through to the bundled production snapshot.
+  }
+
   return snapshotPayload();
 }
