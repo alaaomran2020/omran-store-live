@@ -1,6 +1,11 @@
-import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { fetchProductsPayload, isPubliclyVisible, type Product } from "../shared/products";
+import {
+  fetchProductsPayload,
+  isPubliclyVisible,
+  toDisplayableImageUrl,
+  type Product,
+} from "../shared/products";
 
 const ROOT = process.cwd();
 const ENV_FILE = resolve(ROOT, ".env.production");
@@ -143,7 +148,8 @@ async function downloadVerifiedImage(
   sourceUrl: string,
   preferredPublicPath?: string
 ): Promise<string> {
-  const response = await fetch(sourceUrl, {
+  const displayUrl = toDisplayableImageUrl(sourceUrl) ?? sourceUrl;
+  const response = await fetch(displayUrl, {
     redirect: "follow",
     signal: AbortSignal.timeout(30_000),
     headers: {
@@ -189,7 +195,8 @@ async function downloadVerifiedImage(
 }
 
 async function localizeProductImages(products: Product[]): Promise<Product[]> {
-  await rm(GENERATED_IMAGE_DIR, { recursive: true, force: true });
+  // Preserve the last-known-good same-origin assets. New approved products are
+  // added or refreshed, but a transient Drive issue cannot erase existing catalog images.
   await mkdir(GENERATED_IMAGE_DIR, { recursive: true });
 
   const localized: Product[] = [];
