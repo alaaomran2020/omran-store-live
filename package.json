@@ -5,20 +5,13 @@
   "license": "MIT",
   "scripts": {
     "lint": "oxlint",
-    "dev": "NODE_ENV=development tsx watch server/_core/dev.ts",
-    "build": "vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
-    "start": "NODE_ENV=production node dist/index.js",
-    "check": "tsc --noEmit && tsc -p worker/tsconfig.json",
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite preview --host 0.0.0.0",
+    "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
-    "db:push": "drizzle-kit generate && drizzle-kit migrate",
-    "docker:build": "docker build -t omran-store-live:latest .",
-    "docker:up": "docker compose up -d --build",
-    "docker:down": "docker compose down",
-    "docker:stats": "docker stats --no-stream $(docker compose ps -q)",
-    "deploy:edge": "wrangler deploy",
-    "preview:edge": "wrangler dev",
-    "check:edge": "tsc -p worker/tsconfig.json"
+    "deploy": "pnpm build && wrangler pages deploy dist/public --project-name=omrantoys-live-app --branch=main"
   },
   "dependencies": {
     "@trpc/server": "^11.6.0",

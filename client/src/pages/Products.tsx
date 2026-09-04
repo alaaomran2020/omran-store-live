@@ -20,9 +20,8 @@ import {
 import { whatsappNumber } from "@/lib/productFormat";
 
 /**
- * صفحة المنتجات — نفس التصميم والوظائف، لكن مصدر البيانات صار Google Sheets
- * (CSV منشور للويب) عبر `@/lib/productsClient`. لا قاعدة بيانات، لا لوحة تحكم،
- * لا مفاتيح API: صف في الشيت = منتج على الموقع.
+ * صفحة المنتجات — متجر ثابت بالكامل. المنتجات والصور جزء من نسخة الموقع،
+ * والطلب يتم مباشرة عبر واتساب بلا API أو قاعدة بيانات أو خادم خلفي.
  */
 
 const ALL = "__all__";
@@ -43,11 +42,9 @@ export default function Products() {
 
   const productsQuery = useQuery({
     queryKey: ["products"],
-    queryFn: ({ signal }) => fetchProducts(signal),
-    // كاش في المتصفح: لا نطلب الشيت مع كل تفاعل للمستخدم. الحافة تخزّن 5 دقائق
-    // أيضًا، فالمنتج الجديد يظهر تلقائيًا خلال دقائق بلا Deploy.
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    queryFn: () => fetchProducts(),
+    staleTime: Infinity,
+    gcTime: Infinity,
     refetchOnWindowFocus: false,
     retry: 1,
   });
@@ -156,8 +153,8 @@ export default function Products() {
       </header>
       <main>
         <section className="container grid gap-10 py-14 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:py-20">
-          <div><span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1.5 text-xs font-bold text-orange-900"><Sparkles size={15} /> كتالوج محدَّث أولًا بأول</span><h1 className="mt-5 max-w-3xl text-4xl font-black leading-[1.15] text-emerald-950 sm:text-6xl">ألعاب أطفال مختارة من <span className="text-orange-700">عمران للألعاب</span></h1><p className="mt-5 max-w-2xl text-lg leading-8 text-stone-600">كل منتج تراه هنا معروض بسعره وتفاصيله، والطلب يتم مباشرة عبر واتساب — بلا حسابات وبلا خطوات معقدة.</p><div className="mt-6"><button type="button" onClick={handleShare} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-900 px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 active:scale-[0.97]"><Share2 size={18} aria-hidden="true" /> مشاركة المنتجات</button><p aria-live="polite" className="mt-3 min-h-5 text-sm font-semibold text-emerald-900">{shareOutcome ? shareMessage[shareOutcome] : ""}</p></div></div>
-          <div className="rounded-[2rem] bg-emerald-950 p-7 text-emerald-50 shadow-xl"><p className="text-sm font-bold text-emerald-200">معلومة مهمة</p><p className="mt-3 text-xl font-bold leading-8">الأسعار والتوفر يُحدَّثان من إدارة المتجر مباشرةً، ويظهر التحديث على الموقع خلال دقائق. للاستفسار عن أي منتج اضغط زر واتساب على بطاقته.</p></div>
+          <div><span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1.5 text-xs font-bold text-orange-900"><Sparkles size={15} /> كتالوج منتجات موثّق</span><h1 className="mt-5 max-w-3xl text-4xl font-black leading-[1.15] text-emerald-950 sm:text-6xl">ألعاب أطفال مختارة من <span className="text-orange-700">عمران للألعاب</span></h1><p className="mt-5 max-w-2xl text-lg leading-8 text-stone-600">كل منتج تراه هنا معروض بسعره وتفاصيله، والطلب يتم مباشرة عبر واتساب — بلا حسابات وبلا خطوات معقدة.</p><div className="mt-6"><button type="button" onClick={handleShare} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-900 px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 active:scale-[0.97]"><Share2 size={18} aria-hidden="true" /> مشاركة المنتجات</button><p aria-live="polite" className="mt-3 min-h-5 text-sm font-semibold text-emerald-900">{shareOutcome ? shareMessage[shareOutcome] : ""}</p></div></div>
+          <div className="rounded-[2rem] bg-emerald-950 p-7 text-emerald-50 shadow-xl"><p className="text-sm font-bold text-emerald-200">معلومة مهمة</p><p className="mt-3 text-xl font-bold leading-8">للتأكد من السعر والتوفر والكميات، اضغط زر واتساب على بطاقة المنتج وتواصل معنا مباشرةً.</p></div>
         </section>
 
         <section id="feed" className="border-t border-stone-200 bg-white py-14">
