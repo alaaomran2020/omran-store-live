@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Products from "@/pages/Products";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "@/lib/publicProductsSnapshot";
+import { makeCatalogUrl } from "@/lib/makeGateway";
 
 function renderCatalog() {
   const queryClient = new QueryClient({
@@ -21,9 +22,7 @@ const cards = () => screen.getAllByTestId("product-card");
 beforeEach(() => {
   window.history.replaceState({}, "", "/products");
   vi.stubEnv("VITE_WHATSAPP_NUMBER", "201000000000");
-  vi.stubGlobal("fetch", vi.fn(() => {
-    throw new Error("Static catalog must not use fetch");
-  }));
+  vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("catalog gateway unavailable"))));
 });
 
 afterEach(() => {
@@ -32,17 +31,20 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("كتالوج المنتجات الثابت", () => {
-  it("يعرض كل منتجات الـSnapshot المحلي دون شبكة", async () => {
+describe("كتالوج المنتجات مع fallback محلي", () => {
+  it("يعرض Snapshot المحلي إذا تعذر الكتالوج الحي", async () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(PUBLIC_PRODUCTS_SNAPSHOT.length));
     expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(
       PUBLIC_PRODUCTS_SNAPSHOT.map(product => product.id)
     );
-    expect(fetch).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledWith(
+      makeCatalogUrl(),
+      expect.objectContaining({ method: "GET", cache: "no-store" })
+    );
   });
 
-  it("يبحث ويفلتر داخل البيانات المحلية", async () => {
+  it("يبحث ويفلتر داخل البيانات المتاحة", async () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(PUBLIC_PRODUCTS_SNAPSHOT.length));
 
@@ -68,13 +70,16 @@ describe("كتالوج المنتجات الثابت", () => {
     expect(within(dialog).getByText(target.name)).toBeTruthy();
   });
 
-  it("يبني رابط واتساب للمنتج دون إرسال Lead إلى خادم", async () => {
+  it("يبني رابط واتساب للمنتج مع بقاء fallback الكتالوج مستقلًا", async () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(PUBLIC_PRODUCTS_SNAPSHOT.length));
 
     const links = screen.getAllByRole("link", { name: /اطلب عبر واتساب/ }) as HTMLAnchorElement[];
     expect(links[0].href).toContain("wa.me/201000000000");
     expect(decodeURIComponent(links[0].href)).toContain(PUBLIC_PRODUCTS_SNAPSHOT[0].name);
-    expect(fetch).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledWith(
+      makeCatalogUrl(),
+      expect.objectContaining({ method: "GET" })
+    );
   });
 });
