@@ -1,19 +1,31 @@
-import { MessageCircle, PackageCheck, Search, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  MessageCircle,
+  PackageCheck,
+  Search,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { whatsappNumber } from "@/lib/productFormat";
 
 const storeWhatsAppUrl = (() => {
   const number = whatsappNumber();
   if (!number) return null;
-  const text = encodeURIComponent("مرحبًا، أريد الاستفسار عن منتجات عمران تويز.");
+  const text = encodeURIComponent(
+    "مرحبًا، أريد الاستفسار عن منتجات عمران تويز."
+  );
   return `https://wa.me/${number}?text=${text}`;
 })();
 
 const categories = [
-  "سيارات وألعاب ريموت",
+  "سيارات وريموت",
   "عرائس وألعاب بنات",
-  "ألعاب مطبخ وتمثيل أدوار",
   "ألعاب تعليمية وفنية",
-  "ألعاب حركة ومستلزمات مائية",
+  "ألعاب تمثيل أدوار",
+  "ألعاب حركة ورياضة",
+  "ألعاب مائية",
+  "ألعاب موسيقية",
+  "ألعاب خارجية",
+  "فنون وإبداع",
 ];
 
 export default function Home() {
@@ -21,11 +33,17 @@ export default function Home() {
     <div dir="rtl" className="min-h-screen bg-[#f7f3ec] text-stone-900">
       <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-[#f7f3ec]/95 backdrop-blur">
         <div className="container flex min-h-20 items-center justify-between gap-4">
-          <a href="/" className="text-xl font-black tracking-tight text-emerald-950">
+          <a
+            href="/"
+            className="text-xl font-black tracking-tight text-emerald-950"
+          >
             عمران للألعاب
           </a>
           <nav className="flex items-center gap-3 text-sm font-bold text-stone-700">
-            <a href="/products" className="rounded-full px-4 py-2 transition hover:bg-white hover:text-emerald-900">
+            <a
+              href="/products"
+              className="rounded-full px-4 py-2 transition hover:bg-white hover:text-emerald-900"
+            >
               المنتجات
             </a>
             {storeWhatsAppUrl && (
@@ -50,10 +68,13 @@ export default function Home() {
             </span>
             <h1 className="mt-5 max-w-4xl text-4xl font-black leading-[1.15] text-emerald-950 sm:text-6xl">
               شركة عمران التجارية
-              <span className="mt-2 block text-orange-700">أكبر تشكيلة لعب أطفال وهدايا</span>
+              <span className="mt-2 block text-orange-700">
+                أكبر تشكيلة لعب أطفال وهدايا
+              </span>
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-stone-600">
-              استعرض المنتجات المتاحة، شاهد الصور والتفاصيل، وتواصل مباشرة عبر واتساب للاستفسار عن السعر والكميات والتوفر.
+              استعرض المنتجات المتاحة، شاهد الصور والتفاصيل، وتواصل مباشرة عبر
+              واتساب للاستفسار عن السعر والكميات والتوفر.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a
@@ -69,24 +90,31 @@ export default function Home() {
                   rel="noreferrer"
                   className="inline-flex min-h-12 items-center gap-2 rounded-full border border-stone-300 bg-white px-6 py-3 text-sm font-black text-emerald-950 transition hover:border-emerald-700"
                 >
-                  <MessageCircle size={18} aria-hidden="true" /> للاستفسار والكميات
+                  <MessageCircle size={18} aria-hidden="true" /> للاستفسار
+                  والكميات
                 </a>
               )}
             </div>
           </div>
 
           <div className="rounded-[2rem] bg-emerald-950 p-7 text-white shadow-2xl sm:p-9">
-            <p className="text-sm font-black text-emerald-200">تجربة شراء مباشرة وواضحة</p>
+            <p className="text-sm font-black text-emerald-200">
+              تجربة شراء مباشرة وواضحة
+            </p>
             <div className="mt-6 grid gap-4">
               <div className="rounded-2xl bg-white/10 p-5">
                 <PackageCheck size={24} aria-hidden="true" />
                 <p className="mt-3 font-black">منتجات موثقة بالصور</p>
-                <p className="mt-1 text-sm leading-6 text-emerald-100">المنتجات المنشورة تمر بمراجعة قبل ظهورها في المتجر.</p>
+                <p className="mt-1 text-sm leading-6 text-emerald-100">
+                  المنتجات المنشورة تمر بمراجعة قبل ظهورها في المتجر.
+                </p>
               </div>
               <div className="rounded-2xl bg-white/10 p-5">
                 <ShieldCheck size={24} aria-hidden="true" />
                 <p className="mt-3 font-black">بيانات واضحة بدون تخمين</p>
-                <p className="mt-1 text-sm leading-6 text-emerald-100">أي سعر غير مؤكد يظهر للاستفسار بدل عرض بيانات غير موثوقة.</p>
+                <p className="mt-1 text-sm leading-6 text-emerald-100">
+                  أي سعر غير مؤكد يظهر للاستفسار بدل عرض بيانات غير موثوقة.
+                </p>
               </div>
             </div>
           </div>
@@ -96,10 +124,17 @@ export default function Home() {
           <div className="container">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-sm font-black text-orange-700">تصفح حسب النوع</p>
-                <h2 className="mt-1 text-3xl font-black text-emerald-950">أقسام رئيسية</h2>
+                <p className="text-sm font-black text-orange-700">
+                  تصفح حسب النوع
+                </p>
+                <h2 className="mt-1 text-3xl font-black text-emerald-950">
+                  أقسام رئيسية
+                </h2>
               </div>
-              <a href="/products" className="text-sm font-black text-emerald-900 hover:underline">
+              <a
+                href="/products"
+                className="text-sm font-black text-emerald-900 hover:underline"
+              >
                 عرض كل المنتجات
               </a>
             </div>
@@ -120,16 +155,28 @@ export default function Home() {
         <section className="container py-14 lg:py-20">
           <div className="grid gap-6 md:grid-cols-3">
             <div className="rounded-2xl border border-stone-200 bg-white p-6">
-              <p className="text-lg font-black text-emerald-950">طلب سريع عبر واتساب</p>
-              <p className="mt-2 text-sm leading-7 text-stone-600">كل منتج يوصلك مباشرة لمحادثة الاستفسار بدل خطوات شراء معقدة.</p>
+              <p className="text-lg font-black text-emerald-950">
+                طلب سريع عبر واتساب
+              </p>
+              <p className="mt-2 text-sm leading-7 text-stone-600">
+                كل منتج يوصلك مباشرة لمحادثة الاستفسار بدل خطوات شراء معقدة.
+              </p>
             </div>
             <div className="rounded-2xl border border-stone-200 bg-white p-6">
-              <p className="text-lg font-black text-emerald-950">كتالوج يتحدث باستمرار</p>
-              <p className="mt-2 text-sm leading-7 text-stone-600">نعرض داخل الموقع المنتجات التي تمت مراجعة بياناتها وصورها فقط.</p>
+              <p className="text-lg font-black text-emerald-950">
+                كتالوج يتحدث باستمرار
+              </p>
+              <p className="mt-2 text-sm leading-7 text-stone-600">
+                نعرض داخل الموقع المنتجات التي تمت مراجعة بياناتها وصورها فقط.
+              </p>
             </div>
             <div className="rounded-2xl border border-stone-200 bg-white p-6">
-              <p className="text-lg font-black text-emerald-950">مناسب للقطاعي والكميات</p>
-              <p className="mt-2 text-sm leading-7 text-stone-600">يمكنك الاستفسار عن التوفر والسعر والكميات مباشرة مع فريق المتجر.</p>
+              <p className="text-lg font-black text-emerald-950">
+                مناسب للقطاعي والكميات
+              </p>
+              <p className="mt-2 text-sm leading-7 text-stone-600">
+                يمكنك الاستفسار عن التوفر والسعر والكميات مباشرة مع فريق المتجر.
+              </p>
             </div>
           </div>
         </section>
@@ -137,8 +184,12 @@ export default function Home() {
 
       <footer className="border-t border-emerald-900 bg-emerald-950 py-10 text-emerald-50">
         <div className="container flex flex-col gap-3 text-center sm:text-right">
-          <p className="text-lg font-black">شركة عمران التجارية — عمران للألعاب</p>
-          <p className="text-sm text-emerald-200">لعب أطفال وهدايا — تصفح الكتالوج واستفسر مباشرة عبر واتساب.</p>
+          <p className="text-lg font-black">
+            شركة عمران التجارية — عمران للألعاب
+          </p>
+          <p className="text-sm text-emerald-200">
+            لعب أطفال وهدايا — تصفح الكتالوج واستفسر مباشرة عبر واتساب.
+          </p>
         </div>
       </footer>
     </div>

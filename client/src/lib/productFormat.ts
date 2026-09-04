@@ -10,7 +10,7 @@ import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
  * عند تحويله إلى true لاحقًا تعود الأسعار المؤكدة للعرض بدون تغيير بيانات المنتجات.
  */
 export const SHOW_CATALOG_PRICES = false;
-export const PRICE_ENQUIRY_LABEL = "اسأل عن السعر والتوافر";
+export const PRICE_ENQUIRY_LABEL = "للإستفسار والكميات";
 
 const numberFormatter = new Intl.NumberFormat("ar-EG-u-nu-latn", {
   maximumFractionDigits: 2,
@@ -29,7 +29,10 @@ export function formatPrice(price: number | null): string {
 export function whatsappNumber(): string {
   const fromEnv =
     (import.meta.env.VITE_WHATSAPP_NUMBER as string | undefined) ?? "";
-  return (fromEnv || SOCIAL_EMBED_CONFIG.whatsappNumber || "").replace(/[^\d]/g, "");
+  return (fromEnv || SOCIAL_EMBED_CONFIG.whatsappNumber || "").replace(
+    /[^\d]/g,
+    ""
+  );
 }
 
 export function buildWhatsAppUrl(
@@ -40,10 +43,8 @@ export function buildWhatsAppUrl(
   const number = (options.number ?? whatsappNumber()).replace(/[^\d]/g, "");
   if (!number) return null;
 
-  const sku =
-    (product as { sku?: string | null }).sku?.trim() ||
-    (product as { id?: string }).id?.trim() ||
-    "";
+  const productId = (product as { id?: string }).id?.trim() || "";
+  const sku = (product as { sku?: string | null }).sku?.trim() || "";
   const category = (product as { category?: string }).category?.trim() || "";
   const priceText = formatPrice(product.price);
 
@@ -53,22 +54,29 @@ export function buildWhatsAppUrl(
     if (pid) {
       try {
         pageUrl = productPermalink(pid);
-        if (pageUrl.startsWith("?") && typeof window !== "undefined" && window.location?.href) {
+        if (
+          pageUrl.startsWith("?") &&
+          typeof window !== "undefined" &&
+          window.location?.href
+        ) {
           pageUrl = window.location.href.split("?")[0] + pageUrl;
         }
-        if (pageUrl.startsWith("?") && typeof window !== "undefined") pageUrl = window.location.href;
+        if (pageUrl.startsWith("?") && typeof window !== "undefined")
+          pageUrl = window.location.href;
       } catch {
         pageUrl = "";
       }
     }
-    if (!pageUrl && typeof window !== "undefined" && window.location?.href) pageUrl = window.location.href;
+    if (!pageUrl && typeof window !== "undefined" && window.location?.href)
+      pageUrl = window.location.href;
   }
 
   const lines = [
     "مرحبًا، أريد الاستفسار عن هذا المنتج من عمران تويز.",
     "",
     `المنتج: ${product.name}`,
-    `كود المنتج: ${sku || "—"}`,
+    `كود المنتج: ${productId || "—"}`,
+    `SKU: ${sku || "—"}`,
     `التصنيف: ${category || "غير محدد"}`,
     `السعر: ${priceText}`,
     `رابط المنتج: ${pageUrl || "—"}`,

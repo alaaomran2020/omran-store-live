@@ -22,6 +22,8 @@
 export type Product = {
   /** عمود `id`؛ يُولَّد من رقم الصف إن كان فارغًا. فريد دائمًا. */
   id: string;
+  /** عمود `sku` التجاري إن كان موثقًا؛ لا يُستنتج من المعرّف الداخلي. */
+  sku: string | null;
   /** عمود `name` — مطلوب (الصف بلا اسم يُعتبر تالفًا ويُتجاهل). */
   name: string;
   /** عمود `price` بعد التحويل لرقم؛ `null` إذا كان فارغًا أو غير صالح. */
@@ -73,7 +75,12 @@ export type Product = {
 };
 
 /** حالات النشر المعتمدة في عمود `workflow_status`. */
-export type WorkflowStatus = "REVIEW" | "PUBLISHED" | "REJECTED" | "DRAFT" | "ERROR";
+export type WorkflowStatus =
+  | "REVIEW"
+  | "PUBLISHED"
+  | "REJECTED"
+  | "DRAFT"
+  | "ERROR";
 
 /** قرارات الجودة المعتمدة في عمود `qa_status`. */
 export type QaStatus = "PASS" | "NEEDS_REVIEW" | "FAIL";
@@ -109,6 +116,7 @@ export const PRODUCT_COLUMNS = [
   "source_drive_id",
   "processed_image",
   "review_reason",
+  "sku",
 ] as const;
 
 /** مهلة طلب الشيت — يجب ألا يُعلَّق تحميل الصفحة أبدًا. */
@@ -471,7 +479,7 @@ const normalizeHeader = (value: string): string =>
 const HEADER_ALIASES: Record<string, (typeof PRODUCT_COLUMNS)[number]> = {
   id: "id",
   code: "id",
-  sku: "id",
+  sku: "sku",
   الرقم: "id",
   الكود: "id",
   name: "name",
@@ -490,6 +498,7 @@ const HEADER_ALIASES: Record<string, (typeof PRODUCT_COLUMNS)[number]> = {
   desc: "description",
   الوصف: "description",
   image: "image",
+  source_image: "image",
   image_url: "image",
   img: "image",
   photo: "image",
@@ -504,6 +513,7 @@ const HEADER_ALIASES: Record<string, (typeof PRODUCT_COLUMNS)[number]> = {
   order: "sort_order",
   الترتيب: "sort_order",
   product_prompt: "product_prompt",
+  ai_image_prompt: "product_prompt",
   prompt: "product_prompt",
   البرومبت: "product_prompt",
   workflow_status: "workflow_status",
@@ -528,6 +538,7 @@ const HEADER_ALIASES: Record<string, (typeof PRODUCT_COLUMNS)[number]> = {
   processed: "processed_image",
   المعالجة: "processed_image",
   review_reason: "review_reason",
+  qa_notes: "review_reason",
   reviewreason: "review_reason",
   سبب_المراجعة: "review_reason",
   "سبب المراجعة": "review_reason",
@@ -601,23 +612,22 @@ export function parseProductsCsv(
     while (seen.has(id)) id = `${id}-${rowIndex}`; // معرّفات مكررة في الشيت
     seen.add(id);
 
-    const imageSource = at(row, "image") || null;
+    const processedImageField = at(row, "processed_image");
+    const imageSource = processedImageField || at(row, "image") || null;
     const productPrompt = at(row, "product_prompt");
 
     // الحالة التشغيلية: الأعمدة الصريحة أولًا (First-Class)، ثم طبقة توافق
     // metadata القديمة داخل product_prompt — بلا اختراع أي قيمة.
     const workflowStatus = parseWorkflowStatus(at(row, "workflow_status"));
     const metadata = parseOperationalMetadata(productPrompt);
-    const qaStatus =
-      parseQaStatus(at(row, "qa_status")) ?? metadata.qaStatus;
+    const qaStatus = parseQaStatus(at(row, "qa_status")) ?? metadata.qaStatus;
     const sourceDriveId = at(row, "source_drive_id") || metadata.sourceDriveId;
-    const processedImage =
-      at(row, "processed_image") || metadata.processedImage;
-    const evidenceReason =
-      at(row, "review_reason") || metadata.reviewReason;
+    const processedImage = processedImageField || metadata.processedImage;
+    const evidenceReason = at(row, "review_reason") || metadata.reviewReason;
 
     products.push({
       id,
+      sku: at(row, "sku") || null,
       name,
       price: parsePrice(at(row, "price")),
       category: at(row, "category"),
@@ -664,7 +674,8 @@ export function parseProductsCsv(
     // سبب ميكانيكي مشتق من الحقول فقط (بلا اختراع)
     let reason: string;
     if (!product.active) reason = "inactive";
-    else if (product.workflowStatus === null) reason = "missing_workflow_status";
+    else if (product.workflowStatus === null)
+      reason = "missing_workflow_status";
     else if (product.workflowStatus !== "PUBLISHED")
       reason = `workflow_status_${product.workflowStatus.toLowerCase()}`;
     else if (product.qaStatus === null) reason = "missing_qa_status";
@@ -891,12 +902,17 @@ export function applyOverridesToProducts(
     out.push({
       ...product,
       name: o.name ?? product.name,
-      price: o.price !== undefined && o.price !== null ? o.price : product.price,
+      price:
+        o.price !== undefined && o.price !== null ? o.price : product.price,
       description: o.description ?? product.description,
-      image: o.image !== undefined && o.image !== null
-        ? toDisplayableImageUrl(o.image)
-        : product.image,
-      imageSource: o.image !== undefined && o.image !== null ? o.image : product.imageSource,
+      image:
+        o.image !== undefined && o.image !== null
+          ? toDisplayableImageUrl(o.image)
+          : product.image,
+      imageSource:
+        o.image !== undefined && o.image !== null
+          ? o.image
+          : product.imageSource,
       active: o.active === true ? true : product.active,
     });
   }

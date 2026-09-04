@@ -20,8 +20,16 @@ describe("formatPrice", () => {
 describe("buildWhatsAppUrl", () => {
   it("يستخدم اسم المنتج كما هو ويخفي السعر في رسالة واتساب أيضًا", () => {
     const url = buildWhatsAppUrl(
-      { id: "OT-0001", name: "سيارة أطفال سباق", price: 250, category: "سيارات" },
-      { number: "201000000000", pageUrl: "https://omrantoys.store/?product=OT-0001" }
+      {
+        id: "OT-0001",
+        name: "سيارة أطفال سباق",
+        price: 250,
+        category: "سيارات",
+      },
+      {
+        number: "201000000000",
+        pageUrl: "https://omrantoys.store/?product=OT-0001",
+      }
     );
     expect(url).toBeTruthy();
     const text = decodeURIComponent(new URL(url!).searchParams.get("text")!);
@@ -33,16 +41,28 @@ describe("buildWhatsAppUrl", () => {
   });
 
   it("يُخفي الزر إذا لم يُضبط رقم واتساب", () => {
-    expect(buildWhatsAppUrl({ name: "لعبة", price: 10 }, { number: "" })).toBeNull();
+    expect(
+      buildWhatsAppUrl({ name: "لعبة", price: 10 }, { number: "" })
+    ).toBeNull();
   });
 
   it("يتعامل مع sku", () => {
     const url = buildWhatsAppUrl(
-      { id: "OT-001", name: "عروسة أميرة & خاصة", price: 100, category: "عرائس", sku: "SKU-123" } as any,
-      { number: "201555570269", pageUrl: "https://omrantoys.store/?product=OT-001" }
+      {
+        id: "OT-001",
+        name: "عروسة أميرة & خاصة",
+        price: 100,
+        category: "عرائس",
+        sku: "SKU-123",
+      } as any,
+      {
+        number: "201555570269",
+        pageUrl: "https://omrantoys.store/?product=OT-001",
+      }
     );
     const text = decodeURIComponent(new URL(url!).searchParams.get("text")!);
-    expect(text).toContain("كود المنتج: SKU-123");
+    expect(text).toContain("كود المنتج: OT-001");
+    expect(text).toContain("SKU: SKU-123");
   });
 });
 
