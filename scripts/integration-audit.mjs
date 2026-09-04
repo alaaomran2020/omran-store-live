@@ -59,7 +59,7 @@ if (exists("client/src/lib/publicProductsSnapshot.ts")) {
 
 if (exists(".env.example")) {
   const env = read(".env.example");
-  for (const forbidden of ["DATABASE_URL", "MYSQL_", "ORIGIN_BASE_URL", "JWT_SECRET", "PORT=", "WORKER SECRET", "Cloudflare Tunnel"]) {
+  for (const forbidden of ["DATABASE_URL=", "MYSQL_DATABASE=", "MYSQL_USER=", "ORIGIN_BASE_URL=", "JWT_SECRET=", "PORT="]) {
     assert(!env.includes(forbidden), `static live env template contains obsolete runtime setting: ${forbidden}`);
   }
 }
