@@ -15,20 +15,13 @@ export default defineConfig({
     },
   },
   test: {
-    // وحدات الخادم/المنطق تعمل في node، واختبارات الواجهة تطلب jsdom عبر
-    // تعليق `@vitest-environment jsdom` في أول الملف.
+    // المتجر Static: نختبر الواجهة والوحدات المشتركة فقط.
     environment: "node",
     include: [
-      "server/**/*.test.ts",
-      "server/**/*.spec.ts",
       "client/src/**/*.test.ts",
       "client/src/**/*.test.tsx",
       "client/src/**/*.spec.ts",
-      // منطق Pipeline إدارة المنتجات (Telegram → n8n → Sheets) — automation/n8n/lib
-      "automation/**/*.test.mjs",
-      // وحدات مشتركة (التصنيفات/التطبيع) وطبقة الحافة (health/redirect)
       "shared/**/*.test.ts",
-      "worker/**/*.test.ts",
     ],
   },
 });
