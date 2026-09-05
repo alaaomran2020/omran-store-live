@@ -70,7 +70,7 @@ export default function Products() {
     const byCategory =
       category === ALL ? products : products.filter(product => product.category === category);
     const byAge = age === ALL ? byCategory : filterProductsByAge(byCategory, age);
-    return searchProducts(byAge, search);
+    return searchProducts(byAge, search) as Product[];
   }, [products, search, category, age]);
 
   useEffect(() => {
