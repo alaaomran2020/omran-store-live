@@ -5,9 +5,9 @@ import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Info, MessageCircle } from "lucide-react";
 
 /**
- * بطاقة المنتج — Omran Brand System v1
- * Modern Playful Retail: صورة المنتج هي البطل، Navy/Blue للهوية،
- * Brand Red للسعر المؤكد، وWhatsApp Green محجوز للتحويل عبر واتساب.
+ * Omran Product Card v2
+ * Image → Name → key info → primary CTA.
+ * Keep the card scannable; details belong in the product dialog/page.
  */
 export function ProductCard({
   product,
@@ -27,7 +27,7 @@ export function ProductCard({
     try {
       trackWhatsAppInquiry(product, "product_card");
     } catch {
-      // analytics failure يجب ألا يمنع فتح WhatsApp أبدًا
+      // Analytics failure must never block WhatsApp conversion.
     }
   };
 
@@ -35,7 +35,7 @@ export function ProductCard({
     <article
       data-testid="product-card"
       data-product-id={product.id}
-      className="group flex flex-col overflow-hidden rounded-[1.75rem] border border-brand-border bg-brand-surface shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-[0_4px_18px_rgba(23,32,51,.08)] transition duration-200 hover:-translate-y-0.5 hover:shadow-lg"
     >
       <button
         type="button"
@@ -45,28 +45,24 @@ export function ProductCard({
       >
         <ProductImage
           product={product}
-          className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+          className="h-full w-full object-contain p-3 transition duration-300 group-hover:scale-[1.02]"
           sizesHint="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
         />
         {product.category && (
-          <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-brand-navy/95 px-3 py-1 text-xs font-bold text-white shadow-sm">
+          <span className="absolute right-3 top-3 inline-flex max-w-[80%] items-center rounded-full bg-brand-surface/95 px-3 py-1 text-[11px] font-bold text-brand-navy shadow-sm ring-1 ring-brand-border">
             {product.category}
           </span>
         )}
       </button>
 
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        <h3 className="line-clamp-2 text-lg font-extrabold leading-8 text-brand-navy">
+      <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
+        <h3 className="line-clamp-2 text-base font-extrabold leading-7 text-brand-ink sm:text-lg">
           {product.name}
         </h3>
-        <p className="text-base font-extrabold text-brand-red">
+
+        <p className="text-sm font-extrabold text-brand-red">
           {formatPrice(product.price)}
         </p>
-        {product.description && (
-          <p className="line-clamp-3 text-sm leading-7 text-brand-muted">
-            {product.description}
-          </p>
-        )}
 
         <div className="mt-auto flex flex-col gap-2 pt-2">
           {waUrl && (
@@ -75,17 +71,17 @@ export function ProductCard({
               target="_blank"
               rel="noreferrer"
               onClick={handleWhatsAppClick}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-whatsapp px-4 py-2.5 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-whatsapp/25"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-4 py-2.5 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25"
             >
-              <MessageCircle size={17} aria-hidden="true" /> اطلب عبر واتساب
+              <MessageCircle size={17} aria-hidden="true" /> اسأل عن السعر والتوفر
             </a>
           )}
           <button
             type="button"
             onClick={() => onOpenDetails(product)}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-brand-border px-4 py-2.5 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-4 py-2.5 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue/15"
           >
-            تفاصيل المنتج <Info size={15} aria-hidden="true" />
+            عرض التفاصيل <Info size={15} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -95,13 +91,13 @@ export function ProductCard({
 
 export function ProductCardSkeleton() {
   return (
-    <div className="animate-pulse overflow-hidden rounded-[1.75rem] border border-brand-border bg-brand-surface">
+    <div className="animate-pulse overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-[0_4px_18px_rgba(23,32,51,.06)]">
       <div className="aspect-square bg-brand-cream" />
-      <div className="space-y-3 p-5">
+      <div className="space-y-3 p-4 sm:p-5">
         <div className="h-5 w-3/4 rounded-full bg-brand-border/70" />
         <div className="h-4 w-1/3 rounded-full bg-brand-border/60" />
-        <div className="h-4 w-full rounded-full bg-brand-border/60" />
-        <div className="h-11 w-full rounded-2xl bg-brand-border/50" />
+        <div className="h-12 w-full rounded-xl bg-brand-border/50" />
+        <div className="h-11 w-full rounded-xl bg-brand-border/40" />
       </div>
     </div>
   );
