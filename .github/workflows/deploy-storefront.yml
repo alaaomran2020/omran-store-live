@@ -36,7 +36,7 @@ permissions:
 
 env:
   NODE_OPTIONS: --max-old-space-size=4096
-  PRODUCTS_SHEET_URL: https://docs.google.com/spreadsheets/d/e/2PACX-1vTLph4MyfmoeWcjJ3cMi-iDaM3dgt4_S57SvKr6wpQu8IbDKliduguIcvtp7E5o0ZoxN3ouNQoZo7dn/pub?gid=57015348&single=true&output=csv
+  PRODUCTS_SHEET_URL: https://raw.githubusercontent.com/alaaomran2020/omran-store-live/main/public/catalog/products.csv
 
 jobs:
   validate-storefront:
@@ -174,4 +174,4 @@ jobs:
         run: |
           echo "Storefront project: omrantoys-live-app"
           echo "Commit: ${GITHUB_SHA}"
-          echo "Catalog source: automatic publication catalog mirrored to public storefront feed"
+          echo "Catalog source: repository-hosted public CSV mirror"
