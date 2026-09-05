@@ -1,0 +1,35 @@
+name: Omran Product AI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: omran-product-ai
+  cancel-in-progress: false
+
+jobs:
+  enrich-products:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate AI product content
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_SHEETS_SPREADSHEET_ID: 1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc
+          GEMINI_MODEL: gemini-2.5-pro
+          MAX_AI_ROWS: '10'
+        run: node scripts/product-ai.mjs
