@@ -147,7 +147,7 @@ export default function Products() {
       onClick={() => handleCategoryFilter(value)}
       aria-pressed={category === value}
       data-testid="category-chip"
-      className={`min-h-10 rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15 ${
+      className={`min-h-11 shrink-0 snap-start rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15 ${
         category === value
           ? "bg-brand-navy text-white shadow"
           : "border border-brand-border bg-brand-surface text-brand-muted hover:border-brand-blue hover:text-brand-blue"
@@ -164,7 +164,7 @@ export default function Products() {
       onClick={() => handleAgeFilter(value)}
       aria-pressed={age === value}
       data-testid="age-chip"
-      className={`min-h-10 rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15 ${
+      className={`min-h-11 shrink-0 snap-start rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15 ${
         age === value
           ? "bg-brand-blue text-white shadow"
           : "border border-brand-border bg-brand-sky/40 text-brand-navy hover:border-brand-blue hover:bg-brand-sky"
@@ -177,114 +177,118 @@ export default function Products() {
   return (
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
       <header className="sticky top-0 z-40 border-b border-brand-border/80 bg-brand-cream/95 backdrop-blur">
-        <div className="container flex min-h-20 items-center justify-between gap-4">
-          <a href="/" className="text-xl font-extrabold tracking-tight text-brand-navy">
+        <div className="container flex min-h-16 items-center justify-between gap-3 sm:min-h-20 sm:gap-4">
+          <a href="/" className="min-w-0 truncate text-base font-extrabold tracking-tight text-brand-navy sm:text-xl">
             شركة عمران التجارية
           </a>
-          <nav className="flex items-center gap-4 text-sm font-bold text-brand-muted">
-            <a href="#feed" className="transition hover:text-brand-blue">المنتجات</a>
+          <nav className="flex shrink-0 items-center gap-2 text-sm font-bold text-brand-muted sm:gap-4">
+            <a href="#feed" className="inline-flex min-h-11 items-center rounded-xl px-3 transition hover:bg-brand-sky hover:text-brand-blue sm:px-0 sm:hover:bg-transparent">المنتجات</a>
           </nav>
         </div>
       </header>
 
       <main>
-        <section className="container grid gap-10 py-14 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:py-20">
+        <section className="container grid gap-5 py-8 sm:gap-8 sm:py-12 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:py-20">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow/25 px-3 py-1.5 text-xs font-bold text-brand-navy">
               <Sparkles size={15} /> كتالوج منتجات موثّق
             </span>
-            <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-[1.15] text-brand-navy sm:text-6xl">
+            <h1 className="mt-4 max-w-3xl text-[2rem] font-extrabold leading-[1.16] text-brand-navy sm:mt-5 sm:text-5xl lg:text-6xl">
               اكتشف لعب الأطفال والهدايا من <span className="text-brand-blue">شركة عمران التجارية</span>
             </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-brand-muted">
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-brand-muted sm:mt-5 sm:text-lg sm:leading-8">
               شاهد الصور والتفاصيل المتاحة، واختار حسب السن لما تكون بيانات العمر موثقة، وللسعر والتوفر تواصل معنا عبر واتساب.
             </p>
-            <div className="mt-6">
+            <div className="mt-5 sm:mt-6">
               <button
                 type="button"
                 onClick={handleShare}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-brand-blue px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-brand-blue-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20 active:scale-[0.97]"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 py-3 text-sm font-bold text-white shadow-md transition active:scale-[0.99] hover:bg-brand-blue-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20 sm:w-auto sm:rounded-full sm:shadow-lg"
               >
                 <Share2 size={18} aria-hidden="true" /> مشاركة المنتجات
               </button>
-              <p aria-live="polite" className="mt-3 min-h-5 text-sm font-semibold text-brand-blue">
+              <p aria-live="polite" className="mt-2 min-h-5 text-xs font-semibold text-brand-blue sm:mt-3 sm:text-sm">
                 {shareOutcome ? shareMessage[shareOutcome] : ""}
               </p>
             </div>
           </div>
 
-          <div className="rounded-[2rem] bg-brand-navy p-7 text-white shadow-xl">
-            <p className="text-sm font-bold text-brand-yellow">معلومة مهمة</p>
-            <p className="mt-3 text-xl font-bold leading-8">
+          <div className="rounded-2xl bg-brand-navy p-5 text-white shadow-lg sm:rounded-[2rem] sm:p-7 sm:shadow-xl">
+            <p className="text-xs font-bold text-brand-yellow sm:text-sm">معلومة مهمة</p>
+            <p className="mt-2 text-base font-bold leading-7 sm:mt-3 sm:text-xl sm:leading-8">
               فلترة العمر تستخدم فقط العمر الأدنى والأقصى الموثقين. أي منتج بدون بيانات عمر مؤكدة يظل ظاهرًا في الكتالوج العام فقط.
             </p>
           </div>
         </section>
 
-        <section id="feed" className="border-t border-brand-border bg-brand-surface py-14">
+        <section id="feed" className="scroll-mt-16 border-t border-brand-border bg-brand-surface py-8 sm:scroll-mt-20 sm:py-14">
           <div className="container">
-            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-sm font-bold text-brand-red">اكتشف الاختيار المناسب</p>
-                <h2 className="mt-1 text-3xl font-extrabold text-brand-navy">كتالوج المنتجات</h2>
+            <div className="mb-5 flex items-center justify-between gap-3 sm:mb-8 sm:flex-wrap sm:items-end sm:gap-4">
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-brand-red sm:text-sm">اكتشف الاختيار المناسب</p>
+                <h2 className="mt-1 text-2xl font-extrabold text-brand-navy sm:text-3xl">كتالوج المنتجات</h2>
               </div>
               <button
                 type="button"
                 onClick={() => productsQuery.refetch()}
-                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-brand-border px-4 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15"
+                aria-label="تحديث الكتالوج"
+                className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-brand-border px-3 py-2 text-sm font-bold text-brand-blue transition active:scale-95 hover:border-brand-blue hover:bg-brand-blue/5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15 sm:rounded-full sm:px-4"
               >
-                <RefreshCw size={15} className={productsQuery.isFetching ? "animate-spin" : ""} /> تحديث
+                <RefreshCw size={16} className={productsQuery.isFetching ? "animate-spin" : ""} />
+                <span className="hidden sm:inline">تحديث</span>
               </button>
             </div>
 
             {products.length > 0 && (
-              <div className="mb-8 space-y-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <label className="relative min-w-[230px] flex-1 sm:max-w-sm">
-                    <Search
-                      size={17}
-                      className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted"
-                      aria-hidden="true"
-                    />
-                    <input
-                      type="search"
-                      value={search}
-                      onChange={event => {
-                        setSearch(event.target.value);
-                        updateUrl({ search: event.target.value || null });
-                      }}
-                      placeholder="ابحث في المنتجات…"
-                      aria-label="ابحث في المنتجات"
-                      data-testid="product-search"
-                      className="min-h-11 w-full rounded-full border border-brand-border bg-brand-surface py-2.5 pl-4 pr-11 text-sm font-semibold text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15"
-                    />
-                  </label>
-                  {categories.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2">
+              <div className="mb-5 space-y-3 sm:mb-8 sm:space-y-4">
+                <label className="relative block w-full">
+                  <Search
+                    size={18}
+                    className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted"
+                    aria-hidden="true"
+                  />
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={event => {
+                      setSearch(event.target.value);
+                      updateUrl({ search: event.target.value || null });
+                    }}
+                    placeholder="ابحث عن لعبة أو هدية…"
+                    aria-label="ابحث في المنتجات"
+                    data-testid="product-search"
+                    className="min-h-12 w-full rounded-xl border border-brand-border bg-brand-surface py-3 pl-4 pr-11 text-base font-semibold text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15 sm:max-w-md sm:rounded-full sm:text-sm"
+                  />
+                </label>
+
+                {categories.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-extrabold text-brand-navy sm:hidden">التصنيف</p>
+                    <div className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
                       {categoryChip(ALL, "كل التصنيفات")}
                       {categories.map(name => categoryChip(name, name))}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
-                <div className="rounded-2xl border border-brand-border bg-brand-cream p-4">
-                  <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="rounded-2xl border border-brand-border bg-brand-cream p-3.5 sm:p-4">
+                  <div className="mb-2.5 flex items-center justify-between gap-3 sm:mb-3">
                     <p className="text-sm font-extrabold text-brand-navy">اختار حسب السن</p>
                     {age !== ALL && (
                       <button
                         type="button"
                         onClick={() => handleAgeFilter(ALL)}
-                        className="text-xs font-bold text-brand-blue hover:underline"
+                        className="min-h-9 rounded-lg px-2 text-xs font-bold text-brand-blue hover:bg-brand-sky hover:underline"
                       >
-                        إلغاء فلتر السن
+                        إلغاء الفلتر
                       </button>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="-mx-3.5 flex snap-x snap-mandatory gap-2 overflow-x-auto px-3.5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
                     {ageChip(ALL, "كل الأعمار")}
                     {AGE_FILTER_OPTIONS.map(range => ageChip(range.key, range.key === "13+" ? "13+ سنة" : `${range.key} سنوات`))}
                   </div>
-                  <p className="mt-3 text-xs leading-6 text-brand-muted">
+                  <p className="mt-2.5 text-[11px] leading-5 text-brand-muted sm:mt-3 sm:text-xs sm:leading-6">
                     المنتجات ذات العمر غير المؤكد لا تدخل في نتائج فلترة السن.
                   </p>
                 </div>
@@ -292,16 +296,16 @@ export default function Products() {
             )}
 
             {productsQuery.isLoading ? (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, index) => <ProductCardSkeleton key={index} />)}
               </div>
             ) : products.length === 0 ? (
-              <div className="space-y-10">
-                <div className="rounded-[2rem] border border-brand-border bg-brand-cream p-10 text-center">
+              <div className="space-y-8 sm:space-y-10">
+                <div className="rounded-2xl border border-brand-border bg-brand-cream p-6 text-center sm:rounded-[2rem] sm:p-10">
                   <span className="inline-flex rounded-2xl bg-brand-yellow/25 p-4 text-brand-navy">
                     <Sparkles size={30} aria-hidden="true" />
                   </span>
-                  <p className="mt-5 text-2xl font-extrabold text-brand-navy">
+                  <p className="mt-5 text-xl font-extrabold text-brand-navy sm:text-2xl">
                     {sourceError || productsQuery.isError
                       ? "المنتجات غير متاحة للعرض حاليًا"
                       : "المتجر قيد التجهيز — المنتجات قادمة قريبًا"}
@@ -316,7 +320,7 @@ export default function Products() {
                   <button
                     type="button"
                     onClick={() => productsQuery.refetch()}
-                    className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-brand-blue px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-blue-hover"
+                    className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-blue px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-blue-hover sm:w-auto sm:rounded-full"
                   >
                     <RefreshCw size={16} /> تحديث الكتالوج
                   </button>
@@ -325,12 +329,12 @@ export default function Products() {
               </div>
             ) : (
               <>
-                <p className="mb-6 text-sm font-bold text-brand-muted" data-testid="product-count">
+                <p className="mb-4 text-xs font-bold text-brand-muted sm:mb-6 sm:text-sm" data-testid="product-count">
                   {visibleProducts.length} من {products.length} منتجًا
                 </p>
                 {visibleProducts.length === 0 ? (
-                  <div className="rounded-[2rem] border border-brand-border bg-brand-cream p-10 text-center">
-                    <p className="text-lg font-extrabold text-brand-navy">
+                  <div className="rounded-2xl border border-brand-border bg-brand-cream p-6 text-center sm:rounded-[2rem] sm:p-10">
+                    <p className="text-base font-extrabold text-brand-navy sm:text-lg">
                       {age !== ALL ? "لا توجد منتجات ببيانات عمر موثقة تطابق الفئة دي" : "لا توجد نتائج مطابقة لبحثك"}
                     </p>
                     <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-brand-muted">
@@ -346,13 +350,13 @@ export default function Products() {
                         setAge(ALL);
                         updateUrl({ search: null, category: null, age: null });
                       }}
-                      className="mt-4 inline-flex min-h-10 items-center rounded-full border border-brand-border px-5 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5"
+                      className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-brand-border px-5 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5 sm:w-auto sm:rounded-full"
                     >
                       مسح البحث والفلاتر
                     </button>
                   </div>
                 ) : (
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                     {visibleProducts.map(product => (
                       <ProductCard key={product.id} product={product} onOpenDetails={handleOpenDetails} />
                     ))}
@@ -363,15 +367,15 @@ export default function Products() {
           </div>
         </section>
 
-        <section className="border-t border-brand-border bg-brand-cream py-10">
-          <div className="container flex flex-wrap items-center justify-between gap-4">
+        <section className="border-t border-brand-border bg-brand-cream py-8 sm:py-10">
+          <div className="container flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <p className="text-sm font-bold text-brand-muted">تابعنا على المنصات الرسمية:</p>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
               <a
                 href={SOCIAL_EMBED_CONFIG.instagramProfileUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-brand-border bg-brand-surface px-4 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-3 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5 sm:rounded-full sm:px-4"
               >
                 <Instagram size={16} /> Instagram
               </a>
@@ -379,7 +383,7 @@ export default function Products() {
                 href={SOCIAL_EMBED_CONFIG.facebookPageUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-brand-border bg-brand-surface px-4 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-3 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5 sm:rounded-full sm:px-4"
               >
                 <Facebook size={16} /> Facebook
               </a>
@@ -387,8 +391,8 @@ export default function Products() {
           </div>
         </section>
 
-        <footer className="border-t border-brand-navy bg-brand-navy py-10 text-white">
-          <div className="container flex flex-col items-center gap-5 text-center sm:flex-row sm:justify-between sm:text-right">
+        <footer className="border-t border-brand-navy bg-brand-navy py-8 text-white sm:py-10">
+          <div className="container flex flex-col items-stretch gap-5 text-center sm:flex-row sm:items-center sm:justify-between sm:text-right">
             <div>
               <p className="text-lg font-extrabold">شركة عمران التجارية</p>
               <p className="mt-2 max-w-md text-sm leading-7 text-white/70">
@@ -400,7 +404,7 @@ export default function Products() {
                 href={storeWhatsAppUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-whatsapp px-6 py-3 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-whatsapp/25"
+                className="inline-flex min-h-12 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-whatsapp px-6 py-3 text-sm font-bold text-white transition active:scale-[0.99] hover:bg-whatsapp-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-whatsapp/25 sm:w-auto sm:rounded-full"
               >
                 <MessageCircle size={18} aria-hidden="true" /> تواصل معنا عبر واتساب
               </a>
