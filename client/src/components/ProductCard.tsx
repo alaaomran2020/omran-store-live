@@ -1,4 +1,4 @@
-import type { Product } from "@shared/products";
+import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, formatPrice, productPermalink } from "@/lib/productFormat";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
