@@ -18,7 +18,7 @@ describe("formatPrice", () => {
 });
 
 describe("buildWhatsAppUrl", () => {
-  it("يستخدم اسم المنتج كما هو ويخفي السعر في رسالة واتساب أيضًا", () => {
+  it("يستخدم اسم المنتج كما هو ولا يخترع سعرًا داخل رسالة واتساب", () => {
     const url = buildWhatsAppUrl(
       {
         id: "OT-0001",
@@ -33,10 +33,10 @@ describe("buildWhatsAppUrl", () => {
     );
     expect(url).toBeTruthy();
     const text = decodeURIComponent(new URL(url!).searchParams.get("text")!);
-    expect(text).toContain("المنتج: سيارة أطفال سباق");
+    expect(text).toContain("بالنسبة لـ سيارة أطفال سباق");
     expect(text).toContain("كود المنتج: OT-0001");
     expect(text).toContain("التصنيف: سيارات");
-    expect(text).toContain(`السعر: ${PRICE_ENQUIRY_LABEL}`);
+    expect(text).toContain("السعر والتوفر");
     expect(text).not.toContain("250 ج.م");
   });
 
