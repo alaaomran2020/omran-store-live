@@ -14,6 +14,7 @@ export type ProductEvent =
   | "product_view"
   | "product_search"
   | "product_filter"
+  | "product_age_filter"
   | "whatsapp_click"
   | "whatsapp_product_inquiry"
   | "whatsapp_conversion"
