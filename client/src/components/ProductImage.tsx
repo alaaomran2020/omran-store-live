@@ -10,16 +10,35 @@ function repositoryAssetFallback(image: string | null | undefined): string | nul
   return `${RAW_PUBLIC_BASE}${image}`;
 }
 
+function safeProductSlug(id: string | null | undefined): string | null {
+  if (!id) return null;
+  const slug = id
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || null;
+}
+
+function generatedProductAsset(id: string | null | undefined): string | null {
+  const slug = safeProductSlug(id);
+  return slug ? `/products/processed/generated/product-${slug}-main.webp` : null;
+}
+
 /**
  * صورة منتج آمنة متعددة المراحل.
  *
- * تسلسل المحاولات:
- *   1. صورة المتجر الأساسية (same-origin عندما تكون متاحة).
- *   2. مصدر الصورة البديل، بما في ذلك Google Drive بعد تحويله لصيغة عرض مباشرة.
- *   3. نسخة asset المطابقة من مستودع GitHub كشبكة أمان عند تعثّر Cloudflare/CDN.
- *   4. لوحة بديلة بهوية الموقع — لا صورة مكسورة ولا مربع فارغ.
+ * ترتيب التحميل يفضّل أصول المتجر نفسها قبل أي مصدر خارجي:
+ *   1. الصورة المحلية المعلنة في الكتالوج إن وجدت.
+ *   2. processedImage المحلية إن وجدت.
+ *   3. المسار المحلي القياسي المبني من product_id.
+ *   4. رابط الصورة الأصلي/الخارجي.
+ *   5. Google Drive بعد تحويله لصيغة عرض مباشرة.
+ *   6. نسخة GitHub raw للأصول المحلية كشبكة أمان أخيرة.
+ *   7. Placeholder فقط إذا فشلت كل المصادر.
  *
- * الهدف: المنتج لا يظهر للمستخدم بصورة مكسورة طالما توجد نسخة موثقة من الأصل.
+ * هذا يمنع منتجات الكتالوج الحي من فقد الصورة عندما يكون ملفها الموثق
+ * موجودًا بالفعل ضمن Cloudflare Pages assets حتى لو كان رابط Drive متعثرًا.
  */
 export function ProductImage({
   product,
@@ -27,7 +46,7 @@ export function ProductImage({
   sizesHint,
   priority = false,
 }: {
-  product: Pick<Product, "image" | "imageSource" | "name">;
+  product: Pick<Product, "id" | "image" | "imageSource" | "processedImage" | "name">;
   className?: string;
   sizesHint?: string;
   priority?: boolean;
@@ -36,17 +55,30 @@ export function ProductImage({
 
   useEffect(() => {
     setAttempt(0);
-  }, [product.image, product.imageSource]);
+  }, [product.id, product.image, product.imageSource, product.processedImage]);
 
   const candidates = useMemo(() => {
+    const localImage = product.image?.startsWith("/") ? product.image : null;
+    const localProcessed = product.processedImage?.startsWith("/")
+      ? product.processedImage
+      : null;
+    const conventionalLocal = generatedProductAsset(product.id);
+    const remoteImage = product.image && !product.image.startsWith("/") ? product.image : null;
+    const sourceFallback = fallbackImageUrl(product.imageSource);
+
+    const localCandidates = [localImage, localProcessed, conventionalLocal].filter(
+      (value): value is string => Boolean(value)
+    );
+
     const values = [
-      product.image ?? null,
-      fallbackImageUrl(product.imageSource),
-      repositoryAssetFallback(product.image),
+      ...localCandidates,
+      remoteImage,
+      sourceFallback,
+      ...localCandidates.map(repositoryAssetFallback),
     ].filter((value): value is string => Boolean(value));
 
     return Array.from(new Set(values));
-  }, [product.image, product.imageSource]);
+  }, [product.id, product.image, product.imageSource, product.processedImage]);
 
   const src = candidates[attempt] ?? null;
 
