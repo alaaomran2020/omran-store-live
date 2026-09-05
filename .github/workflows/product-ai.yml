@@ -2,6 +2,11 @@ name: Omran Product AI
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/product-ai.yml'
+      - 'scripts/product-ai.mjs'
   schedule:
     - cron: '*/15 * * * *'
 
