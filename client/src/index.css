@@ -3,8 +3,26 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* لوحة الإدارة — Dark Digital Brutalism (ألوان ثابتة تُستخدم كـ bg-electric …) */
+/*
+ * Omran Trading Company — Brand System v1
+ * Modern Playful Retail: trust + variety + easy choice + enjoyment.
+ * WhatsApp green is intentionally reserved for WhatsApp conversion actions.
+ */
 @theme {
+  --color-brand-navy: #10152f;
+  --color-brand-blue: #2f5bea;
+  --color-brand-blue-hover: #2348c8;
+  --color-brand-red: #e53935;
+  --color-brand-yellow: #ffc93c;
+  --color-brand-cream: #fffdf8;
+  --color-brand-surface: #ffffff;
+  --color-brand-ink: #10152f;
+  --color-brand-muted: #6b7280;
+  --color-brand-border: #e7e3da;
+  --color-whatsapp: #25d366;
+  --color-whatsapp-hover: #1eb857;
+
+  /* لوحة الإدارة — Dark Digital Brutalism (ألوان ثابتة تُستخدم كـ bg-electric …) */
   --color-electric: #2e62ff;
   --color-electric-hover: #1f4fe0;
   --color-electric-soft: #9db4ff;
@@ -106,7 +124,7 @@
   --muted: oklch(0.274 0.006 286.033);
   --muted-foreground: oklch(0.705 0.015 286.067);
   --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
+  --accent-foreground: oklch(0.141 0.005 285.823);
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(1 0 0 / 10%);
@@ -120,7 +138,7 @@
   --sidebar: oklch(0.21 0.006 285.885);
   --sidebar-foreground: oklch(0.85 0.005 65);
   --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.488 0.243 264.376);
 }
@@ -131,6 +149,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: Cairo, "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
