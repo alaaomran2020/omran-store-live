@@ -77,7 +77,7 @@ export function ProductCard({
               onClick={handleWhatsAppClick}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-whatsapp px-4 py-2.5 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-whatsapp/25"
             >
-              <MessageCircle size={17} aria-hidden="true" /> للاستفسار عبر واتساب
+              <MessageCircle size={17} aria-hidden="true" /> اطلب عبر واتساب
             </a>
           )}
           <button
