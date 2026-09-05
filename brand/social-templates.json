@@ -1,0 +1,90 @@
+{
+  "brand": "Omran Trading Company",
+  "version": "2.0",
+  "market": "Egypt",
+  "language": "ar-EG",
+  "direction": "rtl",
+  "font": {
+    "primary": "Cairo",
+    "weights": {
+      "body": 400,
+      "supporting": 600,
+      "heading": 700,
+      "campaign": 800
+    }
+  },
+  "colors": {
+    "primary": "#1769E0",
+    "primaryDark": "#123B6D",
+    "accent": "#E53935",
+    "yellow": "#FFC83D",
+    "softBlue": "#EAF4FF",
+    "page": "#F7F9FC",
+    "surface": "#FFFFFF",
+    "text": "#172033",
+    "muted": "#5F6B7A",
+    "border": "#E4E9F0",
+    "whatsapp": "#25D366"
+  },
+  "rules": {
+    "visualDirection": "Modern Playful Retail",
+    "ratio": "70% professional clarity / 30% playful energy",
+    "productIsHero": true,
+    "maxStrongAccentColorsPerTemplate": 2,
+    "maxTypographyLevels": 3,
+    "noFakeDiscounts": true,
+    "noFakeUrgency": true,
+    "noInventedProductFeatures": true,
+    "noAIProductShapeChanges": true
+  },
+  "formats": {
+    "feed": { "width": 1080, "height": 1350, "ratio": "4:5", "safeMargin": 72 },
+    "story": { "width": 1080, "height": 1920, "ratio": "9:16", "safeMargin": 96 },
+    "square": { "width": 1080, "height": 1080, "ratio": "1:1", "safeMargin": 64 }
+  },
+  "templates": [
+    {
+      "id": "product-spotlight",
+      "name": "Product Spotlight",
+      "composition": { "productArea": "65%", "copyArea": "35%" },
+      "slots": ["logo", "product_image", "product_name", "benefit_line", "cta"],
+      "cta": "اسأل عن السعر والتوفر"
+    },
+    {
+      "id": "new-arrival",
+      "name": "New Arrival",
+      "composition": { "productArea": "70%", "copyArea": "30%" },
+      "slots": ["logo", "badge", "product_image", "product_name", "cta"],
+      "badge": "وصل جديد",
+      "cta": "شوف التفاصيل"
+    },
+    {
+      "id": "gift-finder",
+      "name": "Gift Finder",
+      "composition": { "headlineArea": "20%", "productsArea": "60%", "ctaArea": "20%" },
+      "maxProducts": 3,
+      "slots": ["headline", "product_images", "age_or_occasion", "cta"],
+      "cta": "قولنا السن وميزانيتك على واتساب"
+    },
+    {
+      "id": "age-recommendation",
+      "name": "Age Recommendation",
+      "composition": { "headlineArea": "22%", "productsArea": "58%", "footerArea": "20%" },
+      "slots": ["age_range", "headline", "product_images", "verification_note", "cta"],
+      "cta": "استكشف الاختيارات"
+    },
+    {
+      "id": "product-comparison",
+      "name": "Product Comparison",
+      "maxProducts": 2,
+      "slots": ["headline", "product_a", "product_b", "verified_difference_points", "cta"],
+      "cta": "محتار بينهم؟ اسألنا على واتساب"
+    },
+    {
+      "id": "tips",
+      "name": "Educational / Tips",
+      "slots": ["headline", "three_points_max", "simple_icon_or_product_visual", "cta"],
+      "cta": "احفظ البوست وشاركه"
+    }
+  ]
+}
