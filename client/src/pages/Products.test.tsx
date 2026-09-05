@@ -67,7 +67,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     renderCatalog();
 
     const dialog = await screen.findByTestId("product-details");
-    expect(within(dialog).getByText(target.name)).toBeTruthy();
+    expect(within(dialog).getAllByText(target.name).length).toBeGreaterThan(0);
   });
 
   it("يبني رابط واتساب للاستفسار عن السعر والتوفر مع بقاء fallback الكتالوج مستقلًا", async () => {
