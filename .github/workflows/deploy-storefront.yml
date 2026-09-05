@@ -36,7 +36,7 @@ permissions:
 
 env:
   NODE_OPTIONS: --max-old-space-size=4096
-  PRODUCTS_SHEET_URL: https://docs.google.com/spreadsheets/d/1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc/gviz/tq?tqx=out:csv&gid=57015348
+  PRODUCTS_SHEET_URL: https://docs.google.com/spreadsheets/d/e/2PACX-1vTLph4MyfmoeWcjJ3cMi-iDaM3dgt4_S57SvKr6wpQu8IbDKliduguIcvtp7E5o0ZoxN3ouNQoZo7dn/pub?gid=57015348&single=true&output=csv
 
 jobs:
   validate-storefront:
@@ -174,4 +174,4 @@ jobs:
         run: |
           echo "Storefront project: omrantoys-live-app"
           echo "Commit: ${GITHUB_SHA}"
-          echo "Catalog source: live Google Sheets CSV (gviz)"
+          echo "Catalog source: automatic publication catalog mirrored to public storefront feed"
