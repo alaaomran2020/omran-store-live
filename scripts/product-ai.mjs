@@ -22,10 +22,45 @@ const REQUIRED_AI_FIELDS = [
 
 function b64url(input) { return Buffer.from(input).toString('base64url'); }
 
+function validateServiceAccount(value) {
+  if (!value || typeof value !== 'object') return null;
+  if (!value.client_email || !value.private_key) return null;
+  return value;
+}
+
+function tryParseJson(text) {
+  try {
+    let value = JSON.parse(text);
+    if (typeof value === 'string') value = JSON.parse(value);
+    return validateServiceAccount(value);
+  } catch {
+    return null;
+  }
+}
+
 function parseServiceAccount() {
-  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-  if (!raw) throw new Error('Missing GOOGLE_SERVICE_ACCOUNT_JSON secret');
-  try { return JSON.parse(raw); } catch { throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON'); }
+  const source = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!source) throw new Error('Missing GOOGLE_SERVICE_ACCOUNT_JSON secret');
+
+  let raw = String(source).trim();
+  raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+
+  const direct = tryParseJson(raw);
+  if (direct) return direct;
+
+  const unescaped = raw.replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\t/g, '\t');
+  const parsedUnescaped = tryParseJson(unescaped);
+  if (parsedUnescaped) return parsedUnescaped;
+
+  try {
+    const decoded = Buffer.from(raw, 'base64').toString('utf8').trim();
+    const parsedBase64 = tryParseJson(decoded);
+    if (parsedBase64) return parsedBase64;
+  } catch {
+    // Continue to safe diagnostic below.
+  }
+
+  throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON has an unsupported format. Paste the full service-account JSON object or its base64 form into the GitHub secret.');
 }
 
 async function getGoogleAccessToken(serviceAccount) {
@@ -36,7 +71,7 @@ async function getGoogleAccessToken(serviceAccount) {
   const signer = crypto.createSign('RSA-SHA256'); signer.update(unsigned); signer.end();
   const signature = signer.sign(serviceAccount.private_key).toString('base64url');
   const assertion = `${unsigned}.${signature}`;
-  const response = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion }) });
+  const response = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth-grant-type:jwt-bearer', assertion }) });
   if (!response.ok) throw new Error(`Google OAuth failed: ${response.status} ${await response.text()}`);
   return (await response.json()).access_token;
 }
