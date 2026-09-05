@@ -19,18 +19,12 @@ import {
 } from "lucide-react";
 import { whatsappNumber } from "@/lib/productFormat";
 
-/**
- * صفحة المنتجات — متجر ثابت بالكامل. المنتجات والصور جزء من نسخة الموقع،
- * والطلب يتم مباشرة عبر واتساب بلا API أو قاعدة بيانات أو خادم خلفي.
- */
-
 const ALL = "__all__";
 
-/** تواصل عام مع المتجر (ليس منتجًا محددًا) — يُعرض فقط إذا كان رقم المتجر مضبوطًا. */
 const storeWhatsAppUrl = (() => {
   const number = whatsappNumber();
   if (!number) return null;
-  const text = encodeURIComponent("مرحبًا، أريد الاستفسار عن منتجات عمران تويز.");
+  const text = encodeURIComponent("مرحبًا، أريد الاستفسار عن منتجات شركة عمران التجارية.");
   return `https://wa.me/${number}?text=${text}`;
 })();
 
@@ -53,7 +47,6 @@ export default function Products() {
   const products = payload?.products ?? [];
   const notConfigured = payload?.status === "not_configured";
   const sourceError = payload?.status === "error";
-
   const categories = useMemo(() => productCategories(products), [products]);
 
   const visibleProducts = useMemo(() => {
@@ -62,7 +55,6 @@ export default function Products() {
     return searchProducts(byCategory, search);
   }, [products, search, category]);
 
-  // بحث: حدث تحليلات واحد بعد توقف الكتابة، لا حدث لكل حرف.
   useEffect(() => {
     const term = search.trim();
     if (term.length < 2) return;
@@ -73,7 +65,6 @@ export default function Products() {
     return () => clearTimeout(timer);
   }, [search, visibleProducts.length]);
 
-  // رابط قابل للمشاركة لكل منتج: ?product=<id> يفتح نافذة التفاصيل مباشرة.
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("product");
     if (id) setOpenProductId(id);
@@ -131,10 +122,10 @@ export default function Products() {
       onClick={() => handleFilter(value)}
       aria-pressed={category === value}
       data-testid="category-chip"
-      className={`min-h-10 rounded-full px-4 py-2 text-sm font-bold transition ${
+      className={`min-h-10 rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15 ${
         category === value
-          ? "bg-emerald-900 text-white shadow"
-          : "border border-stone-300 text-stone-600 hover:border-emerald-700 hover:text-emerald-800"
+          ? "bg-brand-navy text-white shadow"
+          : "border border-brand-border bg-brand-surface text-brand-muted hover:border-brand-blue hover:text-brand-blue"
       }`}
     >
       {label}
@@ -142,32 +133,63 @@ export default function Products() {
   );
 
   return (
-    <div dir="rtl" className="min-h-screen bg-[#f7f3ec] text-stone-900">
-      <header className="border-b border-stone-200/80 bg-[#f7f3ec]/90 backdrop-blur">
+    <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
+      <header className="sticky top-0 z-40 border-b border-brand-border/80 bg-brand-cream/95 backdrop-blur">
         <div className="container flex min-h-20 items-center justify-between gap-4">
-          <a href="/products" className="text-xl font-black tracking-tight text-emerald-950">عمران للألعاب</a>
-          <nav className="flex items-center gap-4 text-sm font-bold text-stone-600">
-            <a href="#feed" className="hover:text-emerald-800">المنتجات</a>
+          <a href="/" className="text-xl font-extrabold tracking-tight text-brand-navy">
+            شركة عمران التجارية
+          </a>
+          <nav className="flex items-center gap-4 text-sm font-bold text-brand-muted">
+            <a href="#feed" className="transition hover:text-brand-blue">المنتجات</a>
           </nav>
         </div>
       </header>
+
       <main>
         <section className="container grid gap-10 py-14 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:py-20">
-          <div><span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1.5 text-xs font-bold text-orange-900"><Sparkles size={15} /> كتالوج منتجات موثّق</span><h1 className="mt-5 max-w-3xl text-4xl font-black leading-[1.15] text-emerald-950 sm:text-6xl">ألعاب أطفال مختارة من <span className="text-orange-700">عمران للألعاب</span></h1><p className="mt-5 max-w-2xl text-lg leading-8 text-stone-600">كل منتج تراه هنا معروض بسعره وتفاصيله، والطلب يتم مباشرة عبر واتساب — بلا حسابات وبلا خطوات معقدة.</p><div className="mt-6"><button type="button" onClick={handleShare} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-900 px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 active:scale-[0.97]"><Share2 size={18} aria-hidden="true" /> مشاركة المنتجات</button><p aria-live="polite" className="mt-3 min-h-5 text-sm font-semibold text-emerald-900">{shareOutcome ? shareMessage[shareOutcome] : ""}</p></div></div>
-          <div className="rounded-[2rem] bg-emerald-950 p-7 text-emerald-50 shadow-xl"><p className="text-sm font-bold text-emerald-200">معلومة مهمة</p><p className="mt-3 text-xl font-bold leading-8">للتأكد من السعر والتوفر والكميات، اضغط زر واتساب على بطاقة المنتج وتواصل معنا مباشرةً.</p></div>
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow/25 px-3 py-1.5 text-xs font-bold text-brand-navy">
+              <Sparkles size={15} /> كتالوج منتجات موثّق
+            </span>
+            <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-[1.15] text-brand-navy sm:text-6xl">
+              اكتشف لعب الأطفال والهدايا من <span className="text-brand-blue">شركة عمران التجارية</span>
+            </h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-brand-muted">
+              شاهد الصور والتفاصيل المتاحة، وللتأكد من السعر والتوفر تواصل معنا مباشرة عبر واتساب.
+            </p>
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={handleShare}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-brand-blue px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-brand-blue-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20 active:scale-[0.97]"
+              >
+                <Share2 size={18} aria-hidden="true" /> مشاركة المنتجات
+              </button>
+              <p aria-live="polite" className="mt-3 min-h-5 text-sm font-semibold text-brand-blue">
+                {shareOutcome ? shareMessage[shareOutcome] : ""}
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] bg-brand-navy p-7 text-white shadow-xl">
+            <p className="text-sm font-bold text-brand-yellow">معلومة مهمة</p>
+            <p className="mt-3 text-xl font-bold leading-8">
+              للتأكد من السعر والتوفر والكميات، اضغط زر واتساب على بطاقة المنتج وتواصل معنا مباشرةً.
+            </p>
+          </div>
         </section>
 
-        <section id="feed" className="border-t border-stone-200 bg-white py-14">
+        <section id="feed" className="border-t border-brand-border bg-brand-surface py-14">
           <div className="container">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-sm font-bold text-orange-700">تحديث تلقائي عند تحميل الصفحة</p>
-                <h2 className="mt-1 text-3xl font-black text-emerald-950">كتالوج المنتجات</h2>
+                <p className="text-sm font-bold text-brand-red">اكتشف الاختيار المناسب</p>
+                <h2 className="mt-1 text-3xl font-extrabold text-brand-navy">كتالوج المنتجات</h2>
               </div>
               <button
                 type="button"
                 onClick={() => productsQuery.refetch()}
-                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-stone-300 px-4 py-2 text-sm font-bold text-emerald-900 transition hover:border-emerald-700"
+                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-brand-border px-4 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15"
               >
                 <RefreshCw size={15} className={productsQuery.isFetching ? "animate-spin" : ""} /> تحديث
               </button>
@@ -176,7 +198,11 @@ export default function Products() {
             {products.length > 0 && (
               <div className="mb-8 flex flex-wrap items-center gap-3">
                 <label className="relative min-w-[230px] flex-1 sm:max-w-sm">
-                  <Search size={17} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-stone-400" aria-hidden="true" />
+                  <Search
+                    size={17}
+                    className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted"
+                    aria-hidden="true"
+                  />
                   <input
                     type="search"
                     value={search}
@@ -184,7 +210,7 @@ export default function Products() {
                     placeholder="ابحث في المنتجات…"
                     aria-label="ابحث في المنتجات"
                     data-testid="product-search"
-                    className="min-h-11 w-full rounded-full border border-stone-300 bg-white py-2.5 pl-4 pr-11 text-sm font-semibold text-stone-800 outline-none transition focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100"
+                    className="min-h-11 w-full rounded-full border border-brand-border bg-brand-surface py-2.5 pl-4 pr-11 text-sm font-semibold text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15"
                   />
                 </label>
                 {categories.length > 0 && (
@@ -202,24 +228,26 @@ export default function Products() {
               </div>
             ) : products.length === 0 ? (
               <div className="space-y-10">
-                <div className="rounded-[2rem] border border-emerald-100 bg-emerald-50/60 p-10 text-center">
-                  <span className="inline-flex rounded-2xl bg-emerald-100 p-4 text-emerald-900"><Sparkles size={30} aria-hidden="true" /></span>
-                  <p className="mt-5 text-2xl font-black text-emerald-950">
+                <div className="rounded-[2rem] border border-brand-border bg-brand-cream p-10 text-center">
+                  <span className="inline-flex rounded-2xl bg-brand-yellow/25 p-4 text-brand-navy">
+                    <Sparkles size={30} aria-hidden="true" />
+                  </span>
+                  <p className="mt-5 text-2xl font-extrabold text-brand-navy">
                     {sourceError || productsQuery.isError
                       ? "المنتجات غير متاحة للعرض حاليًا"
                       : "المتجر قيد التجهيز — المنتجات قادمة قريبًا"}
                   </p>
-                  <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-stone-600">
+                  <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-brand-muted">
                     {sourceError || productsQuery.isError
-                      ? "نعمل على تحديث الكتالوج الآن. جرّب التحديث بعد قليل، أو تواصل معنا مباشرةً عبر صفحاتنا الرسمية بالأسفل."
+                      ? "نعمل على تحديث الكتالوج الآن. جرّب التحديث، أو تواصل معنا مباشرةً عبر صفحاتنا الرسمية بالأسفل."
                       : notConfigured
-                        ? "سنضيف أول المنتجات خلال وقت قصير جدًا. تابع صفحاتنا الرسمية حتى ذلك الحين."
-                        : "بمجرد إضافة أول منتج سيظهر هنا تلقائيًا ببطاقته وسعره."}
+                        ? "سنضيف أول المنتجات بعد اعتماد بياناتها وصورها. تابع صفحاتنا الرسمية حتى ذلك الحين."
+                        : "بمجرد إضافة أول منتج معتمد سيظهر هنا تلقائيًا."}
                   </p>
                   <button
                     type="button"
                     onClick={() => productsQuery.refetch()}
-                    className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-900 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-800"
+                    className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-brand-blue px-6 py-3 text-sm font-bold text-white transition hover:bg-brand-blue-hover"
                   >
                     <RefreshCw size={16} /> تحديث الكتالوج
                   </button>
@@ -228,16 +256,19 @@ export default function Products() {
               </div>
             ) : (
               <>
-                <p className="mb-6 text-sm font-bold text-stone-500" data-testid="product-count">
+                <p className="mb-6 text-sm font-bold text-brand-muted" data-testid="product-count">
                   {visibleProducts.length} من {products.length} منتجًا
                 </p>
                 {visibleProducts.length === 0 ? (
-                  <div className="rounded-[2rem] border border-stone-200 bg-stone-50 p-10 text-center">
-                    <p className="text-lg font-black text-emerald-950">لا توجد نتائج مطابقة لبحثك</p>
+                  <div className="rounded-[2rem] border border-brand-border bg-brand-cream p-10 text-center">
+                    <p className="text-lg font-extrabold text-brand-navy">لا توجد نتائج مطابقة لبحثك</p>
                     <button
                       type="button"
-                      onClick={() => { setSearch(""); setCategory(ALL); }}
-                      className="mt-4 inline-flex min-h-10 items-center rounded-full border border-stone-300 px-5 py-2 text-sm font-bold text-emerald-900 hover:border-emerald-700"
+                      onClick={() => {
+                        setSearch("");
+                        setCategory(ALL);
+                      }}
+                      className="mt-4 inline-flex min-h-10 items-center rounded-full border border-brand-border px-5 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5"
                     >
                       مسح البحث والفلاتر
                     </button>
@@ -254,23 +285,36 @@ export default function Products() {
           </div>
         </section>
 
-        <section className="border-t border-stone-200 bg-[#f7f3ec] py-10">
+        <section className="border-t border-brand-border bg-brand-cream py-10">
           <div className="container flex flex-wrap items-center justify-between gap-4">
-            <p className="text-sm font-bold text-stone-600">تابعنا على المنصات الرسمية:</p>
+            <p className="text-sm font-bold text-brand-muted">تابعنا على المنصات الرسمية:</p>
             <div className="flex flex-wrap items-center gap-3">
-              <a href={SOCIAL_EMBED_CONFIG.instagramProfileUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-pink-200 bg-white px-4 py-2 text-sm font-bold text-[#b0195e] hover:border-[#d62976]"><Instagram size={16} /> Instagram</a>
-              <a href={SOCIAL_EMBED_CONFIG.facebookPageUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-bold text-[#1877f2] hover:border-[#1877f2]"><Facebook size={16} /> Facebook</a>
+              <a
+                href={SOCIAL_EMBED_CONFIG.instagramProfileUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-brand-border bg-brand-surface px-4 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5"
+              >
+                <Instagram size={16} /> Instagram
+              </a>
+              <a
+                href={SOCIAL_EMBED_CONFIG.facebookPageUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-brand-border bg-brand-surface px-4 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5"
+              >
+                <Facebook size={16} /> Facebook
+              </a>
             </div>
           </div>
         </section>
 
-        <footer className="border-t border-stone-200 bg-emerald-950 py-10 text-emerald-50">
+        <footer className="border-t border-brand-navy bg-brand-navy py-10 text-white">
           <div className="container flex flex-col items-center gap-5 text-center sm:flex-row sm:justify-between sm:text-right">
             <div>
-              <p className="text-lg font-black">عمران للألعاب</p>
-              <p className="mt-2 max-w-md text-sm leading-7 text-emerald-200">
-                كتالوج محدَّث أولًا بأول — الطلب والاستفسار مباشرة عبر واتساب، بلا حسابات وبلا
-                خطوات معقدة. الأسعار والتوفر تُحدَّث من إدارة المتجر وتظهر خلال دقائق.
+              <p className="text-lg font-extrabold">شركة عمران التجارية</p>
+              <p className="mt-2 max-w-md text-sm leading-7 text-white/70">
+                لعب أطفال وهدايا — صور وتفاصيل تساعدك تختار، والاستفسار مباشرة عبر واتساب.
               </p>
             </div>
             {storeWhatsAppUrl && (
@@ -278,14 +322,14 @@ export default function Products() {
                 href={storeWhatsAppUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-[#25d366] px-6 py-3 text-sm font-black text-white transition hover:bg-[#1eb857]"
+                className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-whatsapp px-6 py-3 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-whatsapp/25"
               >
                 <MessageCircle size={18} aria-hidden="true" /> تواصل معنا عبر واتساب
               </a>
             )}
           </div>
-          <div className="container mt-6 border-t border-emerald-900 pt-4 text-center text-xs font-bold text-emerald-300/80">
-            © 2026 عمران للألعاب — جميع الحقوق محفوظة
+          <div className="container mt-6 border-t border-white/15 pt-4 text-center text-xs font-bold text-white/55">
+            © 2026 شركة عمران التجارية — جميع الحقوق محفوظة
           </div>
         </footer>
       </main>
