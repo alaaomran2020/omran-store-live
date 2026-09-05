@@ -4,9 +4,10 @@ import { OfficialSocialEmbeds } from "@/components/OfficialSocialEmbeds";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { ProductDetailsDialog } from "@/components/ProductDetailsDialog";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
-import { fetchProducts } from "@/lib/productsClient";
+import { fetchProducts, type Product } from "@/lib/productsClient";
+import { AGE_FILTER_OPTIONS, filterProductsByAge, parseAgeRange } from "@/lib/productAge";
 import { trackEvent } from "@/lib/analytics";
-import { productCategories, searchProducts, type Product } from "@shared/products";
+import { productCategories, searchProducts } from "@shared/products";
 import { shareProductsPage, type ProductShareOutcome } from "@/lib/productShare";
 import {
   Facebook,
@@ -28,11 +29,27 @@ const storeWhatsAppUrl = (() => {
   return `https://wa.me/${number}?text=${text}`;
 })();
 
+function readInitialParams() {
+  if (typeof window === "undefined") {
+    return { search: "", category: ALL, age: ALL, product: null as string | null };
+  }
+  const params = new URLSearchParams(window.location.search);
+  const age = params.get("age");
+  return {
+    search: params.get("search") ?? "",
+    category: params.get("category") ?? ALL,
+    age: parseAgeRange(age) ? age! : ALL,
+    product: params.get("product"),
+  };
+}
+
 export default function Products() {
+  const initial = useMemo(readInitialParams, []);
   const [shareOutcome, setShareOutcome] = useState<ProductShareOutcome | null>(null);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<string>(ALL);
-  const [openProductId, setOpenProductId] = useState<string | null>(null);
+  const [search, setSearch] = useState(initial.search);
+  const [category, setCategory] = useState<string>(initial.category);
+  const [age, setAge] = useState<string>(initial.age);
+  const [openProductId, setOpenProductId] = useState<string | null>(initial.product);
 
   const productsQuery = useQuery({
     queryKey: ["products"],
@@ -51,9 +68,10 @@ export default function Products() {
 
   const visibleProducts = useMemo(() => {
     const byCategory =
-      category === ALL ? products : products.filter(p => p.category === category);
-    return searchProducts(byCategory, search);
-  }, [products, search, category]);
+      category === ALL ? products : products.filter(product => product.category === category);
+    const byAge = age === ALL ? byCategory : filterProductsByAge(byCategory, age);
+    return searchProducts(byAge, search);
+  }, [products, search, category, age]);
 
   useEffect(() => {
     const term = search.trim();
@@ -65,31 +83,38 @@ export default function Products() {
     return () => clearTimeout(timer);
   }, [search, visibleProducts.length]);
 
-  useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("product");
-    if (id) setOpenProductId(id);
+  const updateUrl = useCallback((updates: Record<string, string | null>) => {
+    const url = new URL(window.location.href);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (!value || value === ALL) url.searchParams.delete(key);
+      else url.searchParams.set(key, value);
+    });
+    window.history.replaceState({}, "", url.toString());
   }, []);
 
-  const openProduct = products.find(p => p.id === openProductId) ?? null;
+  const openProduct = products.find(product => product.id === openProductId) ?? null;
 
   const handleOpenDetails = useCallback((product: Product) => {
     setOpenProductId(product.id);
     trackEvent("product_view", { product: product.name, id: product.id });
-    const url = new URL(window.location.href);
-    url.searchParams.set("product", product.id);
-    window.history.replaceState({}, "", url.toString());
-  }, []);
+    updateUrl({ product: product.id });
+  }, [updateUrl]);
 
   const handleCloseDetails = useCallback(() => {
     setOpenProductId(null);
-    const url = new URL(window.location.href);
-    url.searchParams.delete("product");
-    window.history.replaceState({}, "", url.toString());
-  }, []);
+    updateUrl({ product: null });
+  }, [updateUrl]);
 
-  const handleFilter = (value: string) => {
+  const handleCategoryFilter = (value: string) => {
     setCategory(value);
+    updateUrl({ category: value });
     trackEvent("product_filter", { category: value === ALL ? "الكل" : value });
+  };
+
+  const handleAgeFilter = (value: string) => {
+    setAge(value);
+    updateUrl({ age: value });
+    trackEvent("product_age_filter", { age: value === ALL ? "الكل" : value });
   };
 
   const handleShare = async () => {
@@ -115,17 +140,34 @@ export default function Products() {
     unavailable: "تعذر النسخ تلقائياً؛ يمكنك نسخ الرابط من شريط العنوان.",
   } as const;
 
-  const filterChip = (value: string, label: string) => (
+  const categoryChip = (value: string, label: string) => (
     <button
       key={value}
       type="button"
-      onClick={() => handleFilter(value)}
+      onClick={() => handleCategoryFilter(value)}
       aria-pressed={category === value}
       data-testid="category-chip"
       className={`min-h-10 rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15 ${
         category === value
           ? "bg-brand-navy text-white shadow"
           : "border border-brand-border bg-brand-surface text-brand-muted hover:border-brand-blue hover:text-brand-blue"
+      }`}
+    >
+      {label}
+    </button>
+  );
+
+  const ageChip = (value: string, label: string) => (
+    <button
+      key={value}
+      type="button"
+      onClick={() => handleAgeFilter(value)}
+      aria-pressed={age === value}
+      data-testid="age-chip"
+      className={`min-h-10 rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15 ${
+        age === value
+          ? "bg-brand-blue text-white shadow"
+          : "border border-brand-border bg-brand-sky/40 text-brand-navy hover:border-brand-blue hover:bg-brand-sky"
       }`}
     >
       {label}
@@ -155,7 +197,7 @@ export default function Products() {
               اكتشف لعب الأطفال والهدايا من <span className="text-brand-blue">شركة عمران التجارية</span>
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-brand-muted">
-              شاهد الصور والتفاصيل المتاحة، وللتأكد من السعر والتوفر تواصل معنا مباشرة عبر واتساب.
+              شاهد الصور والتفاصيل المتاحة، واختار حسب السن لما تكون بيانات العمر موثقة، وللسعر والتوفر تواصل معنا عبر واتساب.
             </p>
             <div className="mt-6">
               <button
@@ -174,7 +216,7 @@ export default function Products() {
           <div className="rounded-[2rem] bg-brand-navy p-7 text-white shadow-xl">
             <p className="text-sm font-bold text-brand-yellow">معلومة مهمة</p>
             <p className="mt-3 text-xl font-bold leading-8">
-              للتأكد من السعر والتوفر والكميات، اضغط زر واتساب على بطاقة المنتج وتواصل معنا مباشرةً.
+              فلترة العمر تستخدم فقط العمر الأدنى والأقصى الموثقين. أي منتج بدون بيانات عمر مؤكدة يظل ظاهرًا في الكتالوج العام فقط.
             </p>
           </div>
         </section>
@@ -196,35 +238,62 @@ export default function Products() {
             </div>
 
             {products.length > 0 && (
-              <div className="mb-8 flex flex-wrap items-center gap-3">
-                <label className="relative min-w-[230px] flex-1 sm:max-w-sm">
-                  <Search
-                    size={17}
-                    className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted"
-                    aria-hidden="true"
-                  />
-                  <input
-                    type="search"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    placeholder="ابحث في المنتجات…"
-                    aria-label="ابحث في المنتجات"
-                    data-testid="product-search"
-                    className="min-h-11 w-full rounded-full border border-brand-border bg-brand-surface py-2.5 pl-4 pr-11 text-sm font-semibold text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15"
-                  />
-                </label>
-                {categories.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    {filterChip(ALL, "الكل")}
-                    {categories.map(name => filterChip(name, name))}
+              <div className="mb-8 space-y-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="relative min-w-[230px] flex-1 sm:max-w-sm">
+                    <Search
+                      size={17}
+                      className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted"
+                      aria-hidden="true"
+                    />
+                    <input
+                      type="search"
+                      value={search}
+                      onChange={event => {
+                        setSearch(event.target.value);
+                        updateUrl({ search: event.target.value || null });
+                      }}
+                      placeholder="ابحث في المنتجات…"
+                      aria-label="ابحث في المنتجات"
+                      data-testid="product-search"
+                      className="min-h-11 w-full rounded-full border border-brand-border bg-brand-surface py-2.5 pl-4 pr-11 text-sm font-semibold text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15"
+                    />
+                  </label>
+                  {categories.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {categoryChip(ALL, "كل التصنيفات")}
+                      {categories.map(name => categoryChip(name, name))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-brand-border bg-brand-cream p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-sm font-extrabold text-brand-navy">اختار حسب السن</p>
+                    {age !== ALL && (
+                      <button
+                        type="button"
+                        onClick={() => handleAgeFilter(ALL)}
+                        className="text-xs font-bold text-brand-blue hover:underline"
+                      >
+                        إلغاء فلتر السن
+                      </button>
+                    )}
                   </div>
-                )}
+                  <div className="flex flex-wrap gap-2">
+                    {ageChip(ALL, "كل الأعمار")}
+                    {AGE_FILTER_OPTIONS.map(range => ageChip(range.key, range.key === "13+" ? "13+ سنة" : `${range.key} سنوات`))}
+                  </div>
+                  <p className="mt-3 text-xs leading-6 text-brand-muted">
+                    المنتجات ذات العمر غير المؤكد لا تدخل في نتائج فلترة السن.
+                  </p>
+                </div>
               </div>
             )}
 
             {productsQuery.isLoading ? (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
+                {Array.from({ length: 8 }).map((_, index) => <ProductCardSkeleton key={index} />)}
               </div>
             ) : products.length === 0 ? (
               <div className="space-y-10">
@@ -261,12 +330,21 @@ export default function Products() {
                 </p>
                 {visibleProducts.length === 0 ? (
                   <div className="rounded-[2rem] border border-brand-border bg-brand-cream p-10 text-center">
-                    <p className="text-lg font-extrabold text-brand-navy">لا توجد نتائج مطابقة لبحثك</p>
+                    <p className="text-lg font-extrabold text-brand-navy">
+                      {age !== ALL ? "لا توجد منتجات ببيانات عمر موثقة تطابق الفئة دي" : "لا توجد نتائج مطابقة لبحثك"}
+                    </p>
+                    <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-brand-muted">
+                      {age !== ALL
+                        ? "المنتجات ذات العمر غير المؤكد لا بنضمها تلقائيًا لأي فئة عمرية."
+                        : "غيّر البحث أو امسح الفلاتر وحاول تاني."}
+                    </p>
                     <button
                       type="button"
                       onClick={() => {
                         setSearch("");
                         setCategory(ALL);
+                        setAge(ALL);
+                        updateUrl({ search: null, category: null, age: null });
                       }}
                       className="mt-4 inline-flex min-h-10 items-center rounded-full border border-brand-border px-5 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5"
                     >
