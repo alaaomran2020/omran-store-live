@@ -36,7 +36,7 @@ permissions:
 
 env:
   NODE_OPTIONS: --max-old-space-size=4096
-  PRODUCTS_SHEET_URL: https://raw.githubusercontent.com/alaaomran2020/omran-store-live/main/public/catalog/products.csv
+  PRODUCTS_SHEET_URL: https://raw.githubusercontent.com/alaaomran2020/omran-store-live/${{ github.sha }}/public/catalog/products.csv
 
 jobs:
   validate-storefront:
@@ -174,4 +174,4 @@ jobs:
         run: |
           echo "Storefront project: omrantoys-live-app"
           echo "Commit: ${GITHUB_SHA}"
-          echo "Catalog source: repository-hosted public CSV mirror"
+          echo "Catalog source: repository-hosted public CSV mirror pinned to this commit"
