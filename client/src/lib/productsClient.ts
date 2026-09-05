@@ -75,6 +75,8 @@ const HEADER_ALIASES: Record<string, CatalogColumn> = {
   "العمر_الأقصى": "age_max",
 };
 
+const snapshotById = new Map(PUBLIC_PRODUCTS_SNAPSHOT.map(product => [product.id, product]));
+
 function normalizeHeader(value: unknown): string {
   return text(value).toLowerCase().replace(/[\s-]+/g, "_");
 }
@@ -167,7 +169,7 @@ function mapRow(row: unknown[], rowIndex: number, header: CatalogColumn[]): Prod
   const ageMin = parseAge(values.age_min);
   const ageMax = parseAge(values.age_max);
 
-  return {
+  const liveProduct: Product = {
     id: text(values.id) || `row-${rowIndex}`,
     sku: nullableText(values.sku),
     name,
@@ -187,6 +189,26 @@ function mapRow(row: unknown[], rowIndex: number, header: CatalogColumn[]): Prod
     ageMin,
     ageMax: ageMax !== null && ageMin !== null && ageMax < ageMin ? null : ageMax,
     rowIndex,
+  };
+
+  // Production should prefer the verified same-origin asset bundled with the
+  // storefront whenever that product already exists in the last-known-good
+  // snapshot. Live catalog data remains authoritative for name/category/price/
+  // age/status, while the snapshot supplies a stable image path and prevents
+  // Drive/CDN/browser failures from producing blank cards.
+  const snapshot = snapshotById.get(liveProduct.id);
+  const stableImage = snapshot?.image?.startsWith("/") ? snapshot.image : null;
+  const stableProcessedImage = snapshot?.processedImage?.startsWith("/")
+    ? snapshot.processedImage
+    : stableImage;
+
+  if (!stableImage) return liveProduct;
+
+  return {
+    ...liveProduct,
+    image: stableImage,
+    processedImage: stableProcessedImage,
+    imageSource: liveProduct.imageSource ?? snapshot?.imageSource ?? stableImage,
   };
 }
 
