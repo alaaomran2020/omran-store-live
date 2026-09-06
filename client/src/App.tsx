@@ -1,7 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AdminAccess from "@/admin/AdminAccess";
-import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
 import Products from "@/pages/Products";
 import { Route, Switch } from "wouter";
@@ -11,7 +10,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
+      <Route path={"/"} component={Products} />
       <Route path={"/products"} component={Products} />
       <Route path={"/admin"} component={AdminAccess} />
       <Route path={"/admin/product-intake"} component={AdminAccess} />
