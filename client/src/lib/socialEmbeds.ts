@@ -2,6 +2,8 @@ export const SOCIAL_EMBED_CONFIG = {
   instagramProfileUrl: "https://www.instagram.com/omrantoys.store/",
   instagramFeaturedPostUrl: "https://www.instagram.com/p/DcTpBu2lOt8/",
   facebookPageUrl: "https://www.facebook.com/profile.php?id=61590544803396&locale=ar_AR",
+  popupInstagramProfileUrl: "https://www.instagram.com/popup.gifts_balloons?stkn=MmxoajAyNDNocG00",
+  popupFacebookPageUrl: "https://www.facebook.com/profile.php?id=61589179737729",
   /**
    * رقم واتساب المتجر بالصيغة الدولية بدون "+" (مثال: "2010XXXXXXXX").
    * الرقم الإنتاجي الحالي: +201555570269 (WhatsApp). يُستخدم كقيمة احتياطية
