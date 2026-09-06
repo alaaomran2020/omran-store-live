@@ -13,7 +13,7 @@ function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Storefront} />
-      <Route path={"/products"} component={Products} />
+      <Route path={"/products"} component={() => <Products />} />
       <Route path={"/popup"} component={PopUp} />
       <Route path={"/admin"} component={AdminAccess} />
       <Route path={"/admin/product-intake"} component={AdminAccess} />
