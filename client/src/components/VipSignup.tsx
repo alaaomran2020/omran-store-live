@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from "react";
-import { BadgeCheck, Gift, MessageCircle, Phone, Sparkles } from "lucide-react";
+import { BadgeCheck, Gift, LoaderCircle, MessageCircle, Phone, Sparkles } from "lucide-react";
 import { whatsappNumber } from "@/lib/productFormat";
 
 type VipSignupProps = {
@@ -7,6 +7,7 @@ type VipSignupProps = {
 };
 
 const STORAGE_KEY = "omran_vip_signup";
+const SUBSCRIBERS_ENDPOINT = ((import.meta.env.VITE_SUBSCRIBERS_WEB_APP_URL as string | undefined) ?? "").trim();
 
 function normalizeEgyptianMobile(value: string): string | null {
   const arabicDigits: Record<string, string> = {
@@ -25,26 +26,24 @@ function normalizeEgyptianMobile(value: string): string | null {
   return /^01[0125]\d{8}$/.test(digits) ? digits : null;
 }
 
+function registrationSource(source: "omran" | "popup") {
+  if (source === "popup") return "popup";
+  if (typeof window !== "undefined" && window.location.pathname === "/products") return "products";
+  return "storefront";
+}
+
 export default function VipSignup({ source = "omran" }: VipSignupProps) {
   const [phone, setPhone] = useState("");
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
-  const [registered, setRegistered] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return Boolean(localStorage.getItem(STORAGE_KEY));
-    } catch {
-      return false;
-    }
-  });
+  const [submitting, setSubmitting] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
   const brandLabel = source === "popup" ? "POP UP" : "عمران";
-  const accent = source === "popup" ? "fuchsia" : "blue";
-  const isPopup = accent === "fuchsia";
-
+  const isPopup = source === "popup";
   const destination = useMemo(() => whatsappNumber(), []);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
 
@@ -57,31 +56,58 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
       setError("لازم توافق على استلام الجديد والعروض قبل التسجيل.");
       return;
     }
-    if (!destination) {
-      setError("التسجيل غير متاح مؤقتًا. حاول مرة تانية لاحقًا.");
+    if (!SUBSCRIBERS_ENDPOINT) {
+      setError("التسجيل المركزي غير متاح مؤقتًا. حاول مرة تانية لاحقًا.");
       return;
     }
 
+    setSubmitting(true);
+    try {
+      const payload = new URLSearchParams({
+        phone: normalized,
+        consent: "true",
+        source: registrationSource(source),
+        sourceUrl: typeof window !== "undefined" ? window.location.href : "",
+        website: "",
+      });
+
+      await fetch(SUBSCRIBERS_ENDPOINT, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        body: payload.toString(),
+        keepalive: true,
+      });
+
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ phone: normalized, source, registeredAt: new Date().toISOString() })
+        );
+      } catch {
+        // التخزين المحلي اختياري؛ المصدر الأساسي هو قائمة المشتركين المركزية.
+      }
+
+      setRegistered(true);
+    } catch {
+      setError("حصلت مشكلة أثناء التسجيل. جرّب مرة تانية خلال لحظات.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const whatsappFollowUp = (() => {
+    if (!destination || !registered) return null;
+    const normalized = normalizeEgyptianMobile(phone);
+    if (!normalized) return null;
     const message = [
       "مرحبًا 👋",
-      `أريد التسجيل في قائمة ${brandLabel} المميزة عشان يوصلني كل جديد أول بأول.`,
+      `تم تسجيلي في قائمة ${brandLabel} المميزة.`,
       `رقم الموبايل: ${normalized}`,
-      `المصدر: ${source === "popup" ? "POP UP" : "المتجر الرئيسي"}`,
-      "وأوافق على استلام تحديثات المنتجات والعروض عبر واتساب/الموبايل.",
+      "حابب أتابع الجديد والعروض على واتساب.",
     ].join("\n");
-
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ phone: normalized, source, registeredAt: new Date().toISOString() })
-      );
-    } catch {
-      // التسجيل يظل صالحًا عبر واتساب حتى لو التخزين المحلي غير متاح.
-    }
-
-    setRegistered(true);
-    window.open(`https://wa.me/${destination}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
-  }
+    return `https://wa.me/${destination}?text=${encodeURIComponent(message)}`;
+  })();
 
   return (
     <section
@@ -107,13 +133,13 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
                 خليك مميز ✨ وسجّل برقم موبايلك
               </h2>
               <p className="mt-2 max-w-xl text-sm font-semibold leading-7 text-brand-muted sm:text-[15px]">
-                خليك من أوائل الناس اللي تعرف أحدث المنتجات والعروض الجديدة من {brandLabel} — التسجيل سريع ومباشر عبر واتساب.
+                سجل مرة واحدة وخليك من أوائل الناس اللي تعرف أحدث المنتجات والعروض الجديدة من {brandLabel}.
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-brand-muted">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-cream px-3 py-2"><Gift size={14} /> جديد المنتجات</span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-cream px-3 py-2"><BadgeCheck size={14} /> عروض مختارة</span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-cream px-3 py-2"><MessageCircle size={14} /> واتساب مباشر</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-cream px-3 py-2"><BadgeCheck size={14} /> منع التسجيل المكرر</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-cream px-3 py-2"><MessageCircle size={14} /> واتساب اختياري بعد التسجيل</span>
               </div>
             </div>
 
@@ -122,10 +148,20 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
                 <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                   <BadgeCheck size={25} aria-hidden="true" />
                 </span>
-                <p className="mt-3 text-lg font-black text-emerald-900">تم تجهيز تسجيلك بنجاح</p>
+                <p className="mt-3 text-lg font-black text-emerald-900">تم تسجيلك في قائمة الجديد</p>
                 <p className="mt-1 text-sm font-semibold leading-6 text-emerald-800/80">
-                  افتح رسالة واتساب وأرسلها لتأكيد التسجيل واستلام كل جديد.
+                  رقمك اتبعت لقائمة المشتركين المركزية. لو كان مسجل قبل كده، النظام بيحدّث سجلك بدل ما يعمل نسخة مكررة.
                 </p>
+                {whatsappFollowUp && (
+                  <a
+                    href={whatsappFollowUp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-whatsapp px-4 py-2.5 text-sm font-black text-white transition hover:bg-whatsapp-hover"
+                  >
+                    <MessageCircle size={17} aria-hidden="true" /> متابعة الجديد على واتساب
+                  </a>
+                )}
               </div>
             ) : (
               <form onSubmit={submit} className="rounded-2xl border border-brand-border bg-brand-cream/70 p-4 sm:p-5" noValidate>
@@ -141,7 +177,8 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
                     value={phone}
                     onChange={event => setPhone(event.target.value)}
                     placeholder="01XXXXXXXXX"
-                    className="min-w-0 flex-1 bg-transparent py-3 text-left text-base font-bold text-brand-ink outline-none placeholder:text-brand-muted/55"
+                    disabled={submitting}
+                    className="min-w-0 flex-1 bg-transparent py-3 text-left text-base font-bold text-brand-ink outline-none placeholder:text-brand-muted/55 disabled:opacity-60"
                     aria-describedby={`vip-help-${source}`}
                   />
                 </div>
@@ -151,6 +188,7 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
                     type="checkbox"
                     checked={consent}
                     onChange={event => setConsent(event.target.checked)}
+                    disabled={submitting}
                     className="mt-1 h-4 w-4 rounded border-brand-border accent-brand-blue"
                   />
                   <span>أوافق على استلام تحديثات المنتجات والعروض من شركة عمران التجارية وPOP UP، ويمكنني التوقف في أي وقت.</span>
@@ -160,14 +198,16 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
 
                 <button
                   type="submit"
+                  disabled={submitting}
                   className={isPopup
-                    ? "mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-fuchsia-600 px-5 py-3 text-sm font-black text-white shadow-md transition hover:-translate-y-0.5 hover:bg-fuchsia-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-fuchsia-200"
-                    : "mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 py-3 text-sm font-black text-white shadow-md transition hover:-translate-y-0.5 hover:bg-brand-blue-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"}
+                    ? "mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-fuchsia-600 px-5 py-3 text-sm font-black text-white shadow-md transition hover:-translate-y-0.5 hover:bg-fuchsia-700 disabled:cursor-wait disabled:opacity-70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-fuchsia-200"
+                    : "mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 py-3 text-sm font-black text-white shadow-md transition hover:-translate-y-0.5 hover:bg-brand-blue-hover disabled:cursor-wait disabled:opacity-70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"}
                 >
-                  <MessageCircle size={18} aria-hidden="true" /> سجلني في الجديد عبر واتساب
+                  {submitting ? <LoaderCircle size={18} className="animate-spin" aria-hidden="true" /> : <BadgeCheck size={18} aria-hidden="true" />}
+                  {submitting ? "جاري التسجيل..." : "سجلني في الجديد"}
                 </button>
                 <p id={`vip-help-${source}`} className="mt-2 text-center text-[11px] font-semibold leading-5 text-brand-muted/80">
-                  لا نطلب كلمة مرور أو بيانات دفع. التسجيل يتم من خلال رسالة واتساب منك.
+                  لا نطلب كلمة مرور أو بيانات دفع. رقمك يُستخدم فقط للتحديثات التي وافقت عليها.
                 </p>
               </form>
             )}
