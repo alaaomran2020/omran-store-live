@@ -34,10 +34,7 @@ async function googleAccessToken() {
   signer.update(unsigned);
   signer.end();
   const assertion = `${unsigned}.${signer.sign(sa.private_key, 'base64url')}`;
-  const body = new URLSearchParams({
-    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-    assertion,
-  });
+  const body = new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion });
   const res = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', body });
   if (!res.ok) throw new Error(`Google OAuth failed: ${res.status} ${await res.text()}`);
   return (await res.json()).access_token;
@@ -53,8 +50,7 @@ async function sheetsRead(token, range) {
 async function sheetsWrite(token, data) {
   if (!data.length) return;
   const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchUpdate`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ valueInputOption: 'RAW', data }),
   });
   if (!res.ok) throw new Error(`Sheets write failed: ${res.status} ${await res.text()}`);
@@ -64,23 +60,11 @@ async function enrichWithGemini(product) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY is not configured');
   const system = `You enrich product catalog text for Omran Trading Company in Egypt, children toys and gifts only. Return strict JSON only. Never invent prices, quantities, barcode, SKU, brand, dimensions, materials, age, safety claims, or technical specifications. If age is not explicitly known, ai_age_group must be empty. Use Egyptian-market Arabic suitable for retail. WhatsApp is the primary conversion channel. Keep uncertain facts out and explain uncertainty in ai_review_notes.`;
-  const prompt = {
-    product_id: product.product_id,
-    name_ar: product.name_ar,
-    category: product.category,
-    description_ar: product.description_ar,
-    image_url: product.image_url,
-    requested_fields: AI_KEYS,
-  };
+  const prompt = { product_id: product.product_id, name_ar: product.name_ar, category: product.category, description_ar: product.description_ar, image_url: product.image_url, requested_fields: AI_KEYS };
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(apiKey)}`;
   const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: 'user', parts: [{ text: JSON.stringify(prompt) }] }],
-      generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
-    }),
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: JSON.stringify(prompt) }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0.2 } }),
   });
   if (!res.ok) throw new Error(`Gemini failed for ${product.product_id}: ${res.status} ${await res.text()}`);
   const json = await res.json();
@@ -96,9 +80,9 @@ function csvCell(value) {
   const s = String(value);
   return /[",\n]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s;
 }
-
-function truthy(value) {
-  return String(value || '').trim().toUpperCase() === 'TRUE';
+function truthy(value) { return String(value || '').trim().toUpperCase() === 'TRUE'; }
+function isPublicApproved(row, get) {
+  return truthy(get(row, 'نشط')) && get(row, 'حالة سير العمل') === 'PUBLISHED' && get(row, 'حالة الجودة') === 'PASS' && get(row, 'بوابة النشر') === 'PUBLIC';
 }
 
 const token = await googleAccessToken();
@@ -113,15 +97,9 @@ for (let i = 1; i < rows.length; i++) {
   const row = rows[i];
   const productId = get(row, 'معرف المنتج');
   if (!productId || !get(row, 'الاسم بالعربية')) continue;
+  if (!isPublicApproved(row, get)) continue;
   if (get(row, 'ai_product_name')) continue;
-  candidates.push({
-    rowNumber: i + 1,
-    product_id: productId,
-    name_ar: get(row, 'الاسم بالعربية'),
-    category: get(row, 'التصنيف'),
-    description_ar: get(row, 'الوصف بالعربية'),
-    image_url: get(row, 'الصورة الرئيسية'),
-  });
+  candidates.push({ rowNumber: i + 1, product_id: productId, name_ar: get(row, 'الاسم بالعربية'), category: get(row, 'التصنيف'), description_ar: get(row, 'الوصف بالعربية'), image_url: get(row, 'الصورة الرئيسية') });
   if (candidates.length >= MAX_PRODUCTS) break;
 }
 
@@ -142,28 +120,8 @@ let publicCount = 0;
 for (let i = 1; i < freshRows.length; i++) {
   const row = freshRows[i];
   const id = get(row, 'معرف المنتج');
-  if (!id) continue;
-  const approved = truthy(get(row, 'نشط')) && get(row, 'حالة سير العمل') === 'PUBLISHED' && get(row, 'حالة الجودة') === 'PASS' && get(row, 'بوابة النشر') === 'PUBLIC';
-  if (!approved) continue;
-  const values = [
-    id,
-    get(row, 'الاسم بالعربية') || get(row, 'ai_product_name'),
-    get(row, 'سعر البيع بالجنيه'),
-    get(row, 'التصنيف') || get(row, 'ai_category'),
-    get(row, 'الوصف بالعربية') || get(row, 'ai_short_description'),
-    get(row, 'الصورة الرئيسية'),
-    'TRUE',
-    get(row, 'ترتيب العرض'),
-    '',
-    'PUBLISHED',
-    'PASS',
-    get(row, 'معرف المصدر في درايف'),
-    get(row, 'الصورة الرئيسية'),
-    get(row, 'سبب المراجعة'),
-    get(row, 'رمز المخزون'),
-    get(row, 'العمر الأدنى'),
-    get(row, 'العمر الأقصى'),
-  ];
+  if (!id || !isPublicApproved(row, get)) continue;
+  const values = [id, get(row, 'الاسم بالعربية') || get(row, 'ai_product_name'), get(row, 'سعر البيع بالجنيه'), get(row, 'التصنيف') || get(row, 'ai_category'), get(row, 'الوصف بالعربية') || get(row, 'ai_short_description'), get(row, 'الصورة الرئيسية'), 'TRUE', get(row, 'ترتيب العرض'), '', 'PUBLISHED', 'PASS', get(row, 'معرف المصدر في درايف'), get(row, 'الصورة الرئيسية'), get(row, 'سبب المراجعة'), get(row, 'رمز المخزون'), get(row, 'العمر الأدنى'), get(row, 'العمر الأقصى')];
   output.push(values.map(csvCell).join(','));
   publicCount++;
 }
