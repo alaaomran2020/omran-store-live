@@ -1,5 +1,6 @@
 import BrandHeader from "@/components/BrandHeader";
 import PopUpPromo from "@/components/PopUpPromo";
+import SiteFooter from "@/components/SiteFooter";
 import Products from "@/pages/Products";
 
 export default function Storefront() {
@@ -8,9 +9,11 @@ export default function Storefront() {
       <BrandHeader />
       <PopUpPromo />
 
-      <div className="[&>div>header]:hidden">
+      <div className="[&>div>header]:hidden [&>div>main>footer]:hidden">
         <Products />
       </div>
+
+      <SiteFooter />
     </div>
   );
 }
