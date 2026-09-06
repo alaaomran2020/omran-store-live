@@ -1,5 +1,6 @@
 import type { Product as BaseProduct, ProductsPayload, QaStatus, WorkflowStatus } from "@shared/products";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "./publicProductsSnapshot";
+import { POPUP_PRODUCTS_SNAPSHOT } from "./popupProductsSnapshot";
 import { makeCatalogUrl } from "./makeGateway";
 
 export type Product = BaseProduct & {
@@ -75,7 +76,8 @@ const HEADER_ALIASES: Record<string, CatalogColumn> = {
   "العمر_الأقصى": "age_max",
 };
 
-const snapshotById = new Map(PUBLIC_PRODUCTS_SNAPSHOT.map(product => [product.id, product]));
+const FALLBACK_PRODUCTS = [...PUBLIC_PRODUCTS_SNAPSHOT, ...POPUP_PRODUCTS_SNAPSHOT];
+const snapshotById = new Map(FALLBACK_PRODUCTS.map(product => [product.id, product]));
 
 function normalizeHeader(value: unknown): string {
   return text(value).toLowerCase().replace(/[\s-]+/g, "_");
@@ -83,7 +85,7 @@ function normalizeHeader(value: unknown): string {
 
 function snapshotPayload(): StorefrontProductsPayload {
   return {
-    products: PUBLIC_PRODUCTS_SNAPSHOT.map(product => ({
+    products: FALLBACK_PRODUCTS.map(product => ({
       ...product,
       ageMin: null,
       ageMax: null,
@@ -191,11 +193,6 @@ function mapRow(row: unknown[], rowIndex: number, header: CatalogColumn[]): Prod
     rowIndex,
   };
 
-  // Production should prefer the verified same-origin asset bundled with the
-  // storefront whenever that product already exists in the last-known-good
-  // snapshot. Live catalog data remains authoritative for name/category/price/
-  // age/status, while the snapshot supplies a stable image path and prevents
-  // Drive/CDN/browser failures from producing blank cards.
   const snapshot = snapshotById.get(liveProduct.id);
   const stableImage = snapshot?.image?.startsWith("/") ? snapshot.image : null;
   const stableProcessedImage = snapshot?.processedImage?.startsWith("/")
