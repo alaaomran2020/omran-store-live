@@ -1,0 +1,57 @@
+name: Master Data Pipeline Pre-Merge Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/master-data-pipeline-premerge-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OMRAN_SHEET_ID: 1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc
+  MAX_AI_PRODUCTS: 1
+  GEMINI_MODEL: gemini-3.8-flash
+
+jobs:
+  test-one-approved-product:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ops/master-schema-v1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Credential binding gate
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          test -n "$GEMINI_API_KEY" || { echo '::error::Missing GEMINI_API_KEY'; exit 1; }
+          test -n "$GOOGLE_SERVICE_ACCOUNT_JSON" || { echo '::error::Missing GOOGLE_SERVICE_ACCOUNT_JSON'; exit 1; }
+          node -e 'const x=JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON); if(!x.client_email||!x.private_key) throw new Error("Invalid service account JSON"); console.log("Credential structure: PASS")'
+
+      - name: Run one-product Gemini enrichment
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: node scripts/master-data-pipeline.mjs
+
+      - name: Validate catalog output
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const csv = readFileSync('public/catalog/products.csv','utf8').trim();
+          const lines = csv.split(/\r?\n/);
+          if (lines.length < 2) throw new Error('No approved products generated');
+          console.log(`Pre-merge catalog validation PASS: ${lines.length-1} public rows`);
+          NODE
