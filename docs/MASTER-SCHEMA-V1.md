@@ -24,33 +24,21 @@ Canonical mapping is stored in the `Master_Schema_v1` tab.
 
 ## Publication contract
 
-A product is eligible for the public catalog only when all conditions are true:
+A product is eligible for the public catalog only when all applicable publication controls are satisfied. The repository catalog must at minimum preserve:
 
-- `نشط = TRUE`
-- `حالة سير العمل = PUBLISHED`
-- `حالة الجودة = PASS`
-- `بوابة النشر = PUBLIC`
+- `active = TRUE`
+- `workflow_status = PUBLISHED`
+- `qa_status = PASS`
 
 Missing price or quantity is allowed. The storefront must use WhatsApp inquiry instead of inventing commercial data.
 
-## Gemini write boundary
+## API-free operating model
 
-Gemini may write only the AI enrichment fields in `المنتجات الرئيسية`:
+This repository does not use Gemini API, Google Sheets API, service accounts, access tokens, or repository secrets for the Master Data Pipeline.
 
-- `ai_product_name`
-- `ai_short_description`
-- `ai_full_description`
-- `ai_category`
-- `ai_age_group`
-- `ai_seo_title`
-- `ai_meta_description`
-- `ai_alt_text`
-- `ai_whatsapp_message`
-- `ai_social_caption`
-- `ai_review_notes`
-- `ai_generated_at`
+Google Drive and Google Sheets remain the operational workspace for human-managed product data. When approved catalog data is synchronized/exported into `public/catalog/products.csv`, GitHub Actions performs local validation only.
 
-Gemini must not modify or invent prices, quantities, SKU, barcode, approval state, QA state, publication gate, supplier facts, or unverified product specifications.
+AI-generated copy may be prepared manually in ChatGPT or Google AI Studio and then reviewed before being written to the operational sheet. AI enrichment never grants publication approval.
 
 ## GitHub Actions integration
 
@@ -59,21 +47,15 @@ Script: `scripts/master-data-pipeline.mjs`
 
 Execution flow:
 
-`Google Sheets -> Gemini enrichment -> write AI columns -> publication validation -> public/catalog/products.csv -> existing storefront QA/deploy workflow`
+`Approved/exported catalog file -> local schema validation -> single-product QA guard -> repository quality gates -> existing storefront build/deploy`
 
-Required GitHub repository secrets:
-
-- `GEMINI_API_KEY`
-- `GOOGLE_SERVICE_ACCOUNT_JSON`
-
-The service-account email must have editor access to the master Google Sheet. No secret is committed to the repository.
-
-Default Gemini model is configurable through `GEMINI_MODEL`. The initial workflow default is `gemini-3.8-flash` and can be changed without schema changes.
+No API keys, credentials, service accounts, or secrets are required by this pipeline.
 
 ## Fail-closed rules
 
-- Missing credentials: workflow fails before touching data.
-- Gemini failure: no publication-state changes are made.
-- No approved public products: catalog generation fails.
-- AI enrichment never grants approval.
-- Human/authorized approval remains a separate control plane through `QA` and `Approvals`.
+- Missing or malformed catalog file: fail.
+- Duplicate product IDs: fail.
+- No approved products: fail.
+- Test product not approved or missing required identity/image data: fail.
+- Prices and quantities are never fabricated.
+- Human QA and approval remain the control plane.
