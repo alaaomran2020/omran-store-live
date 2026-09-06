@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, formatPrice } from "@/lib/productFormat";
+import { extractProductColors, productColorHex } from "@/lib/productColors";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
-import { MessageCircle, X } from "lucide-react";
+import { Check, MessageCircle, X } from "lucide-react";
 
 export function ProductDetailsDialog({
   product,
@@ -12,6 +13,13 @@ export function ProductDetailsDialog({
   product: Product | null;
   onClose: () => void;
 }) {
+  const colors = useMemo(() => extractProductColors(product?.description), [product?.description]);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedColor(colors[0] ?? null);
+  }, [product?.id, colors]);
+
   useEffect(() => {
     if (!product) return;
     const onKey = (e: KeyboardEvent) => {
@@ -28,6 +36,7 @@ export function ProductDetailsDialog({
 
   if (!product) return null;
   const waUrl = buildWhatsAppUrl(product, {
+    selectedColor,
     pageUrl: typeof window === "undefined" ? undefined : window.location.href,
   });
 
@@ -96,6 +105,48 @@ export function ProductDetailsDialog({
                 {formatPrice(product.price)}
               </p>
 
+              {colors.length > 0 && (
+                <div className="rounded-2xl border border-brand-border bg-white p-3.5 sm:p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-extrabold text-brand-navy">اختار اللون</p>
+                      <p className="mt-0.5 text-xs font-bold text-brand-muted">سيتم إرسال اللون المختار تلقائيًا على واتساب</p>
+                    </div>
+                    {selectedColor && (
+                      <span className="rounded-full bg-brand-sky px-2.5 py-1 text-xs font-extrabold text-brand-navy">
+                        {selectedColor}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role="list" aria-label={`ألوان ${product.name}`}>
+                    {colors.map(color => {
+                      const active = selectedColor === color;
+                      return (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setSelectedColor(color)}
+                          aria-pressed={active}
+                          className={`flex min-h-11 items-center gap-2 rounded-xl border px-2.5 py-2 text-right text-xs font-extrabold transition active:scale-[0.98] ${
+                            active
+                              ? "border-brand-blue bg-brand-sky text-brand-navy ring-2 ring-brand-blue/10"
+                              : "border-brand-border bg-white text-brand-muted hover:border-brand-blue/50"
+                          }`}
+                        >
+                          <span
+                            className="h-6 w-6 shrink-0 rounded-full border-2 border-white shadow-sm ring-1 ring-black/10"
+                            style={{ backgroundColor: productColorHex(color) }}
+                            aria-hidden="true"
+                          />
+                          <span className="min-w-0 flex-1 truncate">{color}</span>
+                          {active && <Check size={15} className="shrink-0 text-brand-blue" aria-hidden="true" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {(product.ageMin !== null && product.ageMax !== null) && (
                 <div className="rounded-xl border border-brand-border bg-white px-3 py-2.5 text-xs font-bold text-brand-navy sm:text-sm">
                   العمر الموثق: {product.ageMin}–{product.ageMax} سنة
@@ -110,7 +161,7 @@ export function ProductDetailsDialog({
               )}
 
               <div className="rounded-2xl bg-brand-sky p-3.5 text-sm leading-7 text-brand-navy sm:p-4">
-                محتاج مساعدة في الاختيار؟ ابعتلنا على واتساب وهنساعدك في معرفة السعر والتوفر وأي تفاصيل مؤكدة عن المنتج.
+                اختار اللون المناسب ثم اضغط واتساب، وهيوصلنا اسم المنتج واللون المختار تلقائيًا لتأكيد السعر والتوفر.
               </div>
 
               <div className="mt-auto hidden flex-col gap-2 pt-2 sm:flex">
@@ -122,7 +173,8 @@ export function ProductDetailsDialog({
                     onClick={handleWhatsAppClick}
                     className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25"
                   >
-                    <MessageCircle size={18} aria-hidden="true" /> اسأل عن السعر والتوفر
+                    <MessageCircle size={18} aria-hidden="true" />
+                    {selectedColor ? `استفسر عن اللون ${selectedColor}` : "اسأل عن السعر والتوفر"}
                   </a>
                 ) : (
                   <p className="rounded-xl border border-brand-border bg-brand-cream px-4 py-3 text-sm font-bold text-brand-muted">
@@ -150,7 +202,8 @@ export function ProductDetailsDialog({
               onClick={handleWhatsAppClick}
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp px-4 py-3 text-sm font-extrabold text-white shadow-lg transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-whatsapp/25"
             >
-              <MessageCircle size={18} aria-hidden="true" /> استفسر عن السعر والتوفر على واتساب
+              <MessageCircle size={18} aria-hidden="true" />
+              {selectedColor ? `واتساب — ${selectedColor}` : "استفسر عن السعر والتوفر على واتساب"}
             </a>
           ) : (
             <button
