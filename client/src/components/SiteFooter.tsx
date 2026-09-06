@@ -1,6 +1,7 @@
 import { Facebook, Instagram, MessageCircle, ShieldCheck, Store, ExternalLink, BadgeCheck } from "lucide-react";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import { whatsappNumber } from "@/lib/productFormat";
+import VipSignup from "@/components/VipSignup";
 
 export const FOOTER_NAVIGATION = [
   { label: "الرئيسية", href: "/" },
@@ -213,6 +214,8 @@ function FooterBottom() {
 export default function SiteFooter({ socialBrand = "omran" }: SiteFooterProps) {
   return (
     <footer dir="rtl" className="relative overflow-hidden border-t border-brand-navy bg-brand-navy text-white">
+      <VipSignup source={socialBrand} />
+
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-l from-transparent via-brand-yellow/70 to-transparent" aria-hidden="true" />
       <div className="pointer-events-none absolute -start-24 top-8 h-48 w-48 rounded-full bg-brand-blue/20 blur-3xl" aria-hidden="true" />
       <div className="pointer-events-none absolute -end-24 bottom-20 h-56 w-56 rounded-full bg-brand-yellow/10 blur-3xl" aria-hidden="true" />
