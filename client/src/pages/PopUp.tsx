@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import SiteFooter from "@/components/SiteFooter";
 import Products from "@/pages/Products";
 
 const POPUP_TITLE = "POP UP – Gifts & Balloons | شركة عمران التجارية";
@@ -19,5 +20,10 @@ export default function PopUp() {
     };
   }, []);
 
-  return <Products catalog="popup" />;
+  return (
+    <div className="[&>div>main>footer]:hidden">
+      <Products catalog="popup" />
+      <SiteFooter />
+    </div>
+  );
 }
