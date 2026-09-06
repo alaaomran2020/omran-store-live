@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchProducts } from "./productsClient";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "./publicProductsSnapshot";
+import { POPUP_PRODUCTS_SNAPSHOT } from "./popupProductsSnapshot";
 import { makeCatalogUrl } from "./makeGateway";
 
 afterEach(() => {
@@ -9,16 +10,17 @@ afterEach(() => {
 });
 
 describe("products client", () => {
-  it("يحاول الكتالوج الحي ثم يعود للـSnapshot عند تعذر الشبكة", async () => {
+  it("يحاول الكتالوج الحي ثم يعود للـSnapshot مع منتجات POP UP عند تعذر الشبكة", async () => {
     const fetchMock = vi.fn(() => Promise.reject(new Error("gateway unavailable")));
     vi.stubGlobal("fetch", fetchMock);
 
     const payload = await fetchProducts();
 
     expect(payload.status).toBe("ok");
-    expect(payload.products.map(product => product.id)).toEqual(
-      PUBLIC_PRODUCTS_SNAPSHOT.map(product => product.id)
-    );
+    expect(payload.products.map(product => product.id)).toEqual([
+      ...PUBLIC_PRODUCTS_SNAPSHOT.map(product => product.id),
+      ...POPUP_PRODUCTS_SNAPSHOT.map(product => product.id),
+    ]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
       makeCatalogUrl(),
@@ -26,7 +28,7 @@ describe("products client", () => {
     );
   });
 
-  it("يستخدم الكتالوج الحي عندما يرجع منتجات منشورة ومجتازة QA", async () => {
+  it("يستخدم الكتالوج الحي ويضيف منتجات POP UP إذا لم تكن وصلت للمصدر الحي بعد", async () => {
     const liveRow = [
       "LIVE-001",
       "منتج حي",
@@ -76,7 +78,7 @@ describe("products client", () => {
 
     const { products } = await fetchProducts();
 
-    expect(products).toHaveLength(1);
+    expect(products).toHaveLength(1 + POPUP_PRODUCTS_SNAPSHOT.length);
     expect(products[0]).toMatchObject({
       id: "LIVE-001",
       sku: "SKU-LIVE-001",
@@ -84,6 +86,9 @@ describe("products client", () => {
       workflowStatus: "PUBLISHED",
       qaStatus: "PASS",
     });
+    expect(products.slice(1).map(product => product.id)).toEqual(
+      POPUP_PRODUCTS_SNAPSHOT.map(product => product.id)
+    );
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
