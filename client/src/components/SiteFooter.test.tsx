@@ -5,12 +5,16 @@ import { describe, expect, it } from "vitest";
 import SiteFooter, { FOOTER_NAVIGATION } from "./SiteFooter";
 
 describe("SiteFooter", () => {
-  it("يعرض فقط روابط المتجر الموجودة فعليًا", () => {
+  it("يعرض فقط روابط الفوتر المفعلة حاليًا", () => {
     expect(FOOTER_NAVIGATION).toEqual([
       { label: "الرئيسية", href: "/" },
       { label: "لعب الأطفال", href: "/products" },
-      { label: "POP UP", href: "/popup" },
     ]);
+  });
+
+  it("لا يفعّل POP UP داخل الفوتر قبل اعتماد روابطه", () => {
+    render(<SiteFooter />);
+    expect(screen.queryByRole("link", { name: "POP UP" })).toBeNull();
   });
 
   it("يعرض السنة الحالية واسم شركة عمران التجارية", () => {
