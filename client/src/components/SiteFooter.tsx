@@ -5,6 +5,7 @@ import { whatsappNumber } from "@/lib/productFormat";
 export const FOOTER_NAVIGATION = [
   { label: "الرئيسية", href: "/" },
   { label: "لعب الأطفال", href: "/products" },
+  { label: "POP UP", href: "/popup" },
 ] as const;
 
 const whatsappUrl = (() => {
@@ -14,31 +15,56 @@ const whatsappUrl = (() => {
   return `https://wa.me/${number}?text=${text}`;
 })();
 
-const socialLinks = [
-  {
-    label: "Instagram",
-    account: "@omrantoys.store",
-    href: SOCIAL_EMBED_CONFIG.instagramProfileUrl,
-    icon: Instagram,
-    accent: "from-fuchsia-500/20 via-pink-500/10 to-orange-400/10",
-  },
-  {
-    label: "Facebook",
-    account: "شركة عمران التجارية",
-    href: SOCIAL_EMBED_CONFIG.facebookPageUrl,
-    icon: Facebook,
-    accent: "from-blue-500/20 via-sky-500/10 to-cyan-400/10",
-  },
-  ...(whatsappUrl
-    ? [{
-        label: "WhatsApp",
-        account: "تواصل مباشر",
-        href: whatsappUrl,
-        icon: MessageCircle,
-        accent: "from-emerald-500/20 via-green-500/10 to-lime-400/10",
-      }]
-    : []),
-] as const;
+type SiteFooterProps = {
+  socialBrand?: "omran" | "popup";
+};
+
+function getSocialLinks(socialBrand: "omran" | "popup") {
+  if (socialBrand === "popup") {
+    return [
+      {
+        label: "Instagram",
+        account: "@popup.gifts_balloons",
+        href: SOCIAL_EMBED_CONFIG.popupInstagramProfileUrl,
+        icon: Instagram,
+        accent: "from-fuchsia-500/20 via-pink-500/10 to-orange-400/10",
+      },
+      {
+        label: "Facebook",
+        account: "POP UP – Gifts & Balloons",
+        href: SOCIAL_EMBED_CONFIG.popupFacebookPageUrl,
+        icon: Facebook,
+        accent: "from-blue-500/20 via-sky-500/10 to-cyan-400/10",
+      },
+    ] as const;
+  }
+
+  return [
+    {
+      label: "Instagram",
+      account: "@omrantoys.store",
+      href: SOCIAL_EMBED_CONFIG.instagramProfileUrl,
+      icon: Instagram,
+      accent: "from-fuchsia-500/20 via-pink-500/10 to-orange-400/10",
+    },
+    {
+      label: "Facebook",
+      account: "شركة عمران التجارية",
+      href: SOCIAL_EMBED_CONFIG.facebookPageUrl,
+      icon: Facebook,
+      accent: "from-blue-500/20 via-sky-500/10 to-cyan-400/10",
+    },
+    ...(whatsappUrl
+      ? [{
+          label: "WhatsApp",
+          account: "تواصل مباشر",
+          href: whatsappUrl,
+          icon: MessageCircle,
+          accent: "from-emerald-500/20 via-green-500/10 to-lime-400/10",
+        }]
+      : []),
+  ] as const;
+}
 
 function FooterBrand() {
   return (
@@ -118,22 +144,27 @@ function FooterCompanyInfo() {
   );
 }
 
-function FooterSocial() {
+function FooterSocial({ socialBrand }: { socialBrand: "omran" | "popup" }) {
+  const socialLinks = getSocialLinks(socialBrand);
+  const brandLabel = socialBrand === "popup" ? "POP UP – Gifts & Balloons" : "شركة عمران التجارية";
+
   return (
     <section aria-labelledby="footer-social-title">
       <div className="flex items-center gap-2">
         <h2 id="footer-social-title" className="text-sm font-black text-white">الحسابات الرسمية</h2>
         <BadgeCheck size={17} className="text-brand-yellow" aria-hidden="true" />
       </div>
-      <p className="mt-2 text-xs font-semibold leading-6 text-white/55">تابع شركة عمران التجارية من الروابط الرسمية المعتمدة داخل المتجر.</p>
+      <p className="mt-2 text-xs font-semibold leading-6 text-white/55">
+        تابع {brandLabel} من الروابط الرسمية المعتمدة داخل المتجر.
+      </p>
       <div className="mt-4 grid gap-2.5">
         {socialLinks.map(({ label, account, href, icon: Icon, accent }) => (
           <a
-            key={label}
+            key={`${socialBrand}-${label}`}
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`افتح حساب ${label} الرسمي لشركة عمران التجارية`}
+            aria-label={`افتح حساب ${label} الرسمي لـ ${brandLabel}`}
             className={`group relative flex min-h-14 items-center justify-between gap-3 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-l ${accent} px-3.5 py-3 text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-white/30 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20`}
           >
             <span className="absolute inset-0 bg-white/[0.025] opacity-0 transition group-hover:opacity-100" aria-hidden="true" />
@@ -179,7 +210,7 @@ function FooterBottom() {
   );
 }
 
-export default function SiteFooter() {
+export default function SiteFooter({ socialBrand = "omran" }: SiteFooterProps) {
   return (
     <footer dir="rtl" className="relative overflow-hidden border-t border-brand-navy bg-brand-navy text-white">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-l from-transparent via-brand-yellow/70 to-transparent" aria-hidden="true" />
@@ -190,7 +221,7 @@ export default function SiteFooter() {
         <FooterBrand />
         <FooterNavigation />
         <FooterCompanyInfo />
-        <FooterSocial />
+        <FooterSocial socialBrand={socialBrand} />
       </div>
 
       <FooterBottom />
