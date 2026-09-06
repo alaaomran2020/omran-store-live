@@ -1,0 +1,47 @@
+name: Omran Master Data Pipeline (API-Free)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "public/catalog/products.csv"
+      - "scripts/master-data-pipeline.mjs"
+      - ".github/workflows/master-data-pipeline.yml"
+      - "docs/MASTER-SCHEMA-V1.md"
+  push:
+    branches: [main]
+    paths:
+      - "public/catalog/products.csv"
+      - "scripts/master-data-pipeline.mjs"
+      - ".github/workflows/master-data-pipeline.yml"
+      - "docs/MASTER-SCHEMA-V1.md"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-master-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate one approved product
+        env:
+          TEST_PRODUCT_ID: OMR-RAW-001
+        run: node scripts/master-data-pipeline.mjs
+
+      - name: Assert read-only API-free contract
+        run: |
+          set -euo pipefail
+          ! grep -R "secrets\." .github/workflows/master-data-pipeline.yml
+          ! grep -R "googleapis\.com\|generativelanguage" scripts/master-data-pipeline.mjs docs/MASTER-SCHEMA-V1.md
+          git diff --exit-code -- public/catalog/products.csv
+          echo "API-free contract: PASS"
