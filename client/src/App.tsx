@@ -3,7 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import AdminAccess from "@/admin/AdminAccess";
 import NotFound from "@/pages/NotFound";
 import PopUp from "@/pages/PopUp";
-import Products from "@/pages/Products";
+import ProductsPage from "@/pages/ProductsPage";
 import Storefront from "@/pages/Storefront";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -13,7 +13,7 @@ function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Storefront} />
-      <Route path={"/products"} component={() => <Products />} />
+      <Route path={"/products"} component={ProductsPage} />
       <Route path={"/popup"} component={PopUp} />
       <Route path={"/admin"} component={AdminAccess} />
       <Route path={"/admin/product-intake"} component={AdminAccess} />
