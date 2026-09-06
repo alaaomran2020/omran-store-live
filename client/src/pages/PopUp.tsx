@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { ExternalLink, Facebook, Instagram } from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
 import Products from "@/pages/Products";
+import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 
 const POPUP_TITLE = "POP UP – Gifts & Balloons | شركة عمران التجارية";
 const POPUP_DESCRIPTION = "هدايا وبالونات ومستلزمات حفلات من POP UP ضمن شركة عمران التجارية.";
@@ -10,7 +11,7 @@ const POPUP_SOCIALS = [
   {
     label: "Facebook",
     account: "POP UP – Gifts & Balloons",
-    href: "https://www.facebook.com/profile.php?id=61589179737729",
+    href: SOCIAL_EMBED_CONFIG.popupFacebookPageUrl,
     icon: Facebook,
     accentClass: "from-[#1877F2]/20 via-white/[0.07] to-white/[0.03] hover:border-[#1877F2]/45",
     iconClass: "bg-[#1877F2]/18 text-[#8fc0ff]",
@@ -18,7 +19,7 @@ const POPUP_SOCIALS = [
   {
     label: "Instagram",
     account: "@popup.gifts_balloons",
-    href: "https://www.instagram.com/popup.gifts_balloons/",
+    href: SOCIAL_EMBED_CONFIG.popupInstagramProfileUrl,
     icon: Instagram,
     accentClass: "from-fuchsia-500/20 via-rose-400/10 to-amber-300/5 hover:border-fuchsia-300/40",
     iconClass: "bg-fuchsia-400/15 text-fuchsia-200",
@@ -91,7 +92,7 @@ export default function PopUp() {
     <div className="[&>div>main>footer]:hidden">
       <Products catalog="popup" />
       <PopUpOfficialSocials />
-      <SiteFooter />
+      <SiteFooter socialBrand="popup" />
     </div>
   );
 }
