@@ -1,7 +1,7 @@
 /**
  * Lightweight, fail-safe storefront analytics.
- * Umami remains optional; WhatsApp conversions are also persisted to the
- * operational Analytics_Events ledger through the unified Make gateway.
+ * Umami remains optional. Canonical storefront funnel events are also persisted
+ * to the first-party Analytics_Events ledger through the unified Make gateway.
  */
 
 import { MAKE_GATEWAY_URL } from "./makeGateway";
@@ -12,10 +12,13 @@ type UmamiWindow = Window & {
 
 export type ProductEvent =
   | "product_view"
+  | "search"
+  | "category_view"
+  | "whatsapp_click"
+  | "product_whatsapp_click"
   | "product_search"
   | "product_filter"
   | "product_age_filter"
-  | "whatsapp_click"
   | "whatsapp_product_inquiry"
   | "whatsapp_conversion"
   | "product_share";
@@ -30,13 +33,94 @@ export type WhatsAppProductInquiryPayload = {
   cta_location: "product_card" | "product_details";
 };
 
-export function trackEvent(event: ProductEvent, data: Record<string, unknown> = {}): void {
+type PersistedEventName =
+  | "product_view"
+  | "search"
+  | "category_view"
+  | "whatsapp_click"
+  | "product_whatsapp_click";
+
+const persistedEventAliases: Partial<Record<ProductEvent, PersistedEventName>> = {
+  product_view: "product_view",
+  search: "search",
+  product_search: "search",
+  category_view: "category_view",
+  product_filter: "category_view",
+  whatsapp_click: "whatsapp_click",
+  product_whatsapp_click: "product_whatsapp_click",
+};
+
+function trackUmamiOnly(event: string, data: Record<string, unknown> = {}): void {
   if (typeof window === "undefined") return;
   try {
     (window as UmamiWindow).umami?.track?.(event, data);
   } catch {
     // Analytics is non-critical and must never break a customer action.
   }
+}
+
+function stringValue(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  return String(value);
+}
+
+function createEventId(eventName: PersistedEventName): string {
+  let suffix = "";
+  try {
+    suffix = globalThis.crypto?.randomUUID?.().slice(0, 8).toUpperCase() || "";
+  } catch {
+    suffix = "";
+  }
+  if (!suffix) suffix = Math.random().toString(16).slice(2, 10).toUpperCase();
+  const prefix = eventName === "product_whatsapp_click" ? "PWA" : "EV";
+  return `${prefix}-${Date.now()}-${suffix}`;
+}
+
+function persistStorefrontEvent(
+  eventName: PersistedEventName,
+  data: Record<string, unknown> = {}
+): void {
+  if (typeof window === "undefined" || typeof fetch === "undefined") return;
+
+  try {
+    const pageLocation =
+      stringValue(data.page_location).trim() || window.location.href;
+    const pageUrl = new URL(pageLocation, window.location.origin);
+
+    const body = new URLSearchParams({
+      event_id: createEventId(eventName),
+      event_at: new Date().toISOString(),
+      event_name: eventName,
+      product_id: stringValue(data.product_id || data.id).trim(),
+      sku: stringValue(data.sku).trim(),
+      product_name: stringValue(data.product_name || data.product).trim(),
+      category: stringValue(data.category).trim(),
+      price_mode: stringValue(data.price_mode).trim(),
+      cta_location: stringValue(data.cta_location).trim(),
+      page_location: pageLocation,
+      referrer: typeof document !== "undefined" ? document.referrer : "",
+      utm_source: pageUrl.searchParams.get("utm_source") || "",
+      utm_medium: pageUrl.searchParams.get("utm_medium") || "",
+      utm_campaign: pageUrl.searchParams.get("utm_campaign") || "",
+    });
+
+    void fetch(MAKE_GATEWAY_URL, {
+      method: "POST",
+      mode: "no-cors",
+      keepalive: true,
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body,
+    }).catch(() => undefined);
+  } catch {
+    // First-party analytics must never block navigation, search or WhatsApp.
+  }
+}
+
+export function trackEvent(event: ProductEvent, data: Record<string, unknown> = {}): void {
+  trackUmamiOnly(event, data);
+
+  const persistedEvent = persistedEventAliases[event];
+  if (persistedEvent) persistStorefrontEvent(persistedEvent, data);
 }
 
 export function buildWhatsAppInquiryPayload(
@@ -57,43 +141,10 @@ export function buildWhatsAppInquiryPayload(
   };
 }
 
-function persistWhatsAppConversion(payload: WhatsAppProductInquiryPayload): void {
-  if (typeof window === "undefined" || typeof fetch === "undefined") return;
-
-  try {
-    const pageUrl = new URL(payload.page_location || window.location.href, window.location.origin);
-    const body = new URLSearchParams({
-      event_id: `WA-${Date.now()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
-      event_at: new Date().toISOString(),
-      product_id: payload.product_id,
-      sku: payload.sku,
-      product_name: payload.product_name,
-      category: payload.category,
-      price_mode: payload.price_mode,
-      cta_location: payload.cta_location,
-      page_location: payload.page_location,
-      referrer: typeof document !== "undefined" ? document.referrer : "",
-      utm_source: pageUrl.searchParams.get("utm_source") || "",
-      utm_medium: pageUrl.searchParams.get("utm_medium") || "",
-      utm_campaign: pageUrl.searchParams.get("utm_campaign") || "",
-    });
-
-    void fetch(MAKE_GATEWAY_URL, {
-      method: "POST",
-      mode: "no-cors",
-      keepalive: true,
-      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-      body,
-    }).catch(() => undefined);
-  } catch {
-    // The conversion click must continue even if the operational ledger is unavailable.
-  }
-}
-
 /**
- * A WhatsApp CTA click is the storefront's primary conversion event.
- * It is recorded in the first-party Analytics_Events ledger and, when enabled,
- * in Umami. This measures click-to-WhatsApp conversion, not a completed sale.
+ * A product WhatsApp CTA is persisted exactly once in the first-party ledger
+ * as `product_whatsapp_click`. Legacy Umami aliases remain for continuity but
+ * do not create extra Google Sheets rows.
  */
 export function trackWhatsAppInquiry(
   product: { id: string; name: string; category?: string; price: number | null; sku?: string | null },
@@ -101,13 +152,14 @@ export function trackWhatsAppInquiry(
 ): void {
   const payload = buildWhatsAppInquiryPayload(product, ctaLocation);
 
-  persistWhatsAppConversion(payload);
-  trackEvent("whatsapp_conversion", {
+  persistStorefrontEvent("product_whatsapp_click", payload as unknown as Record<string, unknown>);
+
+  trackUmamiOnly("whatsapp_conversion", {
     ...payload,
     conversion_stage: "whatsapp_click",
   });
-  trackEvent("whatsapp_product_inquiry", payload as Record<string, unknown>);
-  trackEvent("whatsapp_click", {
+  trackUmamiOnly("whatsapp_product_inquiry", payload as unknown as Record<string, unknown>);
+  trackUmamiOnly("whatsapp_click", {
     product: payload.product_name,
     id: payload.product_id,
     sku: payload.sku,
