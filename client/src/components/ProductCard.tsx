@@ -1,13 +1,14 @@
+import { useMemo, useState } from "react";
 import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, formatPrice, productPermalink } from "@/lib/productFormat";
+import { extractProductColors, productColorHex } from "@/lib/productColors";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Info, MessageCircle } from "lucide-react";
 
 /**
- * Omran Product Card v2
- * Image → Name → key info → primary CTA.
- * Mobile keeps dense scanability while preserving 44px+ touch targets.
+ * Omran Product Card v3
+ * Image → Name → price/inquiry → verified color selector → WhatsApp CTA.
  */
 export function ProductCard({
   product,
@@ -16,7 +17,11 @@ export function ProductCard({
   product: Product;
   onOpenDetails: (product: Product) => void;
 }) {
+  const colors = useMemo(() => extractProductColors(product.description), [product.description]);
+  const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null);
+
   const waUrl = buildWhatsAppUrl(product, {
+    selectedColor,
     pageUrl:
       typeof window !== "undefined"
         ? productPermalink(product.id, window.location.origin + window.location.pathname)
@@ -64,6 +69,36 @@ export function ProductCard({
           {formatPrice(product.price)}
         </p>
 
+        {colors.length > 0 && (
+          <div className="rounded-xl border border-brand-border bg-white/80 p-2.5">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="text-[11px] font-extrabold text-brand-navy sm:text-xs">اختار اللون</span>
+              {selectedColor && (
+                <span className="truncate text-[10px] font-bold text-brand-muted sm:text-[11px]">{selectedColor}</span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5" role="list" aria-label={`ألوان ${product.name}`}>
+              {colors.map(color => {
+                const active = selectedColor === color;
+                return (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setSelectedColor(color)}
+                    title={color}
+                    aria-label={`اختيار اللون ${color}`}
+                    aria-pressed={active}
+                    className={`h-7 w-7 rounded-full border-2 shadow-sm transition active:scale-95 ${
+                      active ? "border-brand-blue ring-2 ring-brand-blue/20" : "border-white ring-1 ring-brand-border"
+                    }`}
+                    style={{ backgroundColor: productColorHex(color) }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="mt-auto flex flex-col gap-2 pt-1 sm:pt-2">
           {waUrl && (
             <a
@@ -75,7 +110,9 @@ export function ProductCard({
             >
               <MessageCircle size={16} aria-hidden="true" className="shrink-0" />
               <span className="sm:hidden">استفسر واتساب</span>
-              <span className="hidden sm:inline">اسأل عن السعر والتوفر</span>
+              <span className="hidden sm:inline">
+                {selectedColor ? `استفسر عن ${selectedColor}` : "اسأل عن السعر والتوفر"}
+              </span>
             </a>
           )}
           <button
