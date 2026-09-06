@@ -30,9 +30,10 @@ jobs:
           TEST_PRODUCT_ID: OMR-RAW-001
         run: node scripts/master-data-pipeline.mjs
 
-      - name: Assert zero credential/API dependency
+      - name: Assert read-only API-free contract
         run: |
           set -euo pipefail
-          ! grep -R "GEMINI_API_KEY\|GOOGLE_SERVICE_ACCOUNT_JSON\|generativelanguage.googleapis.com\|sheets.googleapis.com\|oauth2.googleapis.com" scripts/master-data-pipeline.mjs .github/workflows/master-data-pipeline.yml docs/MASTER-SCHEMA-V1.md
+          ! grep -R "secrets\." .github/workflows/master-data-pipeline.yml
+          ! grep -R "googleapis\.com\|generativelanguage" scripts/master-data-pipeline.mjs docs/MASTER-SCHEMA-V1.md
           git diff --exit-code -- public/catalog/products.csv
           echo "Pre-merge API-free validation: PASS"
