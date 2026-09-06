@@ -1,16 +1,22 @@
 import type { Product } from "@shared/products";
 
-const published = (product: Pick<Product, "id" | "name" | "price" | "category" | "description" | "sortOrder" | "rowIndex">): Product => ({
+type PopupProductInput = Pick<
+  Product,
+  "id" | "name" | "price" | "category" | "description" | "sortOrder" | "rowIndex"
+> & {
+  image: string;
+  sourceDriveId: string;
+};
+
+const published = (product: PopupProductInput): Product => ({
   ...product,
   sku: null,
-  image: null,
-  imageSource: null,
+  imageSource: product.image,
   active: true,
   productPrompt: "",
   workflowStatus: "PUBLISHED",
   qaStatus: "PASS",
-  sourceDriveId: null,
-  processedImage: null,
+  processedImage: product.image,
   reviewReason: null,
 });
 
@@ -21,6 +27,8 @@ export const POPUP_PRODUCTS_SNAPSHOT: Product[] = [
     price: 95,
     category: "بالونات",
     description: "بالون لاتكس أمريكي للتزيين والمناسبات — عبوة 100 بالونة. الألوان المتاحة: أسود، رصاصي، أحمر، بيج، بيرجاندي، زيتي، أبيض، بيبي بلو، بني، بينك، أصفر.",
+    image: "https://drive.google.com/uc?export=view&id=1SOK67lmJH7nOlwWIRcIvSYW_gFk-SwJI",
+    sourceDriveId: "1SOK67lmJH7nOlwWIRcIvSYW_gFk-SwJI",
     sortOrder: 1001,
     rowIndex: 1001,
   }),
@@ -30,6 +38,8 @@ export const POPUP_PRODUCTS_SNAPSHOT: Product[] = [
     price: 40,
     category: "بالونات",
     description: "بالون ميتالك لامع للمناسبات والديكورات — عبوة 50 بالونة. الألوان المتاحة: موڤ، بينك، اورانچ، أسود، رصاصي، جولد.",
+    image: "https://drive.google.com/uc?export=view&id=1qmod75Qx96jZ5nfGTs9BvVxe_ksRC1mx",
+    sourceDriveId: "1qmod75Qx96jZ5nfGTs9BvVxe_ksRC1mx",
     sortOrder: 1002,
     rowIndex: 1002,
   }),
@@ -39,6 +49,8 @@ export const POPUP_PRODUCTS_SNAPSHOT: Product[] = [
     price: 80,
     category: "بالونات",
     description: "بالون باندا لاتكس للمناسبات والحفلات — عبوة 100 بالونة. الألوان المتاحة: بينك، رصاصي، أزرق غامق، بيبي بلو، أصفر، فوشيا، موف، جولد، أحمر.",
+    image: "https://drive.google.com/uc?export=view&id=1XOo4XfGMg1445VtL4n30w8xSlFJcw9yU",
+    sourceDriveId: "1XOo4XfGMg1445VtL4n30w8xSlFJcw9yU",
     sortOrder: 1003,
     rowIndex: 1003,
   }),
@@ -48,6 +60,8 @@ export const POPUP_PRODUCTS_SNAPSHOT: Product[] = [
     price: 55,
     category: "بالونات",
     description: "بالون ميتالك لامع للتزيين والمناسبات — عبوة 100 بالونة. الألوان المتاحة: أحمر، بينك، جولد، بيبي بلو، أزرق، رصاصي، أسود، فوشيا، أصفر.",
+    image: "https://drive.google.com/uc?export=view&id=1GtHnihlU4cv8GKgYmYeEgt0m9GzvO38K",
+    sourceDriveId: "1GtHnihlU4cv8GKgYmYeEgt0m9GzvO38K",
     sortOrder: 1004,
     rowIndex: 1004,
   }),
@@ -57,6 +71,8 @@ export const POPUP_PRODUCTS_SNAPSHOT: Product[] = [
     price: 60,
     category: "بالونات",
     description: "بالون كروم لامع بمظهر فاخر للمناسبات والديكورات — عبوة 50 بالونة. الألوان المتاحة: سيلفر، جولد، روز جولد، روز بينك، مينت جرين، بيج، رصاصي غامق، أزرق.",
+    image: "https://drive.google.com/uc?export=view&id=1ijJS4wXcQcsrmF9h4g0PqqNo62h8DAFZ",
+    sourceDriveId: "1ijJS4wXcQcsrmF9h4g0PqqNo62h8DAFZ",
     sortOrder: 1005,
     rowIndex: 1005,
   }),
