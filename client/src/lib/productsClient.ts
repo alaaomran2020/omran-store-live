@@ -261,16 +261,43 @@ async function fetchLiveCatalog(): Promise<StorefrontProductsPayload> {
   }
 }
 
+function mergePopupProducts(liveProducts: Product[]): Product[] {
+  const merged = new Map<string, Product>();
+
+  for (const product of liveProducts) merged.set(product.id, product);
+  for (const product of POPUP_PRODUCTS_SNAPSHOT) {
+    if (!merged.has(product.id)) {
+      merged.set(product.id, {
+        ...product,
+        ageMin: null,
+        ageMax: null,
+      });
+    }
+  }
+
+  return Array.from(merged.values()).sort((a, b) => {
+    if (a.sortOrder !== null && b.sortOrder !== null) return a.sortOrder - b.sortOrder;
+    if (a.sortOrder !== null) return -1;
+    if (b.sortOrder !== null) return 1;
+    return a.rowIndex - b.rowIndex;
+  });
+}
+
 /**
- * Loads the live publication catalog. If the live source is temporarily
- * unavailable, the bundled snapshot remains a fail-safe fallback. Snapshot
- * products deliberately carry null ages unless age data was explicitly
- * verified in the source; unknown age is never inferred from descriptions.
+ * Loads the live publication catalog. POP UP products are merged with the live
+ * catalog until the public gateway reflects the newly published sheet rows.
+ * This keeps toys authoritative from the live source while preventing POP UP
+ * from disappearing because of an upstream publication/cache lag.
  */
 export async function fetchProducts(): Promise<StorefrontProductsPayload> {
   try {
     const live = await fetchLiveCatalog();
-    if (live.products.length > 0) return live;
+    if (live.products.length > 0) {
+      return {
+        ...live,
+        products: mergePopupProducts(live.products),
+      };
+    }
   } catch {
     // Fall through to the bundled production snapshot.
   }
