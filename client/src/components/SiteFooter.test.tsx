@@ -7,16 +7,17 @@ import SiteFooter, { FOOTER_NAVIGATION } from "./SiteFooter";
 afterEach(() => cleanup());
 
 describe("SiteFooter", () => {
-  it("يعرض فقط روابط الفوتر المفعلة حاليًا", () => {
+  it("يعرض روابط الأقسام المفعلة حاليًا", () => {
     expect(FOOTER_NAVIGATION).toEqual([
       { label: "الرئيسية", href: "/" },
       { label: "لعب الأطفال", href: "/products" },
+      { label: "POP UP", href: "/popup" },
     ]);
   });
 
-  it("لا يفعّل POP UP داخل الفوتر قبل اعتماد روابطه", () => {
+  it("يفعّل رابط POP UP داخل الفوتر بعد اعتماد الصفحة", () => {
     render(<SiteFooter />);
-    expect(screen.queryByRole("link", { name: "POP UP" })).toBeNull();
+    expect(screen.getByRole("link", { name: "POP UP" })).toHaveAttribute("href", "/popup");
   });
 
   it("يعرض السنة الحالية واسم شركة عمران التجارية", () => {
