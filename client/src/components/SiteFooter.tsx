@@ -1,4 +1,4 @@
-import { Facebook, Instagram, MessageCircle, ShieldCheck, Store, ExternalLink } from "lucide-react";
+import { Facebook, Instagram, MessageCircle, ShieldCheck, Store, ExternalLink, BadgeCheck } from "lucide-react";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import { whatsappNumber } from "@/lib/productFormat";
 
@@ -18,16 +18,18 @@ const whatsappUrl = (() => {
 const socialLinks = [
   {
     label: "Instagram",
+    account: "@omrantoys.store",
     href: SOCIAL_EMBED_CONFIG.instagramProfileUrl,
     icon: Instagram,
   },
   {
     label: "Facebook",
+    account: "شركة عمران التجارية",
     href: SOCIAL_EMBED_CONFIG.facebookPageUrl,
     icon: Facebook,
   },
   ...(whatsappUrl
-    ? [{ label: "WhatsApp", href: whatsappUrl, icon: MessageCircle }]
+    ? [{ label: "WhatsApp", account: "تواصل مباشر", href: whatsappUrl, icon: MessageCircle }]
     : []),
 ] as const;
 
@@ -111,21 +113,31 @@ function FooterCompanyInfo() {
 function FooterSocial() {
   return (
     <section aria-labelledby="footer-social-title">
-      <h2 id="footer-social-title" className="text-sm font-black text-white">تابعنا</h2>
-      <p className="mt-2 text-xs font-semibold leading-6 text-white/55">الحسابات الرسمية المتاحة حاليًا.</p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        {socialLinks.map(({ label, href, icon: Icon }) => (
+      <div className="flex items-center gap-2">
+        <h2 id="footer-social-title" className="text-sm font-black text-white">الحسابات الرسمية</h2>
+        <BadgeCheck size={17} className="text-brand-yellow" aria-hidden="true" />
+      </div>
+      <p className="mt-2 text-xs font-semibold leading-6 text-white/55">تابع شركة عمران التجارية من الروابط الرسمية المعتمدة داخل المتجر.</p>
+      <div className="mt-4 grid gap-2">
+        {socialLinks.map(({ label, account, href, icon: Icon }) => (
           <a
             key={label}
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`افتح ${label}`}
-            title={label}
-            className="inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-white/12 bg-white/[0.05] px-3 text-sm font-bold text-white/75 transition duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.1] hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/15"
+            aria-label={`افتح حساب ${label} الرسمي لشركة عمران التجارية`}
+            className="group flex min-h-12 items-center justify-between gap-3 rounded-xl border border-white/12 bg-white/[0.05] px-3.5 py-2.5 text-white transition duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.1] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/15"
           >
-            <Icon size={18} aria-hidden="true" />
-            <span className="sr-only sm:not-sr-only">{label}</span>
+            <span className="flex min-w-0 items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] text-white transition group-hover:bg-white/[0.13]">
+                <Icon size={18} aria-hidden="true" />
+              </span>
+              <span className="min-w-0 text-start">
+                <span className="block text-sm font-black">{label}</span>
+                <span className="block truncate text-[11px] font-semibold text-white/55">{account}</span>
+              </span>
+            </span>
+            <ExternalLink size={14} className="shrink-0 text-white/35 transition group-hover:text-white/70" aria-hidden="true" />
           </a>
         ))}
       </div>
@@ -160,7 +172,7 @@ export default function SiteFooter() {
       <div className="pointer-events-none absolute -start-24 top-8 h-48 w-48 rounded-full bg-brand-blue/20 blur-3xl" aria-hidden="true" />
       <div className="pointer-events-none absolute -end-24 bottom-20 h-56 w-56 rounded-full bg-brand-yellow/10 blur-3xl" aria-hidden="true" />
 
-      <div className="container relative grid gap-9 py-10 sm:grid-cols-2 sm:gap-10 sm:py-12 lg:grid-cols-[1.45fr_.7fr_.9fr_.85fr] lg:gap-12 lg:py-14">
+      <div className="container relative grid gap-9 py-10 sm:grid-cols-2 sm:gap-10 sm:py-12 lg:grid-cols-[1.45fr_.7fr_.9fr_1fr] lg:gap-12 lg:py-14">
         <FooterBrand />
         <FooterNavigation />
         <FooterCompanyInfo />
