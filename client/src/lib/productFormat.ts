@@ -48,7 +48,7 @@ export function whatsappNumber(): string {
 export function buildWhatsAppUrl(
   product: Pick<Product, "name" | "price"> &
     Partial<Pick<Product, "id" | "category">> & { sku?: string | null },
-  options: { number?: string; pageUrl?: string } = {}
+  options: { number?: string; pageUrl?: string; selectedColor?: string | null } = {}
 ): string | null {
   const number = (options.number ?? whatsappNumber()).replace(/[^\d]/g, "");
   if (!number) return null;
@@ -56,6 +56,7 @@ export function buildWhatsAppUrl(
   const productId = (product as { id?: string }).id?.trim() || "";
   const sku = (product as { sku?: string | null }).sku?.trim() || "";
   const category = (product as { category?: string }).category?.trim() || "";
+  const selectedColor = options.selectedColor?.trim() || "";
 
   let pageUrl = (options.pageUrl ?? "").trim();
   if (!pageUrl) {
@@ -84,8 +85,11 @@ export function buildWhatsAppUrl(
 
   const lines = [
     "أهلاً بيك 👋",
-    `بالنسبة لـ ${product.name}، حابب أعرف السعر والتوفر وأي تفاصيل متاحة عنه.`,
+    selectedColor
+      ? `بالنسبة لـ ${product.name} — اللون ${selectedColor}، حابب أعرف السعر والتوفر.`
+      : `بالنسبة لـ ${product.name}، حابب أعرف السعر والتوفر وأي تفاصيل متاحة عنه.`,
     "",
+    selectedColor ? `اللون المختار: ${selectedColor}` : null,
     productId ? `كود المنتج: ${productId}` : null,
     sku ? `SKU: ${sku}` : null,
     category ? `التصنيف: ${category}` : null,
