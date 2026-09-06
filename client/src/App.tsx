@@ -4,6 +4,7 @@ import AdminAccess from "@/admin/AdminAccess";
 import NotFound from "@/pages/NotFound";
 import PopUp from "@/pages/PopUp";
 import Products from "@/pages/Products";
+import Storefront from "@/pages/Storefront";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -11,7 +12,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Products} />
+      <Route path={"/"} component={Storefront} />
       <Route path={"/products"} component={Products} />
       <Route path={"/popup"} component={PopUp} />
       <Route path={"/admin"} component={AdminAccess} />
