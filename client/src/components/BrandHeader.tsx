@@ -32,12 +32,18 @@ export default function BrandHeader() {
           </span>
         </a>
 
-        <nav className="flex shrink-0 items-center gap-2 text-sm font-bold">
+        <nav className="flex shrink-0 items-center gap-1 text-xs font-bold sm:gap-2 sm:text-sm" aria-label="أقسام المتجر">
           <a
-            href="#feed"
-            className="hidden min-h-11 items-center rounded-xl px-4 text-brand-navy transition hover:bg-brand-sky hover:text-brand-blue sm:inline-flex"
+            href="/products"
+            className="hidden min-h-11 items-center rounded-xl px-3 text-brand-navy transition hover:bg-brand-sky hover:text-brand-blue sm:inline-flex"
           >
-            المنتجات
+            لعب الأطفال
+          </a>
+          <a
+            href="/popup"
+            className="inline-flex min-h-11 items-center rounded-xl px-3 font-black text-[#6b278f] transition hover:bg-[#f7effb] hover:text-[#542170]"
+          >
+            POP UP
           </a>
           {whatsappUrl && (
             <a
