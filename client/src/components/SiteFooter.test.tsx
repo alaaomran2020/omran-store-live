@@ -17,7 +17,7 @@ describe("SiteFooter", () => {
 
   it("يفعّل رابط POP UP داخل الفوتر بعد اعتماد الصفحة", () => {
     render(<SiteFooter />);
-    expect(screen.getByRole("link", { name: "POP UP" })).toHaveAttribute("href", "/popup");
+    expect(screen.getByRole("link", { name: "POP UP" }).getAttribute("href")).toBe("/popup");
   });
 
   it("يعرض السنة الحالية واسم شركة عمران التجارية", () => {
