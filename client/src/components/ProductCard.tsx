@@ -5,12 +5,13 @@ import { buildWhatsAppUrl, productPermalink } from "@/lib/productFormat";
 import { productColorHex } from "@/lib/productColors";
 import { productColors } from "@/lib/productOptions";
 import { isPopUpProduct } from "@/lib/productCatalog";
-import { trackWhatsAppInquiry } from "@/lib/analytics";
-import { Info, Images, MessageCircle, Play } from "lucide-react";
+import { addProductToCart } from "@/lib/cart";
+import { trackEvent, trackWhatsAppInquiry } from "@/lib/analytics";
+import { Check, Info, Images, MessageCircle, Play, ShoppingCart } from "lucide-react";
 
 /**
  * Omran Product Card v3
- * Image → Name → price/inquiry → verified color selector → WhatsApp CTA.
+ * Image → Name → verified options → cart → WhatsApp CTA.
  */
 export function ProductCard({
   product,
@@ -21,6 +22,7 @@ export function ProductCard({
 }) {
   const colors = useMemo(() => productColors(product), [product]);
   const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null);
+  const [added, setAdded] = useState(false);
   const isPopup = isPopUpProduct(product);
 
   const waUrl = buildWhatsAppUrl(product, {
@@ -37,6 +39,20 @@ export function ProductCard({
     } catch {
       // Analytics failure must never block WhatsApp conversion.
     }
+  };
+
+  const handleAddToCart = () => {
+    addProductToCart(product);
+    setAdded(true);
+    window.setTimeout(() => setAdded(false), 1600);
+    trackEvent("cart_add", {
+      product_id: product.id,
+      sku: product.sku || product.id,
+      product_name: product.name,
+      category: product.category,
+      catalog: isPopup ? "popup" : "toys",
+      cta_location: "product_card",
+    });
   };
 
   return (
@@ -110,6 +126,19 @@ export function ProductCard({
         )}
 
         <div className="mt-auto grid grid-cols-1 gap-2 pt-1 sm:pt-2">
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2.5 text-[12px] font-black transition active:scale-[0.98] focus-visible:ring-4 sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm ${
+              added
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700 focus-visible:ring-emerald-200"
+                : "border-brand-blue bg-white text-brand-blue hover:bg-brand-sky focus-visible:ring-brand-blue/15"
+            }`}
+          >
+            {added ? <Check size={16} aria-hidden="true" /> : <ShoppingCart size={16} aria-hidden="true" />}
+            <span>{added ? "اتضاف للسلة" : "إضافة للسلة"}</span>
+          </button>
+
           {waUrl && (
             <a
               href={waUrl}
