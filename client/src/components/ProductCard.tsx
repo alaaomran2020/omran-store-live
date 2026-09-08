@@ -4,7 +4,7 @@ import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, productPermalink } from "@/lib/productFormat";
 import { extractProductColors, productColorHex } from "@/lib/productColors";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
-import { Info, Images, MessageCircle } from "lucide-react";
+import { Info, Images, MessageCircle, Play } from "lucide-react";
 
 /**
  * Omran Product Card v3
@@ -58,9 +58,12 @@ export function ProductCard({
             {product.category}
           </span>
         )}
-        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-brand-navy/85 px-2 py-1 text-[10px] font-bold text-white sm:bottom-3 sm:left-3">
-          <Images size={12} aria-hidden="true" /> صورة المنتج
-        </span>
+        {(product.galleryImages.length > 0 || product.videoUrl) && (
+          <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-brand-navy/85 px-2 py-1 text-[10px] font-bold text-white sm:bottom-3 sm:left-3">
+            {product.videoUrl ? <Play size={12} aria-hidden="true" /> : <Images size={12} aria-hidden="true" />}
+            {product.videoUrl ? "فيديو" : `${product.galleryImages.length + 1} صور`}
+          </span>
+        )}
       </button>
 
       <div className="flex flex-1 flex-col gap-2.5 p-3 sm:gap-3 sm:p-5">

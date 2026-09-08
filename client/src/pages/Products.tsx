@@ -13,7 +13,7 @@ import { filterProductsByCatalog, type ProductCatalog } from "@/lib/productCatal
 import { trackEvent } from "@/lib/analytics";
 import { productCategories } from "@shared/products";
 import { shareProductsPage, type ProductShareOutcome } from "@/lib/productShare";
-import { Facebook, Instagram, MessageCircle, RefreshCw, Share2, Sparkles } from "lucide-react";
+import { Facebook, Instagram, MessageCircle, Play, RefreshCw, Share2, Sparkles } from "lucide-react";
 import { whatsappNumber } from "@/lib/productFormat";
 
 const ALL = "__all__";
@@ -233,6 +233,20 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
             )}
           </div>
         </section>
+        {!isPopup && (
+          <section className="border-t border-brand-border bg-white py-8 sm:py-12" aria-labelledby="home-videos-title">
+            <div className="container flex flex-col gap-5 rounded-2xl bg-brand-navy p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
+              <div>
+                <p className="text-sm font-bold text-brand-yellow">فيديوهات المنتجات</p>
+                <h2 id="home-videos-title" className="mt-2 text-2xl font-extrabold">شوف اللعبة وهي بتشتغل قبل الاستفسار</h2>
+                <p className="mt-2 text-sm leading-7 text-white/75">نعرض فقط الفيديوهات المعتمدة والمرتبطة بكود SKU الصحيح.</p>
+              </div>
+              <a href="/videos" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-yellow px-5 py-3 text-sm font-extrabold text-brand-navy transition hover:bg-white">
+                <Play size={18} aria-hidden="true" /> عرض الفيديوهات
+              </a>
+            </div>
+          </section>
+        )}
         <section className="border-t border-brand-border bg-brand-cream py-8 sm:py-10">
           <div className="container flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <p className="text-sm font-bold text-brand-muted">تابعنا على المنصات الرسمية:</p>

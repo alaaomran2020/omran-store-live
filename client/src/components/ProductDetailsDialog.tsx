@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/lib/productsClient";
-import { ProductImage } from "@/components/ProductImage";
+import { ProductMediaGallery } from "@/components/ProductMediaGallery";
+import { ProductSpecifications } from "@/components/ProductSpecifications";
 import { buildWhatsAppUrl } from "@/lib/productFormat";
 import { extractProductColors, productColorHex } from "@/lib/productColors";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
@@ -81,16 +82,7 @@ export function ProductDetailsDialog({
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <div className="grid gap-4 p-4 pb-28 sm:gap-6 sm:p-7 sm:pb-7 md:grid-cols-2">
-            <div className="overflow-hidden rounded-2xl border border-brand-border bg-brand-cream">
-              <div className="aspect-[4/3] sm:aspect-square">
-                <ProductImage
-                  product={product}
-                  priority
-                  className="h-full w-full object-cover"
-                  sizesHint="(max-width: 768px) 100vw, 50vw"
-                />
-              </div>
-            </div>
+            <ProductMediaGallery product={product} />
 
             <div className="flex flex-col gap-3.5 sm:gap-4">
               {product.category && (
@@ -157,6 +149,8 @@ export function ProductDetailsDialog({
                   <p className="text-sm leading-7 text-brand-muted sm:leading-8">{product.description}</p>
                 </div>
               )}
+
+              <ProductSpecifications product={product} />
 
               <div className="rounded-2xl bg-brand-sky p-3.5 text-sm leading-7 text-brand-navy sm:p-4">
                 اختار اللون المناسب ثم اضغط واتساب، وهيوصلنا اسم المنتج واللون المختار تلقائيًا لتأكيد السعر والتوفر.
