@@ -4,6 +4,7 @@ import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, productPermalink } from "@/lib/productFormat";
 import { productColorHex } from "@/lib/productColors";
 import { productColors } from "@/lib/productOptions";
+import { isPopUpProduct } from "@/lib/productCatalog";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Info, Images, MessageCircle, Play } from "lucide-react";
 
@@ -20,6 +21,7 @@ export function ProductCard({
 }) {
   const colors = useMemo(() => productColors(product), [product]);
   const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null);
+  const isPopup = isPopUpProduct(product);
 
   const waUrl = buildWhatsAppUrl(product, {
     selectedColor,
@@ -41,17 +43,18 @@ export function ProductCard({
     <article
       data-testid="product-card"
       data-product-id={product.id}
+      data-catalog={isPopup ? "popup" : "toys"}
       className="group flex min-w-0 flex-col overflow-hidden rounded-[1.1rem] border border-brand-border bg-brand-surface shadow-[0_3px_14px_rgba(23,32,51,.07)] transition duration-200 sm:rounded-2xl sm:shadow-[0_4px_18px_rgba(23,32,51,.08)] sm:hover:-translate-y-0.5 sm:hover:shadow-lg"
     >
       <button
         type="button"
         onClick={() => onOpenDetails(product)}
-        className="relative block aspect-square w-full overflow-hidden bg-brand-cream text-right focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15"
+        className={`relative block w-full overflow-hidden bg-brand-cream text-right focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15 ${isPopup ? "aspect-[4/3]" : "aspect-square"}`}
         aria-label={`عرض تفاصيل ${product.name}`}
       >
         <ProductImage
           product={product}
-          className="h-full w-full object-cover transition duration-300 sm:group-hover:scale-[1.02]"
+          className={`h-full w-full transition duration-300 sm:group-hover:scale-[1.02] ${isPopup ? "object-contain p-2 sm:p-3" : "object-cover"}`}
           sizesHint="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
         />
         {product.category && (
@@ -67,7 +70,7 @@ export function ProductCard({
         )}
       </button>
 
-      <div className="flex flex-1 flex-col gap-2.5 p-3 sm:gap-3 sm:p-5">
+      <div className={`flex flex-1 flex-col gap-2.5 ${isPopup ? "p-3 sm:p-4" : "p-3 sm:gap-3 sm:p-5"}`}>
         <h3 className="line-clamp-2 min-h-[2.75rem] text-sm font-extrabold leading-[1.4rem] text-brand-ink sm:min-h-0 sm:text-lg sm:leading-7">
           {product.name}
         </h3>

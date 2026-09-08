@@ -21,7 +21,8 @@ export type ProductEvent =
   | "product_age_filter"
   | "whatsapp_product_inquiry"
   | "whatsapp_conversion"
-  | "product_share";
+  | "product_share"
+  | "product_gallery_interaction";
 
 export type WhatsAppProductInquiryPayload = {
   product_id: string;
@@ -80,11 +81,10 @@ function persistStorefrontEvent(
   eventName: PersistedEventName,
   data: Record<string, unknown> = {}
 ): void {
-  if (typeof window === "undefined" || typeof fetch === "undefined") return;
+  if (typeof window === "undefined") return;
 
   try {
-    const pageLocation =
-      stringValue(data.page_location).trim() || window.location.href;
+    const pageLocation = stringValue(data.page_location).trim() || window.location.href;
     const pageUrl = new URL(pageLocation, window.location.origin);
 
     const body = new URLSearchParams({
@@ -104,12 +104,21 @@ function persistStorefrontEvent(
       utm_campaign: pageUrl.searchParams.get("utm_campaign") || "",
     });
 
+    const encodedBody = body.toString();
+    if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+      const payload = new Blob([encodedBody], {
+        type: "application/x-www-form-urlencoded;charset=UTF-8",
+      });
+      if (navigator.sendBeacon(MAKE_GATEWAY_URL, payload)) return;
+    }
+
+    if (typeof fetch === "undefined") return;
     void fetch(MAKE_GATEWAY_URL, {
       method: "POST",
       mode: "no-cors",
       keepalive: true,
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-      body,
+      body: encodedBody,
     }).catch(() => undefined);
   } catch {
     // First-party analytics must never block navigation, search or WhatsApp.
