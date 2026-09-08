@@ -1,0 +1,23 @@
+name: Automation Workers Validation
+
+on:
+  pull_request:
+    paths:
+      - 'automation/browser-use/**'
+      - 'automation/moneyprinter/**'
+      - '.github/workflows/automation-workers-validation.yml'
+  workflow_dispatch:
+
+jobs:
+  python-guards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Browser Use policy/schema tests
+        run: python automation/browser-use/test_guards.py
+      - name: MoneyPrinter draft tests
+        working-directory: automation/moneyprinter
+        run: python test_worker.py
