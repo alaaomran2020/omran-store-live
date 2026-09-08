@@ -1,6 +1,7 @@
 import { MessageCircle } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
 import { whatsappNumber } from "@/lib/productFormat";
+import CartDrawer from "@/components/CartDrawer";
 
 const whatsappUrl = (() => {
   const number = whatsappNumber();
@@ -42,12 +43,13 @@ export default function BrandHeader() {
           </a>
           <a
             href="/popup"
-            className="inline-flex min-h-11 items-center rounded-xl px-3 font-black text-[#6b278f] transition hover:bg-[#f7effb] hover:text-[#542170]"
+            className="hidden min-h-11 items-center rounded-xl px-3 font-black text-[#6b278f] transition hover:bg-[#f7effb] hover:text-[#542170] min-[460px]:inline-flex"
           >
             POP UP
           </a>
           <a href="/videos" className="hidden min-h-11 items-center rounded-xl px-3 text-brand-navy transition hover:bg-brand-sky hover:text-brand-blue lg:inline-flex">الفيديوهات</a>
           <a href="/rewards" className="hidden min-h-11 items-center rounded-xl px-3 text-brand-navy transition hover:bg-brand-sky hover:text-brand-blue lg:inline-flex">نقاط عمران</a>
+          <CartDrawer />
           {whatsappUrl && (
             <a
               href={whatsappUrl}
