@@ -22,7 +22,12 @@ export type ProductEvent =
   | "whatsapp_product_inquiry"
   | "whatsapp_conversion"
   | "product_share"
-  | "product_gallery_interaction";
+  | "product_gallery_interaction"
+  | "cart_add"
+  | "cart_remove"
+  | "cart_quantity_change"
+  | "cart_open"
+  | "cart_whatsapp_submit";
 
 export type WhatsAppProductInquiryPayload = {
   product_id: string;
@@ -39,7 +44,12 @@ type PersistedEventName =
   | "search"
   | "category_view"
   | "whatsapp_click"
-  | "product_whatsapp_click";
+  | "product_whatsapp_click"
+  | "cart_add"
+  | "cart_remove"
+  | "cart_quantity_change"
+  | "cart_open"
+  | "cart_whatsapp_submit";
 
 const persistedEventAliases: Partial<Record<ProductEvent, PersistedEventName>> = {
   product_view: "product_view",
@@ -49,6 +59,11 @@ const persistedEventAliases: Partial<Record<ProductEvent, PersistedEventName>> =
   product_filter: "category_view",
   whatsapp_click: "whatsapp_click",
   product_whatsapp_click: "product_whatsapp_click",
+  cart_add: "cart_add",
+  cart_remove: "cart_remove",
+  cart_quantity_change: "cart_quantity_change",
+  cart_open: "cart_open",
+  cart_whatsapp_submit: "cart_whatsapp_submit",
 };
 
 function trackUmamiOnly(event: string, data: Record<string, unknown> = {}): void {
@@ -104,6 +119,12 @@ function persistStorefrontEvent(
       utm_campaign: pageUrl.searchParams.get("utm_campaign") || "",
     });
 
+    for (const [key, value] of Object.entries(data)) {
+      if (body.has(key)) continue;
+      const normalized = stringValue(value).trim();
+      if (normalized) body.set(key, normalized);
+    }
+
     const encodedBody = body.toString();
     if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
       const payload = new Blob([encodedBody], {
@@ -127,7 +148,6 @@ function persistStorefrontEvent(
 
 export function trackEvent(event: ProductEvent, data: Record<string, unknown> = {}): void {
   trackUmamiOnly(event, data);
-
   const persistedEvent = persistedEventAliases[event];
   if (persistedEvent) persistStorefrontEvent(persistedEvent, data);
 }
