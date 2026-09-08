@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
 const DEFAULT_BASE_URL = 'https://seekai.cc/v1/';
-const DEFAULT_MODEL = 'qwen3.8-flash';
+const DEFAULT_MODEL = 'glm-5.3-flash';
 const RETRYABLE_STATUS = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -38,16 +38,15 @@ export function validateDraft(source, proposed) {
   };
 }
 
-function buildRequestBody(source, model) {
-  return {
+function buildRequestBody(source, model, { structuredOutput = true } = {}) {
+  const body = {
     model,
     temperature: 0.2,
     max_tokens: 1200,
-    response_format: { type: 'json_object' },
     messages: [
       {
         role: 'system',
-        content: 'You prepare Egyptian Arabic toy catalog metadata. Return one JSON object only with fields: name, description, category, search_keywords, seo_title, seo_description, whatsapp_text. Use only supplied evidence. Never invent prices, ages, dimensions, materials, components, safety claims or stock. Use عرايس instead of دمى and عربيات instead of سيارات. Do not include POP UP products. Omit uncertain facts. Never make publication decisions.'
+        content: 'You prepare Egyptian Arabic toy catalog metadata. Return one JSON object only with fields: name, description, category, search_keywords, seo_title, seo_description, whatsapp_text. Use only supplied evidence. Never invent prices, ages, dimensions, materials, components, safety claims or stock. Use عرايس instead of دمى and عربيات instead of سيارات. Do not include POP UP products. Omit uncertain facts. Never make publication decisions. Do not add commentary before or after the JSON object.'
       },
       {
         role: 'user',
@@ -62,6 +61,44 @@ function buildRequestBody(source, model) {
       }
     ]
   };
+  if (structuredOutput) body.response_format = { type: 'json_object' };
+  return body;
+}
+
+function retryableResponseError(message) {
+  const error = new Error(message);
+  error.retryableResponse = true;
+  return error;
+}
+
+export function parseAssistantJson(data) {
+  const choice = data?.choices?.[0];
+  const content = choice?.message?.content;
+  if (typeof content !== 'string') {
+    throw retryableResponseError('AI response did not contain assistant text');
+  }
+
+  let cleaned = content.replace(/^\uFEFF/, '').trim();
+  if (!cleaned) {
+    const finishReason = choice?.finish_reason ?? 'unknown';
+    const hasReasoning = typeof choice?.message?.reasoning_content === 'string' && choice.message.reasoning_content.trim().length > 0;
+    throw retryableResponseError(`AI returned empty content (finish_reason=${finishReason}, reasoning_content=${hasReasoning ? 'present' : 'absent'})`);
+  }
+
+  cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  const firstBrace = cleaned.indexOf('{');
+  const lastBrace = cleaned.lastIndexOf('}');
+  if (firstBrace > 0 && lastBrace > firstBrace) cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') {
+      throw new Error('JSON root must be an object');
+    }
+    return parsed;
+  } catch {
+    throw retryableResponseError('AI response content was not a valid JSON object');
+  }
 }
 
 export async function generateDraft(source, {
@@ -76,12 +113,13 @@ export async function generateDraft(source, {
   const endpoint = new URL(baseUrl);
   if (endpoint.protocol !== 'https:') throw new Error('HTTPS is required');
   const requestUrl = new URL('chat/completions', endpoint);
-  const body = buildRequestBody(source, model);
   let lastError;
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
+    const structuredOutput = attempt === 1;
+    const body = buildRequestBody(source, model, { structuredOutput });
     try {
       const response = await fetchImpl(requestUrl, {
         method: 'POST',
@@ -91,26 +129,30 @@ export async function generateDraft(source, {
       });
       if (!response.ok) {
         const error = new Error(`AI request failed: HTTP ${response.status}`);
-        if (!RETRYABLE_STATUS.has(response.status) || attempt === attempts) throw error;
-        lastError = error;
-      } else {
-        const data = await response.json();
-        const content = data.choices?.[0]?.message?.content;
-        if (typeof content !== 'string') throw new Error('Invalid AI response');
-        const proposed = JSON.parse(content.replace(/^```(?:json)?\s*|\s*```$/g, ''));
-        return {
-          draft: validateDraft(source, proposed),
-          provider: 'seekai',
-          endpoint: requestUrl.origin + requestUrl.pathname,
-          model: data.model ?? model,
-          usage: data.usage ?? null,
-          attempts_used: attempt
-        };
+        error.retryableProvider = RETRYABLE_STATUS.has(response.status);
+        throw error;
       }
+
+      const data = await response.json();
+      const proposed = parseAssistantJson(data);
+      return {
+        draft: validateDraft(source, proposed),
+        provider: 'seekai',
+        endpoint: requestUrl.origin + requestUrl.pathname,
+        model: data.model ?? model,
+        usage: data.usage ?? null,
+        attempts_used: attempt,
+        response_mode: structuredOutput ? 'json_object' : 'compatibility'
+      };
     } catch (error) {
-      lastError = error;
-      if (error?.name === 'AbortError') lastError = new Error('AI request timed out after 60 seconds');
-      if (attempt === attempts || (!String(lastError.message).includes('HTTP 5') && !String(lastError.message).includes('HTTP 429') && error?.name !== 'AbortError')) throw lastError;
+      if (error?.name === 'AbortError') {
+        lastError = new Error('AI request timed out after 60 seconds');
+        lastError.retryableProvider = true;
+      } else {
+        lastError = error;
+      }
+      const retryable = Boolean(lastError?.retryableProvider || lastError?.retryableResponse);
+      if (attempt === attempts || !retryable) throw lastError;
     } finally {
       clearTimeout(timeout);
     }
@@ -122,7 +164,8 @@ export async function generateDraft(source, {
 async function main() {
   const [input, output] = process.argv.slice(2);
   if (!input || !output) throw new Error('Usage: node automation/seekai/product-engine.mjs input.json output.json');
-  const source = JSON.parse(await readFile(input, 'utf8'));
+  const inputText = (await readFile(input, 'utf8')).replace(/^\uFEFF/, '');
+  const source = JSON.parse(inputText);
   const result = await generateDraft(source, {
     apiKey: process.env.SEEKAI_API_KEY,
     baseUrl: process.env.SEEKAI_BASE_URL || DEFAULT_BASE_URL,
