@@ -1,0 +1,97 @@
+name: MoneyPrinterTurbo E2E
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/moneyprinter-e2e.yml'
+      - 'automation/moneyprinter/**'
+      - 'automation/product-metadata.json'
+      - 'automation/raw-local/omran-product-01.jpg'
+  workflow_dispatch:
+
+jobs:
+  render-one-approved-product:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare local E2E media
+        run: |
+          mkdir -p automation/moneyprinter/e2e-storage automation/moneyprinter/out/drafts
+          ffmpeg -y -loop 1 -i automation/raw-local/omran-product-01.jpg \
+            -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2" \
+            -t 8 -r 30 -pix_fmt yuv420p automation/moneyprinter/e2e-storage/omran-source.mp4
+          ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=stereo -t 8 \
+            automation/moneyprinter/e2e-storage/omran-audio.wav
+
+      - name: Build approved Omran Content Factory draft
+        working-directory: automation/moneyprinter
+        run: |
+          python content_factory.py --input ../product-metadata.json --output out/drafts --product-id OMR-IG-KIT-46
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('out/drafts/OMR-IG-KIT-46.json')
+          d = json.loads(p.read_text(encoding='utf-8'))
+          payload = d['moneyprinter_payload']
+          payload.update({
+            'video_source': 'local',
+            'video_materials': [{
+              'provider': 'local',
+              'url': '/MoneyPrinterTurbo/storage/omran-source.mp4',
+              'duration': 8
+            }],
+            'custom_audio_file': '/MoneyPrinterTurbo/storage/omran-audio.wav',
+            'subtitle_enabled': False,
+            'bgm_type': 'none',
+            'bgm_file': '',
+            'video_aspect': '9:16',
+            'video_count': 1
+          })
+          p.write_text(json.dumps(d, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          python pipeline.py approve out/drafts/OMR-IG-KIT-46.json --by "GitHub E2E human-approved test" --note "Render-only approval; social publishing disabled"
+
+      - name: Start MoneyPrinterTurbo API runtime
+        run: |
+          docker pull ghcr.io/harry0703/moneyprinterturbo:latest
+          docker run -d --name moneyprinterturbo-api \
+            -p 127.0.0.1:8080:8080 \
+            -v "$PWD/automation/moneyprinter/e2e-storage:/MoneyPrinterTurbo/storage" \
+            ghcr.io/harry0703/moneyprinterturbo:latest \
+            sh -lc 'cp -f config.example.toml config.toml && python3 main.py'
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/docs >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          docker logs moneyprinterturbo-api
+          exit 1
+
+      - name: Render first real MP4 draft through API
+        working-directory: automation/moneyprinter
+        env:
+          MONEYPRINTER_API_BASE: http://127.0.0.1:8080/api/v1
+        run: |
+          python pipeline.py render out/drafts/OMR-IG-KIT-46.json --poll-seconds 2 --timeout-seconds 900
+
+      - name: Verify MP4
+        run: |
+          test -s automation/moneyprinter/out/mp4-drafts/OMR-IG-KIT-46.mp4
+          ffprobe -v error -show_entries format=duration,size -of json automation/moneyprinter/out/mp4-drafts/OMR-IG-KIT-46.mp4
+
+      - name: Upload Reel draft artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: omran-toys-first-reel-mp4-draft
+          path: |
+            automation/moneyprinter/out/mp4-drafts/OMR-IG-KIT-46.mp4
+            automation/moneyprinter/out/renders/OMR-IG-KIT-46.json
+            automation/moneyprinter/out/approvals/OMR-IG-KIT-46.json
+            automation/moneyprinter/out/drafts/OMR-IG-KIT-46.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Runtime logs on failure
+        if: failure()
+        run: docker logs moneyprinterturbo-api || true
