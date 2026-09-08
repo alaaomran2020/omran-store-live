@@ -42,13 +42,18 @@ describe("local cart", () => {
     expect(removeCartItem(item.lineId)).toHaveLength(0);
   });
 
-  it("يبني ملخص واتساب بدون اختراع سعر أو توفر", () => {
+  it("لا ينشئ رابط واتساب لسلة فارغة", () => {
+    expect(buildCartWhatsAppUrl([], "201555570269")).toBeNull();
+  });
+
+  it("يبني ملخص واتساب مختصر بدون اختراع سعر أو توفر", () => {
     const items = addProductToCart(product, { اللون: "أحمر" });
     const url = buildCartWhatsAppUrl(items, "201555570269");
     expect(url).toContain("https://wa.me/201555570269?text=");
     const decoded = decodeURIComponent(url ?? "");
-    expect(decoded).toContain("الكمية: 1");
+    expect(decoded).toContain("بالون × 1");
     expect(decoded).toContain("اللون: أحمر");
     expect(decoded).toContain("أكد السعر والتوفر");
+    expect(decoded).not.toContain("السعر:");
   });
 });
