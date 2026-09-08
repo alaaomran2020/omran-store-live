@@ -4,7 +4,9 @@ import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, formatPrice, productPermalink } from "@/lib/productFormat";
 import { extractProductColors, productColorHex } from "@/lib/productColors";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
-import { Info, MessageCircle } from "lucide-react";
+import { addProductToCart } from "@/lib/cart";
+import { toast } from "sonner";
+import { Info, MessageCircle, ShoppingCart } from "lucide-react";
 
 /**
  * Omran Product Card v3
@@ -36,6 +38,14 @@ export function ProductCard({
     }
   };
 
+  const handleAddToCart = () => {
+    const items = addProductToCart(product);
+    const quantity = items.find(item => item.productId === product.id)?.quantity ?? 1;
+    toast.success("تمت إضافة المنتج للسلة", {
+      description: `${product.name} — الكمية: ${quantity}`,
+    });
+  };
+
   return (
     <article
       data-testid="product-card"
@@ -50,7 +60,7 @@ export function ProductCard({
       >
         <ProductImage
           product={product}
-          className="h-full w-full object-contain p-2.5 transition duration-300 sm:p-3 sm:group-hover:scale-[1.02]"
+          className="h-full w-full object-cover transition duration-300 sm:group-hover:scale-[1.02]"
           sizesHint="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
         />
         {product.category && (
@@ -99,7 +109,15 @@ export function ProductCard({
           </div>
         )}
 
-        <div className="mt-auto flex flex-col gap-2 pt-1 sm:pt-2">
+        <div className="mt-auto grid grid-cols-1 gap-2 pt-1 sm:pt-2">
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-brand-red px-2.5 py-2.5 text-[12px] font-extrabold leading-4 text-white transition active:scale-[0.98] hover:brightness-95 focus-visible:ring-4 focus-visible:ring-brand-red/25 sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm"
+          >
+            <ShoppingCart size={16} aria-hidden="true" className="shrink-0" />
+            إضافة للسلة
+          </button>
           {waUrl && (
             <a
               href={waUrl}
@@ -109,10 +127,7 @@ export function ProductCard({
               className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-whatsapp px-2.5 py-2.5 text-[12px] font-bold leading-4 text-white transition active:scale-[0.98] hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25 sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm"
             >
               <MessageCircle size={16} aria-hidden="true" className="shrink-0" />
-              <span className="sm:hidden">استفسر واتساب</span>
-              <span className="hidden sm:inline">
-                {selectedColor ? `استفسر عن ${selectedColor}` : "اسأل عن السعر والتوفر"}
-              </span>
+              <span>{selectedColor ? `الكميات — ${selectedColor}` : "للاستفسار والكميات"}</span>
             </a>
           )}
           <button

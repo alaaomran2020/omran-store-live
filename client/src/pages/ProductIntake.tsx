@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Camera, CheckCircle2, ExternalLink, ImagePlus, Loader2 } from "lucide-react";
+import { Camera, CheckCircle2, ImagePlus, Loader2, Pencil, Plus } from "lucide-react";
 import { BrutalCard, Field, Notice, PageTitle, PrimaryButton, TextInput } from "@/admin/ui";
 import { submitProductIntake, type ProductIntakeReceipt } from "@/lib/productIntakeClient";
 import { IMAGE_SOURCES, buildImageMatchKey, type ImageSource } from "@shared/productIntake";
@@ -102,14 +102,17 @@ export default function ProductIntake() {
           كل إدخال جديد يُسجل تلقائيًا NEEDS_REVIEW. الصورة والسعر والهوية وحالة النشر لا تُعتمد تلقائيًا.
         </Notice>
 
-        <div className="mb-5 flex flex-wrap gap-3">
-          <a href={MASTER_DATABASE_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 border-2 border-electric px-3 py-2 text-sm font-black text-electric">
-            <ExternalLink size={16} /> فتح قاعدة التشغيل المشتركة
+        <div className="mb-5 grid gap-3 sm:grid-cols-2">
+          <a href="#new-product" className="inline-flex min-h-12 items-center justify-center gap-2 border-2 border-electric bg-electric px-4 py-3 text-sm font-black text-slate-950">
+            <Plus size={17} /> إضافة منتج جديد
           </a>
-          <span className="self-center text-xs text-slate-500">Product_Intake → Review / QA → Products_Master → Production Snapshot</span>
+          <a href={MASTER_DATABASE_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 border-2 border-amber-400 px-4 py-3 text-sm font-black text-amber-300">
+            <Pencil size={16} /> تعديل المنتجات الحالية
+          </a>
+          <span className="text-xs text-slate-500 sm:col-span-2">التعديل يتم من قاعدة التشغيل الرئيسية لضمان وصول الاسم والصورة والوصف وحالة النشر إلى المتجر بدون إنشاء نسخة محلية منفصلة.</span>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[1.2fr_.8fr]">
+        <div id="new-product" className="grid scroll-mt-6 gap-5 lg:grid-cols-[1.2fr_.8fr]">
           <BrutalCard className="p-5">
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="اسم الموظف">

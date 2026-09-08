@@ -86,7 +86,7 @@ export function ProductDetailsDialog({
                 <ProductImage
                   product={product}
                   priority
-                  className="h-full w-full object-contain p-3 sm:p-4"
+                  className="h-full w-full object-cover"
                   sizesHint="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
@@ -174,7 +174,7 @@ export function ProductDetailsDialog({
                     className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25"
                   >
                     <MessageCircle size={18} aria-hidden="true" />
-                    {selectedColor ? `استفسر عن اللون ${selectedColor}` : "اسأل عن السعر والتوفر"}
+                    {selectedColor ? `الكميات المتاحة — ${selectedColor}` : "للاستفسار والكميات"}
                   </a>
                 ) : (
                   <p className="rounded-xl border border-brand-border bg-brand-cream px-4 py-3 text-sm font-bold text-brand-muted">
@@ -203,7 +203,7 @@ export function ProductDetailsDialog({
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp px-4 py-3 text-sm font-extrabold text-white shadow-lg transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-whatsapp/25"
             >
               <MessageCircle size={18} aria-hidden="true" />
-              {selectedColor ? `واتساب — ${selectedColor}` : "استفسر عن السعر والتوفر على واتساب"}
+              {selectedColor ? `الكميات — ${selectedColor}` : "للاستفسار والكميات على واتساب"}
             </a>
           ) : (
             <button
