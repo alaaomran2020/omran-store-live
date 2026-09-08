@@ -5,8 +5,9 @@ import { ProductSpecifications } from "@/components/ProductSpecifications";
 import { buildWhatsAppUrl } from "@/lib/productFormat";
 import { productColorHex } from "@/lib/productColors";
 import { nonColorProductOptions, productColors } from "@/lib/productOptions";
+import { addProductToCart } from "@/lib/cart";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
-import { Check, MessageCircle, X } from "lucide-react";
+import { Check, MessageCircle, ShoppingBag, X } from "lucide-react";
 
 export function ProductDetailsDialog({
   product,
@@ -19,12 +20,14 @@ export function ProductDetailsDialog({
   const extraOptions = useMemo(() => (product ? nonColorProductOptions(product) : []), [product]);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [addedFeedback, setAddedFeedback] = useState(false);
 
   useEffect(() => {
     setSelectedColor(colors[0] ?? null);
     setSelectedOptions(
       Object.fromEntries(extraOptions.map(group => [group.name, group.values[0] ?? ""]).filter(([, value]) => Boolean(value)))
     );
+    setAddedFeedback(false);
   }, [product?.id, colors, extraOptions]);
 
   useEffect(() => {
@@ -54,6 +57,17 @@ export function ProductDetailsDialog({
     } catch {
       // Analytics failure must never block WhatsApp conversion.
     }
+  };
+
+  const cartSelections = {
+    ...(selectedColor ? { اللون: selectedColor } : {}),
+    ...selectedOptions,
+  };
+
+  const handleAddToCart = () => {
+    addProductToCart(product, cartSelections);
+    setAddedFeedback(true);
+    window.setTimeout(() => setAddedFeedback(false), 1400);
   };
 
   const selectionSummary = [
@@ -112,7 +126,7 @@ export function ProductDetailsDialog({
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-extrabold text-brand-navy">اختار اللون</p>
-                      <p className="mt-0.5 text-xs font-bold text-brand-muted">اللون الموثق هيظهر تلقائيًا في رسالة واتساب</p>
+                      <p className="mt-0.5 text-xs font-bold text-brand-muted">اللون الموثق هيظهر تلقائيًا في الطلب ورسالة واتساب</p>
                     </div>
                     {selectedColor && (
                       <span className="rounded-full bg-brand-sky px-2.5 py-1 text-xs font-extrabold text-brand-navy">
@@ -199,11 +213,19 @@ export function ProductDetailsDialog({
 
               <div className="rounded-2xl bg-brand-sky p-3.5 text-sm leading-7 text-brand-navy sm:p-4">
                 {selectionSummary.length > 0
-                  ? <>اختياراتك الموثقة: <strong>{selectionSummary.join(" · ")}</strong>. هتتبعت تلقائيًا مع اسم المنتج والكود على واتساب.</>
-                  : "اضغط واتساب وهيوصلنا اسم المنتج والكود تلقائيًا لتأكيد السعر والتوفر."}
+                  ? <>اختياراتك الموثقة: <strong>{selectionSummary.join(" · ")}</strong>. تقدر تضيفها لطلبك أو تبعتها مباشرة على واتساب.</>
+                  : "تقدر تضيف المنتج لطلبك أو تبعت استفسار مباشر على واتساب لتأكيد السعر والتوفر."}
               </div>
 
               <div className="mt-auto hidden flex-col gap-2 pt-2 sm:flex">
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-brand-blue bg-brand-sky px-5 py-3 text-sm font-extrabold text-brand-navy transition hover:bg-brand-blue hover:text-white focus-visible:ring-4 focus-visible:ring-brand-blue/20"
+                >
+                  <ShoppingBag size={18} aria-hidden="true" />
+                  {addedFeedback ? "اتضاف لطلبك ✓" : "أضف لطلبك"}
+                </button>
                 {waUrl ? (
                   <a
                     href={waUrl}
@@ -232,23 +254,31 @@ export function ProductDetailsDialog({
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 z-20 border-t border-brand-border bg-white/96 p-3 pb-[max(.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:hidden">
+        <div className="absolute inset-x-0 bottom-0 z-20 grid grid-cols-2 gap-2 border-t border-brand-border bg-white/96 p-3 pb-[max(.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:hidden">
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-brand-blue bg-brand-sky px-3 py-3 text-xs font-extrabold text-brand-navy shadow-sm transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-brand-blue/20"
+          >
+            <ShoppingBag size={17} aria-hidden="true" />
+            {addedFeedback ? "اتضاف ✓" : "أضف لطلبك"}
+          </button>
           {waUrl ? (
             <a
               href={waUrl}
               target="_blank"
               rel="noreferrer"
               onClick={handleWhatsAppClick}
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp px-4 py-3 text-sm font-extrabold text-white shadow-lg transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-whatsapp/25"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-3 py-3 text-xs font-extrabold text-white shadow-lg transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-whatsapp/25"
             >
-              <MessageCircle size={18} aria-hidden="true" />
-              {selectionSummary.length > 0 ? "استفسر عن الاختيارات المحددة" : "استفسر عن السعر والتوفر على واتساب"}
+              <MessageCircle size={17} aria-hidden="true" />
+              واتساب
             </a>
           ) : (
             <button
               type="button"
               onClick={onClose}
-              className="min-h-12 w-full rounded-xl border border-brand-border bg-white px-4 py-3 text-sm font-bold text-brand-blue"
+              className="min-h-12 rounded-xl border border-brand-border bg-white px-3 py-3 text-xs font-bold text-brand-blue"
             >
               متابعة التصفح
             </button>
