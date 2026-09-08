@@ -20,7 +20,7 @@ test('does not call provider without credentials', async () => {
   await assert.rejects(generateDraft(source), /API key/);
 });
 
-test('uses confirmed SeekAI endpoint, GLM model and JSON response mode', async () => {
+test('uses confirmed SeekAI endpoint, GLM model, larger token budget and JSON response mode', async () => {
   let captured;
   const result = await generateDraft(source, {
     apiKey: 'test',
@@ -39,11 +39,25 @@ test('uses confirmed SeekAI endpoint, GLM model and JSON response mode', async (
   });
   assert.equal(captured.url, 'https://seekai.cc/v1/chat/completions');
   assert.equal(captured.body.model, 'glm-5.3-flash');
+  assert.equal(captured.body.max_tokens, 4096);
   assert.deepEqual(captured.body.response_format, { type: 'json_object' });
   assert.equal(result.draft.suggested_description, 'لعبة عربية للأطفال');
   assert.equal(result.usage.total_tokens, 20);
   assert.equal(result.attempts_used, 1);
   assert.equal(result.response_mode, 'json_object');
+});
+
+test('allows a custom completion budget', async () => {
+  let captured;
+  await generateDraft(source, {
+    apiKey: 'test',
+    maxTokens: 2048,
+    fetchImpl: async (_url, options) => {
+      captured = JSON.parse(options.body);
+      return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: '{"description":"اختبار"}' }, finish_reason: 'stop' }] }) };
+    }
+  });
+  assert.equal(captured.max_tokens, 2048);
 });
 
 test('parses assistant content while ignoring GLM reasoning_content', () => {

@@ -3,6 +3,8 @@ import { pathToFileURL } from 'node:url';
 
 const DEFAULT_BASE_URL = 'https://seekai.cc/v1/';
 const DEFAULT_MODEL = 'glm-5.3-flash';
+const DEFAULT_MAX_TOKENS = 4096;
+const DEFAULT_TIMEOUT_MS = 90000;
 const RETRYABLE_STATUS = new Set([408, 409, 425, 429, 500, 502, 503, 504]);
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -38,15 +40,15 @@ export function validateDraft(source, proposed) {
   };
 }
 
-function buildRequestBody(source, model, { structuredOutput = true } = {}) {
+function buildRequestBody(source, model, { structuredOutput = true, maxTokens = DEFAULT_MAX_TOKENS } = {}) {
   const body = {
     model,
     temperature: 0.2,
-    max_tokens: 1200,
+    max_tokens: maxTokens,
     messages: [
       {
         role: 'system',
-        content: 'You prepare Egyptian Arabic toy catalog metadata. Return one JSON object only with fields: name, description, category, search_keywords, seo_title, seo_description, whatsapp_text. Use only supplied evidence. Never invent prices, ages, dimensions, materials, components, safety claims or stock. Use عرايس instead of دمى and عربيات instead of سيارات. Do not include POP UP products. Omit uncertain facts. Never make publication decisions. Do not add commentary before or after the JSON object.'
+        content: 'You prepare Egyptian Arabic toy catalog metadata. Return one compact JSON object only with fields: name, description, category, search_keywords, seo_title, seo_description, whatsapp_text. Keep the final JSON concise. Use only supplied evidence. Never invent prices, ages, dimensions, materials, components, safety claims or stock. Use عرايس instead of دمى and عربيات instead of سيارات. Do not include POP UP products. Omit uncertain facts. Never make publication decisions. Do not add commentary before or after the JSON object.'
       },
       {
         role: 'user',
@@ -105,6 +107,8 @@ export async function generateDraft(source, {
   apiKey,
   baseUrl = DEFAULT_BASE_URL,
   model = DEFAULT_MODEL,
+  maxTokens = DEFAULT_MAX_TOKENS,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
   fetchImpl = fetch,
   attempts = 3,
   retryDelayMs = 800
@@ -117,9 +121,9 @@ export async function generateDraft(source, {
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     const structuredOutput = attempt === 1;
-    const body = buildRequestBody(source, model, { structuredOutput });
+    const body = buildRequestBody(source, model, { structuredOutput, maxTokens });
     try {
       const response = await fetchImpl(requestUrl, {
         method: 'POST',
@@ -146,7 +150,7 @@ export async function generateDraft(source, {
       };
     } catch (error) {
       if (error?.name === 'AbortError') {
-        lastError = new Error('AI request timed out after 60 seconds');
+        lastError = new Error(`AI request timed out after ${Math.round(timeoutMs / 1000)} seconds`);
         lastError.retryableProvider = true;
       } else {
         lastError = error;
@@ -166,10 +170,14 @@ async function main() {
   if (!input || !output) throw new Error('Usage: node automation/seekai/product-engine.mjs input.json output.json');
   const inputText = (await readFile(input, 'utf8')).replace(/^\uFEFF/, '');
   const source = JSON.parse(inputText);
+  const maxTokens = Number.parseInt(process.env.SEEKAI_MAX_TOKENS || String(DEFAULT_MAX_TOKENS), 10);
+  const timeoutMs = Number.parseInt(process.env.SEEKAI_TIMEOUT_MS || String(DEFAULT_TIMEOUT_MS), 10);
   const result = await generateDraft(source, {
     apiKey: process.env.SEEKAI_API_KEY,
     baseUrl: process.env.SEEKAI_BASE_URL || DEFAULT_BASE_URL,
-    model: process.env.SEEKAI_MODEL || DEFAULT_MODEL
+    model: process.env.SEEKAI_MODEL || DEFAULT_MODEL,
+    maxTokens: Number.isFinite(maxTokens) && maxTokens > 0 ? maxTokens : DEFAULT_MAX_TOKENS,
+    timeoutMs: Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : DEFAULT_TIMEOUT_MS
   });
   await writeFile(output, JSON.stringify(result, null, 2) + '\n', { flag: 'wx' });
   console.log(`Review draft saved for ${result.draft.product_id}. No catalog changes made.`);

@@ -1,26 +1,62 @@
 # Omran Toys AI Product Engine
 
-Review-only pilot. No storefront, database, Google Sheet, Telegram or POP UP writes. No automatic deployment or publishing.
+Review-only product metadata tool. No storefront, database, Google Sheet, Telegram or POP UP writes. No automatic deployment or publishing.
+
+## Safety contract
+Every generated draft must remain `workflow_status=NEEDS_REVIEW`, `qa_status=PENDING`, `active=false`, and `publish=false`. Existing drafts are never overwritten. POP UP products are rejected. Verified source fields such as price, image, age and dimensions are preserved and the model is not allowed to invent them.
 
 ## Provider setup
-Verify the API endpoint, exact model ID, pricing, credit expiry and key spending limits in your own SeekAI dashboard. The endpoint is configurable and has not been authenticated against the user's account. Never commit API keys or put them in VITE_ environment variables or browser code. Use a dedicated restricted key. Do not send customer data, credentials or private business records to the provider.
+Verify the API endpoint, exact model ID, pricing, credit expiry and key spending limits in your own SeekAI dashboard. Never commit API keys or put them in VITE_ environment variables or browser code. Use a dedicated restricted key. Do not send customer data, credentials or private business records to the provider.
 
-Set SEEKAI_API_KEY, SEEKAI_MODEL and optionally SEEKAI_BASE_URL in a private terminal environment. The default base URL is https://seekai.cc/v1/ and must be verified before paid use. Start with a single synthetic product and a maximum $1 pilot allowance. Disable automatic top-ups. Do not run bulk jobs until actual billed usage is reconciled with the dashboard.
+Set `SEEKAI_API_KEY` privately in the terminal. Optional settings:
 
-## Run
-node --test automation/seekai/product-engine.test.mjs
+- `SEEKAI_MODEL` defaults to `glm-5.3-flash`.
+- `SEEKAI_BASE_URL` defaults to `https://seekai.cc/v1/`.
+- `SEEKAI_MAX_TOKENS` defaults to `4096`.
+- `SEEKAI_TIMEOUT_MS` defaults to `90000` (90 seconds).
+
+Do not run bulk jobs until provider billing and balance are understood. Disable automatic top-ups where possible and use provider-side key quotas as the hard spending limit.
+
+## Daily workflow
+Run the mocked safety tests first:
+
+```bash
+pnpm seekai:test
+```
+
+Generate review drafts:
+
+```bash
+pnpm seekai:batch
+```
+
+The batch is resumable. Existing valid review-only drafts are skipped instead of regenerated, so a timeout or provider failure does not force paid reruns for products that already succeeded. Failures are recorded and the runner continues with the remaining products. A local `batch-report.json` records created, skipped and failed items plus known token usage for successful responses.
+
+Build one local review bundle after the batch:
+
+```bash
+pnpm seekai:review
+```
+
+This creates `seekai-batch-review.json` from the local draft files after enforcing the same review-only safety gate. The review bundle is for human QA only and performs no catalog, Sheet, storefront or publication changes.
+
+## Single-product recovery
+For a product that failed while the rest of the batch succeeded, run only that input through the engine and write to its missing draft path. Never overwrite an existing draft.
+
+```bash
 node automation/seekai/product-engine.mjs input.json draft.json
+```
 
-Input example: {"id":"OMR-DEMO-001","name":"عربية بالريموت","description":"لعبة تحكم عن بعد","category":"تحكم عن بعد","price":null}
+## Input and output
+Input example:
 
-Output is a new JSON file containing suggested metadata, preserved verified fields, provider usage and a mandatory review status. Existing output files are never overwritten. Only use synthetic or approved public product information during the pilot. The script does not analyze images; image and dimension verification remain manual. Do not infer physical dimensions from pixel dimensions.
+```json
+{"id":"OMR-DEMO-001","name":"عربية بالريموت","description":"لعبة تحكم عن بعد","category":"تحكم عن بعد","price":null}
+```
 
-## Next integration gates
-1. Confirm provider identity, model capabilities, prices and balance.
-2. Run local mocked tests and one approved paid request; record actual cost.
-3. Review a small batch against the existing catalog and resolve factual errors.
-4. Map fields to the current Google Sheet schema after reading the live schema. Keep all writes disabled until explicit approval.
-5. Integrate the existing Telegram intake and approval workflow without replacing it. Publish only through the existing approved publication gate.
-6. Keep POP UP in a separate pipeline with its own catalog and credentials where appropriate.
+Output is a new JSON file containing suggested metadata, preserved verified fields, provider usage and mandatory review status. The tool does not analyze images; image and dimension verification remain manual. Do not infer physical dimensions from pixel dimensions.
 
-Budget allocation is a planning ceiling, not prepaid provider subaccounts: $70 catalog, $40 intake, $30 engineering, $30 marketing, $30 reserve. Actual usage must be measured; the script itself does not enforce a monetary ceiling because provider-specific pricing and billing APIs are unverified. Use the provider's hard key quota before enabling paid execution.
+## Publication boundary
+This tool stops at human review. Approval and publication must remain separate explicit steps through the existing approved publication gate. No script in this folder should directly change the Google Sheet, public catalog, storefront, deployment state or POP UP catalog.
+
+Budget allocation remains a planning ceiling, not prepaid provider subaccounts. Actual usage must be measured against the provider dashboard; successful response token totals do not necessarily include failed or timed-out provider calls.
