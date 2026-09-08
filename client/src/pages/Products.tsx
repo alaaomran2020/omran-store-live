@@ -4,6 +4,7 @@ import { OfficialSocialEmbeds } from "@/components/OfficialSocialEmbeds";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { ProductDetailsDialog } from "@/components/ProductDetailsDialog";
 import { SmartProductSearch } from "@/components/SmartProductSearch";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import { searchCatalog } from "@/lib/catalogSearch";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import { fetchProducts, type Product } from "@/lib/productsClient";
@@ -37,9 +38,9 @@ function readInitialParams() {
   };
 }
 
-type ProductsProps = { catalog?: ProductCatalog };
+type ProductsProps = { catalog?: ProductCatalog; showAnnouncement?: boolean };
 
-export default function Products({ catalog = "toys" }: ProductsProps) {
+export default function Products({ catalog = "toys", showAnnouncement = true }: ProductsProps) {
   const isPopup = catalog === "popup";
   const initial = useMemo(readInitialParams, []);
   const [shareOutcome, setShareOutcome] = useState<ProductShareOutcome | null>(null);
@@ -140,6 +141,7 @@ export default function Products({ catalog = "toys" }: ProductsProps) {
 
   return (
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
+      {showAnnouncement && <AnnouncementBar />}
       <header className="sticky top-0 z-40 border-b border-brand-border/80 bg-brand-cream/95 backdrop-blur">
         <div className="container flex min-h-16 items-center justify-between gap-3 sm:min-h-20 sm:gap-4">
           <a href="/" className="min-w-0 truncate text-base font-extrabold tracking-tight text-brand-navy sm:text-xl">شركة عمران التجارية</a>

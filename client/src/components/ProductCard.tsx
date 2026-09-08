@@ -1,12 +1,10 @@
 import { useMemo, useState } from "react";
 import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
-import { buildWhatsAppUrl, formatPrice, productPermalink } from "@/lib/productFormat";
+import { buildWhatsAppUrl, productPermalink } from "@/lib/productFormat";
 import { extractProductColors, productColorHex } from "@/lib/productColors";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
-import { addProductToCart } from "@/lib/cart";
-import { toast } from "sonner";
-import { Info, MessageCircle, ShoppingCart } from "lucide-react";
+import { Info, Images, MessageCircle } from "lucide-react";
 
 /**
  * Omran Product Card v3
@@ -38,14 +36,6 @@ export function ProductCard({
     }
   };
 
-  const handleAddToCart = () => {
-    const items = addProductToCart(product);
-    const quantity = items.find(item => item.productId === product.id)?.quantity ?? 1;
-    toast.success("تمت إضافة المنتج للسلة", {
-      description: `${product.name} — الكمية: ${quantity}`,
-    });
-  };
-
   return (
     <article
       data-testid="product-card"
@@ -68,6 +58,9 @@ export function ProductCard({
             {product.category}
           </span>
         )}
+        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-brand-navy/85 px-2 py-1 text-[10px] font-bold text-white sm:bottom-3 sm:left-3">
+          <Images size={12} aria-hidden="true" /> صورة المنتج
+        </span>
       </button>
 
       <div className="flex flex-1 flex-col gap-2.5 p-3 sm:gap-3 sm:p-5">
@@ -75,8 +68,8 @@ export function ProductCard({
           {product.name}
         </h3>
 
-        <p className="text-xs font-extrabold leading-5 text-brand-red sm:text-sm">
-          {formatPrice(product.price)}
+        <p className="text-[11px] font-bold leading-5 text-brand-muted sm:text-xs" dir="ltr">
+          SKU: {product.sku || product.id}
         </p>
 
         {colors.length > 0 && (
@@ -110,14 +103,6 @@ export function ProductCard({
         )}
 
         <div className="mt-auto grid grid-cols-1 gap-2 pt-1 sm:pt-2">
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-brand-red px-2.5 py-2.5 text-[12px] font-extrabold leading-4 text-white transition active:scale-[0.98] hover:brightness-95 focus-visible:ring-4 focus-visible:ring-brand-red/25 sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm"
-          >
-            <ShoppingCart size={16} aria-hidden="true" className="shrink-0" />
-            إضافة للسلة
-          </button>
           {waUrl && (
             <a
               href={waUrl}
@@ -127,7 +112,7 @@ export function ProductCard({
               className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-whatsapp px-2.5 py-2.5 text-[12px] font-bold leading-4 text-white transition active:scale-[0.98] hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25 sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm"
             >
               <MessageCircle size={16} aria-hidden="true" className="shrink-0" />
-              <span>{selectedColor ? `الكميات — ${selectedColor}` : "للاستفسار والكميات"}</span>
+              <span>{selectedColor ? `استفسر عن ${selectedColor}` : "استفسر عن السعر والتوفر"}</span>
             </a>
           )}
           <button

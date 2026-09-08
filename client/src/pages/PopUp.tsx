@@ -3,6 +3,7 @@ import { ExternalLink, Facebook, Instagram } from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
 import Products from "@/pages/Products";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
+import AnnouncementBar from "@/components/AnnouncementBar";
 
 const POPUP_TITLE = "POP UP – Gifts & Balloons | شركة عمران التجارية";
 const POPUP_DESCRIPTION = "هدايا وبالونات ومستلزمات حفلات من POP UP ضمن شركة عمران التجارية.";
@@ -90,7 +91,8 @@ export default function PopUp() {
 
   return (
     <div className="[&>div>main>footer]:hidden">
-      <Products catalog="popup" />
+      <AnnouncementBar />
+      <Products catalog="popup" showAnnouncement={false} />
       <PopUpOfficialSocials />
       <SiteFooter socialBrand="popup" />
     </div>
