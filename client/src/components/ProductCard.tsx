@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, productPermalink } from "@/lib/productFormat";
-import { extractProductColors, productColorHex } from "@/lib/productColors";
+import { productColorHex } from "@/lib/productColors";
+import { productColors } from "@/lib/productOptions";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Info, Images, MessageCircle, Play } from "lucide-react";
 
@@ -17,7 +18,7 @@ export function ProductCard({
   product: Product;
   onOpenDetails: (product: Product) => void;
 }) {
-  const colors = useMemo(() => extractProductColors(product.description), [product.description]);
+  const colors = useMemo(() => productColors(product), [product]);
   const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null);
 
   const waUrl = buildWhatsAppUrl(product, {
