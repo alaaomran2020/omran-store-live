@@ -14,13 +14,14 @@ export function searchCatalog(products: Product[], query: string): CatalogSearch
   const result = smartSearch(products, query);
   const suggestions: CatalogSearchResult["suggestions"] = [];
   const seen = new Set<string>();
-  for (const product of result.results.slice(0, 6)) {
+  for (const { product } of result.results) {
+    if (suggestions.length >= 6) break;
     const key = normalizeSearchText(product.name);
     if (seen.has(key)) continue;
     seen.add(key);
     suggestions.push({ label: product.name, value: product.name, kind: "product" });
   }
-  for (const category of [...new Set(products.map(product => product.category).filter(Boolean))]) {
+  for (const category of new Set(products.map(product => product.category).filter(Boolean))) {
     const key = normalizeSearchText(category);
     if ((key.includes(term) || term.includes(key)) && !seen.has(key) && suggestions.length < 6) {
       seen.add(key);
