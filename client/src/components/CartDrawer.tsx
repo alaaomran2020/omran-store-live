@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { MessageCircle, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import {
+  CART_OPEN_EVENT,
   CART_UPDATED_EVENT,
   buildCartWhatsAppUrl,
   cartItemCount,
@@ -10,6 +11,7 @@ import {
   setCartItemQuantity,
   type CartItem,
 } from "@/lib/cart";
+import { trackEvent } from "@/lib/analytics";
 
 export function CartDrawer() {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -18,10 +20,16 @@ export function CartDrawer() {
   useEffect(() => {
     setItems(readCart());
     const sync = () => setItems(readCart());
+    const openDrawer = () => {
+      setOpen(true);
+      trackEvent("cart_open", { source: "event", cart_items: cartItemCount(readCart()) });
+    };
     window.addEventListener(CART_UPDATED_EVENT, sync);
+    window.addEventListener(CART_OPEN_EVENT, openDrawer);
     window.addEventListener("storage", sync);
     return () => {
       window.removeEventListener(CART_UPDATED_EVENT, sync);
+      window.removeEventListener(CART_OPEN_EVENT, openDrawer);
       window.removeEventListener("storage", sync);
     };
   }, []);
@@ -43,13 +51,42 @@ export function CartDrawer() {
   const totalCount = cartItemCount(items);
   const waUrl = useMemo(() => buildCartWhatsAppUrl(items), [items]);
 
+  const handleOpen = (source: string) => {
+    setOpen(true);
+    trackEvent("cart_open", { source, cart_items: totalCount });
+  };
+
+  const handleWhatsAppSubmit = () => {
+    if (!waUrl || items.length === 0) return;
+    trackEvent("cart_whatsapp_submit", {
+      cart_lines: items.length,
+      cart_items: totalCount,
+      page_location: typeof window === "undefined" ? "" : window.location.href,
+    });
+  };
+
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => handleOpen("header_badge")}
+        aria-label={`طلبك${totalCount ? ` — ${totalCount} قطعة` : ""}`}
+        className="fixed left-3 top-[max(.75rem,env(safe-area-inset-top))] z-[55] inline-flex min-h-10 items-center gap-1.5 rounded-full border border-brand-border bg-white/96 px-3 py-2 text-xs font-extrabold text-brand-navy shadow-lg backdrop-blur transition hover:border-brand-blue hover:bg-brand-sky focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20 sm:left-5 sm:min-h-11 sm:px-4 sm:text-sm"
+      >
+        <ShoppingBag size={16} aria-hidden="true" />
+        <span className="hidden sm:inline">طلبك</span>
+        {totalCount > 0 && (
+          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-brand-yellow px-1.5 py-0.5 text-[10px] font-black text-brand-navy sm:min-w-6 sm:text-xs">
+            {totalCount}
+          </span>
+        )}
+      </button>
+
+      <button
+        type="button"
+        onClick={() => handleOpen("floating_button")}
         aria-label={`فتح طلبك${totalCount ? ` — ${totalCount} قطعة` : ""}`}
-        className="fixed bottom-5 left-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-navy px-4 py-3 text-sm font-extrabold text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-brand-blue focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/25 sm:bottom-6 sm:left-6"
+        className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-navy px-4 py-3 text-sm font-extrabold text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-brand-blue focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/25 sm:bottom-6 sm:left-6 lg:hidden"
       >
         <ShoppingBag size={18} aria-hidden="true" />
         <span>طلبك</span>
@@ -73,10 +110,10 @@ export function CartDrawer() {
             className="absolute inset-y-0 left-0 flex w-full max-w-md flex-col bg-white shadow-2xl"
             onClick={event => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-3 border-b border-brand-border px-4 py-4 sm:px-5">
+            <div className="flex items-center justify-between gap-3 border-b border-brand-border px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-5 sm:pt-5">
               <div>
                 <p className="text-lg font-extrabold text-brand-navy">طلبك</p>
-                <p className="mt-0.5 text-xs font-bold text-brand-muted">جهّز الكميات وبعدين ابعت الطلب على واتساب</p>
+                <p className="mt-0.5 text-xs font-bold text-brand-muted">راجع المنتجات والاختيارات والكميات قبل الإرسال</p>
               </div>
               <button
                 type="button"
@@ -88,12 +125,12 @@ export function CartDrawer() {
               </button>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5">
               {items.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-brand-border bg-brand-cream p-7 text-center">
                   <ShoppingBag className="mx-auto text-brand-muted" size={34} aria-hidden="true" />
                   <p className="mt-3 text-base font-extrabold text-brand-navy">طلبك فاضي حاليًا</p>
-                  <p className="mt-2 text-sm leading-7 text-brand-muted">أضف المنتجات اللي عايز تستفسر عنها، وبعدها ابعت الطلب كامل على واتساب.</p>
+                  <p className="mt-2 text-sm leading-7 text-brand-muted">أضف منتجًا واحدًا على الأقل قبل إرسال الطلب على واتساب.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -109,12 +146,15 @@ export function CartDrawer() {
                           <p className="line-clamp-2 text-sm font-extrabold leading-6 text-brand-ink">{item.name}</p>
                           <p className="mt-1 text-[11px] font-bold text-brand-muted" dir="ltr">SKU: {item.sku || item.productId}</p>
                           {Object.keys(item.selections).length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {Object.entries(item.selections).map(([name, value]) => (
-                                <span key={name} className="rounded-full bg-brand-sky px-2 py-1 text-[10px] font-extrabold text-brand-navy">
-                                  {name}: {value}
-                                </span>
-                              ))}
+                            <div className="mt-2 rounded-xl bg-brand-sky/70 p-2">
+                              <p className="text-[10px] font-extrabold text-brand-muted">الاختيارات</p>
+                              <div className="mt-1 flex flex-wrap gap-1.5">
+                                {Object.entries(item.selections).map(([name, value]) => (
+                                  <span key={name} className="rounded-full bg-white px-2 py-1 text-[10px] font-extrabold text-brand-navy ring-1 ring-brand-border">
+                                    {name}: {value}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -163,11 +203,12 @@ export function CartDrawer() {
                   <span>{totalCount}</span>
                 </div>
               )}
-              {waUrl ? (
+              {waUrl && items.length > 0 ? (
                 <a
                   href={waUrl}
                   target="_blank"
                   rel="noreferrer"
+                  onClick={handleWhatsAppSubmit}
                   className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp px-4 py-3 text-sm font-extrabold text-white shadow-md transition hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25"
                 >
                   <MessageCircle size={18} aria-hidden="true" /> إرسال الطلب على واتساب
