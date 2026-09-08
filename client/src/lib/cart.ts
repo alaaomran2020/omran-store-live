@@ -1,8 +1,10 @@
 import type { Product } from "@/lib/productsClient";
 import { whatsappNumber } from "@/lib/productFormat";
+import { trackEvent } from "@/lib/analytics";
 
 export const CART_STORAGE_KEY = "omran-store-cart-v1";
 export const CART_UPDATED_EVENT = "omran:cart-updated";
+export const CART_OPEN_EVENT = "omran:cart-open";
 
 export type CartSelections = Record<string, string>;
 
@@ -75,6 +77,11 @@ function writeCart(items: CartItem[]): CartItem[] {
   return items;
 }
 
+export function openCartDrawer(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(CART_OPEN_EVENT));
+}
+
 export function addProductToCart(
   product: Pick<Product, "id" | "sku" | "name" | "image" | "category">,
   selections: CartSelections = {}
@@ -100,19 +107,55 @@ export function addProductToCart(
     });
   }
 
-  return writeCart(items);
+  const next = writeCart(items);
+  trackEvent("cart_add", {
+    product_id: product.id,
+    sku: product.sku ?? "",
+    product_name: product.name,
+    category: product.category,
+    quantity: existing?.quantity ?? 1,
+    selections: JSON.stringify(normalizedSelections),
+    cart_items: cartItemCount(next),
+  });
+  return next;
 }
 
 export function setCartItemQuantity(lineId: string, quantity: number): CartItem[] {
   const items = readCart();
   const item = items.find(candidate => candidate.lineId === lineId);
   if (!item) return items;
+  const previousQuantity = item.quantity;
   item.quantity = sanitizeQuantity(quantity);
-  return writeCart(items);
+  const next = writeCart(items);
+  if (item.quantity !== previousQuantity) {
+    trackEvent("cart_quantity_change", {
+      product_id: item.productId,
+      sku: item.sku ?? "",
+      product_name: item.name,
+      category: item.category,
+      from_quantity: previousQuantity,
+      quantity: item.quantity,
+      cart_items: cartItemCount(next),
+    });
+  }
+  return next;
 }
 
 export function removeCartItem(lineId: string): CartItem[] {
-  return writeCart(readCart().filter(item => item.lineId !== lineId));
+  const items = readCart();
+  const item = items.find(candidate => candidate.lineId === lineId);
+  const next = writeCart(items.filter(candidate => candidate.lineId !== lineId));
+  if (item) {
+    trackEvent("cart_remove", {
+      product_id: item.productId,
+      sku: item.sku ?? "",
+      product_name: item.name,
+      category: item.category,
+      quantity: item.quantity,
+      cart_items: cartItemCount(next),
+    });
+  }
+  return next;
 }
 
 export function clearCart(): CartItem[] {
@@ -128,22 +171,16 @@ export function buildCartWhatsAppUrl(items: CartItem[], number = whatsappNumber(
   if (!cleanNumber || items.length === 0) return null;
 
   const lines = [
-    "أهلاً بيك 👋",
-    "حابب أجهز طلب من شركة عمران التجارية وأتأكد من السعر والتوفر:",
+    "مرحبًا، أريد تأكيد السعر والتوفر للطلب التالي:",
     "",
-    ...items.flatMap((item, index) => {
+    ...items.map((item, index) => {
       const selectionText = Object.entries(item.selections)
         .map(([name, value]) => `${name}: ${value}`)
-        .join(" · ");
-      return [
-        `${index + 1}) ${item.name}`,
-        `الكمية: ${item.quantity}`,
-        item.sku ? `SKU: ${item.sku}` : `كود المنتج: ${item.productId}`,
-        selectionText ? `الاختيارات: ${selectionText}` : null,
-        item.category ? `التصنيف: ${item.category}` : null,
-        "",
-      ].filter((line): line is string => Boolean(line));
+        .join("، ");
+      const code = item.sku || item.productId;
+      return `${index + 1}) ${item.name} × ${item.quantity}\nالكود: ${code}${selectionText ? `\n${selectionText}` : ""}`;
     }),
+    "",
     `إجمالي القطع: ${cartItemCount(items)}`,
     "من فضلك أكد السعر والتوفر قبل تأكيد الطلب.",
   ];
