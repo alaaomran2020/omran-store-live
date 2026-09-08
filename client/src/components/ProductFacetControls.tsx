@@ -17,6 +17,11 @@ const AVAILABILITY_OPTIONS: Array<{ value: ProductAvailability; label: string }>
   { value: "unknown", label: "غير محدد" },
 ];
 
+function isDesktopViewport(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return true;
+  return window.matchMedia("(min-width: 640px)").matches;
+}
+
 export function ProductFacetControls({
   isPopup,
   brands,
@@ -52,13 +57,11 @@ export function ProductFacetControls({
   onSortChange: (value: ProductSortMode) => void;
   onClearAll: () => void;
 }) {
-  const [expanded, setExpanded] = useState(() =>
-    typeof window === "undefined" ? true : !window.matchMedia("(max-width: 639px)").matches
-  );
+  const [expanded, setExpanded] = useState(isDesktopViewport);
   const accent = isPopup ? "text-[#6b278f] focus:border-[#8a3aaa] focus:ring-[#8a3aaa]/15" : "text-brand-navy focus:border-brand-blue focus:ring-brand-blue/15";
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
     const media = window.matchMedia("(min-width: 640px)");
     const sync = () => {
       if (media.matches) setExpanded(true);
