@@ -24,7 +24,7 @@ export default function BrandHeader() {
           </span>
 
           <span className="min-w-0">
-            <span className="block truncate text-lg font-black leading-tight tracking-tight text-brand-navy sm:text-2xl">
+            <span className="block whitespace-nowrap text-[13px] font-black leading-tight tracking-[-0.02em] text-brand-navy min-[390px]:text-sm sm:text-2xl sm:tracking-tight">
               شركة عمران التجارية
             </span>
             <span className="mt-1 block text-[11px] font-bold tracking-wide text-brand-muted sm:text-sm">
