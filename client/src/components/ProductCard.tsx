@@ -4,12 +4,13 @@ import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, productPermalink } from "@/lib/productFormat";
 import { productColorHex } from "@/lib/productColors";
 import { productColors } from "@/lib/productOptions";
+import { addProductToCart } from "@/lib/cart";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
-import { Info, Images, MessageCircle, Play } from "lucide-react";
+import { Info, Images, MessageCircle, Play, ShoppingBag } from "lucide-react";
 
 /**
- * Omran Product Card v3
- * Image → Name → price/inquiry → verified color selector → WhatsApp CTA.
+ * Omran Product Card v4
+ * Image → Name → verified color selector → cart prep → WhatsApp CTA.
  */
 export function ProductCard({
   product,
@@ -20,6 +21,7 @@ export function ProductCard({
 }) {
   const colors = useMemo(() => productColors(product), [product]);
   const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null);
+  const [addedFeedback, setAddedFeedback] = useState(false);
 
   const waUrl = buildWhatsAppUrl(product, {
     selectedColor,
@@ -35,6 +37,12 @@ export function ProductCard({
     } catch {
       // Analytics failure must never block WhatsApp conversion.
     }
+  };
+
+  const handleAddToCart = () => {
+    addProductToCart(product, selectedColor ? { اللون: selectedColor } : {});
+    setAddedFeedback(true);
+    window.setTimeout(() => setAddedFeedback(false), 1400);
   };
 
   return (
@@ -107,6 +115,14 @@ export function ProductCard({
         )}
 
         <div className="mt-auto grid grid-cols-1 gap-2 pt-1 sm:pt-2">
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-blue bg-brand-sky px-2.5 py-2.5 text-[12px] font-extrabold leading-4 text-brand-navy transition active:scale-[0.98] hover:bg-brand-blue hover:text-white focus-visible:ring-4 focus-visible:ring-brand-blue/20 sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm"
+          >
+            <ShoppingBag size={16} aria-hidden="true" className="shrink-0" />
+            <span>{addedFeedback ? "اتضاف لطلبك ✓" : "أضف لطلبك"}</span>
+          </button>
           {waUrl && (
             <a
               href={waUrl}
