@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { generateDraft } from './product-engine.mjs';
 
 const DEFAULT_INPUTS = [
@@ -40,7 +41,7 @@ export async function runBatch({
   return results;
 }
 
-if (import.meta.url === new URL(`file://${process.argv[1].replace(/\\/g, '/')}`).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   runBatch().catch(error => {
     console.error(error.message);
     process.exitCode = 1;
