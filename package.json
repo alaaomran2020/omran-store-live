@@ -11,7 +11,7 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
-    "seekai:test": "node --test automation/seekai/product-engine.test.mjs automation/seekai/batch-runner.test.mjs",
+    "seekai:test": "node --test automation/seekai/product-engine.test.mjs automation/seekai/batch-runner.test.mjs automation/seekai/review-bundle.test.mjs",
     "seekai:batch": "node automation/seekai/batch-runner.mjs",
     "seekai:review": "node automation/seekai/review-bundle.mjs",
     "deploy": "pnpm build && wrangler pages deploy dist/public --project-name=omrantoys-live-app --branch=main"
