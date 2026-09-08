@@ -4,9 +4,10 @@ import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, productPermalink } from "@/lib/productFormat";
 import { productColorHex } from "@/lib/productColors";
 import { productColors } from "@/lib/productOptions";
-import { addProductToCart } from "@/lib/cart";
+import { addProductToCart, openCartDrawer } from "@/lib/cart";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Info, Images, MessageCircle, Play, ShoppingBag } from "lucide-react";
+import { toast } from "sonner";
 
 /**
  * Omran Product Card v4
@@ -43,6 +44,13 @@ export function ProductCard({
     addProductToCart(product, selectedColor ? { اللون: selectedColor } : {});
     setAddedFeedback(true);
     window.setTimeout(() => setAddedFeedback(false), 1400);
+    toast.success("اتضاف لطلبك", {
+      description: selectedColor ? `${product.name} — ${selectedColor}` : product.name,
+      action: {
+        label: "عرض الطلب",
+        onClick: openCartDrawer,
+      },
+    });
   };
 
   return (
