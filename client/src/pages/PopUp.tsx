@@ -1,6 +1,6 @@
-import { useEffect } from "react";
 import { ExternalLink, Facebook, Instagram } from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
+import { SeoMetadata } from "@/components/SeoMetadata";
 import Products from "@/pages/Products";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import AnnouncementBar from "@/components/AnnouncementBar";
@@ -75,22 +75,9 @@ function PopUpOfficialSocials() {
 }
 
 export default function PopUp() {
-  useEffect(() => {
-    const previousTitle = document.title;
-    const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
-    const previousDescription = description?.content ?? "";
-
-    document.title = POPUP_TITLE;
-    if (description) description.content = POPUP_DESCRIPTION;
-
-    return () => {
-      document.title = previousTitle;
-      if (description) description.content = previousDescription;
-    };
-  }, []);
-
   return (
     <div className="[&>div>main>footer]:hidden">
+      <SeoMetadata path="/popup" title={POPUP_TITLE} description={POPUP_DESCRIPTION} />
       <AnnouncementBar />
       <Products catalog="popup" showAnnouncement={false} />
       <PopUpOfficialSocials />

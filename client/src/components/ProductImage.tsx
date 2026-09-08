@@ -9,12 +9,27 @@ function repositoryAssetFallback(image: string): string | null {
 }
 
 /** Only use declared product media. Never guess a filename from an SKU. */
-export function productImageCandidates(product: Pick<Product, "image" | "imageSource" | "processedImage">): string[] {
+export function productImageCandidates(
+  product: Pick<Product, "image" | "imageSource" | "processedImage">
+): string[] {
   const declared = [product.processedImage, product.image, product.imageSource];
-  const local = declared.filter((value): value is string => Boolean(value?.startsWith("/") && !value.startsWith("//")));
-  const remote = declared.map(value => toDisplayableImageUrl(value)).filter((value): value is string => Boolean(value));
-  const driveFallbacks = declared.map(value => fallbackImageUrl(value)).filter((value): value is string => Boolean(value));
-  return Array.from(new Set([...local, ...remote, ...driveFallbacks, ...local.map(repositoryAssetFallback)].filter((value): value is string => Boolean(value))));
+  const local = declared.filter(
+    (value): value is string => Boolean(value?.startsWith("/") && !value.startsWith("//"))
+  );
+  const remote = declared
+    .map(value => toDisplayableImageUrl(value))
+    .filter((value): value is string => Boolean(value));
+  const driveFallbacks = declared
+    .map(value => fallbackImageUrl(value))
+    .filter((value): value is string => Boolean(value));
+
+  return Array.from(
+    new Set(
+      [...local, ...remote, ...driveFallbacks, ...local.map(repositoryAssetFallback)].filter(
+        (value): value is string => Boolean(value)
+      )
+    )
+  );
 }
 
 export function ProductImage({
@@ -29,7 +44,10 @@ export function ProductImage({
   priority?: boolean;
 }) {
   const [attempt, setAttempt] = useState(0);
-  const candidates = useMemo(() => productImageCandidates(product), [product.image, product.imageSource, product.processedImage]);
+  const candidates = useMemo(
+    () => productImageCandidates(product),
+    [product.image, product.imageSource, product.processedImage]
+  );
   const mediaKey = candidates.join("\n");
 
   useEffect(() => {
@@ -54,10 +72,14 @@ export function ProductImage({
       key={`${product.id}:${src}`}
       src={src}
       alt={product.name}
+      width={1200}
+      height={1200}
       loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
       decoding="async"
       sizes={sizesHint}
       referrerPolicy="no-referrer"
+      draggable={false}
       onError={() => setAttempt(current => current + 1)}
       className={className}
     />

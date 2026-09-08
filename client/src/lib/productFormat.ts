@@ -48,7 +48,12 @@ export function whatsappNumber(): string {
 export function buildWhatsAppUrl(
   product: Pick<Product, "name" | "price"> &
     Partial<Pick<Product, "id" | "category">> & { sku?: string | null },
-  options: { number?: string; pageUrl?: string; selectedColor?: string | null } = {}
+  options: {
+    number?: string;
+    pageUrl?: string;
+    selectedColor?: string | null;
+    selectedOptions?: Record<string, string | null | undefined>;
+  } = {}
 ): string | null {
   const number = (options.number ?? whatsappNumber()).replace(/[^\d]/g, "");
   if (!number) return null;
@@ -57,6 +62,9 @@ export function buildWhatsAppUrl(
   const sku = (product as { sku?: string | null }).sku?.trim() || "";
   const category = (product as { category?: string }).category?.trim() || "";
   const selectedColor = options.selectedColor?.trim() || "";
+  const structuredSelections = Object.entries(options.selectedOptions ?? {})
+    .map(([name, value]) => [name.trim(), value?.trim() ?? ""] as const)
+    .filter(([name, value]) => name && value && !/^(اللون|الألوان|color|colors)$/i.test(name));
 
   let pageUrl = (options.pageUrl ?? "").trim();
   if (!pageUrl) {
@@ -83,13 +91,15 @@ export function buildWhatsAppUrl(
     }
   }
 
+  const hasSelections = Boolean(selectedColor || structuredSelections.length);
   const lines = [
     "أهلاً بيك 👋",
-    selectedColor
-      ? `بالنسبة لـ ${product.name} — اللون ${selectedColor}، حابب أعرف السعر والتوفر.`
+    hasSelections
+      ? `بالنسبة لـ ${product.name}، حابب أعرف السعر والتوفر للاختيارات دي.`
       : `بالنسبة لـ ${product.name}، حابب أعرف السعر والتوفر وأي تفاصيل متاحة عنه.`,
     "",
     selectedColor ? `اللون المختار: ${selectedColor}` : null,
+    ...structuredSelections.map(([name, value]) => `${name}: ${value}`),
     productId ? `كود المنتج: ${productId}` : null,
     sku ? `SKU: ${sku}` : null,
     category ? `التصنيف: ${category}` : null,

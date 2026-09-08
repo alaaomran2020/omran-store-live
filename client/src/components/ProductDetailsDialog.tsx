@@ -3,7 +3,8 @@ import type { Product } from "@/lib/productsClient";
 import { ProductMediaGallery } from "@/components/ProductMediaGallery";
 import { ProductSpecifications } from "@/components/ProductSpecifications";
 import { buildWhatsAppUrl } from "@/lib/productFormat";
-import { extractProductColors, productColorHex } from "@/lib/productColors";
+import { productColorHex } from "@/lib/productColors";
+import { nonColorProductOptions, productColors } from "@/lib/productOptions";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Check, MessageCircle, X } from "lucide-react";
 
@@ -14,12 +15,17 @@ export function ProductDetailsDialog({
   product: Product | null;
   onClose: () => void;
 }) {
-  const colors = useMemo(() => extractProductColors(product?.description), [product?.description]);
+  const colors = useMemo(() => (product ? productColors(product) : []), [product]);
+  const extraOptions = useMemo(() => (product ? nonColorProductOptions(product) : []), [product]);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setSelectedColor(colors[0] ?? null);
-  }, [product?.id, colors]);
+    setSelectedOptions(
+      Object.fromEntries(extraOptions.map(group => [group.name, group.values[0] ?? ""]).filter(([, value]) => Boolean(value)))
+    );
+  }, [product?.id, colors, extraOptions]);
 
   useEffect(() => {
     if (!product) return;
@@ -38,6 +44,7 @@ export function ProductDetailsDialog({
   if (!product) return null;
   const waUrl = buildWhatsAppUrl(product, {
     selectedColor,
+    selectedOptions,
     pageUrl: typeof window === "undefined" ? undefined : window.location.href,
   });
 
@@ -48,6 +55,11 @@ export function ProductDetailsDialog({
       // Analytics failure must never block WhatsApp conversion.
     }
   };
+
+  const selectionSummary = [
+    selectedColor ? `اللون: ${selectedColor}` : null,
+    ...Object.entries(selectedOptions).map(([name, value]) => (value ? `${name}: ${value}` : null)),
+  ].filter(Boolean);
 
   return (
     <div
@@ -100,7 +112,7 @@ export function ProductDetailsDialog({
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-extrabold text-brand-navy">اختار اللون</p>
-                      <p className="mt-0.5 text-xs font-bold text-brand-muted">سيتم إرسال اللون المختار تلقائيًا على واتساب</p>
+                      <p className="mt-0.5 text-xs font-bold text-brand-muted">اللون الموثق هيظهر تلقائيًا في رسالة واتساب</p>
                     </div>
                     {selectedColor && (
                       <span className="rounded-full bg-brand-sky px-2.5 py-1 text-xs font-extrabold text-brand-navy">
@@ -137,6 +149,39 @@ export function ProductDetailsDialog({
                 </div>
               )}
 
+              {extraOptions.map(group => (
+                <div key={group.name} className="rounded-2xl border border-brand-border bg-white p-3.5 sm:p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-sm font-extrabold text-brand-navy">اختار {group.name}</p>
+                    {selectedOptions[group.name] && (
+                      <span className="rounded-full bg-brand-sky px-2.5 py-1 text-xs font-extrabold text-brand-navy">
+                        {selectedOptions[group.name]}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2" role="list" aria-label={`${group.name} ${product.name}`}>
+                    {group.values.map(value => {
+                      const active = selectedOptions[group.name] === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setSelectedOptions(current => ({ ...current, [group.name]: value }))}
+                          aria-pressed={active}
+                          className={`min-h-11 rounded-xl border px-3 py-2 text-xs font-extrabold transition active:scale-[0.98] ${
+                            active
+                              ? "border-brand-blue bg-brand-sky text-brand-navy ring-2 ring-brand-blue/10"
+                              : "border-brand-border bg-white text-brand-muted hover:border-brand-blue/50"
+                          }`}
+                        >
+                          {value}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
               {(product.ageMin !== null && product.ageMax !== null) && (
                 <div className="rounded-xl border border-brand-border bg-white px-3 py-2.5 text-xs font-bold text-brand-navy sm:text-sm">
                   العمر الموثق: {product.ageMin}–{product.ageMax} سنة
@@ -153,7 +198,9 @@ export function ProductDetailsDialog({
               <ProductSpecifications product={product} />
 
               <div className="rounded-2xl bg-brand-sky p-3.5 text-sm leading-7 text-brand-navy sm:p-4">
-                اختار اللون المناسب ثم اضغط واتساب، وهيوصلنا اسم المنتج واللون المختار تلقائيًا لتأكيد السعر والتوفر.
+                {selectionSummary.length > 0
+                  ? <>اختياراتك الموثقة: <strong>{selectionSummary.join(" · ")}</strong>. هتتبعت تلقائيًا مع اسم المنتج والكود على واتساب.</>
+                  : "اضغط واتساب وهيوصلنا اسم المنتج والكود تلقائيًا لتأكيد السعر والتوفر."}
               </div>
 
               <div className="mt-auto hidden flex-col gap-2 pt-2 sm:flex">
@@ -166,7 +213,7 @@ export function ProductDetailsDialog({
                     className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25"
                   >
                     <MessageCircle size={18} aria-hidden="true" />
-                    {selectedColor ? `استفسر عن ${selectedColor}` : "استفسر عن السعر والتوفر"}
+                    {selectionSummary.length > 0 ? "استفسر عن الاختيارات المحددة" : "استفسر عن السعر والتوفر"}
                   </a>
                 ) : (
                   <p className="rounded-xl border border-brand-border bg-brand-cream px-4 py-3 text-sm font-bold text-brand-muted">
@@ -195,7 +242,7 @@ export function ProductDetailsDialog({
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp px-4 py-3 text-sm font-extrabold text-white shadow-lg transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-whatsapp/25"
             >
               <MessageCircle size={18} aria-hidden="true" />
-              {selectedColor ? `استفسر عن ${selectedColor}` : "استفسر عن السعر والتوفر على واتساب"}
+              {selectionSummary.length > 0 ? "استفسر عن الاختيارات المحددة" : "استفسر عن السعر والتوفر على واتساب"}
             </a>
           ) : (
             <button
