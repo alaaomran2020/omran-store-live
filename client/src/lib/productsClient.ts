@@ -8,6 +8,26 @@ export type Product = BaseProduct & {
   ageMin: number | null;
   /** العمر الأقصى الموثق فقط؛ null يعني غير معروف ولا يدخل في فلترة العمر. */
   ageMax: number | null;
+  galleryImages: string[];
+  videoUrl: string | null;
+  videoPoster: string | null;
+  videoDuration: string | null;
+  specifications: ProductSpecifications;
+};
+
+export type ProductSpecifications = {
+  productLengthCm: number | null; productWidthCm: number | null; productHeightCm: number | null;
+  packageLengthCm: number | null; packageWidthCm: number | null; packageHeightCm: number | null;
+  weightKg: number | null; material: string | null; piecesCount: number | null;
+  powerSource: string | null; assemblyRequired: boolean | null;
+  boxContents: string | null; playInstructions: string | null;
+};
+
+const EMPTY_SPECIFICATIONS: ProductSpecifications = {
+  productLengthCm: null, productWidthCm: null, productHeightCm: null,
+  packageLengthCm: null, packageWidthCm: null, packageHeightCm: null,
+  weightKg: null, material: null, piecesCount: null, powerSource: null,
+  assemblyRequired: null, boxContents: null, playInstructions: null,
 };
 
 export type StorefrontProductsPayload = Omit<ProductsPayload, "products"> & {
@@ -33,6 +53,10 @@ const PRODUCT_COLUMNS = [
   "sku",
   "age_min",
   "age_max",
+  "gallery_images", "video_url", "video_poster", "video_duration",
+  "product_length_cm", "product_width_cm", "product_height_cm",
+  "package_length_cm", "package_width_cm", "package_height_cm", "weight_kg",
+  "material", "pieces_count", "power_source", "assembly_required", "box_contents", "play_instructions",
 ] as const;
 
 type CatalogColumn = (typeof PRODUCT_COLUMNS)[number];
@@ -74,6 +98,14 @@ const HEADER_ALIASES: Record<string, CatalogColumn> = {
   age_max: "age_max",
   max_age: "age_max",
   "العمر_الأقصى": "age_max",
+  gallery_images: "gallery_images", "صور_إضافية": "gallery_images",
+  video_url: "video_url", "رابط_الفيديو": "video_url",
+  video_poster: "video_poster", "غلاف_الفيديو": "video_poster",
+  video_duration: "video_duration", "مدة_الفيديو": "video_duration",
+  product_length_cm: "product_length_cm", product_width_cm: "product_width_cm", product_height_cm: "product_height_cm",
+  package_length_cm: "package_length_cm", package_width_cm: "package_width_cm", package_height_cm: "package_height_cm",
+  weight_kg: "weight_kg", material: "material", pieces_count: "pieces_count", power_source: "power_source",
+  assembly_required: "assembly_required", box_contents: "box_contents", play_instructions: "play_instructions",
 };
 
 const FALLBACK_PRODUCTS = [...PUBLIC_PRODUCTS_SNAPSHOT, ...POPUP_PRODUCTS_SNAPSHOT];
@@ -89,6 +121,8 @@ function snapshotPayload(): StorefrontProductsPayload {
       ...product,
       ageMin: null,
       ageMax: null,
+      galleryImages: [], videoUrl: null, videoPoster: null, videoDuration: null,
+      specifications: EMPTY_SPECIFICATIONS,
     })),
     status: "ok",
     fetchedAt: new Date().toISOString(),
@@ -134,6 +168,24 @@ function parseSortOrder(value: unknown): number | null {
   if (!normalized) return null;
   const sortOrder = Number(normalized);
   return Number.isFinite(sortOrder) ? sortOrder : null;
+}
+
+function parseNumber(value: unknown): number | null {
+  const normalized = text(value).replace(",", ".").replace(/[^0-9.-]/g, "");
+  if (!normalized) return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function parseOptionalBoolean(value: unknown): boolean | null {
+  const normalized = text(value).toLowerCase();
+  if (["true", "1", "yes", "نعم", "مطلوب"].includes(normalized)) return true;
+  if (["false", "0", "no", "لا", "غير مطلوب"].includes(normalized)) return false;
+  return null;
+}
+
+function parseMediaList(value: unknown): string[] {
+  return text(value).split(/[\n,|]+/).map(item => item.trim()).filter(Boolean);
 }
 
 function workflowStatus(value: unknown): WorkflowStatus | null {
@@ -190,6 +242,16 @@ function mapRow(row: unknown[], rowIndex: number, header: CatalogColumn[]): Prod
     reviewReason: nullableText(values.review_reason),
     ageMin,
     ageMax: ageMax !== null && ageMin !== null && ageMax < ageMin ? null : ageMax,
+    galleryImages: parseMediaList(values.gallery_images),
+    videoUrl: nullableText(values.video_url), videoPoster: nullableText(values.video_poster),
+    videoDuration: nullableText(values.video_duration),
+    specifications: {
+      productLengthCm: parseNumber(values.product_length_cm), productWidthCm: parseNumber(values.product_width_cm), productHeightCm: parseNumber(values.product_height_cm),
+      packageLengthCm: parseNumber(values.package_length_cm), packageWidthCm: parseNumber(values.package_width_cm), packageHeightCm: parseNumber(values.package_height_cm),
+      weightKg: parseNumber(values.weight_kg), material: nullableText(values.material), piecesCount: parseNumber(values.pieces_count),
+      powerSource: nullableText(values.power_source), assemblyRequired: parseOptionalBoolean(values.assembly_required),
+      boxContents: nullableText(values.box_contents), playInstructions: nullableText(values.play_instructions),
+    },
     rowIndex,
   };
 
@@ -271,6 +333,8 @@ function mergePopupProducts(liveProducts: Product[]): Product[] {
         ...product,
         ageMin: null,
         ageMax: null,
+        galleryImages: [], videoUrl: null, videoPoster: null, videoDuration: null,
+        specifications: EMPTY_SPECIFICATIONS,
       });
     }
   }

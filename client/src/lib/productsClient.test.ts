@@ -118,6 +118,55 @@ describe("products client", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("يربط معرض الصور والفيديو والمواصفات الموسعة بسجل المنتج", async () => {
+    const headers = [
+      "id", "name", "price", "category", "description", "image", "active",
+      "sort_order", "product_prompt", "workflow_status", "qa_status",
+      "source_drive_id", "processed_image", "review_reason", "sku",
+      "gallery_images", "video_url", "video_poster", "video_duration",
+      "product_length_cm", "product_width_cm", "product_height_cm",
+      "package_length_cm", "package_width_cm", "package_height_cm", "weight_kg",
+      "material", "pieces_count", "power_source", "assembly_required",
+      "box_contents", "play_instructions",
+    ];
+    const row = [
+      "LIVE-MEDIA-001", "لعبة موثقة", "", "ألعاب", "وصف", "/main.webp", "TRUE",
+      "1", "", "PUBLISHED", "PASS", "", "/main.webp", "", "SKU-MEDIA-001",
+      "/side.webp, /box.webp", "https://cdn.example.com/video.mp4", "/poster.webp", "00:45",
+      "40", "20", "35", "45", "25", "40", "1.5", "بلاستيك", "46", "بطاريات",
+      "TRUE", "46 قطعة", "تركيب بإشراف شخص بالغ",
+    ];
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve({
+      ok: true,
+      status: 200,
+      json: async () => ({ values: [headers, row] }),
+    })));
+
+    const { products } = await fetchProducts();
+    expect(products[0]).toMatchObject({
+      id: "LIVE-MEDIA-001",
+      galleryImages: ["/side.webp", "/box.webp"],
+      videoUrl: "https://cdn.example.com/video.mp4",
+      videoPoster: "/poster.webp",
+      videoDuration: "00:45",
+      specifications: {
+        productLengthCm: 40,
+        productWidthCm: 20,
+        productHeightCm: 35,
+        packageLengthCm: 45,
+        packageWidthCm: 25,
+        packageHeightCm: 40,
+        weightKg: 1.5,
+        material: "بلاستيك",
+        piecesCount: 46,
+        powerSource: "بطاريات",
+        assemblyRequired: true,
+        boxContents: "46 قطعة",
+        playInstructions: "تركيب بإشراف شخص بالغ",
+      },
+    });
+  });
+
   it("يحافظ على صور POP UP المحلية عند ترطيب الكتالوج من المصدر الحي", async () => {
     const product = POPUP_PRODUCTS_SNAPSHOT[0];
     const fetchMock = vi.fn(() =>

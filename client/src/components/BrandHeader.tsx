@@ -46,6 +46,8 @@ export default function BrandHeader() {
           >
             POP UP
           </a>
+          <a href="/videos" className="hidden min-h-11 items-center rounded-xl px-3 text-brand-navy transition hover:bg-brand-sky hover:text-brand-blue lg:inline-flex">الفيديوهات</a>
+          <a href="/rewards" className="hidden min-h-11 items-center rounded-xl px-3 text-brand-navy transition hover:bg-brand-sky hover:text-brand-blue lg:inline-flex">نقاط عمران</a>
           {whatsappUrl && (
             <a
               href={whatsappUrl}
