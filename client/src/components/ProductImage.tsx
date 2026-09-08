@@ -44,6 +44,7 @@ export function ProductImage({
   priority?: boolean;
 }) {
   const [attempt, setAttempt] = useState(0);
+  const [loaded, setLoaded] = useState(false);
   const candidates = useMemo(
     () => productImageCandidates(product),
     [product.image, product.imageSource, product.processedImage]
@@ -52,6 +53,7 @@ export function ProductImage({
 
   useEffect(() => {
     setAttempt(0);
+    setLoaded(false);
   }, [product.id, mediaKey]);
 
   const src = candidates[attempt] ?? null;
@@ -80,8 +82,13 @@ export function ProductImage({
       sizes={sizesHint}
       referrerPolicy="no-referrer"
       draggable={false}
-      onError={() => setAttempt(current => current + 1)}
-      className={className}
+      data-image-attempt={attempt + 1}
+      onLoad={() => setLoaded(true)}
+      onError={() => {
+        setLoaded(false);
+        setAttempt(current => current + 1);
+      }}
+      className={`${className} transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
     />
   );
 }
