@@ -3,6 +3,11 @@ import { PUBLIC_PRODUCTS_SNAPSHOT } from "./publicProductsSnapshot";
 import { POPUP_PRODUCTS_SNAPSHOT } from "./popupProductsSnapshot";
 import { makeCatalogUrl } from "./makeGateway";
 
+export type ProductOptionGroup = {
+  name: string;
+  values: string[];
+};
+
 export type Product = BaseProduct & {
   /** العمر الأدنى الموثق فقط؛ null يعني غير معروف ولا يدخل في فلترة العمر. */
   ageMin: number | null;
@@ -12,6 +17,8 @@ export type Product = BaseProduct & {
   videoUrl: string | null;
   videoPoster: string | null;
   videoDuration: string | null;
+  /** خيارات منظمة اختيارية؛ المنتجات القديمة تظل مدعومة من الوصف. */
+  options: ProductOptionGroup[];
   specifications: ProductSpecifications;
 };
 
@@ -20,14 +27,14 @@ export type ProductSpecifications = {
   packageLengthCm: number | null; packageWidthCm: number | null; packageHeightCm: number | null;
   weightKg: number | null; material: string | null; piecesCount: number | null;
   powerSource: string | null; assemblyRequired: boolean | null;
-  boxContents: string | null; playInstructions: string | null;
+  boxContents: string | null; boxContentsItems: string[]; playInstructions: string | null;
 };
 
 const EMPTY_SPECIFICATIONS: ProductSpecifications = {
   productLengthCm: null, productWidthCm: null, productHeightCm: null,
   packageLengthCm: null, packageWidthCm: null, packageHeightCm: null,
   weightKg: null, material: null, piecesCount: null, powerSource: null,
-  assemblyRequired: null, boxContents: null, playInstructions: null,
+  assemblyRequired: null, boxContents: null, boxContentsItems: [], playInstructions: null,
 };
 
 export type StorefrontProductsPayload = Omit<ProductsPayload, "products"> & {
@@ -36,24 +43,11 @@ export type StorefrontProductsPayload = Omit<ProductsPayload, "products"> & {
 
 const CATALOG_TIMEOUT_MS = 8_000;
 const PRODUCT_COLUMNS = [
-  "id",
-  "name",
-  "price",
-  "category",
-  "description",
-  "image",
-  "active",
-  "sort_order",
-  "product_prompt",
-  "workflow_status",
-  "qa_status",
-  "source_drive_id",
-  "processed_image",
-  "review_reason",
-  "sku",
-  "age_min",
-  "age_max",
+  "id", "name", "price", "category", "description", "image", "active", "sort_order",
+  "product_prompt", "workflow_status", "qa_status", "source_drive_id", "processed_image",
+  "review_reason", "sku", "age_min", "age_max",
   "gallery_images", "video_url", "video_poster", "video_duration",
+  "colors", "sizes", "product_options",
   "product_length_cm", "product_width_cm", "product_height_cm",
   "package_length_cm", "package_width_cm", "package_height_cm", "weight_kg",
   "material", "pieces_count", "power_source", "assembly_required", "box_contents", "play_instructions",
@@ -62,46 +56,30 @@ const PRODUCT_COLUMNS = [
 type CatalogColumn = (typeof PRODUCT_COLUMNS)[number];
 
 const HEADER_ALIASES: Record<string, CatalogColumn> = {
-  id: "id",
-  product_id: "id",
-  "معرف_المنتج": "id",
-  sku: "sku",
-  "رمز_المخزون": "sku",
-  name: "name",
-  product_name: "name",
-  "الاسم_بالعربية": "name",
-  price: "price",
-  "سعر_البيع_بالجنيه": "price",
-  category: "category",
-  "التصنيف": "category",
-  description: "description",
-  "الوصف_بالعربية": "description",
-  image: "image",
-  "الصورة_الرئيسية": "image",
-  active: "active",
-  "نشط": "active",
-  sort_order: "sort_order",
-  "ترتيب_العرض": "sort_order",
+  id: "id", product_id: "id", "معرف_المنتج": "id",
+  sku: "sku", "رمز_المخزون": "sku",
+  name: "name", product_name: "name", "الاسم_بالعربية": "name",
+  price: "price", "سعر_البيع_بالجنيه": "price",
+  category: "category", "التصنيف": "category",
+  description: "description", "الوصف_بالعربية": "description",
+  image: "image", "الصورة_الرئيسية": "image",
+  active: "active", "نشط": "active",
+  sort_order: "sort_order", "ترتيب_العرض": "sort_order",
   product_prompt: "product_prompt",
-  workflow_status: "workflow_status",
-  "حالة_سير_العمل": "workflow_status",
-  qa_status: "qa_status",
-  "حالة_الجودة": "qa_status",
-  source_drive_id: "source_drive_id",
-  "معرف_المصدر_في_درايف": "source_drive_id",
+  workflow_status: "workflow_status", "حالة_سير_العمل": "workflow_status",
+  qa_status: "qa_status", "حالة_الجودة": "qa_status",
+  source_drive_id: "source_drive_id", "معرف_المصدر_في_درايف": "source_drive_id",
   processed_image: "processed_image",
-  review_reason: "review_reason",
-  "سبب_المراجعة": "review_reason",
-  age_min: "age_min",
-  min_age: "age_min",
-  "العمر_الأدنى": "age_min",
-  age_max: "age_max",
-  max_age: "age_max",
-  "العمر_الأقصى": "age_max",
+  review_reason: "review_reason", "سبب_المراجعة": "review_reason",
+  age_min: "age_min", min_age: "age_min", "العمر_الأدنى": "age_min",
+  age_max: "age_max", max_age: "age_max", "العمر_الأقصى": "age_max",
   gallery_images: "gallery_images", "صور_إضافية": "gallery_images",
   video_url: "video_url", "رابط_الفيديو": "video_url",
   video_poster: "video_poster", "غلاف_الفيديو": "video_poster",
   video_duration: "video_duration", "مدة_الفيديو": "video_duration",
+  colors: "colors", color: "colors", "الألوان": "colors", "الالوان": "colors",
+  sizes: "sizes", size: "sizes", "المقاسات": "sizes", "المقاس": "sizes",
+  product_options: "product_options", options: "product_options", "خيارات_المنتج": "product_options", "الخيارات": "product_options",
   product_length_cm: "product_length_cm", product_width_cm: "product_width_cm", product_height_cm: "product_height_cm",
   package_length_cm: "package_length_cm", package_width_cm: "package_width_cm", package_height_cm: "package_height_cm",
   weight_kg: "weight_kg", material: "material", pieces_count: "pieces_count", power_source: "power_source",
@@ -122,6 +100,7 @@ function snapshotPayload(): StorefrontProductsPayload {
       ageMin: null,
       ageMax: null,
       galleryImages: [], videoUrl: null, videoPoster: null, videoDuration: null,
+      options: [],
       specifications: EMPTY_SPECIFICATIONS,
     })),
     status: "ok",
@@ -138,11 +117,12 @@ function nullableText(value: unknown): string | null {
   return valueText || null;
 }
 
+function uniqueList(values: string[]): string[] {
+  return Array.from(new Set(values.map(value => value.trim().replace(/\s+/g, " ")).filter(Boolean)));
+}
+
 function parsePrice(value: unknown): number | null {
-  const normalized = text(value)
-    .replace(/[٬,\s]/g, "")
-    .replace(/٫/g, ".")
-    .replace(/[^0-9.-]/g, "");
+  const normalized = text(value).replace(/[٬,\s]/g, "").replace(/٫/g, ".").replace(/[^0-9.-]/g, "");
   if (!normalized) return null;
   const price = Number(normalized);
   return Number.isFinite(price) && price >= 0 ? price : null;
@@ -185,21 +165,74 @@ function parseOptionalBoolean(value: unknown): boolean | null {
 }
 
 function parseMediaList(value: unknown): string[] {
-  return text(value).split(/[\n,|]+/).map(item => item.trim()).filter(Boolean);
+  return uniqueList(text(value).split(/[\n,|]+/));
+}
+
+function parseSimpleList(value: unknown): string[] {
+  return uniqueList(text(value).split(/[\n،,|/]+/));
+}
+
+function parseBoxContents(value: unknown): string[] {
+  return uniqueList(text(value).split(/[\n،,|;+]+/));
+}
+
+function parseOptionGroups(value: unknown): ProductOptionGroup[] {
+  const raw = text(value);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map(item => {
+          if (!item || typeof item !== "object") return null;
+          const record = item as { name?: unknown; values?: unknown };
+          const name = text(record.name);
+          const values = Array.isArray(record.values) ? uniqueList(record.values.map(text)) : parseSimpleList(record.values);
+          return name && values.length > 0 ? { name, values } : null;
+        })
+        .filter((group): group is ProductOptionGroup => Boolean(group));
+    }
+    if (parsed && typeof parsed === "object") {
+      return Object.entries(parsed as Record<string, unknown>)
+        .map(([name, values]) => ({ name: text(name), values: Array.isArray(values) ? uniqueList(values.map(text)) : parseSimpleList(values) }))
+        .filter(group => group.name && group.values.length > 0);
+    }
+  } catch {
+    // Fall through to the human-editable `name: a|b; name2: c|d` format.
+  }
+
+  return raw
+    .split(/[;\n]+/)
+    .map(segment => {
+      const separator = segment.indexOf(":");
+      if (separator < 1) return null;
+      const name = text(segment.slice(0, separator));
+      const values = parseSimpleList(segment.slice(separator + 1));
+      return name && values.length > 0 ? { name, values } : null;
+    })
+    .filter((group): group is ProductOptionGroup => Boolean(group));
+}
+
+function mergeOptionGroups(...groups: ProductOptionGroup[][]): ProductOptionGroup[] {
+  const merged = new Map<string, ProductOptionGroup>();
+  for (const list of groups) {
+    for (const group of list) {
+      const key = group.name.trim().toLowerCase();
+      const existing = merged.get(key);
+      merged.set(key, { name: existing?.name ?? group.name, values: uniqueList([...(existing?.values ?? []), ...group.values]) });
+    }
+  }
+  return Array.from(merged.values());
 }
 
 function workflowStatus(value: unknown): WorkflowStatus | null {
   const normalized = text(value).toUpperCase();
-  return ["REVIEW", "PUBLISHED", "REJECTED", "DRAFT", "ERROR"].includes(normalized)
-    ? (normalized as WorkflowStatus)
-    : null;
+  return ["REVIEW", "PUBLISHED", "REJECTED", "DRAFT", "ERROR"].includes(normalized) ? (normalized as WorkflowStatus) : null;
 }
 
 function qaStatus(value: unknown): QaStatus | null {
   const normalized = text(value).toUpperCase();
-  return ["PASS", "NEEDS_REVIEW", "FAIL"].includes(normalized)
-    ? (normalized as QaStatus)
-    : null;
+  return ["PASS", "NEEDS_REVIEW", "FAIL"].includes(normalized) ? (normalized as QaStatus) : null;
 }
 
 function canonicalHeader(row: unknown[]): CatalogColumn[] {
@@ -210,18 +243,25 @@ function canonicalHeader(row: unknown[]): CatalogColumn[] {
 }
 
 function mapRow(row: unknown[], rowIndex: number, header: CatalogColumn[]): Product | null {
-  const values = Object.fromEntries(
-    PRODUCT_COLUMNS.map(column => {
-      const index = header.indexOf(column);
-      return [column, index >= 0 ? row[index] : undefined];
-    })
-  ) as Record<CatalogColumn, unknown>;
+  const values = Object.fromEntries(PRODUCT_COLUMNS.map(column => {
+    const index = header.indexOf(column);
+    return [column, index >= 0 ? row[index] : undefined];
+  })) as Record<CatalogColumn, unknown>;
 
   const name = text(values.name);
   if (!name) return null;
 
   const ageMin = parseAge(values.age_min);
   const ageMax = parseAge(values.age_max);
+  const colors = parseSimpleList(values.colors);
+  const sizes = parseSimpleList(values.sizes);
+  const structuredOptions = parseOptionGroups(values.product_options);
+  const options = mergeOptionGroups(
+    colors.length ? [{ name: "اللون", values: colors }] : [],
+    sizes.length ? [{ name: "المقاس", values: sizes }] : [],
+    structuredOptions
+  );
+  const boxContents = nullableText(values.box_contents);
 
   const liveProduct: Product = {
     id: text(values.id) || `row-${rowIndex}`,
@@ -243,47 +283,35 @@ function mapRow(row: unknown[], rowIndex: number, header: CatalogColumn[]): Prod
     ageMin,
     ageMax: ageMax !== null && ageMin !== null && ageMax < ageMin ? null : ageMax,
     galleryImages: parseMediaList(values.gallery_images),
-    videoUrl: nullableText(values.video_url), videoPoster: nullableText(values.video_poster),
-    videoDuration: nullableText(values.video_duration),
+    videoUrl: nullableText(values.video_url), videoPoster: nullableText(values.video_poster), videoDuration: nullableText(values.video_duration),
+    options,
     specifications: {
       productLengthCm: parseNumber(values.product_length_cm), productWidthCm: parseNumber(values.product_width_cm), productHeightCm: parseNumber(values.product_height_cm),
       packageLengthCm: parseNumber(values.package_length_cm), packageWidthCm: parseNumber(values.package_width_cm), packageHeightCm: parseNumber(values.package_height_cm),
       weightKg: parseNumber(values.weight_kg), material: nullableText(values.material), piecesCount: parseNumber(values.pieces_count),
       powerSource: nullableText(values.power_source), assemblyRequired: parseOptionalBoolean(values.assembly_required),
-      boxContents: nullableText(values.box_contents), playInstructions: nullableText(values.play_instructions),
+      boxContents, boxContentsItems: parseBoxContents(values.box_contents), playInstructions: nullableText(values.play_instructions),
     },
     rowIndex,
   };
 
   const snapshot = snapshotById.get(liveProduct.id);
   const stableImage = snapshot?.image?.startsWith("/") ? snapshot.image : null;
-  const stableProcessedImage = snapshot?.processedImage?.startsWith("/")
-    ? snapshot.processedImage
-    : stableImage;
-
+  const stableProcessedImage = snapshot?.processedImage?.startsWith("/") ? snapshot.processedImage : stableImage;
   if (!stableImage) return liveProduct;
-
-  return {
-    ...liveProduct,
-    image: stableImage,
-    processedImage: stableProcessedImage,
-    imageSource: liveProduct.imageSource ?? snapshot?.imageSource ?? stableImage,
-  };
+  return { ...liveProduct, image: stableImage, processedImage: stableProcessedImage, imageSource: liveProduct.imageSource ?? snapshot?.imageSource ?? stableImage };
 }
 
 function normalizeCatalogPayload(payload: unknown): Product[] {
   if (!payload || typeof payload !== "object") return [];
   const values = (payload as { values?: unknown }).values;
   if (!Array.isArray(values) || values.length === 0) return [];
-
   const rows = values.filter(Array.isArray) as unknown[][];
   if (rows.length === 0) return [];
-
   const firstRow = canonicalHeader(rows[0]);
   const hasHeader = firstRow.some(value => PRODUCT_COLUMNS.includes(value));
   const header = hasHeader ? firstRow : [...PRODUCT_COLUMNS];
   const dataRows = hasHeader ? rows.slice(1) : rows;
-
   return dataRows
     .map((row, index) => mapRow(row, index + 1, header))
     .filter((product): product is Product => product !== null)
@@ -299,25 +327,12 @@ function normalizeCatalogPayload(payload: unknown): Product[] {
 async function fetchLiveCatalog(): Promise<StorefrontProductsPayload> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), CATALOG_TIMEOUT_MS);
-
   try {
-    const response = await fetch(makeCatalogUrl(), {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      signal: controller.signal,
-      cache: "no-store",
-    });
-
+    const response = await fetch(makeCatalogUrl(), { method: "GET", headers: { Accept: "application/json" }, signal: controller.signal, cache: "no-store" });
     if (!response.ok) throw new Error(`Catalog gateway returned ${response.status}`);
-
     const body = await response.json();
     const products = normalizeCatalogPayload(body);
-
-    return {
-      products,
-      status: products.length > 0 ? "ok" : "not_configured",
-      fetchedAt: new Date().toISOString(),
-    };
+    return { products, status: products.length > 0 ? "ok" : "not_configured", fetchedAt: new Date().toISOString() };
   } finally {
     clearTimeout(timeout);
   }
@@ -325,7 +340,6 @@ async function fetchLiveCatalog(): Promise<StorefrontProductsPayload> {
 
 function mergePopupProducts(liveProducts: Product[]): Product[] {
   const merged = new Map<string, Product>();
-
   for (const product of liveProducts) merged.set(product.id, product);
   for (const product of POPUP_PRODUCTS_SNAPSHOT) {
     if (!merged.has(product.id)) {
@@ -334,11 +348,11 @@ function mergePopupProducts(liveProducts: Product[]): Product[] {
         ageMin: null,
         ageMax: null,
         galleryImages: [], videoUrl: null, videoPoster: null, videoDuration: null,
+        options: [],
         specifications: EMPTY_SPECIFICATIONS,
       });
     }
   }
-
   return Array.from(merged.values()).sort((a, b) => {
     if (a.sortOrder !== null && b.sortOrder !== null) return a.sortOrder - b.sortOrder;
     if (a.sortOrder !== null) return -1;
@@ -356,15 +370,9 @@ function mergePopupProducts(liveProducts: Product[]): Product[] {
 export async function fetchProducts(): Promise<StorefrontProductsPayload> {
   try {
     const live = await fetchLiveCatalog();
-    if (live.products.length > 0) {
-      return {
-        ...live,
-        products: mergePopupProducts(live.products),
-      };
-    }
+    if (live.products.length > 0) return { ...live, products: mergePopupProducts(live.products) };
   } catch {
     // Fall through to the bundled production snapshot.
   }
-
   return snapshotPayload();
 }
