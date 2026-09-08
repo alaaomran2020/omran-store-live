@@ -15,11 +15,11 @@ afterEach(() => {
 describe("products client", () => {
   it("يربط منتجات POP UP الخمسة بالصور المحلية الأصلية القابلة للقراءة", async () => {
     const expectedImages = new Map([
-      ["POP-BAL-US-100", "/products/popup/pop-bal-us-100-pro.webp"],
-      ["POP-BAL-MET-050", "/products/popup/pop-bal-met-050-pro.webp"],
-      ["POP-BAL-PANDA-100", "/products/popup/pop-bal-panda-100-pro.webp"],
-      ["POP-BAL-MET-100", "/products/popup/pop-bal-met-100-pro.webp"],
-      ["POP-BAL-CHR-050", "/products/popup/pop-bal-chr-050-pro.webp"],
+      ["POP-BAL-US-100", "/products/popup/pop-bal-us-100-catalog-v2.webp"],
+      ["POP-BAL-MET-050", "/products/popup/pop-bal-met-050-catalog-v2.webp"],
+      ["POP-BAL-PANDA-100", "/products/popup/pop-bal-panda-100-catalog-v2.webp"],
+      ["POP-BAL-MET-100", "/products/popup/pop-bal-met-100-catalog-v2.webp"],
+      ["POP-BAL-CHR-050", "/products/popup/pop-bal-chr-050-catalog-v2.webp"],
     ]);
 
     expect(POPUP_PRODUCTS_SNAPSHOT).toHaveLength(5);
