@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { OfficialSocialEmbeds } from "@/components/OfficialSocialEmbeds";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { ProductDetailsDialog } from "@/components/ProductDetailsDialog";
+import { ProductFacetControls, type ActiveProductFilter, type ProductSortMode } from "@/components/ProductFacetControls";
 import { SmartProductSearch } from "@/components/SmartProductSearch";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import { searchCatalog } from "@/lib/catalogSearch";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
-import { fetchProducts, type Product } from "@/lib/productsClient";
+import { fetchProducts, type Product, type ProductAvailability } from "@/lib/productsClient";
 import { AGE_FILTER_OPTIONS, filterProductsByAge, parseAgeRange } from "@/lib/productAge";
 import { filterProductsByCatalog, type ProductCatalog } from "@/lib/productCatalog";
 import { trackEvent } from "@/lib/analytics";
@@ -17,6 +18,13 @@ import { Facebook, Instagram, MessageCircle, Play, RefreshCw, Share2, Sparkles }
 import { whatsappNumber } from "@/lib/productFormat";
 
 const ALL = "__all__";
+const AVAILABILITY_LABELS: Record<ProductAvailability, string> = {
+  available: "متاح",
+  unavailable: "غير متاح",
+  preorder: "طلب مسبق",
+  unknown: "غير محدد",
+};
+
 const storeWhatsAppUrl = (() => {
   const number = whatsappNumber();
   if (!number) return null;
@@ -26,14 +34,24 @@ const storeWhatsAppUrl = (() => {
 
 function readInitialParams() {
   if (typeof window === "undefined") {
-    return { search: "", category: ALL, age: ALL, product: null as string | null };
+    return {
+      search: "", category: ALL, age: ALL, brand: ALL, tag: ALL, availability: ALL,
+      sort: "catalog" as ProductSortMode, product: null as string | null,
+    };
   }
   const params = new URLSearchParams(window.location.search);
   const age = params.get("age");
+  const availability = params.get("availability");
+  const sortParam = params.get("sort");
+  const sort: ProductSortMode = sortParam === "name-asc" || sortParam === "name-desc" ? sortParam : "catalog";
   return {
     search: params.get("search") ?? "",
     category: params.get("category") ?? ALL,
     age: parseAgeRange(age) ? age! : ALL,
+    brand: params.get("brand") ?? ALL,
+    tag: params.get("tag") ?? ALL,
+    availability: ["available", "unavailable", "preorder", "unknown"].includes(availability ?? "") ? availability! : ALL,
+    sort,
     product: params.get("product"),
   };
 }
@@ -47,6 +65,10 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   const [search, setSearch] = useState(initial.search);
   const [category, setCategory] = useState<string>(initial.category);
   const [age, setAge] = useState<string>(isPopup ? ALL : initial.age);
+  const [brand, setBrand] = useState<string>(initial.brand);
+  const [tag, setTag] = useState<string>(initial.tag);
+  const [availability, setAvailability] = useState<string>(initial.availability);
+  const [sort, setSort] = useState<ProductSortMode>(initial.sort);
   const [openProductId, setOpenProductId] = useState<string | null>(initial.product);
 
   const productsQuery = useQuery({
@@ -64,13 +86,27 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   const notConfigured = payload?.status === "not_configured";
   const sourceError = payload?.status === "error";
   const categories = useMemo(() => productCategories(products), [products]);
+  const brands = useMemo(() => Array.from(new Set(products.map(product => product.brand).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b, "ar")), [products]);
+  const tags = useMemo(() => Array.from(new Set(products.flatMap(product => product.tags))).sort((a, b) => a.localeCompare(b, "ar")), [products]);
+  const availabilityValues = useMemo(() => Array.from(new Set(products.map(product => product.availability))), [products]);
 
   const filteredProducts = useMemo(() => {
-    const byCategory = category === ALL ? products : products.filter(product => product.category === category);
-    return isPopup || age === ALL ? byCategory : filterProductsByAge(byCategory, age);
-  }, [products, category, age, isPopup]);
+    let result = category === ALL ? products : products.filter(product => product.category === category);
+    if (!isPopup && age !== ALL) result = filterProductsByAge(result, age);
+    if (brand !== ALL) result = result.filter(product => product.brand === brand);
+    if (tag !== ALL) result = result.filter(product => product.tags.includes(tag));
+    if (availability !== ALL) result = result.filter(product => product.availability === availability);
+    return result;
+  }, [products, category, age, isPopup, brand, tag, availability]);
+
   const searchResult = useMemo(() => searchCatalog(filteredProducts, search), [filteredProducts, search]);
-  const visibleProducts = searchResult.products;
+  const visibleProducts = useMemo(() => {
+    if (sort === "catalog") return searchResult.products;
+    return [...searchResult.products].sort((a, b) => {
+      const comparison = a.name.localeCompare(b.name, "ar", { sensitivity: "base" });
+      return sort === "name-asc" ? comparison : -comparison;
+    });
+  }, [searchResult.products, sort]);
 
   useEffect(() => {
     const term = search.trim();
@@ -113,6 +149,50 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     updateUrl({ age: value });
     trackEvent("product_age_filter", { age: value === ALL ? "الكل" : value });
   };
+  const handleBrandFilter = (value: string) => {
+    setBrand(value);
+    updateUrl({ brand: value });
+    trackEvent("product_filter", { brand: value === ALL ? "الكل" : value, catalog });
+  };
+  const handleTagFilter = (value: string) => {
+    setTag(value);
+    updateUrl({ tag: value });
+    trackEvent("product_filter", { tag: value === ALL ? "الكل" : value, catalog });
+  };
+  const handleAvailabilityFilter = (value: string) => {
+    setAvailability(value);
+    updateUrl({ availability: value });
+    trackEvent("product_filter", { availability: value === ALL ? "الكل" : value, catalog });
+  };
+  const handleSort = (value: ProductSortMode) => {
+    setSort(value);
+    updateUrl({ sort: value === "catalog" ? null : value });
+    trackEvent("product_filter", { sort: value, catalog });
+  };
+  const clearAllFilters = useCallback(() => {
+    setSearch("");
+    setCategory(ALL);
+    setAge(ALL);
+    setBrand(ALL);
+    setTag(ALL);
+    setAvailability(ALL);
+    setSort("catalog");
+    updateUrl({ search: null, category: null, age: null, brand: null, tag: null, availability: null, sort: null });
+    trackEvent("product_filter", { action: "clear_all", catalog });
+  }, [catalog, updateUrl]);
+
+  const activeFilters = useMemo<ActiveProductFilter[]>(() => {
+    const filters: ActiveProductFilter[] = [];
+    if (search.trim()) filters.push({ key: "search", label: `بحث: ${search.trim()}`, onClear: () => handleSearchChange("") });
+    if (category !== ALL) filters.push({ key: "category", label: `التصنيف: ${category}`, onClear: () => handleCategoryFilter(ALL) });
+    if (!isPopup && age !== ALL) filters.push({ key: "age", label: `العمر: ${age}`, onClear: () => handleAgeFilter(ALL) });
+    if (brand !== ALL) filters.push({ key: "brand", label: `الماركة: ${brand}`, onClear: () => handleBrandFilter(ALL) });
+    if (tag !== ALL) filters.push({ key: "tag", label: `الوسم: ${tag}`, onClear: () => handleTagFilter(ALL) });
+    if (availability !== ALL) filters.push({ key: "availability", label: `التوفر: ${AVAILABILITY_LABELS[availability as ProductAvailability] ?? availability}`, onClear: () => handleAvailabilityFilter(ALL) });
+    if (sort !== "catalog") filters.push({ key: "sort", label: sort === "name-asc" ? "الترتيب: أ ← ي" : "الترتيب: ي ← أ", onClear: () => handleSort("catalog") });
+    return filters;
+  }, [search, category, age, isPopup, brand, tag, availability, sort]);
+
   const handleShare = async () => {
     const nativeShare = typeof navigator !== "undefined" && navigator.share ? navigator.share.bind(navigator) : undefined;
     const copyToClipboard = typeof navigator !== "undefined" && navigator.clipboard ? navigator.clipboard.writeText.bind(navigator.clipboard) : undefined;
@@ -203,6 +283,24 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                     <p className="mt-2.5 text-[11px] leading-5 text-brand-muted sm:mt-3 sm:text-xs sm:leading-6">المنتجات ذات العمر غير المؤكد لا تدخل في نتائج فلترة السن.</p>
                   </div>
                 )}
+                <ProductFacetControls
+                  isPopup={isPopup}
+                  brands={brands}
+                  tags={tags}
+                  availabilityValues={availabilityValues}
+                  brand={brand}
+                  tag={tag}
+                  availability={availability}
+                  sort={sort}
+                  activeFilters={activeFilters}
+                  resultCount={visibleProducts.length}
+                  totalCount={products.length}
+                  onBrandChange={handleBrandFilter}
+                  onTagChange={handleTagFilter}
+                  onAvailabilityChange={handleAvailabilityFilter}
+                  onSortChange={handleSort}
+                  onClearAll={clearAllFilters}
+                />
               </div>
             )}
             {productsQuery.isLoading ? (
@@ -219,12 +317,11 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
               </div>
             ) : (
               <>
-                <p className="mb-4 text-xs font-bold text-brand-muted sm:mb-6 sm:text-sm" data-testid="product-count">{visibleProducts.length} من {products.length} منتجًا</p>
                 {visibleProducts.length === 0 ? (
                   <div className={`rounded-2xl border p-6 text-center sm:rounded-[2rem] sm:p-10 ${isPopup ? "border-[#e4d3ee] bg-white" : "border-brand-border bg-brand-cream"}`}>
-                    <p className={`text-base font-extrabold sm:text-lg ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>{!isPopup && age !== ALL ? "لا توجد منتجات ببيانات عمر موثقة تطابق الفئة دي" : "لا توجد نتائج مطابقة لبحثك"}</p>
-                    <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-brand-muted">{!isPopup && age !== ALL ? "المنتجات ذات العمر غير المؤكد لا بنضمها تلقائيًا لأي فئة عمرية." : "غيّر البحث أو امسح الفلاتر وحاول تاني."}</p>
-                    <button type="button" onClick={() => { setSearch(""); setCategory(ALL); setAge(ALL); updateUrl({ search: null, category: null, age: null }); }} className={`mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border px-5 py-2 text-sm font-bold transition sm:w-auto sm:rounded-full ${isPopup ? "border-[#e4d3ee] text-[#6b278f] hover:border-[#8a3aaa] hover:bg-[#f7effb]" : "border-brand-border text-brand-blue hover:border-brand-blue hover:bg-brand-blue/5"}`}>مسح البحث والفلاتر</button>
+                    <p className={`text-base font-extrabold sm:text-lg ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>{!isPopup && age !== ALL ? "لا توجد منتجات ببيانات عمر موثقة تطابق الفئة دي" : "لا توجد نتائج مطابقة لبحثك أو الفلاتر"}</p>
+                    <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-brand-muted">{!isPopup && age !== ALL ? "المنتجات ذات العمر غير المؤكد لا بنضمها تلقائيًا لأي فئة عمرية." : "غيّر البحث أو أحد الفلاتر، أو امسح الكل وحاول تاني."}</p>
+                    <button type="button" onClick={clearAllFilters} className={`mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border px-5 py-2 text-sm font-bold transition sm:w-auto sm:rounded-full ${isPopup ? "border-[#e4d3ee] text-[#6b278f] hover:border-[#8a3aaa] hover:bg-[#f7effb]" : "border-brand-border text-brand-blue hover:border-brand-blue hover:bg-brand-blue/5"}`}>مسح البحث والفلاتر</button>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">{visibleProducts.map(product => <ProductCard key={product.id} product={product} onOpenDetails={handleOpenDetails} />)}</div>
