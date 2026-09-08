@@ -8,6 +8,8 @@ export type ProductOptionGroup = {
   values: string[];
 };
 
+export type ProductAvailability = "available" | "unavailable" | "preorder" | "unknown";
+
 export type Product = BaseProduct & {
   /** العمر الأدنى الموثق فقط؛ null يعني غير معروف ولا يدخل في فلترة العمر. */
   ageMin: number | null;
@@ -19,6 +21,12 @@ export type Product = BaseProduct & {
   videoDuration: string | null;
   /** خيارات منظمة اختيارية؛ المنتجات القديمة تظل مدعومة من الوصف. */
   options: ProductOptionGroup[];
+  /** العلامة التجارية كما وردت في مصدر الكتالوج؛ لا يتم استنتاجها من الاسم. */
+  brand: string | null;
+  /** وسوم منظمة للبحث والفلترة فقط. */
+  tags: string[];
+  /** حالة التوفر الموثقة؛ unknown تعني أن المصدر لم يحددها. */
+  availability: ProductAvailability;
   specifications: ProductSpecifications;
 };
 
@@ -47,7 +55,7 @@ const PRODUCT_COLUMNS = [
   "product_prompt", "workflow_status", "qa_status", "source_drive_id", "processed_image",
   "review_reason", "sku", "age_min", "age_max",
   "gallery_images", "video_url", "video_poster", "video_duration",
-  "colors", "sizes", "product_options",
+  "colors", "sizes", "product_options", "brand", "tags", "availability",
   "product_length_cm", "product_width_cm", "product_height_cm",
   "package_length_cm", "package_width_cm", "package_height_cm", "weight_kg",
   "material", "pieces_count", "power_source", "assembly_required", "box_contents", "play_instructions",
@@ -80,6 +88,9 @@ const HEADER_ALIASES: Record<string, CatalogColumn> = {
   colors: "colors", color: "colors", "الألوان": "colors", "الالوان": "colors",
   sizes: "sizes", size: "sizes", "المقاسات": "sizes", "المقاس": "sizes",
   product_options: "product_options", options: "product_options", "خيارات_المنتج": "product_options", "الخيارات": "product_options",
+  brand: "brand", manufacturer: "brand", "العلامة_التجارية": "brand", "الماركة": "brand",
+  tags: "tags", tag: "tags", "الوسوم": "tags", "الكلمات_المفتاحية": "tags",
+  availability: "availability", stock_status: "availability", "التوفر": "availability", "حالة_التوفر": "availability",
   product_length_cm: "product_length_cm", product_width_cm: "product_width_cm", product_height_cm: "product_height_cm",
   package_length_cm: "package_length_cm", package_width_cm: "package_width_cm", package_height_cm: "package_height_cm",
   weight_kg: "weight_kg", material: "material", pieces_count: "pieces_count", power_source: "power_source",
@@ -100,7 +111,7 @@ function snapshotPayload(): StorefrontProductsPayload {
       ageMin: null,
       ageMax: null,
       galleryImages: [], videoUrl: null, videoPoster: null, videoDuration: null,
-      options: [],
+      options: [], brand: null, tags: [], availability: "unknown",
       specifications: EMPTY_SPECIFICATIONS,
     })),
     status: "ok",
@@ -162,6 +173,15 @@ function parseOptionalBoolean(value: unknown): boolean | null {
   if (["true", "1", "yes", "نعم", "مطلوب"].includes(normalized)) return true;
   if (["false", "0", "no", "لا", "غير مطلوب"].includes(normalized)) return false;
   return null;
+}
+
+function parseAvailability(value: unknown): ProductAvailability {
+  const normalized = text(value).toLowerCase().replace(/[\s_-]+/g, " ");
+  if (!normalized) return "unknown";
+  if (["available", "in stock", "instock", "متاح", "متوفر", "موجود", "yes", "نعم"].includes(normalized)) return "available";
+  if (["unavailable", "out of stock", "outofstock", "غير متاح", "غير متوفر", "نفد", "نفذت الكمية", "no", "لا"].includes(normalized)) return "unavailable";
+  if (["preorder", "pre order", "طلب مسبق", "حجز مسبق"].includes(normalized)) return "preorder";
+  return "unknown";
 }
 
 function parseMediaList(value: unknown): string[] {
@@ -285,6 +305,9 @@ function mapRow(row: unknown[], rowIndex: number, header: CatalogColumn[]): Prod
     galleryImages: parseMediaList(values.gallery_images),
     videoUrl: nullableText(values.video_url), videoPoster: nullableText(values.video_poster), videoDuration: nullableText(values.video_duration),
     options,
+    brand: nullableText(values.brand),
+    tags: parseSimpleList(values.tags),
+    availability: parseAvailability(values.availability),
     specifications: {
       productLengthCm: parseNumber(values.product_length_cm), productWidthCm: parseNumber(values.product_width_cm), productHeightCm: parseNumber(values.product_height_cm),
       packageLengthCm: parseNumber(values.package_length_cm), packageWidthCm: parseNumber(values.package_width_cm), packageHeightCm: parseNumber(values.package_height_cm),
@@ -348,7 +371,7 @@ function mergePopupProducts(liveProducts: Product[]): Product[] {
         ageMin: null,
         ageMax: null,
         galleryImages: [], videoUrl: null, videoPoster: null, videoDuration: null,
-        options: [],
+        options: [], brand: null, tags: [], availability: "unknown",
         specifications: EMPTY_SPECIFICATIONS,
       });
     }
