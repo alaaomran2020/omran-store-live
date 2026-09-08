@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
-import { buildWhatsAppUrl, formatPrice } from "@/lib/productFormat";
+import { buildWhatsAppUrl } from "@/lib/productFormat";
 import { extractProductColors, productColorHex } from "@/lib/productColors";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Check, MessageCircle, X } from "lucide-react";
@@ -101,9 +101,7 @@ export function ProductDetailsDialog({
               <h2 className="hidden text-2xl font-extrabold leading-9 text-brand-ink sm:block sm:text-3xl">
                 {product.name}
               </h2>
-              <p className="text-base font-extrabold text-brand-red sm:text-lg">
-                {formatPrice(product.price)}
-              </p>
+              <p className="text-xs font-bold text-brand-muted" dir="ltr">SKU: {product.sku || product.id}</p>
 
               {colors.length > 0 && (
                 <div className="rounded-2xl border border-brand-border bg-white p-3.5 sm:p-4">
@@ -174,7 +172,7 @@ export function ProductDetailsDialog({
                     className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25"
                   >
                     <MessageCircle size={18} aria-hidden="true" />
-                    {selectedColor ? `الكميات المتاحة — ${selectedColor}` : "للاستفسار والكميات"}
+                    {selectedColor ? `استفسر عن ${selectedColor}` : "استفسر عن السعر والتوفر"}
                   </a>
                 ) : (
                   <p className="rounded-xl border border-brand-border bg-brand-cream px-4 py-3 text-sm font-bold text-brand-muted">
@@ -203,7 +201,7 @@ export function ProductDetailsDialog({
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-whatsapp px-4 py-3 text-sm font-extrabold text-white shadow-lg transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-whatsapp/25"
             >
               <MessageCircle size={18} aria-hidden="true" />
-              {selectedColor ? `الكميات — ${selectedColor}` : "للاستفسار والكميات على واتساب"}
+              {selectedColor ? `استفسر عن ${selectedColor}` : "استفسر عن السعر والتوفر على واتساب"}
             </a>
           ) : (
             <button
