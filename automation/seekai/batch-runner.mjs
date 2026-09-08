@@ -6,7 +6,9 @@ import { generateDraft } from './product-engine.mjs';
 const DEFAULT_INPUTS = [
   'automation/seekai/batch/inputs/01-remote-racing-car.json',
   'automation/seekai/batch/inputs/02-kitchen-46pcs.json',
-  'automation/seekai/batch/inputs/03-home-chef-104pcs.json'
+  'automation/seekai/batch/inputs/03-home-chef-104pcs.json',
+  'automation/seekai/batch/inputs/04-bubble-solution.json',
+  'automation/seekai/batch/inputs/05-dog-piano.json'
 ];
 
 export async function runBatch({
