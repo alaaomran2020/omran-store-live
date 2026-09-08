@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Maximize2, Play, X } from "lucide-react";
 import type { Product } from "@/lib/productsClient";
+import { trackEvent } from "@/lib/analytics";
 import { ProductStructuredData } from "./SeoMetadata";
 import { ProductImage } from "./ProductImage";
 
@@ -18,6 +19,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
   );
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const touchStartX = useRef<number | null>(null);
 
   const selected = images[selectedIndex] ?? null;
   const selectedProduct = { ...product, image: selected, processedImage: selected };
@@ -27,15 +29,44 @@ export function ProductMediaGallery({ product }: { product: Product }) {
       ? "/popup"
       : "/products";
 
+  const trackGallery = useCallback((action: string, index = selectedIndex) => {
+    trackEvent("product_gallery_interaction", {
+      action,
+      product_id: product.id,
+      sku: product.sku || product.id,
+      catalog: catalogPath === "/popup" ? "popup" : "toys",
+      image_index: index + 1,
+      image_count: images.length,
+    });
+  }, [catalogPath, images.length, product.id, product.sku, selectedIndex]);
+
   const showPrevious = useCallback(() => {
     if (!images.length) return;
-    setSelectedIndex(current => (current - 1 + images.length) % images.length);
-  }, [images.length]);
+    setSelectedIndex(current => {
+      const next = (current - 1 + images.length) % images.length;
+      trackGallery("previous", next);
+      return next;
+    });
+  }, [images.length, trackGallery]);
 
   const showNext = useCallback(() => {
     if (!images.length) return;
-    setSelectedIndex(current => (current + 1) % images.length);
-  }, [images.length]);
+    setSelectedIndex(current => {
+      const next = (current + 1) % images.length;
+      trackGallery("next", next);
+      return next;
+    });
+  }, [images.length, trackGallery]);
+
+  const openLightbox = useCallback(() => {
+    setLightboxOpen(true);
+    trackGallery("lightbox_open");
+  }, [trackGallery]);
+
+  const closeLightbox = useCallback(() => {
+    setLightboxOpen(false);
+    trackGallery("lightbox_close");
+  }, [trackGallery]);
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -45,11 +76,14 @@ export function ProductMediaGallery({ product }: { product: Product }) {
   useEffect(() => {
     if (!lightboxOpen) return;
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
         event.stopImmediatePropagation();
-        setLightboxOpen(false);
+        closeLightbox();
         return;
       }
       if (event.key === "ArrowLeft" && hasMultipleImages) {
@@ -63,8 +97,26 @@ export function ProductMediaGallery({ product }: { product: Product }) {
     };
 
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [hasMultipleImages, lightboxOpen, showNext, showPrevious]);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [closeLightbox, hasMultipleImages, lightboxOpen, showNext, showPrevious]);
+
+  const onTouchStart = (event: React.TouchEvent) => {
+    touchStartX.current = event.changedTouches[0]?.clientX ?? null;
+  };
+
+  const onTouchEnd = (event: React.TouchEvent) => {
+    const startX = touchStartX.current;
+    touchStartX.current = null;
+    if (startX === null || !hasMultipleImages) return;
+    const endX = event.changedTouches[0]?.clientX ?? startX;
+    const delta = endX - startX;
+    if (Math.abs(delta) < 45) return;
+    if (delta < 0) showNext();
+    else showPrevious();
+  };
 
   return (
     <div>
@@ -81,7 +133,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
         {selected && (
           <button
             type="button"
-            onClick={() => setLightboxOpen(true)}
+            onClick={openLightbox}
             aria-label={`فتح صورة ${product.name} بالحجم الكامل`}
             className="absolute inset-0 z-10 cursor-zoom-in focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
           >
@@ -131,7 +183,10 @@ export function ProductMediaGallery({ product }: { product: Product }) {
             <button
               key={image}
               type="button"
-              onClick={() => setSelectedIndex(index)}
+              onClick={() => {
+                setSelectedIndex(index);
+                trackGallery("thumbnail", index);
+              }}
               aria-label={`عرض صورة المنتج رقم ${index + 1}`}
               aria-pressed={selectedIndex === index}
               className={`h-16 w-16 shrink-0 snap-start overflow-hidden rounded-xl border-2 bg-white transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20 ${
@@ -172,8 +227,10 @@ export function ProductMediaGallery({ product }: { product: Product }) {
           role="dialog"
           aria-modal="true"
           aria-label={`معرض صور ${product.name}`}
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 p-3 sm:p-6"
-          onClick={() => setLightboxOpen(false)}
+          className="fixed inset-0 z-[70] flex touch-pan-y items-center justify-center bg-black/95 p-3 sm:p-6"
+          onClick={closeLightbox}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
           <div
             className="relative flex h-full w-full max-w-6xl items-center justify-center"
@@ -181,8 +238,9 @@ export function ProductMediaGallery({ product }: { product: Product }) {
           >
             <button
               type="button"
-              onClick={() => setLightboxOpen(false)}
+              onClick={closeLightbox}
               aria-label="إغلاق عرض الصورة"
+              autoFocus
               className="absolute left-0 top-0 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30"
             >
               <X size={20} aria-hidden="true" />
