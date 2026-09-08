@@ -1,45 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
-import { fallbackImageUrl, type Product } from "@shared/products";
+import { toDisplayableImageUrl, fallbackImageUrl, type Product } from "@shared/products";
 import { ImageOff } from "lucide-react";
 
-const RAW_PUBLIC_BASE =
-  "https://raw.githubusercontent.com/alaaomran2020/omran-store-live/main/public";
+const RAW_PUBLIC_BASE = "https://raw.githubusercontent.com/alaaomran2020/omran-store-live/main/public";
 
-function repositoryAssetFallback(image: string | null | undefined): string | null {
-  if (!image || !image.startsWith("/")) return null;
-  return `${RAW_PUBLIC_BASE}${image}`;
+function repositoryAssetFallback(image: string): string | null {
+  return image.startsWith("/") && !image.startsWith("//") ? `${RAW_PUBLIC_BASE}${image}` : null;
 }
 
-function safeProductSlug(id: string | null | undefined): string | null {
-  if (!id) return null;
-  const slug = id
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return slug || null;
+/** Only use declared product media. Never guess a filename from an SKU. */
+export function productImageCandidates(product: Pick<Product, "image" | "imageSource" | "processedImage">): string[] {
+  const declared = [product.processedImage, product.image, product.imageSource];
+  const local = declared.filter((value): value is string => Boolean(value?.startsWith("/") && !value.startsWith("//")));
+  const remote = declared.map(value => toDisplayableImageUrl(value)).filter((value): value is string => Boolean(value));
+  const driveFallbacks = declared.map(value => fallbackImageUrl(value)).filter((value): value is string => Boolean(value));
+  return Array.from(new Set([...local, ...remote, ...driveFallbacks, ...local.map(repositoryAssetFallback)].filter((value): value is string => Boolean(value))));
 }
 
-function generatedProductAsset(id: string | null | undefined): string | null {
-  const slug = safeProductSlug(id);
-  return slug ? `/products/processed/generated/product-${slug}-main.webp` : null;
-}
-
-/**
- * صورة منتج آمنة متعددة المراحل.
- *
- * ترتيب التحميل يفضّل أصول المتجر نفسها قبل أي مصدر خارجي:
- *   1. الصورة المحلية المعلنة في الكتالوج إن وجدت.
- *   2. processedImage المحلية إن وجدت.
- *   3. المسار المحلي القياسي المبني من product_id.
- *   4. رابط الصورة الأصلي/الخارجي.
- *   5. Google Drive بعد تحويله لصيغة عرض مباشرة.
- *   6. نسخة GitHub raw للأصول المحلية كشبكة أمان أخيرة.
- *   7. Placeholder فقط إذا فشلت كل المصادر.
- *
- * هذا يمنع منتجات الكتالوج الحي من فقد الصورة عندما يكون ملفها الموثق
- * موجودًا بالفعل ضمن Cloudflare Pages assets حتى لو كان رابط Drive متعثرًا.
- */
 export function ProductImage({
   product,
   className = "",
@@ -52,36 +29,14 @@ export function ProductImage({
   priority?: boolean;
 }) {
   const [attempt, setAttempt] = useState(0);
+  const candidates = useMemo(() => productImageCandidates(product), [product.image, product.imageSource, product.processedImage]);
+  const mediaKey = candidates.join("\n");
 
   useEffect(() => {
     setAttempt(0);
-  }, [product.id, product.image, product.imageSource, product.processedImage]);
-
-  const candidates = useMemo(() => {
-    const localImage = product.image?.startsWith("/") ? product.image : null;
-    const localProcessed = product.processedImage?.startsWith("/")
-      ? product.processedImage
-      : null;
-    const conventionalLocal = generatedProductAsset(product.id);
-    const remoteImage = product.image && !product.image.startsWith("/") ? product.image : null;
-    const sourceFallback = fallbackImageUrl(product.imageSource);
-
-    const localCandidates = [localImage, localProcessed, conventionalLocal].filter(
-      (value): value is string => Boolean(value)
-    );
-
-    const values = [
-      ...localCandidates,
-      remoteImage,
-      sourceFallback,
-      ...localCandidates.map(repositoryAssetFallback),
-    ].filter((value): value is string => Boolean(value));
-
-    return Array.from(new Set(values));
-  }, [product.id, product.image, product.imageSource, product.processedImage]);
+  }, [product.id, mediaKey]);
 
   const src = candidates[attempt] ?? null;
-
   if (!src) {
     return (
       <div
@@ -96,6 +51,7 @@ export function ProductImage({
 
   return (
     <img
+      key={`${product.id}:${src}`}
       src={src}
       alt={product.name}
       loading={priority ? "eager" : "lazy"}
