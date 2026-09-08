@@ -3,7 +3,6 @@ import { MessageCircle, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-reac
 import { whatsappNumber } from "@/lib/productFormat";
 import {
   CART_UPDATED_EVENT,
-  addProductToCart,
   buildCartWhatsAppMessage,
   cartItemsForCatalog,
   cartQuantity,
