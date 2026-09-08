@@ -21,3 +21,6 @@ jobs:
       - name: MoneyPrinter draft tests
         working-directory: automation/moneyprinter
         run: python test_worker.py
+      - name: Approval + Content Factory tests
+        working-directory: automation/moneyprinter
+        run: python test_pipeline.py
