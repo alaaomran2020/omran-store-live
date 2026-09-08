@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Maximize2, Play, X } from "lucide-react";
 import type { Product } from "@/lib/productsClient";
+import { ProductStructuredData } from "./SeoMetadata";
 import { ProductImage } from "./ProductImage";
 
 export function ProductMediaGallery({ product }: { product: Product }) {
@@ -21,6 +22,10 @@ export function ProductMediaGallery({ product }: { product: Product }) {
   const selected = images[selectedIndex] ?? null;
   const selectedProduct = { ...product, image: selected, processedImage: selected };
   const hasMultipleImages = images.length > 1;
+  const catalogPath: "/products" | "/popup" =
+    typeof window !== "undefined" && window.location.pathname.startsWith("/popup")
+      ? "/popup"
+      : "/products";
 
   const showPrevious = useCallback(() => {
     if (!images.length) return;
@@ -63,6 +68,8 @@ export function ProductMediaGallery({ product }: { product: Product }) {
 
   return (
     <div>
+      <ProductStructuredData product={product} catalogPath={catalogPath} />
+
       <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-brand-border bg-brand-cream">
         <ProductImage
           product={selectedProduct}
