@@ -5,9 +5,10 @@ import { ProductSpecifications } from "@/components/ProductSpecifications";
 import { buildWhatsAppUrl } from "@/lib/productFormat";
 import { productColorHex } from "@/lib/productColors";
 import { nonColorProductOptions, productColors } from "@/lib/productOptions";
-import { addProductToCart } from "@/lib/cart";
+import { addProductToCart, openCartDrawer } from "@/lib/cart";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Check, MessageCircle, ShoppingBag, X } from "lucide-react";
+import { toast } from "sonner";
 
 export function ProductDetailsDialog({
   product,
@@ -68,6 +69,14 @@ export function ProductDetailsDialog({
     addProductToCart(product, cartSelections);
     setAddedFeedback(true);
     window.setTimeout(() => setAddedFeedback(false), 1400);
+    const summary = Object.entries(cartSelections).map(([name, value]) => `${name}: ${value}`).join(" · ");
+    toast.success("اتضاف لطلبك", {
+      description: summary ? `${product.name} — ${summary}` : product.name,
+      action: {
+        label: "عرض الطلب",
+        onClick: openCartDrawer,
+      },
+    });
   };
 
   const selectionSummary = [
