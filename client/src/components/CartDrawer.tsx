@@ -69,21 +69,6 @@ export function CartDrawer() {
     <>
       <button
         type="button"
-        onClick={() => handleOpen("header_badge")}
-        aria-label={`طلبك${totalCount ? ` — ${totalCount} قطعة` : ""}`}
-        className="fixed left-3 top-[max(.75rem,env(safe-area-inset-top))] z-[55] inline-flex min-h-10 items-center gap-1.5 rounded-full border border-brand-border bg-white/96 px-3 py-2 text-xs font-extrabold text-brand-navy shadow-lg backdrop-blur transition hover:border-brand-blue hover:bg-brand-sky focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20 sm:left-5 sm:min-h-11 sm:px-4 sm:text-sm"
-      >
-        <ShoppingBag size={16} aria-hidden="true" />
-        <span className="hidden sm:inline">طلبك</span>
-        {totalCount > 0 && (
-          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-brand-yellow px-1.5 py-0.5 text-[10px] font-black text-brand-navy sm:min-w-6 sm:text-xs">
-            {totalCount}
-          </span>
-        )}
-      </button>
-
-      <button
-        type="button"
         onClick={() => handleOpen("floating_button")}
         aria-label={`فتح طلبك${totalCount ? ` — ${totalCount} قطعة` : ""}`}
         className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-navy px-4 py-3 text-sm font-extrabold text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-brand-blue focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/25 sm:bottom-6 sm:left-6 lg:hidden"
