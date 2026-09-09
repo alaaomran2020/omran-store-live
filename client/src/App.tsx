@@ -9,6 +9,11 @@ import ProductsPage from "@/pages/ProductsPage";
 import Storefront from "@/pages/Storefront";
 import Videos from "@/pages/Videos";
 import Rewards from "@/pages/Rewards";
+import VipProgram from "@/pages/VipProgram";
+import VipPrivacy from "@/pages/VipPrivacy";
+import VipQrTest from "@/pages/VipQrTest";
+import VipStaffRegistration from "@/pages/VipStaffRegistration";
+import VipTerms from "@/pages/VipTerms";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -21,8 +26,14 @@ function Router() {
       <Route path={"/popup"} component={PopUp} />
       <Route path={"/videos"} component={Videos} />
       <Route path={"/rewards"} component={Rewards} />
+      <Route path={"/vip"} component={VipProgram} />
+      <Route path={"/vip/terms"} component={VipTerms} />
+      <Route path={"/vip/privacy"} component={VipPrivacy} />
+      <Route path={"/vip/staff-register"} component={VipStaffRegistration} />
+      <Route path={"/vip/qr-test"} component={VipQrTest} />
       <Route path={"/admin"} component={AdminAccess} />
       <Route path={"/admin/product-intake"} component={AdminAccess} />
+      <Route path={"/admin/vip-operations"} component={AdminAccess} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

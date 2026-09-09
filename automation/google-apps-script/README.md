@@ -2,6 +2,12 @@
 
 الغرض: استقبال تسجيلات نموذج «خليك مميز» من المتجر وحفظها مركزيًا في شيت `المشتركون` داخل قاعدة البيانات الرئيسية، مع منع التكرار باستخدام رقم الموبايل بصيغة E.164.
 
+## Omran VIP Card pilot
+
+The VIP program does not use Apps Script. Its disabled pilot tables already exist in the master workbook, while staff enrollment is a static WhatsApp handoff from `/vip/staff-register`. Card issuance, activation, redemption, replacement and complaints are recorded manually in the restricted workbook during the pilot.
+
+The subscriber script documented below belongs to the older marketing subscription form only. It is not used for paid VIP cards, discounts, points, staff access or QR verification.
+
 ## النشر
 
 1. افتح https://script.google.com/create بحساب Google الذي يملك قاعدة البيانات.
