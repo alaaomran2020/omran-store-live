@@ -34,7 +34,7 @@ export function buildStaffEnrollmentWhatsAppUrl(input: {
   whatsapp?: string;
   requestedRole: StaffRequestedRole;
   requestCode?: string;
-}): { url: string; requestCode: string } | null {
+}): { url: string; requestCode: string; message: string } | null {
   const destination = input.destination.replace(/\D/g, "");
   const mobile = normalizeEgyptianMobile(input.mobile);
   const whatsapp = normalizeEgyptianMobile(input.whatsapp || input.mobile);
@@ -55,5 +55,6 @@ export function buildStaffEnrollmentWhatsAppUrl(input: {
   return {
     url: `https://wa.me/${destination}?text=${encodeURIComponent(message)}`,
     requestCode,
+    message,
   };
 }

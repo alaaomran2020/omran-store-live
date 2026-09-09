@@ -31,6 +31,7 @@ describe("employee WhatsApp enrollment", () => {
     expect(message).toContain("OVS-1234ABCD");
     expect(message).toContain("الحالة: PENDING");
     expect(message).toContain("تسجيل الموظف يدويًا");
+    expect(result?.message).toBe(message);
   });
 
   it("rejects invalid name or phone data", () => {
