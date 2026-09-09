@@ -1,4 +1,9 @@
-export type StaffRequestedRole = "CARD_ISSUER" | "BRANCH_STAFF" | "PARTNER_MANAGER" | "SUPPORT" | "REVIEWER";
+export type StaffRequestedRole =
+  | "CARD_ISSUER"
+  | "BRANCH_STAFF"
+  | "PARTNER_MANAGER"
+  | "SUPPORT"
+  | "REVIEWER";
 
 const roleLabels: Record<StaffRequestedRole, string> = {
   CARD_ISSUER: "إصدار وتفعيل الكروت",
@@ -17,13 +22,14 @@ export function normalizeEgyptianMobile(value: string): string | null {
 
 export function createStaffRequestCode(bytes?: Uint8Array): string {
   const random = bytes ?? crypto.getRandomValues(new Uint8Array(4));
-  return `OVS-${Array.from(random, byte => byte.toString(16).padStart(2, "0")).join("").toUpperCase()}`;
+  return `OVS-${Array.from(random, byte => byte.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase()}`;
 }
 
 export function buildStaffEnrollmentWhatsAppUrl(input: {
   destination: string;
   displayName: string;
-  identityEmail: string;
   mobile: string;
   whatsapp?: string;
   requestedRole: StaffRequestedRole;
@@ -33,19 +39,21 @@ export function buildStaffEnrollmentWhatsAppUrl(input: {
   const mobile = normalizeEgyptianMobile(input.mobile);
   const whatsapp = normalizeEgyptianMobile(input.whatsapp || input.mobile);
   const displayName = input.displayName.trim();
-  const identityEmail = input.identityEmail.trim().toLowerCase();
-  if (!destination || !mobile || !whatsapp || displayName.length < 3 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(identityEmail)) return null;
+  if (!destination || !mobile || !whatsapp || displayName.length < 3)
+    return null;
   const requestCode = input.requestCode ?? createStaffRequestCode();
   const message = [
     "طلب تفعيل موظف — Omran VIP",
     `كود الطلب: ${requestCode}`,
     `الاسم: ${displayName}`,
-    `هوية الدخول: ${identityEmail}`,
     `الموبايل: ${mobile}`,
     `واتساب الموظف: ${whatsapp}`,
     `الدور المطلوب: ${roleLabels[input.requestedRole]} (${input.requestedRole})`,
     "أنا أرسل الرسالة من رقم واتسابي وأطلب تسجيل الطلب للمراجعة.",
-    "الحالة: PENDING — لا توجد صلاحية قبل اعتماد المدير وإضافة الهوية إلى Cloudflare Access.",
+    "الحالة: PENDING — لا توجد صلاحية قبل اعتماد المدير وتسجيل الموظف يدويًا.",
   ].join("\n");
-  return { url: `https://wa.me/${destination}?text=${encodeURIComponent(message)}`, requestCode };
+  return {
+    url: `https://wa.me/${destination}?text=${encodeURIComponent(message)}`,
+    requestCode,
+  };
 }

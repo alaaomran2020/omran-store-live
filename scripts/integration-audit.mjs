@@ -6,7 +6,9 @@ const errors = [];
 const ok = condition => Boolean(condition);
 const exists = relative => fs.existsSync(path.join(root, relative));
 const read = relative => fs.readFileSync(path.join(root, relative), "utf8");
-const assert = (condition, message) => { if (!ok(condition)) errors.push(message); };
+const assert = (condition, message) => {
+  if (!ok(condition)) errors.push(message);
+};
 
 const required = [
   "client/src/App.tsx",
@@ -15,6 +17,7 @@ const required = [
   "client/src/pages/Products.tsx",
   "client/src/pages/ProductIntake.tsx",
   "client/src/pages/VipProgram.tsx",
+  "client/src/pages/VipStaffRegistration.tsx",
   "client/src/lib/productIntakeClient.ts",
   "client/src/lib/analytics.ts",
   "client/src/lib/makeGateway.ts",
@@ -22,10 +25,6 @@ const required = [
   "shared/products.ts",
   "shared/productIntake.ts",
   "shared/vipProgram.ts",
-  "automation/google-apps-script/vip-pilot.gs",
-  "automation/google-apps-script/vip-operations.gs",
-  "automation/google-apps-script/vip-console.gs",
-  "automation/google-apps-script/vip-console.html",
   "public/robots.txt",
   "public/sitemap.xml",
   ".env.example",
@@ -33,129 +32,274 @@ const required = [
   ".github/workflows/deploy-storefront.yml",
 ];
 
-for (const file of required) assert(exists(file), `missing required integration file: ${file}`);
+for (const file of required)
+  assert(exists(file), `missing required integration file: ${file}`);
 
 if (exists("client/src/App.tsx")) {
   const app = read("client/src/App.tsx");
   assert(app.includes('path={"/"}'), "home route is not wired");
   assert(app.includes('path={"/products"}'), "products route is not wired");
   assert(app.includes('path={"/admin"}'), "admin route is not wired");
-  assert(app.includes('path={"/admin/product-intake"}'), "product intake route is not wired");
+  assert(
+    app.includes('path={"/admin/product-intake"}'),
+    "product intake route is not wired"
+  );
   assert(app.includes('path={"/vip"}'), "VIP program route is not wired");
+  assert(
+    app.includes('path={"/vip/staff-register"}'),
+    "VIP staff registration route is not wired"
+  );
 }
 
-if (exists("automation/google-apps-script/vip-operations.gs")) {
-  const operations = read("automation/google-apps-script/vip-operations.gs");
-  assert(operations.includes("LockService.getDocumentLock"), "VIP mutations must use a document lock");
-  assert(operations.includes("idempotency_key"), "VIP redemption must use an idempotency key");
-  assert(operations.includes("verification_token_hash"), "VIP cards must store a verification token hash");
-  assert(!operations.includes("function doPost"), "VIP operations must not expose a public write route");
+for (const forbiddenVipRuntime of [
+  "automation/google-apps-script/vip-pilot.gs",
+  "automation/google-apps-script/vip-operations.gs",
+  "automation/google-apps-script/vip-console.gs",
+  "automation/google-apps-script/vip-console.html",
+]) {
+  assert(
+    !exists(forbiddenVipRuntime),
+    `VIP must not depend on Apps Script: ${forbiddenVipRuntime}`
+  );
 }
 
-if (exists("automation/google-apps-script/vip-console.html")) {
-  const consoleHtml = read("automation/google-apps-script/vip-console.html");
-  assert(consoleHtml.includes("OMRAN-VIP-TEST"), "VIP console QR must remain visibly test-only");
-  assert(!consoleHtml.includes("verificationToken+'"), "VIP console must not send a real verification token to the test QR renderer");
+if (exists("client/src/pages/VipStaffRegistration.tsx")) {
+  const registration = read("client/src/pages/VipStaffRegistration.tsx");
+  assert(
+    registration.includes("buildStaffEnrollmentWhatsAppUrl"),
+    "staff registration must use the WhatsApp handoff"
+  );
+  assert(
+    !registration.includes("fetch("),
+    "VIP staff registration must not call an API"
+  );
+  assert(
+    !registration.includes("localStorage"),
+    "VIP staff registration must not create a browser access session"
+  );
+  assert(
+    registration.includes("ليس Access Token"),
+    "the request reference must be labelled as non-authorizing"
+  );
 }
 
 if (exists("client/src/pages/VipProgram.tsx")) {
   const vipPage = read("client/src/pages/VipProgram.tsx");
-  assert(vipPage.includes("تحت الإعداد التجريبي"), "VIP page must state its pilot status");
-  assert(vipPage.includes("لا توجد قيمة بيع أو خصم معتمدة"), "VIP page must not imply unapproved Silver pricing");
-  assert(!/\b(50|70|100)\s*(جنيه|جنيهًا)/.test(vipPage), "VIP page contains an unapproved example price or discount");
+  assert(
+    vipPage.includes("تحت الإعداد التجريبي"),
+    "VIP page must state its pilot status"
+  );
+  assert(
+    vipPage.includes("لا توجد قيمة بيع أو خصم معتمدة"),
+    "VIP page must not imply unapproved Silver pricing"
+  );
+  assert(
+    !/\b(50|70|100)\s*(جنيه|جنيهًا)/.test(vipPage),
+    "VIP page contains an unapproved example price or discount"
+  );
 }
 
 if (exists("shared/vipProgram.ts")) {
   const vipEngine = read("shared/vipProgram.ts");
-  assert(vipEngine.includes("maximumDiscountPiasters"), "VIP offers must require a monetary discount cap");
-  assert(vipEngine.includes("usageLimitPerCard"), "VIP offers must enforce a per-card usage limit");
-  assert(vipEngine.includes("OFFER_BUDGET_EXCEEDED"), "VIP offers must enforce the configured total budget");
-}
-
-if (exists("automation/google-apps-script/vip-pilot.gs")) {
-  const pilotSchema = read("automation/google-apps-script/vip-pilot.gs");
-  assert(pilotSchema.includes("financial_activation', 'false'"), "VIP financial activation must default to false");
-  assert(pilotSchema.includes("points_enabled', 'false'"), "VIP points must default to false");
-  assert(!pilotSchema.includes("function doPost"), "VIP pilot initializer must not expose a public write route");
+  assert(
+    vipEngine.includes("maximumDiscountPiasters"),
+    "VIP offers must require a monetary discount cap"
+  );
+  assert(
+    vipEngine.includes("usageLimitPerCard"),
+    "VIP offers must enforce a per-card usage limit"
+  );
+  assert(
+    vipEngine.includes("OFFER_BUDGET_EXCEEDED"),
+    "VIP offers must enforce the configured total budget"
+  );
 }
 
 if (exists("client/src/admin/AdminAccess.tsx")) {
   const admin = read("client/src/admin/AdminAccess.tsx");
-  assert(admin.includes('/cdn-cgi/access/get-identity'), "admin must verify Cloudflare Access identity");
-  assert(admin.includes('/cdn-cgi/access/logout'), "admin logout must use Cloudflare Access logout");
-  assert(!admin.includes('VITE_ADMIN_AUTH_URL'), "admin must not depend on a custom auth API");
-  assert(!admin.includes('sessionStorage'), "admin must not trust a browser-only session token");
-  assert(!admin.includes('localStorage') || !admin.includes('admin-session'), "admin must not trust a local admin session");
+  assert(
+    admin.includes("/cdn-cgi/access/get-identity"),
+    "admin must verify Cloudflare Access identity"
+  );
+  assert(
+    admin.includes("/cdn-cgi/access/logout"),
+    "admin logout must use Cloudflare Access logout"
+  );
+  assert(
+    !admin.includes("VITE_ADMIN_AUTH_URL"),
+    "admin must not depend on a custom auth API"
+  );
+  assert(
+    !admin.includes("sessionStorage"),
+    "admin must not trust a browser-only session token"
+  );
+  assert(
+    !admin.includes("localStorage") || !admin.includes("admin-session"),
+    "admin must not trust a local admin session"
+  );
 }
 
 if (exists("client/src/pages/ProductIntake.tsx")) {
   const intakePage = read("client/src/pages/ProductIntake.tsx");
-  assert(intakePage.includes("submitProductIntake"), "product intake must submit to the operations gateway");
-  assert(!intakePage.includes("localStorage"), "product intake must not persist operational drafts in localStorage");
-  assert(!intakePage.includes("exportDrafts"), "product intake must not use CSV export as the operational handoff");
+  assert(
+    intakePage.includes("submitProductIntake"),
+    "product intake must submit to the operations gateway"
+  );
+  assert(
+    !intakePage.includes("localStorage"),
+    "product intake must not persist operational drafts in localStorage"
+  );
+  assert(
+    !intakePage.includes("exportDrafts"),
+    "product intake must not use CSV export as the operational handoff"
+  );
 }
 
 if (exists("client/src/lib/productIntakeClient.ts")) {
   const intakeClient = read("client/src/lib/productIntakeClient.ts");
-  assert(intakeClient.includes("FormData"), "product intake gateway must send the product image as multipart data");
-  assert(intakeClient.includes('form.append("photo"'), "product intake gateway must include the original photo");
-  assert(intakeClient.includes("NEEDS_REVIEW"), "product intake gateway must fail closed to NEEDS_REVIEW");
+  assert(
+    intakeClient.includes("FormData"),
+    "product intake gateway must send the product image as multipart data"
+  );
+  assert(
+    intakeClient.includes('form.append("photo"'),
+    "product intake gateway must include the original photo"
+  );
+  assert(
+    intakeClient.includes("NEEDS_REVIEW"),
+    "product intake gateway must fail closed to NEEDS_REVIEW"
+  );
 }
 
 if (exists("client/src/lib/analytics.ts")) {
   const analytics = read("client/src/lib/analytics.ts");
-  assert(analytics.includes('"whatsapp_conversion"'), "analytics must expose the canonical WhatsApp conversion event");
-  assert(analytics.includes("MAKE_GATEWAY_URL"), "WhatsApp conversions must use the unified Make operations gateway");
-  assert(analytics.includes("product_id"), "conversion tracking must include product_id");
+  assert(
+    analytics.includes('"whatsapp_conversion"'),
+    "analytics must expose the canonical WhatsApp conversion event"
+  );
+  assert(
+    analytics.includes("MAKE_GATEWAY_URL"),
+    "WhatsApp conversions must use the unified Make operations gateway"
+  );
+  assert(
+    analytics.includes("product_id"),
+    "conversion tracking must include product_id"
+  );
   assert(analytics.includes("sku"), "conversion tracking must include SKU");
-  assert(analytics.includes("category"), "conversion tracking must include category");
+  assert(
+    analytics.includes("category"),
+    "conversion tracking must include category"
+  );
 }
 
 if (exists("client/src/lib/makeGateway.ts")) {
   const gateway = read("client/src/lib/makeGateway.ts");
-  assert(gateway.includes("hook.eu1.make.com"), "unified Make gateway URL must be configured");
-  assert(gateway.includes("catalog"), "unified Make gateway must expose the catalog action URL");
+  assert(
+    gateway.includes("hook.eu1.make.com"),
+    "unified Make gateway URL must be configured"
+  );
+  assert(
+    gateway.includes("catalog"),
+    "unified Make gateway must expose the catalog action URL"
+  );
 }
 
 if (exists("shared/productIntake.ts")) {
   const intake = read("shared/productIntake.ts");
-  for (const source of ["Facebook", "Instagram", "WhatsApp", "Telegram", "Upload", "Camera", "Sync"]) {
-    assert(intake.includes(`"${source}"`), `image source is missing from intake contract: ${source}`);
+  for (const source of [
+    "Facebook",
+    "Instagram",
+    "WhatsApp",
+    "Telegram",
+    "Upload",
+    "Camera",
+    "Sync",
+  ]) {
+    assert(
+      intake.includes(`"${source}"`),
+      `image source is missing from intake contract: ${source}`
+    );
   }
-  assert(intake.includes('"NEEDS_REVIEW"'), "intake must fail closed to NEEDS_REVIEW");
+  assert(
+    intake.includes('"NEEDS_REVIEW"'),
+    "intake must fail closed to NEEDS_REVIEW"
+  );
 }
 
 if (exists("shared/products.ts")) {
   const products = read("shared/products.ts");
-  assert(products.includes('workflowStatus === "PUBLISHED"') || products.includes('workflow_status === "PUBLISHED"'), "publication gate must require PUBLISHED");
-  assert(products.includes('qaStatus === "PASS"') || products.includes('qa_status === "PASS"'), "publication gate must require PASS");
+  assert(
+    products.includes('workflowStatus === "PUBLISHED"') ||
+      products.includes('workflow_status === "PUBLISHED"'),
+    "publication gate must require PUBLISHED"
+  );
+  assert(
+    products.includes('qaStatus === "PASS"') ||
+      products.includes('qa_status === "PASS"'),
+    "publication gate must require PASS"
+  );
 }
 
 if (exists("client/src/lib/publicProductsSnapshot.ts")) {
   const snapshot = read("client/src/lib/publicProductsSnapshot.ts");
-  const images = [...snapshot.matchAll(/(?:"image"|image):\s*"([^"]+)"/g)].map(match => match[1]);
+  const images = [...snapshot.matchAll(/(?:"image"|image):\s*"([^"]+)"/g)].map(
+    match => match[1]
+  );
   assert(images.length > 0, "public snapshot has no product images");
   for (const image of images) {
-    assert(image.startsWith("/products/processed/"), `public image is not same-origin: ${image}`);
+    assert(
+      image.startsWith("/products/processed/"),
+      `public image is not same-origin: ${image}`
+    );
     const asset = path.join(root, "public", image.replace(/^\//, ""));
-    assert(fs.existsSync(asset), `referenced product image is missing: ${image}`);
-    if (fs.existsSync(asset)) assert(fs.statSync(asset).size >= 1024, `product image is suspiciously small: ${image}`);
+    assert(
+      fs.existsSync(asset),
+      `referenced product image is missing: ${image}`
+    );
+    if (fs.existsSync(asset))
+      assert(
+        fs.statSync(asset).size >= 1024,
+        `product image is suspiciously small: ${image}`
+      );
   }
 }
 
 if (exists(".env.example")) {
   const env = read(".env.example");
-  for (const forbidden of ["DATABASE_URL=", "MYSQL_DATABASE=", "MYSQL_USER=", "ORIGIN_BASE_URL=", "JWT_SECRET=", "PORT=", "VITE_ADMIN_AUTH_URL="]) {
-    assert(!env.includes(forbidden), `static live env template contains obsolete runtime setting: ${forbidden}`);
+  for (const forbidden of [
+    "DATABASE_URL=",
+    "MYSQL_DATABASE=",
+    "MYSQL_USER=",
+    "ORIGIN_BASE_URL=",
+    "JWT_SECRET=",
+    "PORT=",
+    "VITE_ADMIN_AUTH_URL=",
+  ]) {
+    assert(
+      !env.includes(forbidden),
+      `static live env template contains obsolete runtime setting: ${forbidden}`
+    );
   }
 }
 
 if (exists("docs/CURRENT-ARCHITECTURE.md")) {
   const architecture = read("docs/CURRENT-ARCHITECTURE.md");
-  assert(architecture.includes("omran-store-live"), "architecture contract must identify the live repository");
-  assert(architecture.includes("omrantoys-live-app"), "architecture contract must identify the Cloudflare Pages project");
-  assert(architecture.includes("Static Vite storefront only"), "architecture contract must remain static-only");
-  assert(architecture.includes("Cloudflare Access"), "architecture contract must document admin edge authentication");
+  assert(
+    architecture.includes("omran-store-live"),
+    "architecture contract must identify the live repository"
+  );
+  assert(
+    architecture.includes("omrantoys-live-app"),
+    "architecture contract must identify the Cloudflare Pages project"
+  );
+  assert(
+    architecture.includes("Static Vite storefront only"),
+    "architecture contract must remain static-only"
+  );
+  assert(
+    architecture.includes("Cloudflare Access"),
+    "architecture contract must document admin edge authentication"
+  );
 }
 
 for (const obsolete of [
@@ -168,7 +312,10 @@ for (const obsolete of [
   "docs/N8N-PRODUCT-PIPELINE.md",
   "docs/WHATSAPP-ADMIN-AUTH.md",
 ]) {
-  assert(!exists(obsolete), `obsolete architecture artifact must not return to live repo: ${obsolete}`);
+  assert(
+    !exists(obsolete),
+    `obsolete architecture artifact must not return to live repo: ${obsolete}`
+  );
 }
 
 if (errors.length) {
@@ -178,4 +325,6 @@ if (errors.length) {
 }
 
 console.log("Integration audit: PASS");
-console.log("Routes, Cloudflare Access admin guard, publication guard, operational intake, unified Make gateway, conversion tracking, static architecture, environment and bundled product images are coherent.");
+console.log(
+  "Routes, Cloudflare Access admin guard, publication guard, operational intake, unified Make gateway, conversion tracking, static architecture, environment and bundled product images are coherent."
+);

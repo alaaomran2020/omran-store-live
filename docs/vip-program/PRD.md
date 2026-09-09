@@ -11,7 +11,7 @@ Sell and operate two controlled card types, Omran VIP and Omran Silver, while pr
 - Tanta, with launch priority for El-Sayed El-Badawy branch, then Stadium branch.
 - 5–10 documented partners.
 - Configurable one-to-three-month pilot period.
-- Phone registration, unique membership and card IDs, secure QR verification token and card lifecycle.
+- Phone registration, unique membership and card IDs, manual serial/QR lookup and card lifecycle. Real-time secure QR verification is out of scope while API and token use are prohibited.
 - Offer rules with minimum invoice, maximum discount, usage limit, exclusions, dates, funding owner and offer budget.
 - Google-account-restricted pilot operations for issuance, activation, redemption, replacement and complaints. Partner self-service remains gated pending an authenticated transaction layer.
 - Points inside Omran Toys only, disabled until the points policy and liability are approved.
