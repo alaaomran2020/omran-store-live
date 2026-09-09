@@ -2,6 +2,12 @@
 
 الغرض: استقبال تسجيلات نموذج «خليك مميز» من المتجر وحفظها مركزيًا في شيت `المشتركون` داخل قاعدة البيانات الرئيسية، مع منع التكرار باستخدام رقم الموبايل بصيغة E.164.
 
+## Omran VIP Card pilot foundation
+
+`vip-pilot.gs` is a separate, disabled-by-default schema initializer for the paid card pilot. Add it to the existing bound project only after reviewing `docs/vip-program/DISCOVERY-ADR.md`. Running `setupVipPilotSheets()` creates the draft program sheets and three fail-closed settings; it does not issue cards, activate points, expose a web endpoint or publish partners.
+
+Financial transactions must not reuse the public subscriber or Make webhook pattern. The static Cloudflare Access page does not authenticate a separate webhook origin.
+
 ## النشر
 
 1. افتح https://script.google.com/create بحساب Google الذي يملك قاعدة البيانات.

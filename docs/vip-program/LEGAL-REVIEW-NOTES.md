@@ -1,0 +1,30 @@
+# Omran VIP Card Program — Legal review notes
+
+Status: Research notes only. Egyptian counsel approval is required before sale, draw announcement or live personal-data processing.
+
+## Consumer protection
+
+Primary review sources:
+
+- Egypt Consumer Protection Law No. 181/2018: https://www.wipo.int/wipolex/ar/legislation/details/19866
+- Consumer Protection Authority legislation page: https://cpa.gov.eg/ar-eg/%D8%AA%D8%B4%D8%B1%D9%8A%D8%B9%D8%A7%D8%AA
+- Executive Regulations No. 822/2019: https://manshurat.org/node/70791
+
+Before sale, counsel should confirm the exact disclosures for card price, benefit limitations, validity, refund/replacement, invoices, advertising and complaint handling. Each offer must state its cap, minimum invoice, exclusions, participating branch and period. A partner must not be presented as active before written approval.
+
+## Personal data
+
+Review Law No. 151/2020 and Executive Regulations issued by Ministerial Decree No. 816/2025. The regulations became effective in November 2025 and introduce operational requirements covering consent, purpose limitation, retention, security registers, data-subject requests, breach handling, licensing/permits and cross-border processing.
+
+Implementation must therefore remain test-only until counsel confirms the controller/processor licensing path, the privacy owner/DPO requirements, Google/Cloudflare cross-border implications, consent wording, retention periods and deletion/request workflow.
+
+## Promotional draw
+
+No paid draw or purchase-conditioned entry is approved. Before publishing a launch draw, obtain a written opinion identifying the competent authority, required permit, approved rules, prize values, selection method, announcement method and tax/accounting treatment for the exact mechanic.
+
+## Minimum legal release evidence
+
+- Signed legal review memo for the customer terms, partner agreement and privacy notice.
+- Approved data inventory, purposes, retention schedule, access matrix and incident workflow.
+- Approved draw permit or a documented decision to launch without a draw.
+- Versioned copies of every customer-facing promise and partner offer.

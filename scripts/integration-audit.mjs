@@ -14,12 +14,15 @@ const required = [
   "client/src/pages/Home.tsx",
   "client/src/pages/Products.tsx",
   "client/src/pages/ProductIntake.tsx",
+  "client/src/pages/VipProgram.tsx",
   "client/src/lib/productIntakeClient.ts",
   "client/src/lib/analytics.ts",
   "client/src/lib/makeGateway.ts",
   "client/src/lib/publicProductsSnapshot.ts",
   "shared/products.ts",
   "shared/productIntake.ts",
+  "shared/vipProgram.ts",
+  "automation/google-apps-script/vip-pilot.gs",
   "public/robots.txt",
   "public/sitemap.xml",
   ".env.example",
@@ -35,6 +38,28 @@ if (exists("client/src/App.tsx")) {
   assert(app.includes('path={"/products"}'), "products route is not wired");
   assert(app.includes('path={"/admin"}'), "admin route is not wired");
   assert(app.includes('path={"/admin/product-intake"}'), "product intake route is not wired");
+  assert(app.includes('path={"/vip"}'), "VIP program route is not wired");
+}
+
+if (exists("client/src/pages/VipProgram.tsx")) {
+  const vipPage = read("client/src/pages/VipProgram.tsx");
+  assert(vipPage.includes("تحت الإعداد التجريبي"), "VIP page must state its pilot status");
+  assert(vipPage.includes("لا توجد قيمة بيع أو خصم معتمدة"), "VIP page must not imply unapproved Silver pricing");
+  assert(!/\b(50|70|100)\s*(جنيه|جنيهًا)/.test(vipPage), "VIP page contains an unapproved example price or discount");
+}
+
+if (exists("shared/vipProgram.ts")) {
+  const vipEngine = read("shared/vipProgram.ts");
+  assert(vipEngine.includes("maximumDiscountPiasters"), "VIP offers must require a monetary discount cap");
+  assert(vipEngine.includes("usageLimitPerCard"), "VIP offers must enforce a per-card usage limit");
+  assert(vipEngine.includes("OFFER_BUDGET_EXCEEDED"), "VIP offers must enforce the configured total budget");
+}
+
+if (exists("automation/google-apps-script/vip-pilot.gs")) {
+  const pilotSchema = read("automation/google-apps-script/vip-pilot.gs");
+  assert(pilotSchema.includes("financial_activation', 'false'"), "VIP financial activation must default to false");
+  assert(pilotSchema.includes("points_enabled', 'false'"), "VIP points must default to false");
+  assert(!pilotSchema.includes("function doPost"), "VIP pilot initializer must not expose a public write route");
 }
 
 if (exists("client/src/admin/AdminAccess.tsx")) {
