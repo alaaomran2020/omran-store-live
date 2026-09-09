@@ -38,6 +38,7 @@ Reuse the current restricted Google Sheet as the manual operations workspace. St
 - Added a static WhatsApp employee-registration page with no API, database write or access token.
 - Added a client-side `/vip/qr-test` tool that creates a serial-only SVG locally with no remote request; production QR remains blocked pending a printed scan test.
 - Added protected `/admin/vip-operations` manual row preparation for issuance, activation, suspension, replacement, redemption and complaint intake; it performs no remote write and every operation starts `PENDING`.
+- Added `VIP_Card_Payments` and `VIP_Dashboard` so collected revenue, refunds, Omran-funded discounts, partner-funded discounts and remaining Omran offer liability are reported separately.
 
 ## Why this is the first safe scope
 

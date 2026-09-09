@@ -26,6 +26,10 @@ An employee who passed Cloudflare Access opens `/admin/vip-operations`. The scre
 
 The employee copies the generated 18-column row into the first empty row of `VIP_Manual_Operations`. Every row starts as `PENDING`; a reviewer must compare it with the card, payment, invoice and evidence before updating the related register. Preparing or copying a row is never activation by itself.
 
+For a card activation, record the collected amount separately in `VIP_Card_Payments`; only `COMPLETED` payment rows are included as card revenue. Refunds use `REFUNDED` and remain visible separately. Open `VIP_Dashboard` for issued and active cards, pending reviews, complaints, card revenue, discounts by funding owner, refunds, points and the maximum remaining Omran-funded offer liability.
+
+The dashboard's “cash before costs” value is not program profit. It excludes printing, marketing, administration and points cost. Shared discounts remain separate until an approved partner agreement states the allocation.
+
 ## Native Sheet controls
 
 The workbook rejects duplicate non-empty identifiers for cards, staff requests, manual operations, redemptions, replacements and complaints. Duplicate identifiers are also highlighted in red. Money fields in manual operations, redemptions, replacements and complaints accept only zero or positive numeric piaster values. These controls are native Google Sheets validation and conditional formatting; they do not use Apps Script, an API or an access token.

@@ -8,6 +8,7 @@ All IDs are opaque strings. Money uses integer piasters. Timestamps use ISO 8601
 | Memberships                    | `membership_id`; one active pilot membership per customer/program | belongs to customer; owns cards                                                           |
 | Card_Types                     | `card_type_id`, code unique                                       | configures cards and eligibility                                                          |
 | Cards                          | `card_id`, serial unique, manual verification reference           | belongs to membership and type; replacement chain; no token in the manual pilot           |
+| Card_Payments                  | `payment_id`; payment reference                                   | card and type; separates collected card revenue, refunds and cancellations                |
 | Partners                       | `partner_id`, legal agreement reference unique                    | has branches and offers                                                                   |
 | Partner_Branches               | `partner_branch_id`                                               | belongs to partner                                                                        |
 | Offers                         | `offer_id`                                                        | belongs to provider and has eligibility rules                                             |
@@ -21,6 +22,7 @@ All IDs are opaque strings. Money uses integer piasters. Timestamps use ISO 8601
 | Staff users (`الموظفون`)       | approved staff ID; WhatsApp request code unique                   | reused with ADMIN, CARD_ISSUER, BRANCH_STAFF, PARTNER_MANAGER, SUPPORT and REVIEWER roles |
 | Audit logs (`سجل التدقيق`)     | immutable event ID                                                | reused append-only audit destination                                                      |
 | Program_Settings               | setting key + version unique                                      | approved configuration with effective dates                                               |
+| Dashboard                      | protected formula ranges                                          | read-only operational and financial view over VIP registers                               |
 
 ## Atomic redemption transaction
 

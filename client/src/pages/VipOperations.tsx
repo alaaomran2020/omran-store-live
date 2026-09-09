@@ -19,6 +19,8 @@ import {
 const SHEET_ID = "1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc";
 const CONSOLE_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=155540235`;
 const OPERATIONS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=155540234`;
+const PAYMENTS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=155540236`;
+const DASHBOARD_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=155540237`;
 
 const requestedStatuses: Partial<Record<ManualOperationType, string>> = {
   ISSUE_CARD: "NEW",
@@ -112,7 +114,7 @@ export default function VipOperations() {
           في سجل العمليات وراجعه واعتمده يدويًا.
         </Notice>
 
-        <div className="mb-5 grid gap-3 sm:grid-cols-2">
+        <div className="mb-5 grid gap-3 sm:grid-cols-3">
           <a
             href={CONSOLE_URL}
             target="_blank"
@@ -126,6 +128,14 @@ export default function VipOperations() {
             className="inline-flex items-center justify-center gap-2 border-2 border-slate-600 px-4 py-3 font-black text-slate-200"
           >
             اختبار QR محلي
+          </a>
+          <a
+            href={DASHBOARD_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 border-2 border-slate-600 px-4 py-3 font-black text-slate-200"
+          >
+            <ExternalLink size={17} /> لوحة التقارير
           </a>
         </div>
 
@@ -277,6 +287,16 @@ export default function VipOperations() {
                 >
                   <ExternalLink size={15} /> فتح سجل العمليات
                 </a>
+                {operationType === "ACTIVATE_CARD" ? (
+                  <a
+                    href={PAYMENTS_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 border-2 border-slate-700 px-3 py-2 text-xs font-bold text-slate-300"
+                  >
+                    <ExternalLink size={15} /> تسجيل التحصيل
+                  </a>
+                ) : null}
               </div>
             </div>
           ) : null}
