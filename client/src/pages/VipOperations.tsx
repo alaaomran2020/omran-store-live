@@ -11,8 +11,10 @@ import {
   TextInput,
 } from "@/admin/ui";
 import {
+  buildCardPayment,
   buildManualOperation,
   manualOperationLabels,
+  type CardPaymentMethod,
   type ManualOperationType,
 } from "@/lib/vipManualOperation";
 
@@ -34,25 +36,32 @@ export default function VipOperations() {
     useState<ManualOperationType>("ISSUE_CARD");
   const [cardSerial, setCardSerial] = useState("");
   const [membershipId, setMembershipId] = useState("");
+  const [cardTypeId, setCardTypeId] = useState("VIP");
   const [staffId, setStaffId] = useState("");
   const [staffWhatsApp, setStaffWhatsApp] = useState("");
   const [partnerOrBranchId, setPartnerOrBranchId] = useState("");
   const [invoiceReference, setInvoiceReference] = useState("");
   const [amountEgp, setAmountEgp] = useState("");
+  const [paymentMethod, setPaymentMethod] =
+    useState<CardPaymentMethod>("CASH");
   const [discountEgp, setDiscountEgp] = useState("");
   const [previousStatus, setPreviousStatus] = useState("");
   const [evidenceLink, setEvidenceLink] = useState("");
   const [notes, setNotes] = useState("");
   const [preparedRow, setPreparedRow] = useState("");
+  const [preparedPaymentRow, setPreparedPaymentRow] = useState("");
   const [operationId, setOperationId] = useState("");
   const [message, setMessage] = useState("");
   const [copied, setCopied] = useState(false);
+  const [paymentCopied, setPaymentCopied] = useState(false);
 
   const resetPrepared = () => {
     setPreparedRow("");
+    setPreparedPaymentRow("");
     setOperationId("");
     setMessage("");
     setCopied(false);
+    setPaymentCopied(false);
   };
 
   const prepare = () => {
@@ -77,11 +86,35 @@ export default function VipOperations() {
       );
       return;
     }
+    const payment =
+      operationType === "ACTIVATE_CARD"
+        ? buildCardPayment({
+            cardSerial,
+            cardTypeId,
+            amountEgp,
+            paymentMethod,
+            paymentReference: invoiceReference,
+            staffId,
+          })
+        : null;
+    if (operationType === "ACTIVATE_CARD" && !payment) {
+      setMessage(
+        "التفعيل يحتاج نوع الكارت، مبلغ تحصيل أكبر من صفر، وسيلة دفع، ومرجع إيصال صحيح."
+      );
+      return;
+    }
     setPreparedRow(result.tsv);
+    setPreparedPaymentRow(payment?.tsv || "");
     setOperationId(result.operationId);
     setMessage(
       "تم تجهيز سطر العملية. انسخه والصقه في أول صف فارغ بسجل العمليات، ثم راجعه قبل الاعتماد."
     );
+  };
+
+  const copyPaymentRow = async () => {
+    if (!preparedPaymentRow) return;
+    await navigator.clipboard.writeText(preparedPaymentRow);
+    setPaymentCopied(true);
   };
 
   const copyRow = async () => {
@@ -171,6 +204,21 @@ export default function VipOperations() {
                 dir="ltr"
               />
             </Field>
+            {operationType === "ACTIVATE_CARD" ? (
+              <Field label="نوع الكارت">
+                <select
+                  value={cardTypeId}
+                  onChange={event => {
+                    setCardTypeId(event.target.value);
+                    resetPrepared();
+                  }}
+                  className="w-full border-2 border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-electric focus:outline-none"
+                >
+                  <option value="VIP">Omran VIP</option>
+                  <option value="SILVER">Omran Silver</option>
+                </select>
+              </Field>
+            ) : null}
             <Field label="رقم الموظف المعتمد">
               <TextInput
                 {...input(staffId, setStaffId)}
@@ -215,6 +263,23 @@ export default function VipOperations() {
                 inputMode="decimal"
               />
             </Field>
+            {operationType === "ACTIVATE_CARD" ? (
+              <Field label="وسيلة تحصيل قيمة الكارت">
+                <select
+                  value={paymentMethod}
+                  onChange={event => {
+                    setPaymentMethod(event.target.value as CardPaymentMethod);
+                    resetPrepared();
+                  }}
+                  className="w-full border-2 border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-electric focus:outline-none"
+                >
+                  <option value="CASH">نقدي</option>
+                  <option value="CARD">بطاقة بنكية</option>
+                  <option value="TRANSFER">تحويل</option>
+                  <option value="OTHER">أخرى</option>
+                </select>
+              </Field>
+            ) : null}
             <Field label="قيمة الخصم بالجنيه">
               <TextInput
                 {...input(discountEgp, setDiscountEgp)}
@@ -298,6 +363,24 @@ export default function VipOperations() {
                   </a>
                 ) : null}
               </div>
+              {preparedPaymentRow ? (
+                <div className="mt-4 border-t border-emerald-800 pt-4">
+                  <p className="mb-2 text-sm font-bold text-emerald-200">
+                    سطر التحصيل مستقل ويبدأ PENDING للمراجعة
+                  </p>
+                  <textarea
+                    dir="ltr"
+                    readOnly
+                    value={preparedPaymentRow}
+                    className="h-20 w-full border border-slate-700 bg-slate-950 p-2 font-mono text-xs text-slate-300"
+                    aria-label="سطر تحصيل الكارت الجاهز للنسخ"
+                  />
+                  <GhostButton type="button" onClick={copyPaymentRow} className="mt-2">
+                    {paymentCopied ? <Check size={15} /> : <ClipboardCopy size={15} />}
+                    {paymentCopied ? "تم نسخ سطر التحصيل" : "نسخ سطر التحصيل"}
+                  </GhostButton>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </BrutalCard>

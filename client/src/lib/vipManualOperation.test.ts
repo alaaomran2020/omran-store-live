@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildCardPayment,
   buildManualOperation,
   createManualOperationId,
   egpToPiasters,
@@ -58,5 +59,43 @@ describe("manual VIP operation preparation", () => {
         discountEgp: "60",
       })
     ).toBeNull();
+  });
+
+  it("creates a separate pending card-payment row", () => {
+    const result = buildCardPayment({
+      cardSerial: "omr-vip-0001",
+      cardTypeId: "VIP",
+      amountEgp: "250.50",
+      paymentMethod: "CASH",
+      paymentReference: "RCPT-100",
+      staffId: "EMP-01",
+      paymentId: "PAY-TEST0001",
+      paidAt: "2026-09-09T12:00:00.000Z",
+    });
+    expect(result?.columns).toHaveLength(9);
+    expect(result?.columns).toEqual([
+      "PAY-TEST0001",
+      "OMR-VIP-0001",
+      "VIP",
+      "25050",
+      "CASH",
+      "PENDING",
+      "RCPT-100",
+      "2026-09-09T12:00:00.000Z",
+      "EMP-01",
+    ]);
+  });
+
+  it("rejects incomplete or zero-value card payments", () => {
+    const common = {
+      cardSerial: "OMR-VIP-0001",
+      cardTypeId: "VIP",
+      amountEgp: "100",
+      paymentMethod: "CARD" as const,
+      paymentReference: "RCPT-100",
+      staffId: "EMP-01",
+    };
+    expect(buildCardPayment({ ...common, amountEgp: "0" })).toBeNull();
+    expect(buildCardPayment({ ...common, paymentReference: "" })).toBeNull();
   });
 });

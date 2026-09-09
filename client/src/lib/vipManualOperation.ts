@@ -20,6 +20,8 @@ export const manualOperationLabels: Record<ManualOperationType, string> = {
   RECORD_COMPLAINT: "تسجيل شكوى",
 };
 
+export type CardPaymentMethod = "CASH" | "CARD" | "TRANSFER" | "OTHER";
+
 const cleanCell = (value: string | undefined) =>
   (value || "").replace(/[\t\r\n]+/g, " ").trim();
 
@@ -34,6 +36,47 @@ export function egpToPiasters(value: string): number | null {
 
 export function createManualOperationId(bytes?: Uint8Array): string {
   return createStaffRequestCode(bytes).replace("OVS-", "OP-");
+}
+
+export function buildCardPayment(input: {
+  cardSerial: string;
+  cardTypeId: string;
+  amountEgp: string;
+  paymentMethod: CardPaymentMethod;
+  paymentReference: string;
+  staffId: string;
+  paymentId?: string;
+  paidAt?: string;
+}): { paymentId: string; columns: string[]; tsv: string } | null {
+  const cardSerial = cleanCell(input.cardSerial).toUpperCase();
+  const cardTypeId = cleanCell(input.cardTypeId).toUpperCase();
+  const paymentReference = cleanCell(input.paymentReference);
+  const staffId = cleanCell(input.staffId);
+  const amount = egpToPiasters(input.amountEgp);
+  if (
+    !/^[A-Z0-9][A-Z0-9-]{5,39}$/.test(cardSerial) ||
+    !cardTypeId ||
+    !paymentReference ||
+    !staffId ||
+    amount === null ||
+    amount <= 0
+  )
+    return null;
+
+  const paymentId =
+    input.paymentId || createManualOperationId().replace("OP-", "PAY-");
+  const columns = [
+    paymentId,
+    cardSerial,
+    cardTypeId,
+    String(amount),
+    input.paymentMethod,
+    "PENDING",
+    paymentReference,
+    input.paidAt || new Date().toISOString(),
+    staffId,
+  ];
+  return { paymentId, columns, tsv: columns.join("\t") };
 }
 
 export function buildManualOperation(input: {
