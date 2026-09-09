@@ -1,4 +1,5 @@
 import { ExternalLink, Facebook, Instagram } from "lucide-react";
+import BrandHeader from "@/components/BrandHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { SeoMetadata } from "@/components/SeoMetadata";
 import Products from "@/pages/Products";
@@ -76,9 +77,10 @@ function PopUpOfficialSocials() {
 
 export default function PopUp() {
   return (
-    <div className="[&>div>main>footer]:hidden">
+    <div className="[&>div>header]:hidden [&>div>main>footer]:hidden">
       <SeoMetadata path="/popup" title={POPUP_TITLE} description={POPUP_DESCRIPTION} />
       <AnnouncementBar />
+      <BrandHeader />
       <Products catalog="popup" showAnnouncement={false} />
       <PopUpOfficialSocials />
       <SiteFooter socialBrand="popup" />

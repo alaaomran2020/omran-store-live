@@ -1,3 +1,5 @@
+import BrandHeader from "@/components/BrandHeader";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import SiteFooter from "@/components/SiteFooter";
 import { SeoMetadata } from "@/components/SeoMetadata";
 import Products from "@/pages/Products";
@@ -8,9 +10,11 @@ const PRODUCTS_DESCRIPTION =
 
 export default function ProductsPage() {
   return (
-    <div className="[&>div>main>footer]:hidden">
+    <div className="[&>div>header]:hidden [&>div>main>footer]:hidden">
       <SeoMetadata path="/products" title={PRODUCTS_TITLE} description={PRODUCTS_DESCRIPTION} />
-      <Products />
+      <AnnouncementBar />
+      <BrandHeader />
+      <Products showAnnouncement={false} />
       <SiteFooter />
     </div>
   );
