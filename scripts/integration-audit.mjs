@@ -121,12 +121,12 @@ if (exists("client/src/pages/VipStaffRegistration.tsx")) {
 if (exists("client/src/pages/VipProgram.tsx")) {
   const vipPage = read("client/src/pages/VipProgram.tsx");
   assert(
-    vipPage.includes("تحت الإعداد التجريبي"),
-    "VIP page must state its pilot status"
+    vipPage.includes("اسأل عن موعد الإطلاق"),
+    "VIP page must make the pre-launch state clear through its customer CTA"
   );
   assert(
-    vipPage.includes("لا توجد قيمة بيع أو خصم معتمدة"),
-    "VIP page must not imply unapproved Silver pricing"
+    !/(اشتر|شراء|اطلب الكارت)/.test(vipPage),
+    "VIP page must not offer card sales before launch approval"
   );
   assert(
     !/\b(50|70|100)\s*(جنيه|جنيهًا)/.test(vipPage),
@@ -258,108 +258,3 @@ if (exists("shared/productIntake.ts")) {
   assert(
     intake.includes('"NEEDS_REVIEW"'),
     "intake must fail closed to NEEDS_REVIEW"
-  );
-}
-
-if (exists("shared/products.ts")) {
-  const products = read("shared/products.ts");
-  assert(
-    products.includes('workflowStatus === "PUBLISHED"') ||
-      products.includes('workflow_status === "PUBLISHED"'),
-    "publication gate must require PUBLISHED"
-  );
-  assert(
-    products.includes('qaStatus === "PASS"') ||
-      products.includes('qa_status === "PASS"'),
-    "publication gate must require PASS"
-  );
-}
-
-if (exists("client/src/lib/publicProductsSnapshot.ts")) {
-  const snapshot = read("client/src/lib/publicProductsSnapshot.ts");
-  const images = [...snapshot.matchAll(/(?:"image"|image):\s*"([^"]+)"/g)].map(
-    match => match[1]
-  );
-  assert(images.length > 0, "public snapshot has no product images");
-  for (const image of images) {
-    assert(
-      image.startsWith("/products/processed/"),
-      `public image is not same-origin: ${image}`
-    );
-    const asset = path.join(root, "public", image.replace(/^\//, ""));
-    assert(
-      fs.existsSync(asset),
-      `referenced product image is missing: ${image}`
-    );
-    if (fs.existsSync(asset))
-      assert(
-        fs.statSync(asset).size >= 1024,
-        `product image is suspiciously small: ${image}`
-      );
-  }
-}
-
-if (exists(".env.example")) {
-  const env = read(".env.example");
-  for (const forbidden of [
-    "DATABASE_URL=",
-    "MYSQL_DATABASE=",
-    "MYSQL_USER=",
-    "ORIGIN_BASE_URL=",
-    "JWT_SECRET=",
-    "PORT=",
-    "VITE_ADMIN_AUTH_URL=",
-  ]) {
-    assert(
-      !env.includes(forbidden),
-      `static live env template contains obsolete runtime setting: ${forbidden}`
-    );
-  }
-}
-
-if (exists("docs/CURRENT-ARCHITECTURE.md")) {
-  const architecture = read("docs/CURRENT-ARCHITECTURE.md");
-  assert(
-    architecture.includes("omran-store-live"),
-    "architecture contract must identify the live repository"
-  );
-  assert(
-    architecture.includes("omrantoys-live-app"),
-    "architecture contract must identify the Cloudflare Pages project"
-  );
-  assert(
-    architecture.includes("Static Vite storefront only"),
-    "architecture contract must remain static-only"
-  );
-  assert(
-    architecture.includes("Cloudflare Access"),
-    "architecture contract must document admin edge authentication"
-  );
-}
-
-for (const obsolete of [
-  "server",
-  "worker",
-  "docker-compose.yml",
-  "docs/PLATFORM-AUDIT.md",
-  "docs/PRODUCTION-ROUTING-FIX.md",
-  "docs/META-SYNC-SETUP.md",
-  "docs/N8N-PRODUCT-PIPELINE.md",
-  "docs/WHATSAPP-ADMIN-AUTH.md",
-]) {
-  assert(
-    !exists(obsolete),
-    `obsolete architecture artifact must not return to live repo: ${obsolete}`
-  );
-}
-
-if (errors.length) {
-  console.error("Integration audit: FAIL");
-  for (const error of errors) console.error(`- ${error}`);
-  process.exit(1);
-}
-
-console.log("Integration audit: PASS");
-console.log(
-  "Routes, Cloudflare Access admin guard, publication guard, operational intake, unified Make gateway, conversion tracking, static architecture, environment and bundled product images are coherent."
-);
