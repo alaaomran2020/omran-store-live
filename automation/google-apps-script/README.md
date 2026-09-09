@@ -8,6 +8,10 @@
 
 `vip-operations.gs` adds locked pilot operations for issuing a `NEW` card, activating it only after a payment reference and explicit financial enablement, returning a privacy-safe verification view, and recording an idempotent capped redemption. Copy both VIP files into the existing bound Apps Script project only after review. Staff operations require a verified Google email present in `الموظفون`; no browser secret or public Make webhook is accepted for financial writes.
 
+`vip-console.gs` and `vip-console.html` provide the restricted employee sidebar for card issue/activation/search/suspension/replacement, complaints and staff approvals. The displayed QR is deliberately `TEST_ONLY`: it contains no verification token and cannot authorize a discount. A production QR must be generated locally from the one-time token after the public verification path and rate limits are approved.
+
+Employee onboarding starts from the existing `/admin` access-denied screen: the employee enters their Egyptian mobile, WhatsApp number, identity email and requested role, then sends the generated `OVS-XXXXXXXX` challenge from their own WhatsApp. An admin records the matching inbound request in the sidebar and approves it. Approval in `الموظفون` does not itself add the email to Cloudflare Access; that remains a separate required control.
+
 Financial transactions must not reuse the public subscriber or Make webhook pattern. The static Cloudflare Access page does not authenticate a separate webhook origin.
 
 ## النشر

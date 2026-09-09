@@ -31,6 +31,7 @@ const VIP_PILOT_SHEETS = {
   VIP_Rewards: ['reward_id', 'display_name_ar', 'points_cost', 'reward_kind', 'value_piasters', 'usage_limit', 'starts_at', 'ends_at', 'status', 'approval_id'],
   VIP_Complaints: ['complaint_id', 'ticket_number', 'customer_id', 'card_id', 'partner_id', 'redemption_id', 'contact_phone', 'visited_at', 'invoice_piasters', 'expected_discount_piasters', 'applied_discount_piasters', 'receipt_evidence_ref', 'status', 'assigned_to', 'created_at', 'resolved_at', 'resolution_note'],
   VIP_Card_Replacements: ['replacement_id', 'old_card_id', 'new_card_id', 'reason', 'fee_piasters', 'approved_by', 'created_at'],
+  VIP_Staff_Enrollments: ['enrollment_id', 'request_code', 'display_name', 'phone_e164', 'whatsapp_e164', 'identity_email', 'requested_role', 'status', 'requested_at', 'whatsapp_verified_at', 'approved_by', 'approved_at'],
   VIP_Program_Settings: ['setting_key', 'setting_value', 'value_type', 'version', 'status', 'effective_from', 'effective_to', 'approved_by', 'approved_at'],
 };
 
@@ -68,6 +69,7 @@ function setupVipPilotSheets() {
     settings.appendRow(['financial_activation', 'false', 'boolean', 1, 'DRAFT', new Date().toISOString(), '', actor, '']);
     settings.appendRow(['points_enabled', 'false', 'boolean', 1, 'DRAFT', new Date().toISOString(), '', actor, '']);
     settings.appendRow(['public_verification_enabled', 'false', 'boolean', 1, 'DRAFT', new Date().toISOString(), '', actor, '']);
+    settings.appendRow(['staff_activation_whatsapp', '', 'string', 1, 'DRAFT', new Date().toISOString(), '', actor, '']);
     settings.appendRow(['schema_dependencies', JSON.stringify(VIP_EXISTING_DEPENDENCIES), 'json', 1, 'DRAFT', new Date().toISOString(), '', actor, '']);
   }
 

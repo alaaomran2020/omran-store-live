@@ -27,3 +27,14 @@ Issue a test card; reject a duplicate serial; activate after test payment eviden
 Stop activation if a duplicate redemption is possible, an offer lacks a cap, a partner is not documented, customer data is exposed, the old card remains usable after replacement, liability cannot be reconciled, or legal approval is missing.
 
 Partner self-service is not part of the first internal test. It stays blocked until requests can be authenticated at the transaction endpoint rather than only at the static storefront page.
+
+## Employee enrollment
+
+1. Employee opens `/admin`, enters name, Egyptian mobile, WhatsApp, identity email and requested role.
+2. The page creates an `OVS-XXXXXXXX` challenge and opens the approved Omran WhatsApp conversation.
+3. Employee sends the prepared message from the same WhatsApp number entered in the request.
+4. Admin matches the sender number and challenge, records it as `WHATSAPP_CONFIRMED`, then approves the least-privilege role.
+5. Admin separately adds the same identity email to the Cloudflare Access allow-list.
+6. Test that the employee can open the console and cannot perform actions outside their role.
+
+Phone or WhatsApp possession alone never authorizes a discount, points change or card activation.

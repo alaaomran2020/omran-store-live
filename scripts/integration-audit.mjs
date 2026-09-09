@@ -23,6 +23,9 @@ const required = [
   "shared/productIntake.ts",
   "shared/vipProgram.ts",
   "automation/google-apps-script/vip-pilot.gs",
+  "automation/google-apps-script/vip-operations.gs",
+  "automation/google-apps-script/vip-console.gs",
+  "automation/google-apps-script/vip-console.html",
   "public/robots.txt",
   "public/sitemap.xml",
   ".env.example",
@@ -39,6 +42,20 @@ if (exists("client/src/App.tsx")) {
   assert(app.includes('path={"/admin"}'), "admin route is not wired");
   assert(app.includes('path={"/admin/product-intake"}'), "product intake route is not wired");
   assert(app.includes('path={"/vip"}'), "VIP program route is not wired");
+}
+
+if (exists("automation/google-apps-script/vip-operations.gs")) {
+  const operations = read("automation/google-apps-script/vip-operations.gs");
+  assert(operations.includes("LockService.getDocumentLock"), "VIP mutations must use a document lock");
+  assert(operations.includes("idempotency_key"), "VIP redemption must use an idempotency key");
+  assert(operations.includes("verification_token_hash"), "VIP cards must store a verification token hash");
+  assert(!operations.includes("function doPost"), "VIP operations must not expose a public write route");
+}
+
+if (exists("automation/google-apps-script/vip-console.html")) {
+  const consoleHtml = read("automation/google-apps-script/vip-console.html");
+  assert(consoleHtml.includes("OMRAN-VIP-TEST"), "VIP console QR must remain visibly test-only");
+  assert(!consoleHtml.includes("verificationToken+'"), "VIP console must not send a real verification token to the test QR renderer");
 }
 
 if (exists("client/src/pages/VipProgram.tsx")) {

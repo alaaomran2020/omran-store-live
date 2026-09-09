@@ -11,9 +11,12 @@
 const VIP_ALLOWED_ROLES = {
   ISSUE_CARD: ['ADMIN', 'CARD_ISSUER'],
   ACTIVATE_CARD: ['ADMIN', 'CARD_ISSUER'],
+  SEARCH_CARD: ['ADMIN', 'CARD_ISSUER', 'BRANCH_STAFF', 'SUPPORT', 'REVIEWER'],
   RECORD_REDEMPTION: ['ADMIN', 'BRANCH_STAFF'],
   SUSPEND_CARD: ['ADMIN', 'SUPPORT'],
   REPLACE_CARD: ['ADMIN', 'CARD_ISSUER'],
+  RECORD_COMPLAINT: ['ADMIN', 'BRANCH_STAFF', 'SUPPORT'],
+  MANAGE_STAFF: ['ADMIN'],
 };
 
 function vipNormalizeText_(value) {
@@ -100,6 +103,19 @@ function vipSha256_(value) {
   return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(value), Utilities.Charset.UTF_8)
     .map(function(byte) { return ('0' + ((byte + 256) % 256).toString(16)).slice(-2); })
     .join('');
+}
+
+function vipNormalizeEgyptPhone_(value) {
+  let digits = vipNormalizeText_(value).replace(/\D/g, '');
+  if (digits.slice(0, 2) === '20') digits = digits.slice(2);
+  if (digits.slice(0, 1) === '0') digits = digits.slice(1);
+  if (!/^1(?:0|1|2|5)\d{8}$/.test(digits)) throw new Error('INVALID_EGYPTIAN_MOBILE');
+  return '+20' + digits;
+}
+
+function vipMaskPhone_(value) {
+  const phone = vipNormalizeText_(value);
+  return phone.length < 7 ? '' : phone.slice(0, 4) + '•••••' + phone.slice(-3);
 }
 
 function vipAudit_(actor, action, entityType, entityId, field, oldValue, newValue, note) {
@@ -240,4 +256,160 @@ function recordVipRedemption(input) {
     vipAudit_(actor, 'VIP_REDEMPTION_COMPLETED', 'VIP_REDEMPTION', redemptionId, 'discount_piasters', '', discount, idempotencyKey);
     return { duplicate: false, redemptionId: redemptionId, discountPiasters: discount, payablePiasters: invoice - discount };
   });
+}
+
+function searchVipCards(query) {
+  const actor = vipAuthorize_('SEARCH_CARD');
+  const needle = vipNormalizeText_(query).toLowerCase();
+  if (needle.length < 4) throw new Error('SEARCH_QUERY_TOO_SHORT');
+  const cards = vipRows_('VIP_Cards').rows;
+  const memberships = vipRows_('VIP_Memberships').rows;
+  const subscribers = vipRows_(VIP_EXISTING_DEPENDENCIES.customers).rows;
+  return cards.map(function(card) {
+    const membership = memberships.find(function(item) { return vipNormalizeText_(item.membership_id) === vipNormalizeText_(card.membership_id); });
+    const subscriber = membership ? subscribers.find(function(item) { return vipNormalizeText_(item['معرف المشترك']) === vipNormalizeText_(membership.subscriber_id); }) : null;
+    const phone = subscriber ? vipNormalizeText_(subscriber['رقم الهاتف E.164']) : '';
+    const haystack = [card.card_id, card.serial_number, membership && membership.membership_id, phone].map(vipNormalizeText_).join('|').toLowerCase();
+    return { card: card, membership: membership, phone: phone, match: haystack.indexOf(needle) !== -1 };
+  }).filter(function(item) { return item.match; }).slice(0, 20).map(function(item) {
+    const maySeePhone = ['ADMIN', 'CARD_ISSUER', 'SUPPORT'].indexOf(actor.role) !== -1;
+    return {
+      cardId: item.card.card_id, serialNumber: item.card.serial_number, cardTypeId: item.card.card_type_id,
+      membershipId: item.card.membership_id, status: item.card.status, activatedAt: item.card.activated_at || '',
+      expiresAt: item.card.expires_at || '', phone: maySeePhone ? item.phone : vipMaskPhone_(item.phone),
+    };
+  });
+}
+
+function suspendVipCard(input) {
+  return vipWithLock_(function() {
+    const actor = vipAuthorize_('SUSPEND_CARD');
+    const card = vipFindOne_('VIP_Cards', 'card_id', input && input.cardId);
+    const reason = vipNormalizeText_(input && input.reason);
+    if (!card) throw new Error('CARD_NOT_FOUND');
+    if (['NEW', 'ACTIVE'].indexOf(vipNormalizeText_(card.status)) === -1) throw new Error('CARD_CANNOT_BE_SUSPENDED');
+    if (reason.length < 5) throw new Error('SUSPENSION_REASON_REQUIRED');
+    vipUpdateRow_('VIP_Cards', card.__row, { status: 'SUSPENDED', updated_at: new Date().toISOString() });
+    vipAudit_(actor, 'VIP_CARD_SUSPENDED', 'VIP_CARD', card.card_id, 'status', card.status, 'SUSPENDED', reason);
+    return { cardId: card.card_id, status: 'SUSPENDED' };
+  });
+}
+
+function replaceVipCard(input) {
+  return vipWithLock_(function() {
+    const actor = vipAuthorize_('REPLACE_CARD');
+    const oldCard = vipFindOne_('VIP_Cards', 'card_id', input && input.cardId);
+    const reason = vipNormalizeText_(input && input.reason);
+    if (!oldCard) throw new Error('CARD_NOT_FOUND');
+    if (['LOST', 'SUSPENDED'].indexOf(vipNormalizeText_(oldCard.status)) === -1) throw new Error('SUSPEND_OR_MARK_LOST_BEFORE_REPLACEMENT');
+    if (reason.length < 5) throw new Error('REPLACEMENT_REASON_REQUIRED');
+    if (vipFindOne_('VIP_Card_Replacements', 'old_card_id', oldCard.card_id)) throw new Error('CARD_ALREADY_REPLACED');
+
+    const token = vipToken_();
+    const now = new Date().toISOString();
+    const newCardId = vipId_('VIP-CARD');
+    const serial = 'OV-' + Utilities.getUuid().replace(/-/g, '').slice(0, 12).toUpperCase();
+    const remainsValid = oldCard.expires_at && Date.parse(oldCard.expires_at) > Date.now() && oldCard.activated_at;
+    vipAppend_('VIP_Cards', {
+      card_id: newCardId, membership_id: oldCard.membership_id, card_type_id: oldCard.card_type_id,
+      serial_number: serial, verification_token_hash: vipSha256_(token), status: remainsValid ? 'ACTIVE' : 'NEW',
+      payment_reference: oldCard.payment_reference || '', issued_at: now, activated_at: remainsValid ? oldCard.activated_at : '',
+      expires_at: remainsValid ? oldCard.expires_at : '', created_by: actor.identity, updated_at: now,
+    });
+    vipUpdateRow_('VIP_Cards', oldCard.__row, { status: 'REPLACED', replaced_by_card_id: newCardId, updated_at: now });
+    const replacementId = vipId_('VIP-REP');
+    vipAppend_('VIP_Card_Replacements', {
+      replacement_id: replacementId, old_card_id: oldCard.card_id, new_card_id: newCardId,
+      reason: reason, fee_piasters: Number(input.feePiasters || 0), approved_by: actor.identity, created_at: now,
+    });
+    vipAudit_(actor, 'VIP_CARD_REPLACED', 'VIP_CARD', oldCard.card_id, 'status', oldCard.status, 'REPLACED', reason);
+    return { oldCardId: oldCard.card_id, newCardId: newCardId, serialNumber: serial, verificationToken: token, status: remainsValid ? 'ACTIVE' : 'NEW' };
+  });
+}
+
+function createVipComplaint(input) {
+  return vipWithLock_(function() {
+    const actor = vipAuthorize_('RECORD_COMPLAINT');
+    const contact = vipNormalizeEgyptPhone_(input && input.contactPhone);
+    const note = vipNormalizeText_(input && input.note);
+    if (note.length < 5) throw new Error('COMPLAINT_NOTE_REQUIRED');
+    const complaintId = vipId_('VIP-CMP');
+    const ticket = 'OVC-' + Utilities.formatDate(new Date(), 'Africa/Cairo', 'yyyyMMdd') + '-' + Utilities.getUuid().slice(0, 6).toUpperCase();
+    const now = new Date().toISOString();
+    vipAppend_('VIP_Complaints', {
+      complaint_id: complaintId, ticket_number: ticket, subscriber_id: input.subscriberId || '',
+      card_id: input.cardId || '', partner_id: input.partnerId || '', redemption_id: input.redemptionId || '',
+      contact_phone: contact, visited_at: input.visitedAt || '', invoice_piasters: Number(input.invoicePiasters || 0),
+      expected_discount_piasters: Number(input.expectedDiscountPiasters || 0), applied_discount_piasters: Number(input.appliedDiscountPiasters || 0),
+      receipt_evidence_ref: input.receiptEvidenceRef || '', status: 'NEW', assigned_to: '', created_at: now,
+      resolution_note: note, escalation_level: 'NOTICE',
+    });
+    vipAudit_(actor, 'VIP_COMPLAINT_CREATED', 'VIP_COMPLAINT', complaintId, 'status', '', 'NEW', ticket);
+    return { complaintId: complaintId, ticketNumber: ticket, status: 'NEW' };
+  });
+}
+
+function registerVipStaffEnrollment(input) {
+  return vipWithLock_(function() {
+    const actor = vipAuthorize_('MANAGE_STAFF');
+    const requestCode = vipNormalizeText_(input && input.requestCode).toUpperCase();
+    const displayName = vipNormalizeText_(input && input.displayName);
+    const email = vipNormalizeText_(input && input.identityEmail).toLowerCase();
+    const role = vipNormalizeText_(input && input.requestedRole);
+    const phone = vipNormalizeEgyptPhone_(input && input.phone);
+    const whatsapp = vipNormalizeEgyptPhone_((input && input.whatsapp) || phone);
+    if (!/^OVS-[A-Z0-9]{8}$/.test(requestCode)) throw new Error('INVALID_REQUEST_CODE');
+    if (displayName.length < 3 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('NAME_AND_IDENTITY_EMAIL_REQUIRED');
+    if (['CARD_ISSUER', 'BRANCH_STAFF', 'PARTNER_MANAGER', 'SUPPORT', 'REVIEWER'].indexOf(role) === -1) throw new Error('INVALID_REQUESTED_ROLE');
+    if (vipFindOne_('VIP_Staff_Enrollments', 'request_code', requestCode)) throw new Error('DUPLICATE_REQUEST_CODE');
+    const enrollmentId = vipId_('VIP-ENR');
+    const now = new Date().toISOString();
+    vipAppend_('VIP_Staff_Enrollments', {
+      enrollment_id: enrollmentId, request_code: requestCode, display_name: displayName,
+      phone_e164: phone, whatsapp_e164: whatsapp, identity_email: email, requested_role: role,
+      status: 'WHATSAPP_CONFIRMED', requested_at: input.requestedAt || now, whatsapp_verified_at: now,
+    });
+    vipAudit_(actor, 'VIP_STAFF_WHATSAPP_CONFIRMED', 'VIP_STAFF_ENROLLMENT', enrollmentId, 'status', 'PENDING', 'WHATSAPP_CONFIRMED', requestCode);
+    return { enrollmentId: enrollmentId, requestCode: requestCode, status: 'WHATSAPP_CONFIRMED' };
+  });
+}
+
+function approveVipStaffEnrollment(input) {
+  return vipWithLock_(function() {
+    const actor = vipAuthorize_('MANAGE_STAFF');
+    const enrollment = vipFindOne_('VIP_Staff_Enrollments', 'enrollment_id', input && input.enrollmentId);
+    if (!enrollment || vipNormalizeText_(enrollment.status) !== 'WHATSAPP_CONFIRMED') throw new Error('ENROLLMENT_NOT_READY');
+    if (vipFindOne_(VIP_EXISTING_DEPENDENCIES.staff, 'اسم المستخدم', enrollment.identity_email)) throw new Error('STAFF_IDENTITY_ALREADY_EXISTS');
+    const now = new Date().toISOString();
+    const staffId = vipId_('VIP-STAFF');
+    vipAppend_(VIP_EXISTING_DEPENDENCIES.staff, {
+      'معرف الموظف': staffId, 'اسم المستخدم': enrollment.identity_email, 'الاسم المعروض': enrollment.display_name,
+      'الهاتف': enrollment.phone_e164, 'واتساب': enrollment.whatsapp_e164, 'الدور': enrollment.requested_role,
+      'حالة الموافقة': 'APPROVED', 'معرف الدخول': enrollment.identity_email, 'وقت الطلب': enrollment.requested_at,
+      'وقت الموافقة': now, 'وافق بواسطة': actor.identity, 'نشط': true,
+      'ملاحظات': 'WhatsApp sender checked manually. Cloudflare Access allow-list remains a separate required step.',
+      'تاريخ الإنشاء': now, 'تاريخ التحديث': now,
+    });
+    vipUpdateRow_('VIP_Staff_Enrollments', enrollment.__row, { status: 'APPROVED', approved_by: actor.identity, approved_at: now });
+    vipAudit_(actor, 'VIP_STAFF_APPROVED', 'STAFF', staffId, 'status', 'WHATSAPP_CONFIRMED', 'APPROVED', enrollment.request_code);
+    return { staffId: staffId, email: enrollment.identity_email, role: enrollment.requested_role, accessPolicyPending: true };
+  });
+}
+
+function getVipStaffConsoleBootstrap() {
+  const actor = vipAuthorize_('SEARCH_CARD');
+  const cardTypes = vipRows_('VIP_Card_Types').rows.map(function(row) {
+    return { id: row.card_type_id, code: row.code, name: row.display_name_ar, status: row.status };
+  });
+  const pending = actor.role === 'ADMIN' ? vipRows_('VIP_Staff_Enrollments').rows.filter(function(row) {
+    return ['PENDING', 'WHATSAPP_CONFIRMED'].indexOf(vipNormalizeText_(row.status)) !== -1;
+  }).map(function(row) {
+    return { id: row.enrollment_id, code: row.request_code, name: row.display_name, email: row.identity_email, role: row.requested_role, status: row.status };
+  }) : [];
+  return {
+    actor: actor, cardTypes: cardTypes, pendingEnrollments: pending,
+    financialEnabled: vipSetting_('financial_activation').toLowerCase() === 'true',
+    publicVerificationEnabled: vipSetting_('public_verification_enabled').toLowerCase() === 'true',
+    staffActivationWhatsApp: vipSetting_('staff_activation_whatsapp'),
+  };
 }
