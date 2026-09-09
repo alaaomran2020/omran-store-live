@@ -8,21 +8,15 @@ import { isPopUpProduct } from "@/lib/productCatalog";
 import { addProductToCart, openCartDrawer } from "@/lib/cart";
 import {
   SAVED_PRODUCTS_UPDATED_EVENT,
-  isCompared,
   isWishlisted,
   openSavedProducts,
-  toggleCompare,
   toggleWishlist,
 } from "@/lib/savedProducts";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
-import { Heart, Info, Images, MessageCircle, Play, Scale, ShoppingBag } from "lucide-react";
+import { Heart, Info, Images, MessageCircle, Play, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 
-/**
- * Omran Product Card v5
- * Preserves the separate POP UP media treatment while adding saved/compare,
- * cart preparation and WhatsApp conversion actions.
- */
+/** Omran Product Card v5 — separate POP UP media, wishlist, cart and WhatsApp. */
 export function ProductCard({
   product,
   onOpenDetails,
@@ -34,15 +28,11 @@ export function ProductCard({
   const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null);
   const [addedFeedback, setAddedFeedback] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
-  const [compared, setCompared] = useState(false);
   const isPopup = isPopUpProduct(product);
   const catalog = isPopup ? "popup" as const : "toys" as const;
 
   useEffect(() => {
-    const sync = () => {
-      setWishlisted(isWishlisted(product.id));
-      setCompared(isCompared(product.id));
-    };
+    const sync = () => setWishlisted(isWishlisted(product.id));
     sync();
     window.addEventListener(SAVED_PRODUCTS_UPDATED_EVENT, sync);
     return () => window.removeEventListener(SAVED_PRODUCTS_UPDATED_EVENT, sync);
@@ -81,23 +71,6 @@ export function ProductCard({
     toast.success(active ? "اتحفظ في المفضلة" : "اتشال من المفضلة", {
       description: product.name,
       action: active ? { label: "عرض المفضلة", onClick: () => openSavedProducts("wishlist") } : undefined,
-    });
-  };
-
-  const handleCompare = () => {
-    const result = toggleCompare(product, catalog);
-    setCompared(result.items.some(item => item.productId === product.id));
-    if (result.status === "full") {
-      toast.error("المقارنة وصلت للحد الأقصى", { description: "احذف منتج من المقارنة أولًا. الحد الأقصى 3 منتجات." });
-      return;
-    }
-    if (result.status === "different_catalog") {
-      toast.error("المقارنة منفصلة بين الأقسام", { description: "مينفعش نقارن منتجات عمران تويز مع POP UP في نفس المجموعة." });
-      return;
-    }
-    toast.success(result.status === "added" ? "اتضاف للمقارنة" : "اتشال من المقارنة", {
-      description: product.name,
-      action: result.status === "added" ? { label: "عرض المقارنة", onClick: () => openSavedProducts("compare") } : undefined,
     });
   };
 
@@ -141,15 +114,6 @@ export function ProductCard({
             className={`inline-flex h-9 w-9 items-center justify-center rounded-full border shadow-md backdrop-blur transition ${wishlisted ? "border-red-200 bg-red-50 text-brand-red" : "border-white/80 bg-white/95 text-brand-muted hover:text-brand-red"}`}
           >
             <Heart size={16} fill={wishlisted ? "currentColor" : "none"} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={handleCompare}
-            aria-label={compared ? `إزالة ${product.name} من المقارنة` : `إضافة ${product.name} للمقارنة`}
-            aria-pressed={compared}
-            className={`inline-flex h-9 w-9 items-center justify-center rounded-full border shadow-md backdrop-blur transition ${compared ? "border-brand-blue bg-brand-sky text-brand-blue" : "border-white/80 bg-white/95 text-brand-muted hover:text-brand-blue"}`}
-          >
-            <Scale size={16} aria-hidden="true" />
           </button>
         </div>
       </div>
