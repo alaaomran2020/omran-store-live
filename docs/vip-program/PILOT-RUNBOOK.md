@@ -2,6 +2,8 @@
 
 ## Before pilot
 
+Open `VIP_Launch_Approval` in the master workbook. Every gate must have an evidence link, approver and approval timestamp before it is marked `APPROVED`. An approval without those three fields is incomplete. `CONCURRENCY` and `PRODUCTION` are deliberately `BLOCKED` until the owner selects a safe operating decision and explicitly authorizes release.
+
 1. Approve card settings and model assumptions.
 2. Complete legal and privacy review.
 3. Sign 5–10 partner agreements and approve each offer.
