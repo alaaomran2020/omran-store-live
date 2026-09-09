@@ -26,6 +26,12 @@ The workbook rejects duplicate non-empty identifiers for cards, staff requests, 
 
 The redemption `idempotency_key` is a unique manual operation reference, not a credential. Before recording a redemption, the operator must still re-read the card status, expiry, offer conditions, prior usage and budget. Native validation reduces accidental duplicates but does not provide an atomic lock across simultaneous operators.
 
+## Experimental QR
+
+Open `/vip/qr-test` on the development build, enter a test card serial and generate the QR locally in the browser. The QR payload contains only `OMRAN-VIP:<SERIAL>` and no customer data, phone number, API credential or access token. Download the SVG, print one sample at the intended card size, then scan it on representative employee phones and confirm that the decoded serial matches exactly.
+
+Do not print a production batch or mark `qr_mode` approved until the physical scan test is documented. A successful scan still requires an exact serial lookup in `VIP_Employee_Console`; the QR alone never authorizes a discount.
+
 ## Required test cycle
 
 Issue a test card; reject a duplicate serial; activate after test payment evidence; validate active, expired, suspended and lost states; apply capped percentage and fixed discounts; reject excluded items, repeat use and budget overrun; verify the manual duplicate-check procedure; replace a lost card and reject the old card; earn, expire, redeem and reverse test points; open and escalate a complaint; verify that public pages expose no customer data; verify role separation; and run storefront regression tests including POP UP separation.

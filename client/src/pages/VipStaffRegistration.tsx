@@ -195,7 +195,7 @@ export default function VipStaffRegistration() {
               <select
                 value={requestedRole}
                 onChange={event => {
-                  setRequestedRole(event.target.value as StaffRequestedRole)
+                  setRequestedRole(event.target.value as StaffRequestedRole);
                   resetPreparedRequest();
                 }}
                 className="w-full border-2 border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-electric focus:outline-none"

@@ -36,6 +36,7 @@ Reuse the current restricted Google Sheet as the manual operations workspace. St
 - Added `VIP_Employee_Console` with internal serial lookup, operating counters and direct links to the controlled registers.
 - Removed the VIP Apps Script console and operations modules from the development branch.
 - Added a static WhatsApp employee-registration page with no API, database write or access token.
+- Added a client-side `/vip/qr-test` tool that creates a serial-only SVG locally with no remote request; production QR remains blocked pending a printed scan test.
 
 ## Why this is the first safe scope
 

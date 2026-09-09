@@ -18,6 +18,8 @@ const required = [
   "client/src/pages/ProductIntake.tsx",
   "client/src/pages/VipProgram.tsx",
   "client/src/pages/VipStaffRegistration.tsx",
+  "client/src/pages/VipQrTest.tsx",
+  "client/src/lib/vipQr.ts",
   "client/src/lib/productIntakeClient.ts",
   "client/src/lib/analytics.ts",
   "client/src/lib/makeGateway.ts",
@@ -48,6 +50,19 @@ if (exists("client/src/App.tsx")) {
   assert(
     app.includes('path={"/vip/staff-register"}'),
     "VIP staff registration route is not wired"
+  );
+  assert(
+    app.includes('path={"/vip/qr-test"}'),
+    "VIP local QR test route is not wired"
+  );
+}
+
+if (exists("client/src/pages/VipQrTest.tsx")) {
+  const qrTest = read("client/src/pages/VipQrTest.tsx");
+  assert(!qrTest.includes("fetch("), "VIP QR test must not call an API");
+  assert(
+    qrTest.includes("لا يثبت صلاحية الكارت"),
+    "VIP QR test must warn that QR is not proof of validity"
   );
 }
 
