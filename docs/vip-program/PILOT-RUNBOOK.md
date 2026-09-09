@@ -20,6 +20,12 @@ Open `VIP_Employee_Console` in the master workbook. It is the starting point for
 
 Only cell `B4` is an operator search input. Search results and KPI cells are formulas and must not be overwritten. Every state-changing action must also receive a unique row in `VIP_Manual_Operations`.
 
+## Native Sheet controls
+
+The workbook rejects duplicate non-empty identifiers for cards, staff requests, manual operations, redemptions, replacements and complaints. Duplicate identifiers are also highlighted in red. Money fields in manual operations, redemptions, replacements and complaints accept only zero or positive numeric piaster values. These controls are native Google Sheets validation and conditional formatting; they do not use Apps Script, an API or an access token.
+
+The redemption `idempotency_key` is a unique manual operation reference, not a credential. Before recording a redemption, the operator must still re-read the card status, expiry, offer conditions, prior usage and budget. Native validation reduces accidental duplicates but does not provide an atomic lock across simultaneous operators.
+
 ## Required test cycle
 
 Issue a test card; reject a duplicate serial; activate after test payment evidence; validate active, expired, suspended and lost states; apply capped percentage and fixed discounts; reject excluded items, repeat use and budget overrun; verify the manual duplicate-check procedure; replace a lost card and reject the old card; earn, expire, redeem and reverse test points; open and escalate a complaint; verify that public pages expose no customer data; verify role separation; and run storefront regression tests including POP UP separation.
@@ -29,7 +35,7 @@ Issue a test card; reject a duplicate serial; activate after test payment eviden
 - Reconcile issued, paid and activated card counts.
 - Reconcile redemptions to invoices and funding owner.
 - Review offer budget remaining and maximum outstanding liability.
-- Review duplicate operation IDs, invoice references and manual adjustments.
+- Review red-highlighted duplicates, invoice references and manual adjustments.
 - Review new complaints and partner response deadlines.
 - Back up the operational Sheet according to the approved retention plan.
 

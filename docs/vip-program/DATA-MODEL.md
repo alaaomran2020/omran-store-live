@@ -18,13 +18,13 @@ All IDs are opaque strings. Money uses integer piasters. Timestamps use ISO 8601
 | Rewards                        | `reward_id`                                                       | creates redemption ledger entries                                                         |
 | Complaints                     | `complaint_id`, ticket number unique                              | customer, card, partner and redemption                                                    |
 | Card_Replacements              | `replacement_id`, old card unique                                 | old and new card; reason and approver                                                     |
-| Staff users (`الموظفون`)       | verified Google email/username unique                             | reused with ADMIN, CARD_ISSUER, BRANCH_STAFF, PARTNER_MANAGER, SUPPORT and REVIEWER roles |
+| Staff users (`الموظفون`)       | approved staff ID; WhatsApp request code unique                   | reused with ADMIN, CARD_ISSUER, BRANCH_STAFF, PARTNER_MANAGER, SUPPORT and REVIEWER roles |
 | Audit logs (`سجل التدقيق`)     | immutable event ID                                                | reused append-only audit destination                                                      |
 | Program_Settings               | setting key + version unique                                      | approved configuration with effective dates                                               |
 
 ## Atomic redemption transaction
 
-The manual pilot has no atomic write mechanism. One authorized operator must re-read the latest card, offer, usage and budget rows before writing a uniquely identified operation, redemption and audit record. Operation IDs and invoice references are checked for duplicates, but simultaneous redemption remains a launch blocker rather than a solved control.
+The manual pilot has no atomic write mechanism. One authorized operator must re-read the latest card, offer, usage and budget rows before writing a uniquely identified operation, redemption and audit record. Native Google Sheets validation rejects duplicate identifiers and negative piaster values, while conditional formatting highlights duplicates for review. These controls reduce manual error but simultaneous redemption remains a launch blocker rather than a solved control.
 
 ## Separation
 
