@@ -19,7 +19,9 @@ const required = [
   "client/src/pages/VipProgram.tsx",
   "client/src/pages/VipStaffRegistration.tsx",
   "client/src/pages/VipQrTest.tsx",
+  "client/src/pages/VipOperations.tsx",
   "client/src/lib/vipQr.ts",
+  "client/src/lib/vipManualOperation.ts",
   "client/src/lib/productIntakeClient.ts",
   "client/src/lib/analytics.ts",
   "client/src/lib/makeGateway.ts",
@@ -55,6 +57,10 @@ if (exists("client/src/App.tsx")) {
     app.includes('path={"/vip/qr-test"}'),
     "VIP local QR test route is not wired"
   );
+  assert(
+    app.includes('path={"/admin/vip-operations"}'),
+    "protected VIP operations route is not wired"
+  );
 }
 
 if (exists("client/src/pages/VipQrTest.tsx")) {
@@ -63,6 +69,20 @@ if (exists("client/src/pages/VipQrTest.tsx")) {
   assert(
     qrTest.includes("لا يثبت صلاحية الكارت"),
     "VIP QR test must warn that QR is not proof of validity"
+  );
+}
+
+if (exists("client/src/pages/VipOperations.tsx")) {
+  const operations = read("client/src/pages/VipOperations.tsx");
+  assert(
+    operations.includes("buildManualOperation"),
+    "VIP operations page must use the validated row builder"
+  );
+  assert(!operations.includes("fetch("), "VIP operations must not call an API");
+  assert(
+    operations.includes("PENDING") ||
+      read("client/src/lib/vipManualOperation.ts").includes('"PENDING"'),
+    "manual VIP operations must start pending review"
   );
 }
 

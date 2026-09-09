@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { LogOut, MessageCircle, ShieldCheck } from "lucide-react";
 import { BrutalCard, Notice, PageTitle } from "@/admin/ui";
 import ProductIntake from "@/pages/ProductIntake";
+import VipOperations from "@/pages/VipOperations";
 
 type AccessIdentity = {
   email?: string;
@@ -53,6 +54,12 @@ export default function AdminAccess() {
   }, []);
 
   if (accessState === "allowed" && identity) {
+    const content =
+      window.location.pathname === "/admin/vip-operations" ? (
+        <VipOperations />
+      ) : (
+        <ProductIntake />
+      );
     return (
       <div className="relative">
         <div
@@ -69,7 +76,7 @@ export default function AdminAccess() {
             <LogOut size={15} /> خروج
           </a>
         </div>
-        <ProductIntake />
+        {content}
       </div>
     );
   }

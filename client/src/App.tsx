@@ -29,6 +29,7 @@ function Router() {
       <Route path={"/vip/qr-test"} component={VipQrTest} />
       <Route path={"/admin"} component={AdminAccess} />
       <Route path={"/admin/product-intake"} component={AdminAccess} />
+      <Route path={"/admin/vip-operations"} component={AdminAccess} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

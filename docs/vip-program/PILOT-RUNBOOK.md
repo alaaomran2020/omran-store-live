@@ -20,6 +20,12 @@ Open `VIP_Employee_Console` in the master workbook. It is the starting point for
 
 Only cell `B4` is an operator search input. Search results and KPI cells are formulas and must not be overwritten. Every state-changing action must also receive a unique row in `VIP_Manual_Operations`.
 
+## Employee operation desk
+
+An employee who passed Cloudflare Access opens `/admin/vip-operations`. The screen prepares issuance, activation, suspension, replacement, redemption and complaint-operation rows without writing to Google Sheets. It converts EGP input to integer piasters, rejects invalid Egyptian WhatsApp numbers, rejects a discount above the invoice total, and requires payment or invoice evidence for the relevant operations.
+
+The employee copies the generated 18-column row into the first empty row of `VIP_Manual_Operations`. Every row starts as `PENDING`; a reviewer must compare it with the card, payment, invoice and evidence before updating the related register. Preparing or copying a row is never activation by itself.
+
 ## Native Sheet controls
 
 The workbook rejects duplicate non-empty identifiers for cards, staff requests, manual operations, redemptions, replacements and complaints. Duplicate identifiers are also highlighted in red. Money fields in manual operations, redemptions, replacements and complaints accept only zero or positive numeric piaster values. These controls are native Google Sheets validation and conditional formatting; they do not use Apps Script, an API or an access token.
