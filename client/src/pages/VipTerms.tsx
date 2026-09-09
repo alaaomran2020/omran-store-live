@@ -17,8 +17,8 @@ export default function VipTerms() {
       <main className="container max-w-4xl py-10 sm:py-14">
         <Link href="/vip" className="text-sm font-black text-brand-blue">العودة لبرنامج Omran VIP</Link>
         <h1 className="mt-4 text-3xl font-black text-brand-navy">شروط استخدام كروت Omran VIP</h1>
-        <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold leading-7 text-amber-950">
-          نسخة تجريبية للمراجعة قبل الإطلاق. السعر والمدة وسياسة الاسترجاع ورقم الدعم لا تصبح نهائية إلا بعد اعتمادها.
+        <p className="mt-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm font-bold leading-7 text-sky-950">
+          راجع تفاصيل نوع الكارت وصلاحيته والعروض المتاحة وقت الشراء، لأن لكل عرض شروط استخدام مستقلة.
         </p>
         <div className="mt-7 space-y-4">
           {sections.map(([title, body]) => (
@@ -29,7 +29,7 @@ export default function VipTerms() {
           ))}
         </div>
         <p className="mt-6 text-sm font-semibold leading-7 text-brand-muted">
-          النسخة النهائية ستوضح نوع الكارت وسعره وصلاحيته وقابلية نقل الملكية ورسوم الاستبدال وسياسة الإلغاء والاسترجاع، مع حفظ نسخة مؤرخة من الشروط المطبقة وقت الشراء.
+          تفاصيل السعر والصلاحية والاستبدال والإلغاء الخاصة بكل كارت بتظهر للعميل قبل الشراء.
         </p>
       </main>
       <SiteFooter />
