@@ -28,7 +28,9 @@ The employee copies the generated 18-column row into the first empty row of `VIP
 
 For a card activation, record the collected amount separately in `VIP_Card_Payments`; only `COMPLETED` payment rows are included as card revenue. Refunds use `REFUNDED` and remain visible separately. Open `VIP_Dashboard` for issued and active cards, pending reviews, complaints, card revenue, discounts by funding owner, refunds, points and the maximum remaining Omran-funded offer liability.
 
-The dashboard's “cash before costs” value is not program profit. It excludes printing, marketing, administration and points cost. Shared discounts remain separate until an approved partner agreement states the allocation.
+The dashboard’s “cash before costs” value is not program profit. It excludes printing, marketing, administration and points cost. Shared discounts remain separate until an approved partner agreement states the allocation.
+
+The employee console links directly to both the dashboard and the card-payments register. `payment_id` and any non-empty `payment_reference` must be unique. A repeated `COMPLETED` payment for the same card is highlighted for immediate review; it must not be treated as additional revenue until reconciled against the original receipt.
 
 ## Native Sheet controls
 
