@@ -33,6 +33,7 @@ Reuse the current restricted Google Sheet as the manual operations workspace. St
 - Seeded Omran VIP and Omran Silver as `DRAFT` with no price or validity values.
 - Left `financial_activation`, `points_enabled` and `public_verification_enabled` set to `false` and `DRAFT`.
 - Added `VIP_Manual_Operations` and recorded the owner-approved `MANUAL_SHEETS_WHATSAPP` mode.
+- Added `VIP_Employee_Console` with internal serial lookup, operating counters and direct links to the controlled registers.
 - Removed the VIP Apps Script console and operations modules from the development branch.
 - Added a static WhatsApp employee-registration page with no API, database write or access token.
 

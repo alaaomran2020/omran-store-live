@@ -9,6 +9,17 @@
 5. Train issuance, branch, partner and support roles separately.
 6. Print a small test batch and test QR scans on representative phones.
 
+## Employee console
+
+Open `VIP_Employee_Console` in the master workbook. It is the starting point for internal staff and provides:
+
+- exact serial-number lookup for card ID, membership, type, status, expiry and payment reference;
+- live counts for new, active, stopped/lost cards, pending operations, staff requests, complaints, replacements and redemptions;
+- direct links to the card, manual-operation, replacement, redemption, complaint and staff-enrollment registers;
+- a visible warning that serial/QR lookup is manual and is not proof of validity.
+
+Only cell `B4` is an operator search input. Search results and KPI cells are formulas and must not be overwritten. Every state-changing action must also receive a unique row in `VIP_Manual_Operations`.
+
 ## Required test cycle
 
 Issue a test card; reject a duplicate serial; activate after test payment evidence; validate active, expired, suspended and lost states; apply capped percentage and fixed discounts; reject excluded items, repeat use and budget overrun; verify the manual duplicate-check procedure; replace a lost card and reject the old card; earn, expire, redeem and reverse test points; open and escalate a complaint; verify that public pages expose no customer data; verify role separation; and run storefront regression tests including POP UP separation.
