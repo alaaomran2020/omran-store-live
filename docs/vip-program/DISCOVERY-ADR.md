@@ -1,6 +1,6 @@
 # Omran VIP Card Program — Discovery and ADR 001
 
-Status: Proposed for pilot. No production activation.
+Status: Foundation implemented for a disabled pilot. No production activation.
 
 ## Evidence from the current repository
 
@@ -25,6 +25,14 @@ Cloudflare Access protects the static `/admin*` page, but it does not protect th
 Reuse the current Google Sheet and the existing Google Apps Script project for the pilot, but keep financial writes inside a Sheet-bound Apps Script menu/sidebar that only approved Google accounts with explicit spreadsheet access can open. The storefront admin may link to that operational workspace; it must not hold a shared write secret. Keep the customer program page static and read-only until an authenticated verification endpoint with rate limiting is approved.
 
 `Approved Google account -> restricted Sheet/Apps Script UI -> ScriptLock -> validated append-only ledgers -> Google Sheet`
+
+## Implemented foundation — 2026-09-09
+
+- Reused the existing `المشتركون`, `الموظفون`, `حسابات النقاط`, `حركات النقاط` and `سجل التدقيق` sheets.
+- Created only the missing VIP membership, card, partner, offer, redemption, purchase, reward, complaint, replacement and settings sheets.
+- Seeded Omran VIP and Omran Silver as `DRAFT` with no price or validity values.
+- Left `financial_activation`, `points_enabled` and `public_verification_enabled` set to `false` and `DRAFT`.
+- Added a locked Apps Script operations module; it is repository code only and has not been copied or deployed to the bound Apps Script project.
 
 ## Why this is the first safe scope
 

@@ -4,7 +4,9 @@
 
 ## Omran VIP Card pilot foundation
 
-`vip-pilot.gs` is a separate, disabled-by-default schema initializer for the paid card pilot. Add it to the existing bound project only after reviewing `docs/vip-program/DISCOVERY-ADR.md`. Running `setupVipPilotSheets()` creates the draft program sheets and three fail-closed settings; it does not issue cards, activate points, expose a web endpoint or publish partners.
+`vip-pilot.gs` is a disabled-by-default schema initializer for the paid card pilot. It reuses `المشتركون`, `الموظفون`, `حركات النقاط`, `حسابات النقاط` and `سجل التدقيق` instead of duplicating them. The missing VIP tables were created in the master workbook on 2026-09-09 with all commercial and public-verification switches left `false` and `DRAFT`.
+
+`vip-operations.gs` adds locked pilot operations for issuing a `NEW` card, activating it only after a payment reference and explicit financial enablement, returning a privacy-safe verification view, and recording an idempotent capped redemption. Copy both VIP files into the existing bound Apps Script project only after review. Staff operations require a verified Google email present in `الموظفون`; no browser secret or public Make webhook is accepted for financial writes.
 
 Financial transactions must not reuse the public subscriber or Make webhook pattern. The static Cloudflare Access page does not authenticate a separate webhook origin.
 

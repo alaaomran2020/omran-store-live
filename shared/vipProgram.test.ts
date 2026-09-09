@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { calculateDiscount, calculatePointsBalance, type DiscountRule } from "./vipProgram";
+import {
+  calculateDiscount,
+  calculatePointsBalance,
+  canPerformVipAction,
+  canTransitionCardStatus,
+  toPublicCardVerification,
+  type DiscountRule,
+} from "./vipProgram";
 
 const rule: DiscountRule = {
   id: "offer-1",
@@ -64,5 +71,48 @@ describe("Omran VIP points ledger", () => {
       { id: "1", customerId: "c1", referenceId: "redemption-1", points: -100, state: "AVAILABLE", createdAt: "2026-09-01" },
     ], "c1", "2026-09-09");
     expect(balance.available).toBe(0);
+  });
+});
+
+describe("Omran VIP operational controls", () => {
+  it("separates staff duties", () => {
+    expect(canPerformVipAction("CARD_ISSUER", "ISSUE_CARD")).toBe(true);
+    expect(canPerformVipAction("CARD_ISSUER", "MANAGE_FINANCIAL_RULES")).toBe(false);
+    expect(canPerformVipAction("BRANCH_STAFF", "RECORD_REDEMPTION")).toBe(true);
+    expect(canPerformVipAction("SUPPORT", "RECORD_REDEMPTION")).toBe(false);
+  });
+
+  it("prevents invalid card state transitions", () => {
+    expect(canTransitionCardStatus("NEW", "ACTIVE")).toBe(true);
+    expect(canTransitionCardStatus("LOST", "REPLACED")).toBe(true);
+    expect(canTransitionCardStatus("REPLACED", "ACTIVE")).toBe(false);
+    expect(canTransitionCardStatus("EXPIRED", "ACTIVE")).toBe(false);
+  });
+
+  it("returns only public-safe verification fields", () => {
+    const result = toPublicCardVerification({
+      serialNumber: "OV-1234567890AB",
+      cardTypeNameAr: "Omran VIP",
+      status: "ACTIVE",
+      expiresAt: "2026-10-01T00:00:00.000Z",
+    }, "2026-09-09T00:00:00.000Z");
+    expect(result).toEqual({
+      valid: true,
+      serialSuffix: "90AB",
+      cardTypeNameAr: "Omran VIP",
+      status: "ACTIVE",
+      expiresAt: "2026-10-01T00:00:00.000Z",
+    });
+    expect(result).not.toHaveProperty("phone");
+    expect(result).not.toHaveProperty("customerId");
+  });
+
+  it("marks an active expired card as expired", () => {
+    expect(toPublicCardVerification({
+      serialNumber: "OV-1234",
+      cardTypeNameAr: "Omran Silver",
+      status: "ACTIVE",
+      expiresAt: "2026-09-01T00:00:00.000Z",
+    }, "2026-09-09T00:00:00.000Z")).toMatchObject({ valid: false, status: "EXPIRED" });
   });
 });

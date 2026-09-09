@@ -1,10 +1,10 @@
-# Omran VIP Card Program — Data model v0.1
+# Omran VIP Card Program — Data model v0.2
 
 All IDs are opaque strings. Money uses integer piasters. Timestamps use ISO 8601 UTC and display in `Africa/Cairo`.
 
 | Entity | Unique controls | Important relationships |
 |---|---|---|
-| Customers | `customer_id`, normalized phone unique | has memberships, purchases, complaints |
+| Customers (`المشتركون`) | existing subscriber ID and normalized phone | reused master entity; has memberships, purchases, complaints |
 | Memberships | `membership_id`; one active pilot membership per customer/program | belongs to customer; owns cards |
 | Card_Types | `card_type_id`, code unique | configures cards and eligibility |
 | Cards | `card_id`, serial unique, verification token hash unique | belongs to membership and type; replacement chain |
@@ -14,13 +14,12 @@ All IDs are opaque strings. Money uses integer piasters. Timestamps use ISO 8601
 | Offer_Eligibility_Rules | `rule_id` | belongs to offer; card type/category/product/branch filters |
 | Card_Redemptions | `redemption_id`, `idempotency_key` unique | card, offer, branch, staff and optional purchase |
 | Purchases | `purchase_id`, external invoice reference unique per branch | customer, branch and points entries |
-| Points_Ledger | `points_entry_id`, source reference unique | customer, purchase/reward/reversal; append-only |
+| Points ledger (`حركات النقاط`) | existing transaction and source references | reused append-only ledger; points remain disabled pending policy approval |
 | Rewards | `reward_id` | creates redemption ledger entries |
 | Complaints | `complaint_id`, ticket number unique | customer, card, partner and redemption |
 | Card_Replacements | `replacement_id`, old card unique | old and new card; reason and approver |
-| Staff_Users | Cloudflare identity unique | assigned roles and branches |
-| Roles | role code unique | many-to-many staff permissions |
-| Audit_Logs | `audit_id`, event hash unique | actor, entity, before/after digest; append-only |
+| Staff users (`الموظفون`) | verified Google email/username unique | reused with ADMIN, CARD_ISSUER, BRANCH_STAFF, PARTNER_MANAGER, SUPPORT and REVIEWER roles |
+| Audit logs (`سجل التدقيق`) | immutable event ID | reused append-only audit destination |
 | Program_Settings | setting key + version unique | approved configuration with effective dates |
 
 ## Atomic redemption transaction

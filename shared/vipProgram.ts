@@ -93,6 +93,65 @@ export type PointsEntry = {
 
 export type PointsBalance = { pending: number; available: number; expired: number };
 
+export type StaffRole = "ADMIN" | "CARD_ISSUER" | "BRANCH_STAFF" | "PARTNER_MANAGER" | "SUPPORT" | "REVIEWER";
+export type VipAction = "ISSUE_CARD" | "ACTIVATE_CARD" | "RECORD_REDEMPTION" | "SUSPEND_CARD" | "REPLACE_CARD" | "MANAGE_FINANCIAL_RULES";
+
+const allowedRoleActions: Record<StaffRole, readonly VipAction[]> = {
+  ADMIN: ["ISSUE_CARD", "ACTIVATE_CARD", "RECORD_REDEMPTION", "SUSPEND_CARD", "REPLACE_CARD", "MANAGE_FINANCIAL_RULES"],
+  CARD_ISSUER: ["ISSUE_CARD", "ACTIVATE_CARD", "REPLACE_CARD"],
+  BRANCH_STAFF: ["RECORD_REDEMPTION"],
+  PARTNER_MANAGER: [],
+  SUPPORT: ["SUSPEND_CARD"],
+  REVIEWER: [],
+};
+
+export function canPerformVipAction(role: StaffRole, action: VipAction): boolean {
+  return allowedRoleActions[role].includes(action);
+}
+
+const cardTransitions: Record<CardStatus, readonly CardStatus[]> = {
+  NEW: ["ACTIVE", "SUSPENDED"],
+  ACTIVE: ["SUSPENDED", "EXPIRED", "LOST", "FULLY_USED"],
+  SUSPENDED: ["ACTIVE", "EXPIRED", "LOST"],
+  EXPIRED: [],
+  LOST: ["REPLACED"],
+  REPLACED: [],
+  FULLY_USED: [],
+};
+
+export function canTransitionCardStatus(from: CardStatus, to: CardStatus): boolean {
+  return cardTransitions[from].includes(to);
+}
+
+export type PublicCardRecord = {
+  serialNumber: string;
+  cardTypeNameAr: string;
+  status: CardStatus;
+  expiresAt?: string;
+};
+
+export type PublicCardVerification = {
+  valid: boolean;
+  serialSuffix: string;
+  cardTypeNameAr: string;
+  status: CardStatus;
+  expiresAt?: string;
+};
+
+export function toPublicCardVerification(card: PublicCardRecord, now: string): PublicCardVerification {
+  const expires = card.expiresAt ? Date.parse(card.expiresAt) : Number.POSITIVE_INFINITY;
+  const checkedAt = Date.parse(now);
+  const expired = Number.isFinite(checkedAt) && expires <= checkedAt;
+  const status: CardStatus = card.status === "ACTIVE" && expired ? "EXPIRED" : card.status;
+  return {
+    valid: status === "ACTIVE",
+    serialSuffix: card.serialNumber.slice(-4),
+    cardTypeNameAr: card.cardTypeNameAr,
+    status,
+    ...(card.expiresAt ? { expiresAt: card.expiresAt } : {}),
+  };
+}
+
 export function calculatePointsBalance(entries: PointsEntry[], customerId: string, asOf: string): PointsBalance {
   const seen = new Set<string>();
   const result: PointsBalance = { pending: 0, available: 0, expired: 0 };
