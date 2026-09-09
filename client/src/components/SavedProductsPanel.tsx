@@ -82,21 +82,6 @@ export function SavedProductsPanel() {
 
   return (
     <>
-      <div className="fixed right-3 top-[max(.75rem,env(safe-area-inset-top))] z-[54] flex items-center gap-1.5 sm:right-5">
-        <button type="button" onClick={() => { setView("wishlist"); setOpen(true); }} aria-label={`المفضلة — ${wishlist.length} منتج`}
-          className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-brand-border bg-white/96 px-3 py-2 text-xs font-extrabold text-brand-navy shadow-lg backdrop-blur transition hover:border-brand-red hover:bg-red-50 focus-visible:ring-4 focus-visible:ring-brand-red/15 sm:min-h-11">
-          <Heart size={16} aria-hidden="true" />
-          <span className="hidden sm:inline">المفضلة</span>
-          {wishlist.length > 0 && <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-black text-brand-red">{wishlist.length}</span>}
-        </button>
-        <button type="button" onClick={() => { setView("compare"); setOpen(true); }} aria-label={`المقارنة — ${compare.length} منتج`}
-          className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-brand-border bg-white/96 px-3 py-2 text-xs font-extrabold text-brand-navy shadow-lg backdrop-blur transition hover:border-brand-blue hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue/15 sm:min-h-11">
-          <Scale size={16} aria-hidden="true" />
-          <span className="hidden sm:inline">قارن</span>
-          {compare.length > 0 && <span className="rounded-full bg-brand-sky px-1.5 py-0.5 text-[10px] font-black text-brand-blue">{compare.length}</span>}
-        </button>
-      </div>
-
       {open && (
         <div className="fixed inset-0 z-[90] bg-brand-navy/60 backdrop-blur-[2px]" onClick={() => setOpen(false)}>
           <section dir="rtl" role="dialog" aria-modal="true" aria-label={view === "wishlist" ? "المفضلة" : "مقارنة المنتجات"}
