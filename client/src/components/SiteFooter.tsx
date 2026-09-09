@@ -94,7 +94,7 @@ function FooterBrand() {
 
       <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-2 text-xs font-bold text-white/65">
         <ShieldCheck size={16} aria-hidden="true" />
-        كتالوج المنتجات يعتمد على البيانات المعتمدة فقط
+        اختار اللي يناسبك واسألنا مباشرة على واتساب
       </div>
     </section>
   );
