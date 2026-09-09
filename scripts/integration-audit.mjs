@@ -121,12 +121,12 @@ if (exists("client/src/pages/VipStaffRegistration.tsx")) {
 if (exists("client/src/pages/VipProgram.tsx")) {
   const vipPage = read("client/src/pages/VipProgram.tsx");
   assert(
-    vipPage.includes("تحت الإعداد التجريبي"),
-    "VIP page must state its pilot status"
+    vipPage.includes("اسأل عن موعد الإطلاق"),
+    "VIP page must make the pre-launch state clear through its customer CTA"
   );
   assert(
-    vipPage.includes("لا توجد قيمة بيع أو خصم معتمدة"),
-    "VIP page must not imply unapproved Silver pricing"
+    !/(اشتر|شراء|اطلب الكارت)/.test(vipPage),
+    "VIP page must not offer card sales before launch approval"
   );
   assert(
     !/\b(50|70|100)\s*(جنيه|جنيهًا)/.test(vipPage),
