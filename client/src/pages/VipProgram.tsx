@@ -3,6 +3,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import BrandHeader from "@/components/BrandHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { whatsappNumber } from "@/lib/productFormat";
+import { Link } from "wouter";
 
 const tiers = [
   { name: "Omran VIP", description: "كارت المزايا الرئيسي. السعر والمدة وحدود الاستخدام تحت الاعتماد التجاري.", features: ["عروض عمران تويز", "عروض الشركاء المعتمدين", "إمكانية إضافة نقاط عمران بعد اعتماد السياسة"] },
@@ -35,6 +36,10 @@ export default function VipProgram() {
             <div className="flex items-start gap-3"><ShieldCheck className="mt-1 shrink-0 text-amber-700" /><div><h2 className="font-black text-amber-950">الحماية قبل الخصم</h2><p className="mt-2 text-sm font-semibold leading-7 text-amber-900">صورة الكارت أو الـQR وحدهما لا يثبتان صلاحية الاستخدام. الموظف أو الشريك لازم يتحقق من الحالة والصلاحية وشروط العرض قبل تسجيل العملية.</p></div></div>
           </div>
           {href && <a href={href} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-black text-white"><MessageCircle size={19} /> اسأل عن موعد الإطلاق</a>}
+          <nav aria-label="مستندات برنامج Omran VIP" className="mt-7 flex flex-wrap gap-4 border-t border-brand-border pt-5 text-sm font-black text-brand-blue">
+            <Link href="/vip/terms">شروط الاستخدام التجريبية</Link>
+            <Link href="/vip/privacy">إشعار الخصوصية التجريبي</Link>
+          </nav>
         </section>
       </main>
       <SiteFooter />
