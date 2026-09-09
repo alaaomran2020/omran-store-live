@@ -6,8 +6,8 @@ import { whatsappNumber } from "@/lib/productFormat";
 import { Link } from "wouter";
 
 const tiers = [
-  { name: "Omran VIP", description: "كارت المزايا الرئيسي. السعر والمدة وحدود الاستخدام تحت الاعتماد التجاري.", features: ["عروض عمران تويز", "عروض الشركاء المعتمدين", "إمكانية إضافة نقاط عمران بعد اعتماد السياسة"] },
-  { name: "Omran Silver", description: "كارت أو Voucher مبسط بقواعد استخدام محددة. لا توجد قيمة بيع أو خصم معتمدة حتى الآن.", features: ["عرض محدد وواضح", "حد مالي للاستخدام", "عدد استخدامات مضبوط"] },
+  { name: "Omran VIP", description: "كارت المزايا الرئيسي لعروض وخصومات مستمرة طوال مدة الكارت.", features: ["عروض عمران تويز", "عروض الأماكن المشاركة", "مكافآت ومزايا خاصة"] },
+  { name: "Omran Silver", description: "كارت بسيط للاستفادة من عرض واضح بعدد استخدامات محدد.", features: ["خصم محدد وواضح", "حد أقصى معروف للخصم", "استخدام سهل وآمن"] },
 ];
 
 export default function VipProgram() {
@@ -21,7 +21,7 @@ export default function VipProgram() {
           <div className="container max-w-5xl">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-2 text-sm font-black"><Sparkles size={17} /> Omran VIP Card Program</span>
             <h1 className="mt-5 max-w-3xl text-3xl font-black leading-tight sm:text-5xl">خصومات محسوبة، وشروط واضحة، وتحقق فعلي من الكارت</h1>
-            <p className="mt-4 max-w-3xl text-base font-semibold leading-8 text-sky-50">البرنامج تحت الإعداد التجريبي. لن نعرض سعرًا أو شريكًا أو نسبة خصم قبل اعتمادها وتوثيق شروطها.</p>
+            <p className="mt-4 max-w-3xl text-base font-semibold leading-8 text-sky-50">استفيد من عروض عمران تويز والأماكن المشاركة، مع شروط وحد أقصى واضح لكل خصم.</p>
           </div>
         </section>
         <section className="container max-w-5xl py-10 sm:py-14">
@@ -37,8 +37,8 @@ export default function VipProgram() {
           </div>
           {href && <a href={href} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-black text-white"><MessageCircle size={19} /> اسأل عن موعد الإطلاق</a>}
           <nav aria-label="مستندات برنامج Omran VIP" className="mt-7 flex flex-wrap gap-4 border-t border-brand-border pt-5 text-sm font-black text-brand-blue">
-            <Link href="/vip/terms">شروط الاستخدام التجريبية</Link>
-            <Link href="/vip/privacy">إشعار الخصوصية التجريبي</Link>
+            <Link href="/vip/terms">شروط الاستخدام</Link>
+            <Link href="/vip/privacy">إشعار الخصوصية</Link>
           </nav>
         </section>
       </main>

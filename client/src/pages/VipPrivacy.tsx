@@ -18,8 +18,8 @@ export default function VipPrivacy() {
       <main className="container max-w-4xl py-10 sm:py-14">
         <Link href="/vip" className="text-sm font-black text-brand-blue">العودة لبرنامج Omran VIP</Link>
         <h1 className="mt-4 text-3xl font-black text-brand-navy">خصوصية برنامج Omran VIP</h1>
-        <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold leading-7 text-amber-950">
-          نسخة تجريبية للمراجعة. لن يبدأ تسجيل عضويات حقيقية قبل اعتماد مسؤول الخصوصية ومدد الاحتفاظ ومسار معالجة البيانات.
+        <p className="mt-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm font-bold leading-7 text-sky-950">
+          بنستخدم أقل قدر من البيانات اللازمة لتقديم الخدمة وحماية حسابك ومتابعة طلباتك.
         </p>
         <div className="mt-7 space-y-4">
           {sections.map(([title, body]) => (
