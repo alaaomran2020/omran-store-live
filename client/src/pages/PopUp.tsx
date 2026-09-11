@@ -1,4 +1,4 @@
-import { ExternalLink, Facebook, Instagram } from "lucide-react";
+import { ExternalLink, Facebook, Instagram, MessageCircle, Quote } from "lucide-react";
 import BrandHeader from "@/components/BrandHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { SeoMetadata } from "@/components/SeoMetadata";
@@ -27,6 +27,74 @@ const POPUP_SOCIALS = [
     iconClass: "bg-fuchsia-400/15 text-fuchsia-200",
   },
 ] as const;
+
+const POPUP_REVIEWS = [
+  {
+    text: "جودة البلالين تحفة قوي، والخامة بتاعتها حلوة كويسة جدًا بالنسبة للسعر. ودي مش أول مرة أتعامل معاكم، أنا بتعامل معاكم بقالي كتير قوي، والصراحة التعامل كويس جدًا وخامات البلالين تحفة.",
+    context: "تنسيق بالونات مناسبة",
+  },
+  {
+    text: "شكرًا بجد على البالون وسرعة الرد، ومبسوطة بالتنوع الجديد في الأشكال اللي بتوفروها.",
+    context: "طلب بالونات وتجهيز مناسبة",
+  },
+] as const;
+
+function PopUpRealReviews() {
+  return (
+    <section
+      dir="rtl"
+      aria-labelledby="popup-reviews-title"
+      className="border-y border-rose-100 bg-gradient-to-b from-white via-rose-50/45 to-fuchsia-50/40 py-10 sm:py-14"
+    >
+      <div className="container">
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-3 py-1.5 text-xs font-black text-rose-700 shadow-sm">
+            <MessageCircle size={15} aria-hidden="true" />
+            ريفيوهات حقيقية
+          </span>
+          <h2 id="popup-reviews-title" className="mt-3 text-2xl font-black tracking-tight text-brand-ink sm:text-3xl">
+            عملاؤنا قالوا إيه عن POP UP؟
+          </h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-7 text-brand-muted sm:text-[15px]">
+            آراء حقيقية وصلتنا من عملائنا بعد استلام وتجربة تنسيقات البالونات.
+          </p>
+        </div>
+
+        <div className="mx-auto mt-7 grid max-w-5xl gap-4 lg:grid-cols-2">
+          {POPUP_REVIEWS.map((review, index) => (
+            <article
+              key={review.text}
+              className="relative overflow-hidden rounded-3xl border border-rose-100 bg-white p-5 shadow-[0_12px_35px_rgba(136,19,55,0.07)] sm:p-6"
+            >
+              <div className="absolute -left-6 -top-7 h-24 w-24 rounded-full bg-fuchsia-100/60 blur-2xl" aria-hidden="true" />
+              <div className="relative">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-700">
+                    عميل POP UP
+                  </span>
+                  <Quote className="text-fuchsia-300" size={25} aria-hidden="true" />
+                </div>
+
+                <blockquote className="mt-4 text-[15px] font-bold leading-8 text-brand-ink sm:text-base sm:leading-8">
+                  «{review.text}»
+                </blockquote>
+
+                <div className="mt-5 flex items-center justify-between gap-3 border-t border-rose-100 pt-4">
+                  <p className="text-xs font-bold text-brand-muted">{review.context}</p>
+                  <span className="text-xs font-black text-fuchsia-700">رسالة عميل #{index + 1}</span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <p className="mx-auto mt-4 max-w-2xl text-center text-[11px] font-semibold leading-6 text-brand-muted">
+          تم إخفاء بيانات العملاء الشخصية حفاظًا على الخصوصية، مع الحفاظ على مضمون الرسائل الحقيقية.
+        </p>
+      </div>
+    </section>
+  );
+}
 
 function PopUpOfficialSocials() {
   return (
@@ -82,6 +150,7 @@ export default function PopUp() {
       <AnnouncementBar />
       <BrandHeader />
       <Products catalog="popup" showAnnouncement={false} />
+      <PopUpRealReviews />
       <PopUpOfficialSocials />
       <SiteFooter socialBrand="popup" />
     </div>
