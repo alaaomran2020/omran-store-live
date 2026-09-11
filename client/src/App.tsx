@@ -8,6 +8,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 const AdminAccess = lazy(() => import("@/admin/AdminAccess"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PopUp = lazy(() => import("@/pages/PopUp"));
+const PopupVideos = lazy(() => import("@/pages/PopupVideos"));
 const ProductsPage = lazy(() => import("@/pages/ProductsPage"));
 const Storefront = lazy(() => import("@/pages/Storefront"));
 const Videos = lazy(() => import("@/pages/Videos"));
@@ -23,6 +24,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Storefront} />
       <Route path={"/products"} component={ProductsPage} />
+      <Route path={"/popup/videos"} component={PopupVideos} />
       <Route path={"/popup"} component={PopUp} />
       <Route path={"/videos"} component={Videos} />
       <Route path={"/rewards"} component={Rewards} />

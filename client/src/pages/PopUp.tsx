@@ -1,4 +1,4 @@
-import { ExternalLink, Facebook, Instagram, MessageCircle, Quote } from "lucide-react";
+import { ExternalLink, Facebook, Instagram, MessageCircle, PlayCircle, Quote } from "lucide-react";
 import BrandHeader from "@/components/BrandHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { SeoMetadata } from "@/components/SeoMetadata";
@@ -38,6 +38,31 @@ const POPUP_REVIEWS = [
     context: "طلب بالونات وتجهيز مناسبة",
   },
 ] as const;
+
+function PopUpVideosCta() {
+  return (
+    <section dir="rtl" aria-labelledby="popup-videos-title" className="border-y border-fuchsia-100 bg-white py-8 sm:py-10">
+      <div className="container">
+        <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-5 rounded-3xl bg-gradient-to-l from-fuchsia-700 via-purple-700 to-rose-600 p-6 text-center text-white shadow-[0_18px_50px_rgba(126,34,206,0.18)] sm:p-8 lg:flex-row lg:text-start">
+          <div>
+            <p className="text-xs font-black text-fuchsia-100">فيديوهات POP UP</p>
+            <h2 id="popup-videos-title" className="mt-2 text-2xl font-black sm:text-3xl">شوف التنسيقات بالفيديو</h2>
+            <p className="mt-2 max-w-xl text-sm font-semibold leading-7 text-white/85">
+              فيديوهات حقيقية للهدايا والبالونات وتنسيقات المناسبات من POP UP.
+            </p>
+          </div>
+          <a
+            href="/popup/videos"
+            className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-black text-fuchsia-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <PlayCircle size={18} aria-hidden="true" />
+            مشاهدة الفيديوهات
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function PopUpRealReviews() {
   return (
@@ -87,10 +112,6 @@ function PopUpRealReviews() {
             </article>
           ))}
         </div>
-
-        <p className="mx-auto mt-4 max-w-2xl text-center text-[11px] font-semibold leading-6 text-brand-muted">
-          تم إخفاء بيانات العملاء الشخصية حفاظًا على الخصوصية، مع الحفاظ على مضمون الرسائل الحقيقية.
-        </p>
       </div>
     </section>
   );
@@ -150,6 +171,7 @@ export default function PopUp() {
       <AnnouncementBar />
       <BrandHeader />
       <Products catalog="popup" showAnnouncement={false} />
+      <PopUpVideosCta />
       <PopUpRealReviews />
       <PopUpOfficialSocials />
       <SiteFooter socialBrand="popup" />
