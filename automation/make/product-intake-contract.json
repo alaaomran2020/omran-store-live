@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Omran Product Intake Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source", "photo", "purchase_price", "sale_price", "quantity"],
+  "properties": {
+    "source": {
+      "type": "string",
+      "enum": ["telegram", "admin"]
+    },
+    "message_id": { "type": ["string", "null"] },
+    "operator_id": { "type": ["string", "null"] },
+    "photo": {
+      "type": "object",
+      "required": ["file_id"],
+      "properties": {
+        "file_id": { "type": "string", "minLength": 1 },
+        "file_name": { "type": ["string", "null"] },
+        "mime_type": { "type": ["string", "null"] }
+      }
+    },
+    "purchase_price": { "type": "number", "minimum": 0 },
+    "sale_price": { "type": "number", "minimum": 0 },
+    "quantity": { "type": "integer", "minimum": 0 },
+    "barcode": { "type": ["string", "null"], "pattern": "^[0-9A-Za-z_-]{4,64}$" },
+    "employee_note": { "type": ["string", "null"] }
+  }
+}
