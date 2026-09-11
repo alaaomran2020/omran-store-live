@@ -98,10 +98,6 @@ function PopUpRealReviews() {
             </article>
           ))}
         </div>
-
-        <p className="mx-auto mt-4 max-w-2xl text-center text-[11px] font-semibold leading-6 text-brand-muted">
-          تم إخفاء بيانات العملاء الشخصية حفاظًا على الخصوصية، مع الحفاظ على مضمون الرسائل الحقيقية.
-        </p>
       </div>
     </section>
   );
