@@ -1,0 +1,18 @@
+/* Mobile-only storefront control placement.
+ * Keep floating quick actions clear of the announcement ticker without
+ * restructuring the stable header markup. Comparison controls are hidden
+ * from the storefront UI per current product direction.
+ */
+@media (max-width: 639px) {
+  button[aria-label^="طلبك"] {
+    top: calc(env(safe-area-inset-top, 0px) + 4rem) !important;
+  }
+
+  button[aria-label^="المفضلة"] {
+    top: calc(env(safe-area-inset-top, 0px) + 4rem) !important;
+  }
+}
+
+button[aria-label*="المقارنة"] {
+  display: none !important;
+}
