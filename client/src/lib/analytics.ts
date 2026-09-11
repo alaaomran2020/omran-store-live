@@ -22,12 +22,7 @@ export type ProductEvent =
   | "whatsapp_product_inquiry"
   | "whatsapp_conversion"
   | "product_share"
-  | "product_gallery_interaction"
-  | "cart_add"
-  | "cart_remove"
-  | "cart_quantity_change"
-  | "cart_open"
-  | "cart_whatsapp_submit";
+  | "product_gallery_interaction";
 
 export type WhatsAppProductInquiryPayload = {
   product_id: string;
@@ -44,12 +39,7 @@ type PersistedEventName =
   | "search"
   | "category_view"
   | "whatsapp_click"
-  | "product_whatsapp_click"
-  | "cart_add"
-  | "cart_remove"
-  | "cart_quantity_change"
-  | "cart_open"
-  | "cart_whatsapp_submit";
+  | "product_whatsapp_click";
 
 const persistedEventAliases: Partial<Record<ProductEvent, PersistedEventName>> = {
   product_view: "product_view",
@@ -59,11 +49,6 @@ const persistedEventAliases: Partial<Record<ProductEvent, PersistedEventName>> =
   product_filter: "category_view",
   whatsapp_click: "whatsapp_click",
   product_whatsapp_click: "product_whatsapp_click",
-  cart_add: "cart_add",
-  cart_remove: "cart_remove",
-  cart_quantity_change: "cart_quantity_change",
-  cart_open: "cart_open",
-  cart_whatsapp_submit: "cart_whatsapp_submit",
 };
 
 function trackUmamiOnly(event: string, data: Record<string, unknown> = {}): void {

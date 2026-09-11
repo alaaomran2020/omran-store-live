@@ -74,12 +74,13 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(PUBLIC_PRODUCTS_SNAPSHOT.length));
 
-    const links = screen.getAllByRole("link", { name: /استفسر عن السعر والتوفر/ }) as HTMLAnchorElement[];
+    const links = screen.getAllByRole("link", { name: /للاستفسار والكميات|استفسر عن/ }) as HTMLAnchorElement[];
     expect(links[0].href).toContain("wa.me/201000000000");
     expect(decodeURIComponent(links[0].href)).toContain(PUBLIC_PRODUCTS_SNAPSHOT[0].name);
     expect(fetch).toHaveBeenCalledWith(
       makeCatalogUrl(),
       expect.objectContaining({ method: "GET" })
     );
+    expect(screen.queryByText(/طلبك|إضافة للسلة|أضف لطلبك|مقارنة المنتجات/)).toBeNull();
   });
 });

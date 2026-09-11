@@ -33,10 +33,10 @@ describe("buildWhatsAppUrl", () => {
     );
     expect(url).toBeTruthy();
     const text = decodeURIComponent(new URL(url!).searchParams.get("text")!);
-    expect(text).toContain("بالنسبة لـ سيارة أطفال سباق");
-    expect(text).toContain("كود المنتج: OT-0001");
+    expect(text).toContain("السلام عليكم، عاوز أستفسر عن:\nسيارة أطفال سباق");
+    expect(text).toContain("الكود: OT-0001");
     expect(text).toContain("التصنيف: سيارات");
-    expect(text).toContain("السعر والتوفر");
+    expect(text).toContain("التوفر والكميات");
     expect(text).not.toContain("250 ج.م");
   });
 
@@ -61,8 +61,8 @@ describe("buildWhatsAppUrl", () => {
       }
     );
     const text = decodeURIComponent(new URL(url!).searchParams.get("text")!);
-    expect(text).toContain("كود المنتج: OT-001");
-    expect(text).toContain("SKU: SKU-123");
+    expect(text).toContain("الكود: SKU-123");
+    expect(text).not.toContain("الكود: OT-001");
   });
 });
 

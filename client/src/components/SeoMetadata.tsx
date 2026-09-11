@@ -39,7 +39,7 @@ export function SeoMetadata({
   title,
   description,
 }: {
-  path: "/products" | "/popup";
+  path: `/${string}`;
   title: string;
   description: string;
 }) {

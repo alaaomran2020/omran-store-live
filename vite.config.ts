@@ -1,4 +1,3 @@
-import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
@@ -10,7 +9,6 @@ import {
   type PluginOption,
   type ViteDevServer,
 } from "vite";
-import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
 // =============================================================================
 // Manus Debug Collector - Vite Plugin
@@ -178,20 +176,13 @@ function vitePluginManusDebugCollector(): Plugin {
 // -----------------------------------------------------------------------------
 // Host/IDE tooling must never reach production output.
 //
-// `vite-plugin-manus-runtime` inlines its whole previewer bundle
-// (~367 kB of JS, plus ~34 kB CSS) directly into index.html on every build —
-// it is the host editor's element-picker, not application code. `@builder.io/
-// vite-plugin-jsx-loc` likewise stamps `data-jsx-loc` source coordinates onto
-// every element (bundle bloat + leaked file paths). Both are marked
-// `apply: "serve"` so `vite build` skips them. The dev log collector lives in
+// Host-specific editor plugins are intentionally absent from the live repo:
+// they are not application code and expand the development-server surface.
+// The dev log collector lives in
 // `client/public/__manus__`, which is deliberately NOT the shipped publicDir,
 // and is served in dev through a middleware instead (see the plugin above), so
 // it is dropped from the build output too.
 // -----------------------------------------------------------------------------
-function devOnly(plugin: Plugin): Plugin {
-  return { ...plugin, apply: "serve" };
-}
-
 /**
  * Optional Umami analytics tag.
  *
@@ -242,6 +233,7 @@ const EDGE_HEADERS = [
   "  X-Content-Type-Options: nosniff",
   "  X-Frame-Options: DENY",
   "  Referrer-Policy: strict-origin-when-cross-origin",
+  "  Permissions-Policy: geolocation=(), microphone=()",
   "",
   "# Content-hashed chunks are safe to pin for a year (browser + edge).",
   "/assets/*",
@@ -285,8 +277,6 @@ function buildPlugins(): PluginOption[] {
   return [
     react(),
     tailwindcss(),
-    devOnly(jsxLocPlugin()),
-    devOnly(vitePluginManusRuntime()),
     vitePluginManusDebugCollector(),
     vitePluginOptionalAnalytics(env),
     vitePluginEdgeHeaders(),

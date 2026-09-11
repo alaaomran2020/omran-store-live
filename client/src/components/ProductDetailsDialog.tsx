@@ -1,34 +1,35 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/lib/productsClient";
 import { ProductMediaGallery } from "@/components/ProductMediaGallery";
+import { ProductImage } from "@/components/ProductImage";
 import { ProductSpecifications } from "@/components/ProductSpecifications";
 import { buildWhatsAppUrl } from "@/lib/productFormat";
 import { productColorHex } from "@/lib/productColors";
 import { nonColorProductOptions, productColors } from "@/lib/productOptions";
-import { addProductToCart, openCartDrawer } from "@/lib/cart";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
-import { Check, MessageCircle, ShoppingBag, X } from "lucide-react";
-import { toast } from "sonner";
+import { Check, MessageCircle, X } from "lucide-react";
 
 export function ProductDetailsDialog({
   product,
+  relatedProducts = [],
+  onSelectProduct,
   onClose,
 }: {
   product: Product | null;
+  relatedProducts?: Product[];
+  onSelectProduct?: (product: Product) => void;
   onClose: () => void;
 }) {
   const colors = useMemo(() => (product ? productColors(product) : []), [product]);
   const extraOptions = useMemo(() => (product ? nonColorProductOptions(product) : []), [product]);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
-  const [addedFeedback, setAddedFeedback] = useState(false);
 
   useEffect(() => {
     setSelectedColor(colors[0] ?? null);
     setSelectedOptions(
       Object.fromEntries(extraOptions.map(group => [group.name, group.values[0] ?? ""]).filter(([, value]) => Boolean(value)))
     );
-    setAddedFeedback(false);
   }, [product?.id, colors, extraOptions]);
 
   useEffect(() => {
@@ -58,25 +59,6 @@ export function ProductDetailsDialog({
     } catch {
       // Analytics failure must never block WhatsApp conversion.
     }
-  };
-
-  const cartSelections = {
-    ...(selectedColor ? { اللون: selectedColor } : {}),
-    ...selectedOptions,
-  };
-
-  const handleAddToCart = () => {
-    addProductToCart(product, cartSelections);
-    setAddedFeedback(true);
-    window.setTimeout(() => setAddedFeedback(false), 1400);
-    const summary = Object.entries(cartSelections).map(([name, value]) => `${name}: ${value}`).join(" · ");
-    toast.success("اتضاف لطلبك", {
-      description: summary ? `${product.name} — ${summary}` : product.name,
-      action: {
-        label: "عرض الطلب",
-        onClick: openCartDrawer,
-      },
-    });
   };
 
   const selectionSummary = [
@@ -135,7 +117,7 @@ export function ProductDetailsDialog({
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-extrabold text-brand-navy">اختار اللون</p>
-                      <p className="mt-0.5 text-xs font-bold text-brand-muted">اللون الموثق هيظهر تلقائيًا في الطلب ورسالة واتساب</p>
+                      <p className="mt-0.5 text-xs font-bold text-brand-muted">اللون المختار هيظهر تلقائيًا في رسالة واتساب</p>
                     </div>
                     {selectedColor && (
                       <span className="rounded-full bg-brand-sky px-2.5 py-1 text-xs font-extrabold text-brand-navy">
@@ -205,9 +187,13 @@ export function ProductDetailsDialog({
                 </div>
               ))}
 
-              {(product.ageMin !== null && product.ageMax !== null) && (
+              {(product.ageMin !== null || product.ageMax !== null) && (
                 <div className="rounded-xl border border-brand-border bg-white px-3 py-2.5 text-xs font-bold text-brand-navy sm:text-sm">
-                  العمر الموثق: {product.ageMin}–{product.ageMax} سنة
+                  العمر الموثق: {product.ageMin !== null && product.ageMax !== null
+                    ? `${product.ageMin}–${product.ageMax} سنة`
+                    : product.ageMin !== null
+                      ? `من ${product.ageMin} سنة`
+                      : `حتى ${product.ageMax} سنة`}
                 </div>
               )}
 
@@ -220,21 +206,35 @@ export function ProductDetailsDialog({
 
               <ProductSpecifications product={product} />
 
+              {relatedProducts.length > 0 && onSelectProduct && (
+                <section aria-labelledby="related-products-title" className="border-t border-brand-border pt-4">
+                  <h3 id="related-products-title" className="text-sm font-extrabold text-brand-navy">منتجات مشابهة</h3>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {relatedProducts.slice(0, 3).map(item => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => onSelectProduct(item)}
+                        className="min-w-0 overflow-hidden rounded-xl border border-brand-border bg-white text-right transition hover:border-brand-blue hover:shadow-sm focus-visible:ring-4 focus-visible:ring-brand-blue/15"
+                        aria-label={`عرض تفاصيل ${item.name}`}
+                      >
+                        <span className="block aspect-square overflow-hidden bg-brand-cream">
+                          <ProductImage product={item} className="h-full w-full object-contain" sizesHint="120px" />
+                        </span>
+                        <span className="line-clamp-2 block min-h-12 px-2 py-2 text-[11px] font-extrabold leading-4 text-brand-ink">{item.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+
               <div className="rounded-2xl bg-brand-sky p-3.5 text-sm leading-7 text-brand-navy sm:p-4">
                 {selectionSummary.length > 0
-                  ? <>اختياراتك الموثقة: <strong>{selectionSummary.join(" · ")}</strong>. تقدر تضيفها لطلبك أو تبعتها مباشرة على واتساب.</>
-                  : "تقدر تضيف المنتج لطلبك أو تبعت استفسار مباشر على واتساب لتأكيد السعر والتوفر."}
+                  ? <>اختياراتك: <strong>{selectionSummary.join(" · ")}</strong>. ابعتها مباشرة على واتساب للاستفسار عن التوفر والكميات.</>
+                  : "ابعت استفسار مباشر على واتساب لمعرفة التوفر والكميات."}
               </div>
 
               <div className="mt-auto hidden flex-col gap-2 pt-2 sm:flex">
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-brand-blue bg-brand-sky px-5 py-3 text-sm font-extrabold text-brand-navy transition hover:bg-brand-blue hover:text-white focus-visible:ring-4 focus-visible:ring-brand-blue/20"
-                >
-                  <ShoppingBag size={18} aria-hidden="true" />
-                  {addedFeedback ? "اتضاف لطلبك ✓" : "أضف لطلبك"}
-                </button>
                 {waUrl ? (
                   <a
                     href={waUrl}
@@ -244,7 +244,7 @@ export function ProductDetailsDialog({
                     className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25"
                   >
                     <MessageCircle size={18} aria-hidden="true" />
-                    {selectionSummary.length > 0 ? "استفسر عن الاختيارات المحددة" : "استفسر عن السعر والتوفر"}
+                    {selectionSummary.length > 0 ? "استفسر عن الاختيارات المحددة" : "للاستفسار والكميات"}
                   </a>
                 ) : (
                   <p className="rounded-xl border border-brand-border bg-brand-cream px-4 py-3 text-sm font-bold text-brand-muted">
@@ -263,15 +263,7 @@ export function ProductDetailsDialog({
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 z-20 grid grid-cols-2 gap-2 border-t border-brand-border bg-white/96 p-3 pb-[max(.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:hidden">
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-brand-blue bg-brand-sky px-3 py-3 text-xs font-extrabold text-brand-navy shadow-sm transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-brand-blue/20"
-          >
-            <ShoppingBag size={17} aria-hidden="true" />
-            {addedFeedback ? "اتضاف ✓" : "أضف لطلبك"}
-          </button>
+        <div className="absolute inset-x-0 bottom-0 z-20 grid grid-cols-1 gap-2 border-t border-brand-border bg-white/96 p-3 pb-[max(.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:hidden">
           {waUrl ? (
             <a
               href={waUrl}
@@ -281,7 +273,7 @@ export function ProductDetailsDialog({
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-3 py-3 text-xs font-extrabold text-white shadow-lg transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-whatsapp/25"
             >
               <MessageCircle size={17} aria-hidden="true" />
-              واتساب
+              للاستفسار والكميات
             </a>
           ) : (
             <button

@@ -21,8 +21,15 @@ describe("smart search", () => {
     expect(normalizeSearchText(" إِلَى  نَظّارة ـ ١۲ ")).toBe("الي نظاره 12");
   });
   it("matches Arabic spelling variants and English synonyms", () => {
-    for (const query of ["نظارة", "نضارة", "نظارات", "glasses"]) {
+    for (const query of ["نظاره", "نظارة", "نضاره", "نضارة", "نظارات", "glasses"]) {
       expect(smartSearch([glasses, car], query).results[0]?.product.id).toBe("T1");
+    }
+    for (const query of ["عربية", "عربيه", "car", "cars"]) {
+      expect(smartSearch([glasses, car], query).results[0]?.product.id).toBe("T2");
+    }
+    const doll = product("T3", "عروسة أطفال");
+    for (const query of ["عرايس", "عروسة", "doll"]) {
+      expect(smartSearch([glasses, car, doll], query).results[0]?.product.id).toBe("T3");
     }
   });
   it("ranks exact names above synonyms and descriptions", () => {

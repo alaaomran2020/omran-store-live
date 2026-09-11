@@ -1,22 +1,22 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { CartDrawer } from "@/components/CartDrawer";
-import { SavedProductsPanel } from "@/components/SavedProductsPanel";
-import AdminAccess from "@/admin/AdminAccess";
-import NotFound from "@/pages/NotFound";
-import PopUp from "@/pages/PopUp";
-import ProductsPage from "@/pages/ProductsPage";
-import Storefront from "@/pages/Storefront";
-import Videos from "@/pages/Videos";
-import Rewards from "@/pages/Rewards";
-import VipProgram from "@/pages/VipProgram";
-import VipPrivacy from "@/pages/VipPrivacy";
-import VipQrTest from "@/pages/VipQrTest";
-import VipStaffRegistration from "@/pages/VipStaffRegistration";
-import VipTerms from "@/pages/VipTerms";
+import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+
+const AdminAccess = lazy(() => import("@/admin/AdminAccess"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const PopUp = lazy(() => import("@/pages/PopUp"));
+const ProductsPage = lazy(() => import("@/pages/ProductsPage"));
+const Storefront = lazy(() => import("@/pages/Storefront"));
+const Videos = lazy(() => import("@/pages/Videos"));
+const Rewards = lazy(() => import("@/pages/Rewards"));
+const VipProgram = lazy(() => import("@/pages/VipProgram"));
+const VipPrivacy = lazy(() => import("@/pages/VipPrivacy"));
+const VipQrTest = lazy(() => import("@/pages/VipQrTest"));
+const VipStaffRegistration = lazy(() => import("@/pages/VipStaffRegistration"));
+const VipTerms = lazy(() => import("@/pages/VipTerms"));
 
 function Router() {
   return (
@@ -46,9 +46,9 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
-          <Router />
-          <CartDrawer />
-          <SavedProductsPanel />
+          <Suspense fallback={<div className="min-h-screen bg-brand-cream" aria-label="جاري تحميل الصفحة" />}>
+            <Router />
+          </Suspense>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

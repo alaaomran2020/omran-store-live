@@ -22,6 +22,7 @@ import {
   normalizeEgyptianMobile,
   type StaffRequestedRole,
 } from "@/lib/staffEnrollment";
+import BrandHeader from "@/components/BrandHeader";
 
 export default function VipStaffRegistration() {
   const [displayName, setDisplayName] = useState("");
@@ -92,10 +93,9 @@ export default function VipStaffRegistration() {
   };
 
   return (
-    <main
-      dir="rtl"
-      className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100"
-    >
+    <div dir="rtl" className="min-h-screen bg-slate-950">
+      <BrandHeader />
+      <main className="px-4 py-10 text-slate-100">
       <div className="mx-auto max-w-xl">
         <PageTitle
           title="تسجيل موظف في Omran VIP"
@@ -263,6 +263,7 @@ export default function VipStaffRegistration() {
           </p>
         </div>
       </div>
-    </main>
+      </main>
+    </div>
   );
 }

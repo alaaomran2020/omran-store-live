@@ -1,22 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, productPermalink } from "@/lib/productFormat";
 import { productColorHex } from "@/lib/productColors";
 import { productColors } from "@/lib/productOptions";
 import { isPopUpProduct } from "@/lib/productCatalog";
-import { addProductToCart, openCartDrawer } from "@/lib/cart";
-import {
-  SAVED_PRODUCTS_UPDATED_EVENT,
-  isWishlisted,
-  openSavedProducts,
-  toggleWishlist,
-} from "@/lib/savedProducts";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
-import { Heart, Info, Images, MessageCircle, Play, ShoppingBag } from "lucide-react";
-import { toast } from "sonner";
+import { Info, Images, MessageCircle, Play } from "lucide-react";
 
-/** Omran Product Card v5 — separate POP UP media, wishlist, cart and WhatsApp. */
+/** Omran product card — separate POP UP media and WhatsApp-first conversion. */
 export function ProductCard({
   product,
   onOpenDetails,
@@ -26,17 +18,7 @@ export function ProductCard({
 }) {
   const colors = useMemo(() => productColors(product), [product]);
   const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null);
-  const [addedFeedback, setAddedFeedback] = useState(false);
-  const [wishlisted, setWishlisted] = useState(false);
   const isPopup = isPopUpProduct(product);
-  const catalog = isPopup ? "popup" as const : "toys" as const;
-
-  useEffect(() => {
-    const sync = () => setWishlisted(isWishlisted(product.id));
-    sync();
-    window.addEventListener(SAVED_PRODUCTS_UPDATED_EVENT, sync);
-    return () => window.removeEventListener(SAVED_PRODUCTS_UPDATED_EVENT, sync);
-  }, [product.id]);
 
   const waUrl = buildWhatsAppUrl(product, {
     selectedColor,
@@ -52,26 +34,6 @@ export function ProductCard({
     } catch {
       // Analytics failure must never block WhatsApp conversion.
     }
-  };
-
-  const handleAddToCart = () => {
-    addProductToCart(product, selectedColor ? { اللون: selectedColor } : {});
-    setAddedFeedback(true);
-    window.setTimeout(() => setAddedFeedback(false), 1400);
-    toast.success("اتضاف لطلبك", {
-      description: selectedColor ? `${product.name} — ${selectedColor}` : product.name,
-      action: { label: "عرض الطلب", onClick: openCartDrawer },
-    });
-  };
-
-  const handleWishlist = () => {
-    const next = toggleWishlist(product, catalog);
-    const active = next.some(item => item.productId === product.id);
-    setWishlisted(active);
-    toast.success(active ? "اتحفظ في المفضلة" : "اتشال من المفضلة", {
-      description: product.name,
-      action: active ? { label: "عرض المفضلة", onClick: () => openSavedProducts("wishlist") } : undefined,
-    });
   };
 
   return (
@@ -105,17 +67,6 @@ export function ProductCard({
             </span>
           )}
         </button>
-        <div className="absolute left-2 top-2 z-10 flex gap-1.5 sm:left-3 sm:top-3">
-          <button
-            type="button"
-            onClick={handleWishlist}
-            aria-label={wishlisted ? `إزالة ${product.name} من المفضلة` : `إضافة ${product.name} للمفضلة`}
-            aria-pressed={wishlisted}
-            className={`inline-flex h-9 w-9 items-center justify-center rounded-full border shadow-md backdrop-blur transition ${wishlisted ? "border-red-200 bg-red-50 text-brand-red" : "border-white/80 bg-white/95 text-brand-muted hover:text-brand-red"}`}
-          >
-            <Heart size={16} fill={wishlisted ? "currentColor" : "none"} aria-hidden="true" />
-          </button>
-        </div>
       </div>
 
       <div className={`flex flex-1 flex-col gap-2.5 ${isPopup ? "p-3 sm:p-4" : "p-3 sm:gap-3 sm:p-5"}`}>
@@ -149,14 +100,10 @@ export function ProductCard({
         )}
 
         <div className="mt-auto grid grid-cols-1 gap-2 pt-1 sm:pt-2">
-          <button type="button" onClick={handleAddToCart} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-blue bg-brand-sky px-2.5 py-2.5 text-[12px] font-extrabold leading-4 text-brand-navy transition active:scale-[0.98] hover:bg-brand-blue hover:text-white focus-visible:ring-4 focus-visible:ring-brand-blue/20 sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm">
-            <ShoppingBag size={16} aria-hidden="true" className="shrink-0" />
-            <span>{addedFeedback ? "اتضاف لطلبك ✓" : "أضف لطلبك"}</span>
-          </button>
           {waUrl && (
             <a href={waUrl} target="_blank" rel="noreferrer" onClick={handleWhatsAppClick} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-whatsapp px-2.5 py-2.5 text-[12px] font-bold leading-4 text-white transition active:scale-[0.98] hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25 sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm">
               <MessageCircle size={16} aria-hidden="true" className="shrink-0" />
-              <span>{selectedColor ? `استفسر عن ${selectedColor}` : "استفسر عن السعر والتوفر"}</span>
+              <span>{selectedColor ? `استفسر عن ${selectedColor}` : "للاستفسار والكميات"}</span>
             </a>
           )}
           <button type="button" onClick={() => onOpenDetails(product)} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-brand-surface px-2.5 py-2.5 text-[12px] font-bold text-brand-blue transition active:scale-[0.98] hover:border-brand-blue hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue/15 sm:gap-2 sm:px-4 sm:text-sm">
