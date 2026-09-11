@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildWhatsAppInquiryPayload,
   trackWhatsAppInquiry,
@@ -13,8 +13,13 @@ const baseProduct = {
   price: 850,
 };
 
+beforeEach(() => {
+  vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response(null, { status: 204 }))));
+});
+
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   delete (window as unknown as Record<string, unknown>).umami;
 });
 

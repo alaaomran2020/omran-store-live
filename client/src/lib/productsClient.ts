@@ -95,6 +95,7 @@ const HEADER_ALIASES: Record<string, CatalogColumn> = {
   package_length_cm: "package_length_cm", package_width_cm: "package_width_cm", package_height_cm: "package_height_cm",
   weight_kg: "weight_kg", material: "material", pieces_count: "pieces_count", power_source: "power_source",
   assembly_required: "assembly_required", box_contents: "box_contents", play_instructions: "play_instructions",
+  components: "box_contents", component: "box_contents", "المكونات": "box_contents", "مكونات_المنتج": "box_contents",
 };
 
 const FALLBACK_PRODUCTS = [...PUBLIC_PRODUCTS_SNAPSHOT, ...POPUP_PRODUCTS_SNAPSHOT];

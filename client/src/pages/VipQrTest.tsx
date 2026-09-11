@@ -17,6 +17,10 @@ export default function VipQrTest() {
     () => (normalizedSerial ? createVipQrSvg(normalizedSerial) : null),
     [normalizedSerial]
   );
+  const svgDataUrl = useMemo(
+    () => (svg ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}` : null),
+    [svg]
+  );
 
   const downloadSvg = () => {
     if (!svg || !normalizedSerial) return;
@@ -68,13 +72,13 @@ export default function VipQrTest() {
             />
           </Field>
 
-          {svg && normalizedSerial ? (
+          {svg && svgDataUrl && normalizedSerial ? (
             <div className="mt-5">
               <div className="mx-auto w-full max-w-72 border-8 border-white bg-white p-2">
-                <div
-                  role="img"
-                  aria-label={`QR تجريبي للكارت ${normalizedSerial}`}
-                  dangerouslySetInnerHTML={{ __html: svg }}
+                <img
+                  src={svgDataUrl}
+                  alt={`QR تجريبي للكارت ${normalizedSerial}`}
+                  className="h-auto w-full"
                 />
               </div>
               <div

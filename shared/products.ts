@@ -1,11 +1,8 @@
 /**
  * OMRAN TOYS — كتالوج المنتجات من Google Sheets (CSV منشور للويب).
  *
- * وحدة واحدة مشتركة تعمل في كل البيئات بلا تعديل:
- *   - المتصفح (client/src/lib/productsClient.ts)
- *   - Cloudflare Worker (worker/index.ts)  → /api/products
- *   - Express dev/VPS   (server/products.ts) → /api/products
- * لذلك تستخدم Web APIs فقط (fetch / AbortController / URL) — بلا Node وبلا DOM.
+ * تُستخدم الأنواع وقواعد التطبيع في واجهة المتجر الثابتة الحالية.
+ * التنفيذ الفعلي لتحميل الكتالوج موجود في client/src/lib/productsClient.ts.
  *
  * قواعد التصميم:
  *   1. لا مفاتيح API ولا OAuth ولا Service Account: المصدر الوحيد هو رابط

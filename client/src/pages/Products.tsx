@@ -110,9 +110,16 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   useEffect(() => {
     const term = search.trim();
     if (term.length < 2) return;
-    const timer = setTimeout(() => trackEvent("product_search", { term, results: visibleProducts.length, catalog }), 600);
+    const timer = setTimeout(() => trackEvent("search", { term, results: visibleProducts.length, catalog }), 600);
     return () => clearTimeout(timer);
   }, [search, visibleProducts.length, catalog]);
+
+  useEffect(() => {
+    trackEvent("category_view", {
+      category: category === ALL ? (isPopup ? "POP UP" : "لعب الأطفال") : category,
+      catalog,
+    });
+  }, [catalog, category, isPopup]);
 
   const updateUrl = useCallback((updates: Record<string, string | null>) => {
     const url = new URL(window.location.href);
@@ -129,15 +136,40 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   }, [updateUrl]);
 
   const openProduct = products.find(product => product.id === openProductId) ?? null;
+  const relatedProducts = useMemo(() => {
+    if (!openProduct) return [];
+    return products
+      .filter(product => product.id !== openProduct.id)
+      .sort((a, b) => Number(b.category === openProduct.category) - Number(a.category === openProduct.category))
+      .slice(0, 3);
+  }, [openProduct, products]);
   const handleOpenDetails = useCallback((product: Product) => {
     setOpenProductId(product.id);
-    trackEvent("product_view", { product: product.name, id: product.id, catalog });
+    trackEvent("product_view", {
+      product: product.name,
+      product_id: product.id,
+      sku: product.sku || product.id,
+      category: product.category,
+      catalog,
+    });
     updateUrl({ product: product.id });
   }, [updateUrl, catalog]);
   const handleCloseDetails = useCallback(() => {
     setOpenProductId(null);
     updateUrl({ product: null });
   }, [updateUrl]);
+  const handleSelectRelatedProduct = useCallback((product: Product) => {
+    setOpenProductId(product.id);
+    trackEvent("product_view", {
+      product: product.name,
+      product_id: product.id,
+      sku: product.sku || product.id,
+      category: product.category,
+      catalog,
+      source: "related_products",
+    });
+    updateUrl({ product: product.id });
+  }, [catalog, updateUrl]);
   const handleCategoryFilter = (value: string) => {
     setCategory(value);
     updateUrl({ category: value });
@@ -360,7 +392,12 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
           <div className="container mt-6 border-t border-white/15 pt-4 text-center text-xs font-bold text-white/55">© 2026 شركة عمران التجارية — جميع الحقوق محفوظة</div>
         </footer>
       </main>
-      <ProductDetailsDialog product={openProduct} onClose={handleCloseDetails} />
+      <ProductDetailsDialog
+        product={openProduct}
+        relatedProducts={relatedProducts}
+        onSelectProduct={handleSelectRelatedProduct}
+        onClose={handleCloseDetails}
+      />
     </div>
   );
 }

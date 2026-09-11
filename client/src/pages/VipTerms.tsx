@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import BrandHeader from "@/components/BrandHeader";
 import SiteFooter from "@/components/SiteFooter";
+import { SeoMetadata } from "@/components/SeoMetadata";
 
 const sections = [
   ["التفعيل", "الكارت لا يصبح فعالًا إلا بعد إثبات التحصيل ومراجعة موظف مخوّل. الرقم التسلسلي والـQR للمطابقة، وصورة الكارت وحدها لا تمنح خصمًا."],
@@ -13,6 +14,7 @@ const sections = [
 export default function VipTerms() {
   return (
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
+      <SeoMetadata path="/vip/terms" title="شروط استخدام Omran VIP" description="شروط تفعيل واستخدام واستبدال كروت Omran VIP." />
       <AnnouncementBar /><BrandHeader />
       <main className="container max-w-4xl py-10 sm:py-14">
         <Link href="/vip" className="text-sm font-black text-brand-blue">العودة لبرنامج Omran VIP</Link>

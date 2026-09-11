@@ -11,7 +11,7 @@ import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
  * عند تحويله إلى true لاحقًا تعود الأسعار المؤكدة للعرض بدون تغيير بيانات المنتجات.
  */
 export const SHOW_CATALOG_PRICES = false;
-export const PRICE_ENQUIRY_LABEL = "اسأل عن السعر والتوفر";
+export const PRICE_ENQUIRY_LABEL = "للاستفسار والكميات";
 
 const numberFormatter = new Intl.NumberFormat("ar-EG-u-nu-latn", {
   maximumFractionDigits: 2,
@@ -91,19 +91,16 @@ export function buildWhatsAppUrl(
     }
   }
 
-  const hasSelections = Boolean(selectedColor || structuredSelections.length);
   const lines = [
-    "أهلاً بيك 👋",
-    hasSelections
-      ? `بالنسبة لـ ${product.name}، حابب أعرف السعر والتوفر للاختيارات دي.`
-      : `بالنسبة لـ ${product.name}، حابب أعرف السعر والتوفر وأي تفاصيل متاحة عنه.`,
+    "السلام عليكم، عاوز أستفسر عن:",
+    product.name,
     "",
     selectedColor ? `اللون المختار: ${selectedColor}` : null,
     ...structuredSelections.map(([name, value]) => `${name}: ${value}`),
-    productId ? `كود المنتج: ${productId}` : null,
-    sku ? `SKU: ${sku}` : null,
+    `الكود: ${sku || productId}`,
     category ? `التصنيف: ${category}` : null,
     pageUrl ? `الرابط: ${pageUrl}` : null,
+    "وأعرف التوفر والكميات.",
   ].filter(Boolean);
 
   return `https://wa.me/${number}?text=${encodeURIComponent(lines.join("\n"))}`;

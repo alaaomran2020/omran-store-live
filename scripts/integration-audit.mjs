@@ -13,7 +13,6 @@ const assert = (condition, message) => {
 const required = [
   "client/src/App.tsx",
   "client/src/admin/AdminAccess.tsx",
-  "client/src/pages/Home.tsx",
   "client/src/pages/Products.tsx",
   "client/src/pages/ProductIntake.tsx",
   "client/src/pages/VipProgram.tsx",

@@ -42,13 +42,14 @@ function normalizeColor(value: string): string {
  */
 export function extractProductColors(description: string | null | undefined): string[] {
   if (!description) return [];
-  const match = description.match(/الألوان\s+المتاحة\s*[:：]\s*([^\.\n]+)/i);
+  const match = description.match(/الألوان\s+المتاحة\s*[:：]\s*([^.\n]+)/i);
   if (!match?.[1]) return [];
 
   return Array.from(
     new Set(
       match[1]
-        .split(/[،,\/|]+/)
+        .replaceAll("/", "،")
+        .split(/[،,|]+/)
         .map(normalizeColor)
         .filter(Boolean)
     )
