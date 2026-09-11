@@ -39,6 +39,17 @@ const POPUP_REVIEWS = [
   },
 ] as const;
 
+const POPUP_REVIEW_GALLERY = [
+  {
+    src: "/popup/reviews/customer-work-1.webp",
+    alt: "نماذج تنسيقات بالونات نفذها POP UP لمناسبات مختلفة",
+  },
+  {
+    src: "/popup/reviews/customer-work-2.webp",
+    alt: "تنسيق بالونات أبيض وذهبي وفضي من تنفيذ POP UP",
+  },
+] as const;
+
 function PopUpRealReviews() {
   return (
     <section
@@ -87,10 +98,43 @@ function PopUpRealReviews() {
             </article>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
 
-        <p className="mx-auto mt-4 max-w-2xl text-center text-[11px] font-semibold leading-6 text-brand-muted">
-          تم إخفاء بيانات العملاء الشخصية حفاظًا على الخصوصية، مع الحفاظ على مضمون الرسائل الحقيقية.
-        </p>
+function PopUpReviewGallery() {
+  return (
+    <section dir="rtl" aria-labelledby="popup-gallery-title" className="bg-white py-9 sm:py-12">
+      <div className="container">
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="inline-flex rounded-full border border-fuchsia-100 bg-fuchsia-50 px-3 py-1.5 text-xs font-black text-fuchsia-700">
+            من شغلنا الحقيقي
+          </span>
+          <h2 id="popup-gallery-title" className="mt-3 text-2xl font-black tracking-tight text-brand-ink sm:text-3xl">
+            صور من تنسيقات POP UP
+          </h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-7 text-brand-muted sm:text-[15px]">
+            نماذج حقيقية من التنسيقات اللي استلمها عملاؤنا في مناسبات مختلفة.
+          </p>
+        </div>
+
+        <div className="mx-auto mt-6 grid max-w-5xl gap-4 sm:grid-cols-2">
+          {POPUP_REVIEW_GALLERY.map((image) => (
+            <figure
+              key={image.src}
+              className="group overflow-hidden rounded-3xl border border-fuchsia-100 bg-rose-50 shadow-[0_12px_35px_rgba(112,26,117,0.08)]"
+            >
+              <img
+                src={image.src}
+                alt={image.alt}
+                loading="lazy"
+                decoding="async"
+                className="h-full min-h-64 w-full object-cover transition duration-500 group-hover:scale-[1.02] sm:min-h-80"
+              />
+            </figure>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -151,6 +195,7 @@ export default function PopUp() {
       <BrandHeader />
       <Products catalog="popup" showAnnouncement={false} />
       <PopUpRealReviews />
+      <PopUpReviewGallery />
       <PopUpOfficialSocials />
       <SiteFooter socialBrand="popup" />
     </div>
