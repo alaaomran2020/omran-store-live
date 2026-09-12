@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Maximize2, Play, X } from "lucide-react";
 import type { Product } from "@/lib/productsClient";
 import { trackEvent } from "@/lib/analytics";
 import { ProductStructuredData } from "./SeoMetadata";
-import { ProductImage } from "./ProductImage";
+import { imageSourceCandidates, ProductImage } from "./ProductImage";
 
 export function ProductMediaGallery({ product }: { product: Product }) {
   const images = useMemo(
@@ -72,6 +72,21 @@ export function ProductMediaGallery({ product }: { product: Product }) {
     setSelectedIndex(0);
     setLightboxOpen(false);
   }, [product.id, images]);
+
+  // Bounded warm-up: prefetch ONLY the next image (full size) so a swipe or
+  // arrow press resolves from cache instead of a cold fetch. One image at a
+  // time; the request is aborted whenever the selection or product changes.
+  useEffect(() => {
+    if (!hasMultipleImages) return;
+    const nextSource = images[(selectedIndex + 1) % images.length];
+    const [firstCandidate] = imageSourceCandidates(nextSource, "full");
+    if (!firstCandidate) return;
+    const image = new Image();
+    image.src = firstCandidate;
+    return () => {
+      image.src = "";
+    };
+  }, [hasMultipleImages, images, selectedIndex]);
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -200,6 +215,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
             >
               <ProductImage
                 product={{ ...product, image, processedImage: image }}
+                size="thumb"
                 className="h-full w-full object-contain"
                 sizesHint="64px"
               />

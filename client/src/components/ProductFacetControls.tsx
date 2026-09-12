@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { ProductAvailability } from "@/lib/productsClient";
 import { SlidersHorizontal, X } from "lucide-react";
 
@@ -17,7 +17,12 @@ const AVAILABILITY_OPTIONS: Array<{ value: ProductAvailability; label: string }>
   { value: "unknown", label: "غير محدد" },
 ];
 
-export function ProductFacetControls({
+/**
+ * Memoized: the catalog page re-renders on every search keystroke, but the
+ * facet list only changes when a filter actually changes — the parent keeps
+ * all of these props referentially stable.
+ */
+export const ProductFacetControls = memo(function ProductFacetControls({
   isPopup,
   brands,
   tags,
@@ -176,4 +181,4 @@ export function ProductFacetControls({
       )}
     </section>
   );
-}
+});

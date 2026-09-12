@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, productPermalink } from "@/lib/productFormat";
@@ -13,13 +14,22 @@ const AVAILABILITY_LABELS: Record<Product["availability"], string> = {
   unknown: "اسأل عن التوفر",
 };
 
-/** Omran product card — separate POP UP media and WhatsApp-first conversion. */
-export function ProductCard({
+/**
+ * Omran product card — separate POP UP media and WhatsApp-first conversion.
+ *
+ * Memoized: the grid re-renders on every search keystroke / filter change, and
+ * `product` + `onOpenDetails` keep identity stable, so unchanged cards skip
+ * the whole re-render (and the WhatsApp URL rebuild) instead of re-diffing.
+ */
+export const ProductCard = memo(function ProductCard({
   product,
   onOpenDetails,
+  priorityImage = false,
 }: {
   product: Product;
   onOpenDetails: (product: Product) => void;
+  /** First visible card only: eager + fetchpriority=high to protect the LCP image. */
+  priorityImage?: boolean;
 }) {
   const isPopup = isPopUpProduct(product);
 
@@ -54,6 +64,8 @@ export function ProductCard({
         >
           <ProductImage
             product={product}
+            size="thumb"
+            priority={priorityImage}
             className={`h-full w-full transition duration-300 sm:group-hover:scale-[1.02] ${isPopup ? "object-contain p-2 sm:p-3" : "object-cover"}`}
             sizesHint="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
           />
@@ -94,7 +106,7 @@ export function ProductCard({
       </div>
     </article>
   );
-}
+});
 
 export function ProductCardSkeleton() {
   return (

@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { OfficialSocialEmbeds } from "@/components/OfficialSocialEmbeds";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
-import { ProductDetailsDialog } from "@/components/ProductDetailsDialog";
 import { ProductFacetControls, type ActiveProductFilter, type ProductSortMode } from "@/components/ProductFacetControls";
 import { SmartProductSearch } from "@/components/SmartProductSearch";
 import { CatalogBreadcrumbs } from "@/components/CatalogBreadcrumbs";
@@ -17,6 +16,13 @@ import { canonicalCategory, displayCategoryName } from "@shared/taxonomy";
 import { shareProductsPage, type ProductShareOutcome } from "@/lib/productShare";
 import { Facebook, Instagram, RefreshCw, Share2, Sparkles } from "lucide-react";
 import { findSimilarProducts } from "@/lib/similarProducts";
+
+/**
+ * The details dialog (gallery, lightbox, video player, specifications) is the
+ * heaviest piece of the catalog UI but is invisible until a product opens —
+ * keep it out of the first-paint bundle and load it on demand.
+ */
+const ProductDetailsDialog = lazy(() => import("@/components/ProductDetailsDialog").then(module => ({ default: module.ProductDetailsDialog })));
 
 const ALL = "__all__";
 const PRODUCTS_PAGE_SIZE = 24;
@@ -152,7 +158,10 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     updateUrl({ search: value || null });
   }, [updateUrl]);
 
-  const openProduct = products.find(product => product.id === openProductId) ?? null;
+  const openProduct = useMemo(
+    () => (openProductId ? products.find(product => product.id === openProductId) ?? null : null),
+    [products, openProductId]
+  );
   const relatedProducts = useMemo(() => {
     if (!openProduct) return [];
     return findSimilarProducts(products, openProduct, 3);
@@ -184,36 +193,38 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     });
     updateUrl({ product: product.id });
   }, [catalog, updateUrl]);
-  const handleCategoryFilter = (value: string) => {
+  // Stable identities: ProductFacetControls is memoized, and activeFilters'
+  // onClear closures must not force it to re-render on unrelated updates.
+  const handleCategoryFilter = useCallback((value: string) => {
     setCategory(value);
     updateUrl({ category: value });
     trackEvent("product_filter", { category: value === ALL ? "الكل" : value, catalog });
-  };
-  const handleAgeFilter = (value: string) => {
+  }, [updateUrl, catalog]);
+  const handleAgeFilter = useCallback((value: string) => {
     setAge(value);
     updateUrl({ age: value });
     trackEvent("product_age_filter", { age: value === ALL ? "الكل" : value });
-  };
-  const handleBrandFilter = (value: string) => {
+  }, [updateUrl]);
+  const handleBrandFilter = useCallback((value: string) => {
     setBrand(value);
     updateUrl({ brand: value });
     trackEvent("product_filter", { brand: value === ALL ? "الكل" : value, catalog });
-  };
-  const handleTagFilter = (value: string) => {
+  }, [updateUrl, catalog]);
+  const handleTagFilter = useCallback((value: string) => {
     setTag(value);
     updateUrl({ tag: value });
     trackEvent("product_filter", { tag: value === ALL ? "الكل" : value, catalog });
-  };
-  const handleAvailabilityFilter = (value: string) => {
+  }, [updateUrl, catalog]);
+  const handleAvailabilityFilter = useCallback((value: string) => {
     setAvailability(value);
     updateUrl({ availability: value });
     trackEvent("product_filter", { availability: value === ALL ? "الكل" : value, catalog });
-  };
-  const handleSort = (value: ProductSortMode) => {
+  }, [updateUrl, catalog]);
+  const handleSort = useCallback((value: ProductSortMode) => {
     setSort(value);
     updateUrl({ sort: value === "catalog" ? null : value });
     trackEvent("product_filter", { sort: value, catalog });
-  };
+  }, [updateUrl, catalog]);
   const clearAllFilters = useCallback(() => {
     setSearch("");
     setCategory(ALL);
@@ -236,7 +247,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     if (availability !== ALL) filters.push({ key: "availability", label: `التوفر: ${AVAILABILITY_LABELS[availability as ProductAvailability] ?? availability}`, onClear: () => handleAvailabilityFilter(ALL) });
     if (sort !== "catalog") filters.push({ key: "sort", label: sort === "name-asc" ? "الترتيب: أ ← ي" : "الترتيب: ي ← أ", onClear: () => handleSort("catalog") });
     return filters;
-  }, [search, category, age, isPopup, brand, tag, availability, sort]);
+  }, [search, category, age, isPopup, brand, tag, availability, sort, handleSearchChange, handleCategoryFilter, handleAgeFilter, handleBrandFilter, handleTagFilter, handleAvailabilityFilter, handleSort]);
 
   const handleShare = async () => {
     const nativeShare = typeof navigator !== "undefined" && navigator.share ? navigator.share.bind(navigator) : undefined;
@@ -367,7 +378,9 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                       عرض {renderedProducts.length} من {visibleProducts.length} منتج
                     </p>
                     <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-                      {renderedProducts.map(product => <ProductCard key={product.id} product={product} onOpenDetails={handleOpenDetails} />)}
+                      {renderedProducts.map((product, index) => (
+                        <ProductCard key={product.id} product={product} onOpenDetails={handleOpenDetails} priorityImage={index === 0} />
+                      ))}
                     </div>
                     {hasMoreProducts && (
                       <div className="mt-7 flex justify-center sm:mt-10">
@@ -396,12 +409,14 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
           </div>
         </section>
       </main>
-      <ProductDetailsDialog
-        product={openProduct}
-        relatedProducts={relatedProducts}
-        onSelectProduct={handleSelectRelatedProduct}
-        onClose={handleCloseDetails}
-      />
+      <Suspense fallback={null}>
+        <ProductDetailsDialog
+          product={openProduct}
+          relatedProducts={relatedProducts}
+          onSelectProduct={handleSelectRelatedProduct}
+          onClose={handleCloseDetails}
+        />
+      </Suspense>
     </div>
   );
 }

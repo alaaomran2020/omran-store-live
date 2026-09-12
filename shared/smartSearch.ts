@@ -64,18 +64,38 @@ export function editDistance(a: string, b: string, max = 1): number {
   return previous[b.length];
 }
 
-function tokenScore(query: string, value: string, fuzzy: boolean): number {
-  if (query === value) return 100;
-  if (equivalents(query).includes(value)) return 85;
-  if (query.length >= 2 && value.startsWith(query)) return 65;
-  if (fuzzy && query.length >= 4 && value.length >= 4 && query[0] === value[0] && editDistance(query, value, 1) <= 1) return 35;
+/**
+ * Per-term lookup table of synonym equivalents. Built once per query instead
+ * of per (product × field × token) pair — the old hot loop re-ran the group
+ * scan hundreds of thousands of times for a 3000-product catalog.
+ */
+type PreparedQuery = {
+  normalized: string;
+  terms: string[];
+  termEquivs: Map<string, Set<string>>;
+};
+
+function prepareQuery(rawQuery: string, normalized: string): PreparedQuery {
+  const terms = words(normalized);
+  const termEquivs = new Map<string, Set<string>>();
+  for (const term of terms) termEquivs.set(term, new Set(equivalents(term)));
+  return { normalized, terms, termEquivs };
+}
+
+function tokenScore(term: string, termEquivs: Set<string>, value: string, fuzzy: boolean): number {
+  if (term === value) return 100;
+  if (termEquivs.has(value)) return 85;
+  if (term.length >= 2 && value.startsWith(term)) return 65;
+  if (fuzzy && term.length >= 4 && value.length >= 4 && term[0] === value[0] && editDistance(term, value, 1) <= 1) return 35;
   return 0;
 }
 
 type SearchField = { value: string; weight: number; tokens: string[] };
-const fieldCache = new WeakMap<SearchableProduct, SearchField[]>();
+type PreparedProduct = { fields: SearchField[]; name: string };
 
-function fieldsFor(product: SearchableProduct): SearchField[] {
+const fieldCache = new WeakMap<SearchableProduct, PreparedProduct>();
+
+function fieldsFor(product: SearchableProduct): PreparedProduct {
   const cached = fieldCache.get(product);
   if (cached) return cached;
   const fields: Array<[string, number]> = [
@@ -89,28 +109,29 @@ function fieldsFor(product: SearchableProduct): SearchField[] {
     [product.category, 0.45], [product.description, 0.15],
   ];
   const normalized = fields.map(([value, weight]) => ({ value: normalizeSearchText(value), weight, tokens: words(value) })).filter(field => field.value);
-  fieldCache.set(product, normalized);
-  return normalized;
+  const prepared: PreparedProduct = { fields: normalized, name: normalizeSearchText(product.name) };
+  fieldCache.set(product, prepared);
+  return prepared;
 }
 
-function rank(product: SearchableProduct, query: string, fuzzy: boolean): number {
-  const fields = fieldsFor(product);
-  const terms = words(query);
+function rank(product: SearchableProduct, query: PreparedQuery, fuzzy: boolean): number {
+  const { fields, name } = fieldsFor(product);
+  const { terms, termEquivs } = query;
   if (!terms.length) return 0;
   // Every query term must match, but terms may occur in different fields.
   let total = 0;
   for (const term of terms) {
     let best = 0;
+    const equivs = termEquivs.get(term)!;
     for (const field of fields) {
-      for (const token of field.tokens) best = Math.max(best, tokenScore(term, token, fuzzy) * field.weight);
+      for (const token of field.tokens) best = Math.max(best, tokenScore(term, equivs, token, fuzzy) * field.weight);
     }
     if (!best) return 0;
     total += best;
   }
   // Exact full-name matches always outrank synonyms and description matches.
-  const name = normalizeSearchText(product.name);
-  if (name === query) total += 140;
-  else if (query.length >= 2 && name.startsWith(query)) total += 35;
+  if (name === query.normalized) total += 140;
+  else if (query.normalized.length >= 2 && name.startsWith(query.normalized)) total += 35;
   const boost = Number.isFinite(product.search_boost) ? Math.max(-10, Math.min(10, product.search_boost!)) : 0;
   return total + boost;
 }
@@ -119,9 +140,12 @@ function rank(product: SearchableProduct, query: string, fuzzy: boolean): number
 export function smartSearch<T extends SearchableProduct>(products: T[], query: string): SearchResponse<T> {
   const normalized = normalizeSearchText(query);
   if (!normalized) return { results: products.map(product => ({ product, score: 0 })), suggestion: null };
-  const exact = products.map(product => ({ product, score: rank(product, normalized, false) })).filter(item => item.score > 0);
+  // The query is prepared ONCE per keystroke; the old implementation re-ran
+  // words() and the synonym scan per product (3000× per keystroke).
+  const prepared = prepareQuery(query, normalized);
+  const exact = products.map(product => ({ product, score: rank(product, prepared, false) })).filter(item => item.score > 0);
   // Preserve all exact matches. Only attempt typo recovery when no exact result exists.
-  const matches = exact.length ? exact : products.map(product => ({ product, score: rank(product, normalized, true) })).filter(item => item.score > 0);
+  const matches = exact.length ? exact : products.map(product => ({ product, score: rank(product, prepared, true) })).filter(item => item.score > 0);
   matches.sort((a, b) => b.score - a.score || (a.product.sortOrder ?? Infinity) - (b.product.sortOrder ?? Infinity));
   return { results: matches, suggestion: exact.length || !matches.length ? null : matches[0].product.name };
 }

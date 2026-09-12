@@ -1,35 +1,67 @@
 import { useEffect, useMemo, useState } from "react";
-import { toDisplayableImageUrl, fallbackImageUrl, type Product } from "@shared/products";
+import {
+  fallbackImageUrl,
+  localThumbnailPath,
+  toDisplayableImageUrl,
+  type Product,
+} from "@shared/products";
 import { ImageOff } from "lucide-react";
 
 const RAW_PUBLIC_BASE = "https://raw.githubusercontent.com/alaaomran2020/omran-store-live/main/public";
+
+/** Drive thumbnail width per render size: cards must not pay for a 1000px asset. */
+const DRIVE_WIDTH: Record<ProductImageSize, number> = { full: 1000, thumb: 480 };
+
+export type ProductImageSize = "full" | "thumb";
 
 function repositoryAssetFallback(image: string): string | null {
   return image.startsWith("/") && !image.startsWith("//") ? `${RAW_PUBLIC_BASE}${image}` : null;
 }
 
+function isLocalPath(value: string): boolean {
+  return value.startsWith("/") && !value.startsWith("//");
+}
+
+/**
+ * Ordered URL candidates for one declared image source at one render size.
+ *
+ * `thumb` prefers the local 480px variant (cards) and Drive `w480` thumbnails;
+ * `full` keeps the historical w1000/default behavior for the details dialog.
+ * Every candidate that can 404 is followed by the next-best source, so a
+ * missing local thumbnail degrades to the full-size source automatically.
+ */
+export function imageSourceCandidates(source: string, size: ProductImageSize): string[] {
+  const width = DRIVE_WIDTH[size];
+  if (isLocalPath(source)) {
+    const candidates: string[] = [];
+    if (size === "thumb") {
+      const thumb = localThumbnailPath(source);
+      if (thumb) candidates.push(thumb);
+    }
+    candidates.push(source);
+    const raw = repositoryAssetFallback(source);
+    if (raw) {
+      if (size === "thumb") {
+        const rawThumb = localThumbnailPath(source);
+        if (rawThumb) candidates.push(`${RAW_PUBLIC_BASE}${rawThumb}`);
+      }
+      candidates.push(raw);
+    }
+    return candidates;
+  }
+  const displayable = toDisplayableImageUrl(source, width);
+  const fallback = fallbackImageUrl(source, width);
+  return [displayable, fallback].filter((value): value is string => Boolean(value));
+}
+
 /** Only use declared product media. Never guess a filename from an SKU. */
 export function productImageCandidates(
-  product: Pick<Product, "image" | "imageSource" | "processedImage">
+  product: Pick<Product, "image" | "imageSource" | "processedImage">,
+  size: ProductImageSize = "full"
 ): string[] {
   const declared = [product.processedImage, product.image, product.imageSource];
-  const local = declared.filter(
-    (value): value is string => Boolean(value?.startsWith("/") && !value.startsWith("//"))
-  );
-  const remote = declared
-    .map(value => toDisplayableImageUrl(value))
-    .filter((value): value is string => Boolean(value));
-  const driveFallbacks = declared
-    .map(value => fallbackImageUrl(value))
-    .filter((value): value is string => Boolean(value));
-
-  return Array.from(
-    new Set(
-      [...local, ...remote, ...driveFallbacks, ...local.map(repositoryAssetFallback)].filter(
-        (value): value is string => Boolean(value)
-      )
-    )
-  );
+  const sources = declared.filter((value): value is string => Boolean(value));
+  return Array.from(new Set(sources.flatMap(source => imageSourceCandidates(source, size))));
 }
 
 export function ProductImage({
@@ -37,19 +69,22 @@ export function ProductImage({
   className = "",
   sizesHint,
   priority = false,
+  size = "full",
 }: {
   product: Pick<Product, "id" | "image" | "imageSource" | "processedImage" | "name">;
   className?: string;
   sizesHint?: string;
   priority?: boolean;
+  /** `thumb` requests the 480px card variant; `full` (default) the dialog-size source. */
+  size?: ProductImageSize;
 }) {
   const [attempt, setAttempt] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const candidates = useMemo(
-    () => productImageCandidates(product),
-    [product.image, product.imageSource, product.processedImage]
+    () => productImageCandidates(product, size),
+    [product.image, product.imageSource, product.processedImage, size]
   );
-  const mediaKey = candidates.join("\n");
+  const mediaKey = `${size}:${candidates.join("\n")}`;
 
   useEffect(() => {
     setAttempt(0);

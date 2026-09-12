@@ -282,7 +282,7 @@ export function ProductDetailsDialog({
                         aria-label={`عرض تفاصيل ${item.name}`}
                       >
                         <span className="block aspect-square overflow-hidden bg-brand-cream">
-                          <ProductImage product={item} className="h-full w-full object-contain" sizesHint="120px" />
+                          <ProductImage product={item} size="thumb" className="h-full w-full object-contain" sizesHint="120px" />
                         </span>
                         <span className="block px-2 py-2">
                           <span className="line-clamp-2 block min-h-8 text-[11px] font-extrabold leading-4 text-brand-ink">{item.name}</span>

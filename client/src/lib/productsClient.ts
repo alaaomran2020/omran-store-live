@@ -1,6 +1,4 @@
 import type { Product as BaseProduct, ProductsPayload, QaStatus, WorkflowStatus } from "@shared/products";
-import { PUBLIC_PRODUCTS_SNAPSHOT } from "./publicProductsSnapshot";
-import { POPUP_PRODUCTS_SNAPSHOT } from "./popupProductsSnapshot";
 import { makeCatalogUrl } from "./makeGateway";
 
 export type ProductOptionGroup = {
@@ -98,16 +96,40 @@ const HEADER_ALIASES: Record<string, CatalogColumn> = {
   components: "box_contents", component: "box_contents", "المكونات": "box_contents", "مكونات_المنتج": "box_contents",
 };
 
-const FALLBACK_PRODUCTS = [...PUBLIC_PRODUCTS_SNAPSHOT, ...POPUP_PRODUCTS_SNAPSHOT];
-const snapshotById = new Map(FALLBACK_PRODUCTS.map(product => [product.id, product]));
+type SnapshotBundle = {
+  toys: BaseProduct[];
+  popup: BaseProduct[];
+};
+
+let snapshotBundle: SnapshotBundle | null = null;
+
+/**
+ * The last-known-good snapshots are loaded on demand (dynamic import) instead
+ * of shipping inside the critical products chunk: they back the offline
+ * fallback and the local-image stabilization pass, both of which run after the
+ * HTML is painted, while the module loads in parallel with the live catalog
+ * network request.
+ */
+async function loadProductSnapshots(): Promise<SnapshotBundle> {
+  if (snapshotBundle) return snapshotBundle;
+  const [toysModule, popupModule] = await Promise.all([
+    import("./publicProductsSnapshot"),
+    import("./popupProductsSnapshot"),
+  ]);
+  snapshotBundle = {
+    toys: toysModule.PUBLIC_PRODUCTS_SNAPSHOT,
+    popup: popupModule.POPUP_PRODUCTS_SNAPSHOT,
+  };
+  return snapshotBundle;
+}
 
 function normalizeHeader(value: unknown): string {
   return text(value).toLowerCase().replace(/[\s-]+/g, "_");
 }
 
-function snapshotPayload(): StorefrontProductsPayload {
+function snapshotPayload(toys: BaseProduct[], popup: BaseProduct[]): StorefrontProductsPayload {
   return {
-    products: FALLBACK_PRODUCTS.map(product => ({
+    products: [...toys, ...popup].map(product => ({
       ...product,
       ageMin: null,
       ageMax: null,
@@ -263,7 +285,7 @@ function canonicalHeader(row: unknown[]): CatalogColumn[] {
   });
 }
 
-function mapRow(row: unknown[], rowIndex: number, header: CatalogColumn[]): Product | null {
+function mapRow(row: unknown[], rowIndex: number, header: CatalogColumn[], snapshotById: Map<string, BaseProduct>): Product | null {
   const values = Object.fromEntries(PRODUCT_COLUMNS.map(column => {
     const index = header.indexOf(column);
     return [column, index >= 0 ? row[index] : undefined];
@@ -326,7 +348,7 @@ function mapRow(row: unknown[], rowIndex: number, header: CatalogColumn[]): Prod
   return { ...liveProduct, image: stableImage, processedImage: stableProcessedImage, imageSource: liveProduct.imageSource ?? snapshot?.imageSource ?? stableImage };
 }
 
-function normalizeCatalogPayload(payload: unknown): Product[] {
+function normalizeCatalogPayload(payload: unknown, snapshotById: Map<string, BaseProduct>): Product[] {
   if (!payload || typeof payload !== "object") return [];
   const values = (payload as { values?: unknown }).values;
   if (!Array.isArray(values) || values.length === 0) return [];
@@ -337,7 +359,7 @@ function normalizeCatalogPayload(payload: unknown): Product[] {
   const header = hasHeader ? firstRow : [...PRODUCT_COLUMNS];
   const dataRows = hasHeader ? rows.slice(1) : rows;
   return dataRows
-    .map((row, index) => mapRow(row, index + 1, header))
+    .map((row, index) => mapRow(row, index + 1, header, snapshotById))
     .filter((product): product is Product => product !== null)
     .filter(product => product.active && product.workflowStatus === "PUBLISHED" && product.qaStatus === "PASS")
     .sort((a, b) => {
@@ -348,24 +370,22 @@ function normalizeCatalogPayload(payload: unknown): Product[] {
     });
 }
 
-async function fetchLiveCatalog(): Promise<StorefrontProductsPayload> {
+async function fetchLiveCatalogBody(): Promise<unknown> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), CATALOG_TIMEOUT_MS);
   try {
     const response = await fetch(makeCatalogUrl(), { method: "GET", headers: { Accept: "application/json" }, signal: controller.signal, cache: "no-store" });
     if (!response.ok) throw new Error(`Catalog gateway returned ${response.status}`);
-    const body = await response.json();
-    const products = normalizeCatalogPayload(body);
-    return { products, status: products.length > 0 ? "ok" : "not_configured", fetchedAt: new Date().toISOString() };
+    return await response.json();
   } finally {
     clearTimeout(timeout);
   }
 }
 
-function mergePopupProducts(liveProducts: Product[]): Product[] {
+function mergePopupProducts(liveProducts: Product[], popupProducts: BaseProduct[]): Product[] {
   const merged = new Map<string, Product>();
   for (const product of liveProducts) merged.set(product.id, product);
-  for (const product of POPUP_PRODUCTS_SNAPSHOT) {
+  for (const product of popupProducts) {
     if (!merged.has(product.id)) {
       merged.set(product.id, {
         ...product,
@@ -390,13 +410,28 @@ function mergePopupProducts(liveProducts: Product[]): Product[] {
  * catalog until the public gateway reflects the newly published sheet rows.
  * This keeps toys authoritative from the live source while preventing POP UP
  * from disappearing because of an upstream publication/cache lag.
+ *
+ * The local snapshots load in parallel with the network request (dynamic
+ * import), so the offline fallback stays available without shipping ~30KB of
+ * catalog text inside the critical JS path.
  */
 export async function fetchProducts(): Promise<StorefrontProductsPayload> {
   try {
-    const live = await fetchLiveCatalog();
-    if (live.products.length > 0) return { ...live, products: mergePopupProducts(live.products) };
+    const [snapshots, liveBody] = await Promise.all([loadProductSnapshots(), fetchLiveCatalogBody()]);
+    const snapshotById = new Map<string, BaseProduct>(
+      [...snapshots.toys, ...snapshots.popup].map(product => [product.id, product])
+    );
+    const products = normalizeCatalogPayload(liveBody, snapshotById);
+    if (products.length > 0) {
+      return {
+        products: mergePopupProducts(products, snapshots.popup),
+        status: "ok",
+        fetchedAt: new Date().toISOString(),
+      };
+    }
   } catch {
     // Fall through to the bundled production snapshot.
   }
-  return snapshotPayload();
+  const snapshots = await loadProductSnapshots();
+  return snapshotPayload(snapshots.toys, snapshots.popup);
 }
