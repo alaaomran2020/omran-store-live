@@ -13,7 +13,9 @@ describe("store shell responsive smoke", () => {
       render(<BrandHeader />);
 
       expect(screen.getByText("شركة عمران التجارية")).toBeTruthy();
-      expect(screen.getByAltText("لوجو عمران").getAttribute("src")).toBe("/brand/logo.png");
+      // Header logo uses the 128px variant (rendered at 48–64px); the 512px
+      // source stays on disk for og:image and other consumers.
+      expect(screen.getByAltText("لوجو عمران").getAttribute("src")).toBe("/brand/logo-128.png");
       expect(screen.getByRole("navigation", { name: "أقسام المتجر" })).toBeTruthy();
       expect(screen.queryByText("طلبك")).toBeNull();
       expect(screen.queryByText("مقارنة المنتجات")).toBeNull();

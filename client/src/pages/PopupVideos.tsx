@@ -10,19 +10,19 @@ const POPUP_VIDEOS = [
     id: "popup-video-01",
     title: "POP UP – فيديو 1",
     src: "https://drive.google.com/file/d/1fH97KeIJMwkaNudiLpTO6Yz97ShzrjMA/preview",
-    thumbnail: "https://drive.google.com/thumbnail?id=1fH97KeIJMwkaNudiLpTO6Yz97ShzrjMA&sz=w1200",
+    thumbnail: "https://drive.google.com/thumbnail?id=1fH97KeIJMwkaNudiLpTO6Yz97ShzrjMA&sz=w640",
   },
   {
     id: "popup-video-02",
     title: "POP UP – فيديو 2",
     src: "https://drive.google.com/file/d/1u-2ihGnQJiIiX-VR-oi1rVBtA8alqLYv/preview",
-    thumbnail: "https://drive.google.com/thumbnail?id=1u-2ihGnQJiIiX-VR-oi1rVBtA8alqLYv&sz=w1200",
+    thumbnail: "https://drive.google.com/thumbnail?id=1u-2ihGnQJiIiX-VR-oi1rVBtA8alqLYv&sz=w640",
   },
   {
     id: "popup-video-03",
     title: "POP UP – فيديو 3",
     src: "https://drive.google.com/file/d/1uVYhjjjM4VcIhSrjAVTFHYJ2b1_dZlBC/preview",
-    thumbnail: "https://drive.google.com/thumbnail?id=1uVYhjjjM4VcIhSrjAVTFHYJ2b1_dZlBC&sz=w1200",
+    thumbnail: "https://drive.google.com/thumbnail?id=1uVYhjjjM4VcIhSrjAVTFHYJ2b1_dZlBC&sz=w640",
   },
 ] as const;
 

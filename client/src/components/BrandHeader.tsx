@@ -24,10 +24,10 @@ export default function BrandHeader() {
         <a href="/" className="group flex min-w-0 items-center gap-3 sm:gap-4" aria-label="شركة عمران التجارية - الصفحة الرئيسية">
           <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-brand-border bg-white shadow-sm ring-1 ring-black/[0.02] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md sm:h-16 sm:w-16 sm:rounded-2xl">
             <img
-              src="/brand/logo.png"
+              src="/brand/logo-128.png"
               alt="لوجو عمران"
-              width="512"
-              height="512"
+              width="128"
+              height="128"
               className="h-full w-full object-contain p-1.5"
               loading="eager"
               decoding="async"

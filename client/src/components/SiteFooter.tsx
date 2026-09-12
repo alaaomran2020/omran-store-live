@@ -78,7 +78,7 @@ function FooterBrand() {
         aria-label="شركة عمران التجارية - الصفحة الرئيسية"
       >
         <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white shadow-sm transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg">
-          <img src="/brand/logo.png" alt="لوجو عمران" className="h-full w-full object-contain p-1.5" loading="lazy" decoding="async" />
+          <img src="/brand/logo-128.png" alt="لوجو عمران" width="128" height="128" className="h-full w-full object-contain p-1.5" loading="lazy" decoding="async" />
         </span>
         <span>
           <span id="footer-brand-title" className="block text-xl font-black tracking-tight text-white sm:text-2xl">

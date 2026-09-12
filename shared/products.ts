@@ -461,6 +461,25 @@ export function fallbackImageUrl(
   return id ? `https://lh3.googleusercontent.com/d/${id}=w${width}` : null;
 }
 
+/**
+ * Derive the local thumbnail variant of a static product image.
+ *
+ * `scripts/generate-image-thumbs.mjs` emits `<basename>-thumb.webp` (480px,
+ * q80) next to every product WebP. Cards request that variant to keep the
+ * initial viewport light; the dialog still requests the full-size source.
+ * Returns `null` when no thumbnail convention applies (remote URLs, non-WebP,
+ * already a thumbnail) so the caller keeps the original candidate.
+ */
+export function localThumbnailPath(
+  rawUrl: string | null | undefined
+): string | null {
+  const url = clean(rawUrl ?? "");
+  if (!url.startsWith("/") || url.startsWith("//")) return null;
+  if (!url.toLowerCase().endsWith(".webp")) return null;
+  if (url.includes("-thumb.")) return null;
+  return url.replace(/\.webp$/i, "-thumb.webp");
+}
+
 // ---------------------------------------------------------------------------
 // 4) من CSV إلى Product[]
 // ---------------------------------------------------------------------------
