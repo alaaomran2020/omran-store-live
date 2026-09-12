@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ProductAvailability } from "@/lib/productsClient";
-import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
 
 export type ProductSortMode = "catalog" | "name-asc" | "name-desc";
 
@@ -16,11 +16,6 @@ const AVAILABILITY_OPTIONS: Array<{ value: ProductAvailability; label: string }>
   { value: "unavailable", label: "غير متاح" },
   { value: "unknown", label: "غير محدد" },
 ];
-
-function isDesktopViewport(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return true;
-  return window.matchMedia("(min-width: 640px)").matches;
-}
 
 export function ProductFacetControls({
   isPopup,
@@ -57,19 +52,22 @@ export function ProductFacetControls({
   onSortChange: (value: ProductSortMode) => void;
   onClearAll: () => void;
 }) {
-  const [expanded, setExpanded] = useState(isDesktopViewport);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const accent = isPopup ? "text-[#6b278f] focus:border-[#8a3aaa] focus:ring-[#8a3aaa]/15" : "text-brand-navy focus:border-brand-blue focus:ring-brand-blue/15";
 
   useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
-    const media = window.matchMedia("(min-width: 640px)");
-    const sync = () => {
-      if (media.matches) setExpanded(true);
+    if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileOpen(false);
     };
-    sync();
-    media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
-  }, []);
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [mobileOpen]);
 
   return (
     <section className="rounded-2xl border border-brand-border bg-white p-3.5 shadow-sm sm:p-4" aria-labelledby="advanced-filters-title">
@@ -90,56 +88,75 @@ export function ProductFacetControls({
           )}
           <button
             type="button"
-            onClick={() => setExpanded(value => !value)}
-            aria-expanded={expanded}
+            onClick={() => setMobileOpen(true)}
+            aria-expanded={mobileOpen}
             aria-controls="advanced-filter-fields"
-            className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-brand-border bg-brand-surface transition sm:hidden ${isPopup ? "text-[#6b278f]" : "text-brand-blue"}`}
-            aria-label={expanded ? "إخفاء الفلاتر الإضافية" : "إظهار الفلاتر الإضافية"}
+            className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-3 text-xs font-extrabold transition sm:hidden ${isPopup ? "text-[#6b278f]" : "text-brand-blue"}`}
+            aria-label="فتح الفلاتر الإضافية"
           >
-            <ChevronDown size={18} className={`transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" />
+            <SlidersHorizontal size={16} aria-hidden="true" /> الفلاتر
           </button>
         </div>
       </div>
 
-      <div id="advanced-filter-fields" hidden={!expanded} className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        {brands.length > 0 && (
-          <label className="text-xs font-extrabold text-brand-muted">
-            الماركة
-            <select value={brand} onChange={event => onBrandChange(event.target.value)} className={`mt-1 min-h-11 w-full rounded-xl border border-brand-border bg-brand-surface px-3 text-sm font-bold outline-none ring-4 ring-transparent transition ${accent}`}>
-              <option value="__all__">كل الماركات</option>
-              {brands.map(value => <option key={value} value={value}>{value}</option>)}
-            </select>
-          </label>
-        )}
+      <div id="advanced-filter-fields" className={`${mobileOpen ? "fixed" : "hidden"} inset-0 z-50 sm:static sm:mt-3 sm:block`}>
+        <button type="button" onClick={() => setMobileOpen(false)} className="absolute inset-0 bg-brand-navy/60 backdrop-blur-[2px] sm:hidden" aria-label="إغلاق الفلاتر" />
+        <div role="dialog" aria-modal={mobileOpen ? "true" : undefined} aria-labelledby="mobile-filters-title" className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl sm:static sm:max-h-none sm:overflow-visible sm:rounded-none sm:bg-transparent sm:p-0 sm:shadow-none">
+          <div className="mb-4 flex items-center justify-between gap-3 sm:hidden">
+            <div>
+              <p id="mobile-filters-title" className="text-base font-extrabold text-brand-navy">فلترة المنتجات</p>
+              <p className="mt-1 text-xs font-bold text-brand-muted">{resultCount} نتيجة متاحة</p>
+            </div>
+            <button type="button" onClick={() => setMobileOpen(false)} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-brand-border text-brand-muted" aria-label="إغلاق الفلاتر">
+              <X size={18} aria-hidden="true" />
+            </button>
+          </div>
 
-        {tags.length > 0 && (
-          <label className="text-xs font-extrabold text-brand-muted">
-            الوسم
-            <select value={tag} onChange={event => onTagChange(event.target.value)} className={`mt-1 min-h-11 w-full rounded-xl border border-brand-border bg-brand-surface px-3 text-sm font-bold outline-none ring-4 ring-transparent transition ${accent}`}>
-              <option value="__all__">كل الوسوم</option>
-              {tags.map(value => <option key={value} value={value}>{value}</option>)}
-            </select>
-          </label>
-        )}
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-2 lg:grid-cols-4">
+            {brands.length > 0 && (
+              <label className="text-xs font-extrabold text-brand-muted">
+                الماركة
+                <select value={brand} onChange={event => onBrandChange(event.target.value)} className={`mt-1 min-h-11 w-full rounded-xl border border-brand-border bg-brand-surface px-3 text-sm font-bold outline-none ring-4 ring-transparent transition ${accent}`}>
+                  <option value="__all__">كل الماركات</option>
+                  {brands.map(value => <option key={value} value={value}>{value}</option>)}
+                </select>
+              </label>
+            )}
 
-        {availabilityValues.length > 0 && (
-          <label className="text-xs font-extrabold text-brand-muted">
-            التوفر
-            <select value={availability} onChange={event => onAvailabilityChange(event.target.value)} className={`mt-1 min-h-11 w-full rounded-xl border border-brand-border bg-brand-surface px-3 text-sm font-bold outline-none ring-4 ring-transparent transition ${accent}`}>
-              <option value="__all__">كل حالات التوفر</option>
-              {AVAILABILITY_OPTIONS.filter(option => availabilityValues.includes(option.value)).map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
-          </label>
-        )}
+            {tags.length > 0 && (
+              <label className="text-xs font-extrabold text-brand-muted">
+                الوسم
+                <select value={tag} onChange={event => onTagChange(event.target.value)} className={`mt-1 min-h-11 w-full rounded-xl border border-brand-border bg-brand-surface px-3 text-sm font-bold outline-none ring-4 ring-transparent transition ${accent}`}>
+                  <option value="__all__">كل الوسوم</option>
+                  {tags.map(value => <option key={value} value={value}>{value}</option>)}
+                </select>
+              </label>
+            )}
 
-        <label className="text-xs font-extrabold text-brand-muted">
-          الترتيب
-          <select value={sort} onChange={event => onSortChange(event.target.value as ProductSortMode)} className={`mt-1 min-h-11 w-full rounded-xl border border-brand-border bg-brand-surface px-3 text-sm font-bold outline-none ring-4 ring-transparent transition ${accent}`}>
-            <option value="catalog">ترتيب الكتالوج</option>
-            <option value="name-asc">الاسم: أ ← ي</option>
-            <option value="name-desc">الاسم: ي ← أ</option>
-          </select>
-        </label>
+            {availabilityValues.length > 0 && (
+              <label className="text-xs font-extrabold text-brand-muted">
+                التوفر
+                <select value={availability} onChange={event => onAvailabilityChange(event.target.value)} className={`mt-1 min-h-11 w-full rounded-xl border border-brand-border bg-brand-surface px-3 text-sm font-bold outline-none ring-4 ring-transparent transition ${accent}`}>
+                  <option value="__all__">كل حالات التوفر</option>
+                  {AVAILABILITY_OPTIONS.filter(option => availabilityValues.includes(option.value)).map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                </select>
+              </label>
+            )}
+
+            <label className="text-xs font-extrabold text-brand-muted">
+              الترتيب
+              <select value={sort} onChange={event => onSortChange(event.target.value as ProductSortMode)} className={`mt-1 min-h-11 w-full rounded-xl border border-brand-border bg-brand-surface px-3 text-sm font-bold outline-none ring-4 ring-transparent transition ${accent}`}>
+                <option value="catalog">ترتيب الكتالوج</option>
+                <option value="name-asc">الاسم: أ ← ي</option>
+                <option value="name-desc">الاسم: ي ← أ</option>
+              </select>
+            </label>
+          </div>
+
+          <button type="button" onClick={() => setMobileOpen(false)} className={`mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl px-4 text-sm font-extrabold text-white sm:hidden ${isPopup ? "bg-[#6b278f]" : "bg-brand-blue"}`}>
+            عرض {resultCount} منتج
+          </button>
+        </div>
       </div>
 
       {activeFilters.length > 0 && (
