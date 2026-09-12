@@ -8,6 +8,8 @@ import { SmartProductSearch } from "@/components/SmartProductSearch";
 import { CatalogBreadcrumbs } from "@/components/CatalogBreadcrumbs";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import { searchCatalog } from "@/lib/catalogSearch";
+import { resolveCatalogIndexing } from "@/lib/catalogIndexing";
+import { setRobotsMeta } from "@/components/SeoMetadata";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import { fetchProducts, type Product, type ProductAvailability } from "@/lib/productsClient";
 import { AGE_FILTER_OPTIONS, filterProductsByAge, parseAgeRange } from "@/lib/productAge";
@@ -175,6 +177,24 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     if (!openProduct) return [];
     return findSimilarProducts(products, openProduct, 3);
   }, [openProduct, products]);
+
+  /* SEO indexing state for the catalog URL:
+     clean URL = indexable، بحث/فلتر/فرز = noindex,follow،
+     ?product= غير موجود أو لكتالوج آخر = noindex,follow (soft-404).
+     يُقرأ من URL الحقيقي ليبقى صحيحاً مع back/forward. */
+  const catalogLoaded = productsQuery.isSuccess;
+  useEffect(() => {
+    const urlParams: Record<string, string | null> = Object.fromEntries(
+      Array.from(new URLSearchParams(window.location.search).entries()).map(([key, value]) => [key, value] as [string, string | null])
+    );
+    const state = resolveCatalogIndexing({
+      urlParams,
+      productOpen: Boolean(openProduct),
+      catalogLoaded,
+      productFoundInCatalog: Boolean(openProduct),
+    });
+    setRobotsMeta(state.robots);
+  }, [catalog, catalogLoaded, openProduct, search, category, age, brand, tag, availability, sort]);
   const handleOpenDetails = useCallback((product: Product) => {
     setOpenProductId(product.id);
     trackEvent("product_view", {

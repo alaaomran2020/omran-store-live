@@ -9,6 +9,9 @@ export const FOOTER_NAVIGATION = [
   { label: "POP UP", href: "/popup" },
   { label: "الفيديوهات", href: "/videos" },
   { label: "نقاط عمران", href: "/rewards" },
+  /* الصفحة العامة لبرنامج Omran VIP كانت معزولة عن روابط الزحف — رابط واحد
+     يجعلها (وصفحتي الشروط/الخصوصية المرتبطتين منها) قابلة للوصول. */
+  { label: "Omran VIP", href: "/vip" },
 ] as const;
 
 const whatsappUrl = (() => {

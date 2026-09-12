@@ -9,6 +9,7 @@ import {
   TextInput,
 } from "@/admin/ui";
 import { createVipQrSvg, normalizeCardSerial } from "@/lib/vipQr";
+import { SeoMetadata } from "@/components/SeoMetadata";
 import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 export default function VipQrTest() {
@@ -40,6 +41,13 @@ export default function VipQrTest() {
       dir="rtl"
       className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100"
     >
+      {/* أداة داخلية للتجربة فقط — لا تدخل الفهرسة. */}
+      <SeoMetadata
+        path="/vip/qr-test"
+        title="اختبار QR محلي | Omran VIP"
+        description="أداة داخلية لتوليد QR تجريبي لكروت Omran VIP على الجهاز فقط."
+        robots="noindex,follow"
+      />
       <div className="mx-auto max-w-xl">
         <PageTitle
           title="QR تجريبي لكروت Omran VIP"

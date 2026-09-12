@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { LogOut, MessageCircle, ShieldCheck } from "lucide-react";
+import { SeoMetadata } from "@/components/SeoMetadata";
 import { BrutalCard, Notice, PageTitle } from "@/admin/ui";
 import ProductIntake from "@/pages/ProductIntake";
 import VipOperations from "@/pages/VipOperations";
@@ -63,6 +64,13 @@ export default function AdminAccess() {
       );
     return (
       <div className="relative">
+        {/* لوحة الإدارة خلف Cloudflare Access — noindex إضافية (defense in depth). */}
+        <SeoMetadata
+          path="/admin"
+          title="لوحة الإدارة | شركة عمران التجارية"
+          description="لوحة عمليات شركة عمران التجارية — وصول الموظفين المعتمدين فقط."
+          robots="noindex,follow"
+        />
         <div
           dir="rtl"
           className="absolute left-4 top-4 z-50 flex items-center gap-2"
@@ -87,6 +95,13 @@ export default function AdminAccess() {
       dir="rtl"
       className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100"
     >
+      {/* لوحة الإدارة خلف Cloudflare Access — noindex إضافية (defense in depth). */}
+      <SeoMetadata
+        path="/admin"
+        title="لوحة الإدارة | شركة عمران التجارية"
+        description="لوحة عمليات شركة عمران التجارية — وصول الموظفين المعتمدين فقط."
+        robots="noindex,follow"
+      />
       <div className="mx-auto max-w-xl">
         <PageTitle
           title="لوحة الإدارة محمية"

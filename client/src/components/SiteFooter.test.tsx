@@ -14,6 +14,7 @@ describe("SiteFooter", () => {
       { label: "POP UP", href: "/popup" },
       { label: "الفيديوهات", href: "/videos" },
       { label: "نقاط عمران", href: "/rewards" },
+      { label: "Omran VIP", href: "/vip" },
     ]);
   });
 
