@@ -5,6 +5,7 @@ import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { ProductDetailsDialog } from "@/components/ProductDetailsDialog";
 import { ProductFacetControls, type ActiveProductFilter, type ProductSortMode } from "@/components/ProductFacetControls";
 import { SmartProductSearch } from "@/components/SmartProductSearch";
+import { CatalogBreadcrumbs } from "@/components/CatalogBreadcrumbs";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import { searchCatalog } from "@/lib/catalogSearch";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
@@ -279,6 +280,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
       {showAnnouncement && <AnnouncementBar />}
       <main>
         <section className={`container grid gap-5 py-8 sm:gap-8 sm:py-12 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:py-20 ${isPopup ? "relative" : ""}`}>
+          <CatalogBreadcrumbs catalog={catalog} category={category === ALL ? undefined : category} className="lg:col-span-2" />
           <div>
             <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${isPopup ? "bg-[#f6e8fb] text-[#6b278f]" : "bg-brand-yellow/25 text-brand-navy"}`}><Sparkles size={15} /> {isPopup ? "POP UP – Gifts & Balloons" : "كتالوج لعب الأطفال"}</span>
             <h1 className={`mt-4 max-w-3xl text-[2rem] font-extrabold leading-[1.16] sm:mt-5 sm:text-5xl lg:text-6xl ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>

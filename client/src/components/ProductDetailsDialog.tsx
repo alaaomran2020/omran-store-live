@@ -3,12 +3,14 @@ import type { Product } from "@/lib/productsClient";
 import { ProductMediaGallery } from "@/components/ProductMediaGallery";
 import { ProductImage } from "@/components/ProductImage";
 import { ProductSpecifications } from "@/components/ProductSpecifications";
+import { CatalogBreadcrumbs } from "@/components/CatalogBreadcrumbs";
 import { buildWhatsAppUrl } from "@/lib/productFormat";
 import { productColorHex } from "@/lib/productColors";
 import { nonColorProductOptions, productColors } from "@/lib/productOptions";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Check, MessageCircle, X } from "lucide-react";
 import { displayCategoryName } from "@shared/taxonomy";
+import { isPopUpProduct } from "@/lib/productCatalog";
 
 const AVAILABILITY_LABELS: Record<Product["availability"], string> = {
   available: "متاح للاستفسار",
@@ -122,6 +124,12 @@ export function ProductDetailsDialog({
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <div className="grid gap-4 p-4 pb-28 sm:gap-6 sm:p-7 sm:pb-7 md:grid-cols-2">
+            <CatalogBreadcrumbs
+              catalog={isPopUpProduct(product) ? "popup" : "toys"}
+              category={product.category ? displayCategoryName(product.category) : undefined}
+              productName={product.name}
+              className="md:col-span-2"
+            />
             <ProductMediaGallery product={product} />
 
             <div className="flex flex-col gap-3.5 sm:gap-4">
