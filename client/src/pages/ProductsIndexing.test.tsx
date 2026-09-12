@@ -101,6 +101,32 @@ describe("حالة فهرسة روابط الكتالوج", () => {
     expect(graph.some(node => (node["@type"] as string) === "Product" && "offers" in node)).toBe(false);
   });
 
+  it("تكرار ?product= يظل متسقًا بين dialog وcanonical وJSON-LD بدون stale state", async () => {
+    const first = PUBLIC_PRODUCTS_SNAPSHOT[0];
+    const second = PUBLIC_PRODUCTS_SNAPSHOT[1];
+    window.history.replaceState(
+      {},
+      "",
+      `/products?product=${encodeURIComponent(first.id)}&product=${encodeURIComponent(second.id)}`
+    );
+    renderCatalog();
+
+    await waitFor(() => expect(screen.getByTestId("product-details")).toBeTruthy(), { timeout: 4000 });
+    expect(meta("robots")).toBe("index,follow");
+
+    const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    const firstCanonical = `https://omrantoys.store/products?product=${encodeURIComponent(first.id)}`;
+    const secondCanonical = `https://omrantoys.store/products?product=${encodeURIComponent(second.id)}`;
+    expect([firstCanonical, secondCanonical]).toContain(canonical?.href);
+
+    const selected = canonical?.href === firstCanonical ? first : second;
+    const script = document.getElementById("omran-product-jsonld");
+    expect(script).toBeTruthy();
+    const parsed = JSON.parse((script as HTMLScriptElement).textContent ?? "{}") as Record<string, unknown>;
+    const graph = parsed["@graph"] as Record<string, unknown>[];
+    expect(graph.find(node => (node["@type"] as string) === "Product")?.name).toBe(selected.name);
+  });
+
   it("POP UP: رابط منتج popup على /products لا يُفهرس (alias) ولا يفتح في كتالوج toys", async () => {
     // منتج POP-BAL-US-100 موجود في كتالوج popup فقط.
     window.history.replaceState({}, "", "/products?product=POP-BAL-US-100");
