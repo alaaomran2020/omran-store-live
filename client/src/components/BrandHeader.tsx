@@ -19,7 +19,7 @@ export default function BrandHeader() {
   }`;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-white/95 shadow-[0_8px_30px_rgba(15,23,42,0.04)] backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-white/95 pt-[env(safe-area-inset-top)] shadow-[0_8px_30px_rgba(15,23,42,0.04)] backdrop-blur-xl">
       <div className="container flex flex-col items-stretch gap-1.5 py-2 sm:min-h-[88px] sm:flex-row sm:items-center sm:justify-between sm:gap-5">
         <a href="/" className="group flex min-w-0 items-center gap-3 sm:gap-4" aria-label="شركة عمران التجارية - الصفحة الرئيسية">
           <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-brand-border bg-white shadow-sm ring-1 ring-black/[0.02] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md sm:h-16 sm:w-16 sm:rounded-2xl">

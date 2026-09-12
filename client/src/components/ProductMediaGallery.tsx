@@ -122,7 +122,12 @@ export function ProductMediaGallery({ product }: { product: Product }) {
     <div>
       <ProductStructuredData product={product} catalogPath={catalogPath} />
 
-      <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-brand-border bg-brand-cream">
+      <div
+        data-testid="product-gallery-stage"
+        className="relative aspect-square w-full touch-pan-y overflow-hidden rounded-2xl border border-brand-border bg-brand-cream"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         <ProductImage
           product={selectedProduct}
           priority
@@ -152,7 +157,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
                 showPrevious();
               }}
               aria-label="الصورة السابقة"
-              className="absolute right-3 top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-brand-navy shadow-lg ring-1 ring-brand-border transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
+              className="absolute right-2 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-brand-navy shadow-lg ring-1 ring-brand-border transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20 sm:right-3"
             >
               <ChevronRight size={19} aria-hidden="true" />
             </button>
@@ -163,7 +168,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
                 showNext();
               }}
               aria-label="الصورة التالية"
-              className="absolute left-3 top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-brand-navy shadow-lg ring-1 ring-brand-border transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
+              className="absolute left-2 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-brand-navy shadow-lg ring-1 ring-brand-border transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20 sm:left-3"
             >
               <ChevronLeft size={19} aria-hidden="true" />
             </button>
@@ -178,7 +183,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
       </div>
 
       {images.length > 1 && (
-        <div className="mt-3 flex snap-x gap-2 overflow-x-auto pb-1" aria-label="صور المنتج">
+        <div className="mt-3 flex touch-pan-x snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="صور المنتج">
           {images.map((image, index) => (
             <button
               key={image}

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ProductFacetControls } from "./ProductFacetControls";
 
 afterEach(cleanup);
@@ -31,7 +31,7 @@ function renderFilters() {
 }
 
 describe("فلاتر المنتجات", () => {
-  it("تفتح Drawer الموبايل وتغلقه بزر Escape", () => {
+  it("تفتح Drawer الموبايل وتنقل التركيز ثم تعيده عند الإغلاق", async () => {
     renderFilters();
     const openButton = screen.getByRole("button", { name: "فتح الفلاتر الإضافية" });
     expect(openButton.getAttribute("aria-expanded")).toBe("false");
@@ -39,9 +39,11 @@ describe("فلاتر المنتجات", () => {
     fireEvent.click(openButton);
     expect(openButton.getAttribute("aria-expanded")).toBe("true");
     expect(screen.getByRole("dialog", { name: "فلترة المنتجات" })).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole("button", { name: "إغلاق الفلاتر" })).toBe(document.activeElement));
 
     fireEvent.keyDown(document, { key: "Escape" });
     expect(openButton.getAttribute("aria-expanded")).toBe("false");
+    expect(openButton).toBe(document.activeElement);
   });
 
   it("تعرض الفلاتر النشطة وتسمح بإلغاء كل فلتر مباشرة", () => {

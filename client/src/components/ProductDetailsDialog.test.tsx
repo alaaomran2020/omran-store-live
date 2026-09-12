@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { ProductDetailsDialog } from "./ProductDetailsDialog";
 import type { Product } from "@/lib/productsClient";
 
@@ -90,5 +90,21 @@ describe("تفاصيل المنتج", () => {
     view.unmount();
     expect(trigger).toBe(document.activeElement);
     trigger.remove();
+  });
+
+  it("يدعم السحب بين صور المنتج من المعرض الأساسي على الموبايل", () => {
+    const productWithGallery: Product = {
+      ...product,
+      image: "/products/main.webp",
+      processedImage: "/products/main.webp",
+      galleryImages: ["/products/second.webp"],
+    };
+    render(<ProductDetailsDialog product={productWithGallery} onClose={vi.fn()} />);
+
+    expect(screen.getByText("1 / 2")).toBeTruthy();
+    const stage = screen.getByTestId("product-gallery-stage");
+    fireEvent.touchStart(stage, { changedTouches: [{ clientX: 240 }] });
+    fireEvent.touchEnd(stage, { changedTouches: [{ clientX: 120 }] });
+    expect(screen.getByText("2 / 2")).toBeTruthy();
   });
 });

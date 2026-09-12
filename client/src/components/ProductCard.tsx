@@ -82,7 +82,7 @@ export function ProductCard({
 
         <div className="mt-auto grid grid-cols-1 gap-2 pt-1 sm:pt-2">
           {waUrl && (
-            <a href={waUrl} target="_blank" rel="noreferrer" onClick={handleWhatsAppClick} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-whatsapp px-2.5 py-2.5 text-[12px] font-bold leading-4 text-white transition active:scale-[0.98] hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25 sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm">
+            <a href={waUrl} target="_blank" rel="noreferrer" onClick={handleWhatsAppClick} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-whatsapp px-2.5 py-2.5 text-[12px] font-bold leading-4 text-white transition active:scale-[0.98] hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25 max-[359px]:gap-1 max-[359px]:px-1.5 max-[359px]:text-[11px] sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm">
               <MessageCircle size={16} aria-hidden="true" className="shrink-0" />
               <span>للاستفسار والكميات</span>
             </a>

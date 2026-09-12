@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ProductAvailability } from "@/lib/productsClient";
 import { SlidersHorizontal, X } from "lucide-react";
 
@@ -53,6 +53,8 @@ export function ProductFacetControls({
   onClearAll: () => void;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const openButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const accent = isPopup ? "text-[#6b278f] focus:border-[#8a3aaa] focus:ring-[#8a3aaa]/15" : "text-brand-navy focus:border-brand-blue focus:ring-brand-blue/15";
 
   useEffect(() => {
@@ -63,9 +65,12 @@ export function ProductFacetControls({
     };
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", closeOnEscape);
+    const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus());
     return () => {
+      window.cancelAnimationFrame(focusFrame);
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", closeOnEscape);
+      openButtonRef.current?.focus();
     };
   }, [mobileOpen]);
 
@@ -87,6 +92,7 @@ export function ProductFacetControls({
             </button>
           )}
           <button
+            ref={openButtonRef}
             type="button"
             onClick={() => setMobileOpen(true)}
             aria-expanded={mobileOpen}
@@ -100,14 +106,14 @@ export function ProductFacetControls({
       </div>
 
       <div id="advanced-filter-fields" className={`${mobileOpen ? "fixed" : "hidden"} inset-0 z-50 sm:static sm:mt-3 sm:block`}>
-        <button type="button" onClick={() => setMobileOpen(false)} className="absolute inset-0 bg-brand-navy/60 backdrop-blur-[2px] sm:hidden" aria-label="إغلاق الفلاتر" />
-        <div role="dialog" aria-modal={mobileOpen ? "true" : undefined} aria-labelledby="mobile-filters-title" className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl sm:static sm:max-h-none sm:overflow-visible sm:rounded-none sm:bg-transparent sm:p-0 sm:shadow-none">
+        <button type="button" onClick={() => setMobileOpen(false)} className="absolute inset-0 bg-brand-navy/60 backdrop-blur-[2px] sm:hidden" aria-label="إغلاق الفلاتر بالضغط خارج اللوحة" />
+        <div role="dialog" aria-modal={mobileOpen ? "true" : undefined} aria-labelledby="mobile-filters-title" className="absolute inset-x-0 bottom-0 max-h-[85dvh] overscroll-contain overflow-y-auto rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl sm:static sm:max-h-none sm:overflow-visible sm:rounded-none sm:bg-transparent sm:p-0 sm:shadow-none">
           <div className="mb-4 flex items-center justify-between gap-3 sm:hidden">
             <div>
               <p id="mobile-filters-title" className="text-base font-extrabold text-brand-navy">فلترة المنتجات</p>
               <p className="mt-1 text-xs font-bold text-brand-muted">{resultCount} نتيجة متاحة</p>
             </div>
-            <button type="button" onClick={() => setMobileOpen(false)} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-brand-border text-brand-muted" aria-label="إغلاق الفلاتر">
+            <button ref={closeButtonRef} type="button" onClick={() => setMobileOpen(false)} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-brand-border text-brand-muted" aria-label="إغلاق الفلاتر">
               <X size={18} aria-hidden="true" />
             </button>
           </div>
