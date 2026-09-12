@@ -17,6 +17,7 @@ import { canonicalCategory, displayCategoryName } from "@shared/taxonomy";
 import { shareProductsPage, type ProductShareOutcome } from "@/lib/productShare";
 import { Facebook, Instagram, MessageCircle, Play, RefreshCw, Share2, Sparkles } from "lucide-react";
 import { whatsappNumber } from "@/lib/productFormat";
+import { findSimilarProducts } from "@/lib/similarProducts";
 
 const ALL = "__all__";
 const PRODUCTS_PAGE_SIZE = 24;
@@ -162,10 +163,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   const openProduct = products.find(product => product.id === openProductId) ?? null;
   const relatedProducts = useMemo(() => {
     if (!openProduct) return [];
-    return products
-      .filter(product => product.id !== openProduct.id)
-      .sort((a, b) => Number(b.category === openProduct.category) - Number(a.category === openProduct.category))
-      .slice(0, 3);
+    return findSimilarProducts(products, openProduct, 3);
   }, [openProduct, products]);
   const handleOpenDetails = useCallback((product: Product) => {
     setOpenProductId(product.id);

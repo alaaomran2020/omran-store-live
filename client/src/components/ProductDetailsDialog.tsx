@@ -284,7 +284,10 @@ export function ProductDetailsDialog({
                         <span className="block aspect-square overflow-hidden bg-brand-cream">
                           <ProductImage product={item} className="h-full w-full object-contain" sizesHint="120px" />
                         </span>
-                        <span className="line-clamp-2 block min-h-12 px-2 py-2 text-[11px] font-extrabold leading-4 text-brand-ink">{item.name}</span>
+                        <span className="block px-2 py-2">
+                          <span className="line-clamp-2 block min-h-8 text-[11px] font-extrabold leading-4 text-brand-ink">{item.name}</span>
+                          <span className="mt-1 block truncate text-[10px] font-bold text-brand-muted" dir="ltr">SKU: {item.sku || item.id}</span>
+                        </span>
                       </button>
                     ))}
                   </div>
