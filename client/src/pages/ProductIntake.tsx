@@ -3,6 +3,7 @@ import { Camera, CheckCircle2, ImagePlus, Loader2, Pencil, Plus } from "lucide-r
 import { BrutalCard, Field, Notice, PageTitle, PrimaryButton, TextInput } from "@/admin/ui";
 import { submitProductIntake, type ProductIntakeReceipt } from "@/lib/productIntakeClient";
 import { IMAGE_SOURCES, buildImageMatchKey, type ImageSource } from "@shared/productIntake";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 const MASTER_DATABASE_URL = "https://docs.google.com/spreadsheets/d/1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc/edit";
 
@@ -95,7 +96,7 @@ export default function ProductIntake() {
   };
 
   return (
-    <main dir="rtl" className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
+    <main id={MAIN_CONTENT_ID} tabIndex={-1} dir="rtl" className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
       <div className="mx-auto max-w-6xl">
         <PageTitle title="Product Intake — التشغيل اليومي" subtitle="إدخال مباشر إلى قاعدة التشغيل المركزية، بدون LocalStorage أو CSV" />
         <Notice kind="warn" className="mb-5">
@@ -188,7 +189,7 @@ export default function ProductIntake() {
 
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <PrimaryButton onClick={submit} disabled={!employeeName.trim() || !productName.trim() || !category.trim() || !photo || submitting}>
-                {submitting ? <span className="inline-flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> جاري الإرسال</span> : "إرسال لقاعدة التشغيل"}
+                {submitting ? <span className="inline-flex items-center gap-2"><Loader2 size={16} className="animate-spin motion-reduce:animate-none" /> جاري الإرسال</span> : "إرسال لقاعدة التشغيل"}
               </PrimaryButton>
               <span className="text-xs text-slate-500">Match key: {matchKey || "—"}</span>
             </div>

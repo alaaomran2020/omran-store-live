@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { ProductAvailability } from "@/lib/productsClient";
 import { SlidersHorizontal, X } from "lucide-react";
 
@@ -55,21 +56,22 @@ export function ProductFacetControls({
   const [mobileOpen, setMobileOpen] = useState(false);
   const openButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const accent = isPopup ? "text-[#6b278f] focus:border-[#8a3aaa] focus:ring-[#8a3aaa]/15" : "text-brand-navy focus:border-brand-blue focus:ring-brand-blue/15";
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const accent = isPopup ? "text-[#6b278f] focus:border-[#8a3aaa] focus:ring-[#8a3aaa]" : "text-brand-navy focus:border-brand-blue focus:ring-brand-blue";
+  const closeMobileFilters = useCallback(() => setMobileOpen(false), []);
+
+  /* The drawer is only modal while it is open, so that is the only time it may
+     claim dialog semantics or swallow Tab/Escape. */
+  useFocusTrap(drawerRef, mobileOpen, closeMobileFilters);
 
   useEffect(() => {
     if (!mobileOpen) return;
     const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMobileOpen(false);
-    };
     document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", closeOnEscape);
     const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus());
     return () => {
       window.cancelAnimationFrame(focusFrame);
       document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", closeOnEscape);
       openButtonRef.current?.focus();
     };
   }, [mobileOpen]);
@@ -87,7 +89,7 @@ export function ProductFacetControls({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {activeFilters.length > 0 && (
-            <button type="button" onClick={onClearAll} className={`min-h-10 rounded-xl border border-brand-border px-3 py-2 text-xs font-extrabold transition hover:bg-brand-cream ${isPopup ? "text-[#6b278f]" : "text-brand-blue"}`}>
+            <button type="button" onClick={onClearAll} className={`min-h-10 rounded-xl border border-brand-border px-3 py-2 text-xs font-extrabold transition hover:bg-brand-cream focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${isPopup ? "text-[#6b278f]" : "text-brand-blue"}`}>
               مسح الكل
             </button>
           )}
@@ -97,7 +99,7 @@ export function ProductFacetControls({
             onClick={() => setMobileOpen(true)}
             aria-expanded={mobileOpen}
             aria-controls="advanced-filter-fields"
-            className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-3 text-xs font-extrabold transition sm:hidden ${isPopup ? "text-[#6b278f]" : "text-brand-blue"}`}
+            className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-3 text-xs font-extrabold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue sm:hidden ${isPopup ? "text-[#6b278f]" : "text-brand-blue"}`}
             aria-label="فتح الفلاتر الإضافية"
           >
             <SlidersHorizontal size={16} aria-hidden="true" /> الفلاتر
@@ -105,15 +107,25 @@ export function ProductFacetControls({
         </div>
       </div>
 
-      <div id="advanced-filter-fields" className={`${mobileOpen ? "fixed" : "hidden"} inset-0 z-50 sm:static sm:mt-3 sm:block`}>
-        <button type="button" onClick={() => setMobileOpen(false)} className="absolute inset-0 bg-brand-navy/60 backdrop-blur-[2px] sm:hidden" aria-label="إغلاق الفلاتر بالضغط خارج اللوحة" />
-        <div role="dialog" aria-modal={mobileOpen ? "true" : undefined} aria-labelledby="mobile-filters-title" className="absolute inset-x-0 bottom-0 max-h-[85dvh] overscroll-contain overflow-y-auto rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl sm:static sm:max-h-none sm:overflow-visible sm:rounded-none sm:bg-transparent sm:p-0 sm:shadow-none">
+      <div
+        ref={drawerRef}
+        id="advanced-filter-fields"
+        tabIndex={-1}
+        className={`${mobileOpen ? "fixed outline-none" : "hidden"} inset-0 z-50 sm:static sm:mt-3 sm:block`}
+      >
+        <button type="button" onClick={closeMobileFilters} className="absolute inset-0 bg-brand-navy/60 backdrop-blur-[2px] sm:hidden" aria-label="إغلاق الفلاتر بالضغط خارج اللوحة" />
+        <div
+          role={mobileOpen ? "dialog" : undefined}
+          aria-modal={mobileOpen ? "true" : undefined}
+          aria-labelledby={mobileOpen ? "mobile-filters-title" : undefined}
+          className="absolute inset-x-0 bottom-0 max-h-[85dvh] overscroll-contain overflow-y-auto rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl sm:static sm:max-h-none sm:overflow-visible sm:rounded-none sm:bg-transparent sm:p-0 sm:shadow-none"
+        >
           <div className="mb-4 flex items-center justify-between gap-3 sm:hidden">
             <div>
               <p id="mobile-filters-title" className="text-base font-extrabold text-brand-navy">فلترة المنتجات</p>
               <p className="mt-1 text-xs font-bold text-brand-muted">{resultCount} نتيجة متاحة</p>
             </div>
-            <button ref={closeButtonRef} type="button" onClick={() => setMobileOpen(false)} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-brand-border text-brand-muted" aria-label="إغلاق الفلاتر">
+            <button ref={closeButtonRef} type="button" onClick={closeMobileFilters} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-brand-border text-brand-muted focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue" aria-label="إغلاق الفلاتر">
               <X size={18} aria-hidden="true" />
             </button>
           </div>
@@ -159,16 +171,17 @@ export function ProductFacetControls({
             </label>
           </div>
 
-          <button type="button" onClick={() => setMobileOpen(false)} className={`mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl px-4 text-sm font-extrabold text-white sm:hidden ${isPopup ? "bg-[#6b278f]" : "bg-brand-blue"}`}>
+          <button type="button" onClick={closeMobileFilters} className={`mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl px-4 text-sm font-extrabold text-white sm:hidden ${isPopup ? "bg-[#6b278f]" : "bg-brand-blue"}`}>
             عرض {resultCount} منتج
           </button>
         </div>
       </div>
 
       {activeFilters.length > 0 && (
-        <div className="mt-3 flex max-w-full gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible" aria-label="الفلاتر النشطة">
+        /* aria-label needs a group role to be exposed on a plain container. */
+        <div role="group" aria-label="الفلاتر النشطة" className="mt-3 flex max-w-full gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
           {activeFilters.map(filter => (
-            <button key={filter.key} type="button" onClick={filter.onClear} className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-extrabold transition ${isPopup ? "border-[#e4d3ee] bg-[#f9f2fc] text-[#6b278f] hover:bg-[#f3e6f8]" : "border-brand-border bg-brand-sky/50 text-brand-navy hover:bg-brand-sky"}`} aria-label={`إلغاء فلتر ${filter.label}`}>
+            <button key={filter.key} type="button" onClick={filter.onClear} className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-extrabold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${isPopup ? "border-[#e4d3ee] bg-[#f9f2fc] text-[#6b278f] hover:bg-[#f3e6f8]" : "border-brand-border bg-brand-sky/50 text-brand-navy hover:bg-brand-sky"}`} aria-label={`إلغاء فلتر ${filter.label}`}>
               <X size={13} aria-hidden="true" /> {filter.label}
             </button>
           ))}

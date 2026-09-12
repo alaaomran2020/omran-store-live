@@ -49,7 +49,7 @@ export function ProductCard({
         <button
           type="button"
           onClick={() => onOpenDetails(product)}
-          className={`relative block w-full overflow-hidden bg-brand-cream text-right focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15 ${isPopup ? "aspect-[4/3]" : "aspect-square"}`}
+          className={`relative block w-full overflow-hidden bg-brand-cream text-right focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${isPopup ? "aspect-[4/3]" : "aspect-square"}`}
           aria-label={`عرض تفاصيل ${product.name}`}
         >
           <ProductImage
@@ -74,7 +74,12 @@ export function ProductCard({
       <div className={`flex flex-1 flex-col gap-2.5 ${isPopup ? "p-3 sm:p-4" : "p-3 sm:gap-3 sm:p-5"}`}>
         <h3 className="line-clamp-2 min-h-[2.75rem] text-sm font-extrabold leading-[1.4rem] text-brand-ink sm:min-h-0 sm:text-lg sm:leading-7">{product.name}</h3>
         <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold leading-5 sm:text-xs">
-          <span className="text-brand-muted" dir="ltr">SKU: {product.sku || product.id}</span>
+          {/* Latin "SKU:" reads as letters in an Arabic screen reader; expose the Arabic
+              label to assistive tech and keep the Latin form for sighted readers only. */}
+          <span className="text-brand-muted">
+            <span className="sr-only">كود المنتج: {product.sku || product.id}</span>
+            <span dir="ltr" aria-hidden="true">SKU: {product.sku || product.id}</span>
+          </span>
           <span className={`rounded-full px-2.5 py-1 ${product.availability === "unavailable" ? "bg-red-50 text-brand-red" : "bg-brand-sky text-brand-navy"}`}>
             {AVAILABILITY_LABELS[product.availability]}
           </span>
@@ -82,12 +87,12 @@ export function ProductCard({
 
         <div className="mt-auto grid grid-cols-1 gap-2 pt-1 sm:pt-2">
           {waUrl && (
-            <a href={waUrl} target="_blank" rel="noreferrer" onClick={handleWhatsAppClick} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-whatsapp px-2.5 py-2.5 text-[12px] font-bold leading-4 text-white transition active:scale-[0.98] hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25 max-[359px]:gap-1 max-[359px]:px-1.5 max-[359px]:text-[11px] sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm">
+            <a href={waUrl} target="_blank" rel="noreferrer" onClick={handleWhatsAppClick} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-whatsapp px-2.5 py-2.5 text-[12px] font-bold leading-4 text-white transition active:scale-[0.98] hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp-hover max-[359px]:gap-1 max-[359px]:px-1.5 max-[359px]:text-[11px] sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm">
               <MessageCircle size={16} aria-hidden="true" className="shrink-0" />
               <span>للاستفسار والكميات</span>
             </a>
           )}
-          <button type="button" onClick={() => onOpenDetails(product)} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-brand-surface px-2.5 py-2.5 text-[12px] font-bold text-brand-blue transition active:scale-[0.98] hover:border-brand-blue hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue/15 sm:gap-2 sm:px-4 sm:text-sm">
+          <button type="button" onClick={() => onOpenDetails(product)} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-brand-surface px-2.5 py-2.5 text-[12px] font-bold text-brand-blue transition active:scale-[0.98] hover:border-brand-blue hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue sm:gap-2 sm:px-4 sm:text-sm">
             التفاصيل <Info size={14} aria-hidden="true" />
           </button>
         </div>
@@ -98,7 +103,7 @@ export function ProductCard({
 
 export function ProductCardSkeleton() {
   return (
-    <div className="animate-pulse overflow-hidden rounded-[1.1rem] border border-brand-border bg-brand-surface shadow-[0_3px_14px_rgba(23,32,51,.06)] sm:rounded-2xl">
+    <div className="animate-pulse overflow-hidden rounded-[1.1rem] motion-reduce:animate-none border border-brand-border bg-brand-surface shadow-[0_3px_14px_rgba(23,32,51,.06)] sm:rounded-2xl">
       <div className="aspect-square bg-brand-cream" />
       <div className="space-y-2.5 p-3 sm:space-y-3 sm:p-5">
         <div className="h-4 w-3/4 rounded-full bg-brand-border/70 sm:h-5" />

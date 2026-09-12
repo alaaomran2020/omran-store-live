@@ -3,6 +3,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import BrandHeader from "@/components/BrandHeader";
 import { SeoMetadata } from "@/components/SeoMetadata";
 import SiteFooter from "@/components/SiteFooter";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 export default function Rewards() {
   return (
@@ -10,7 +11,7 @@ export default function Rewards() {
       <SeoMetadata path="/rewards" title="مزايا عمران تويز" description="تابع أحدث المزايا والعروض المتاحة لعملاء عمران تويز." />
       <AnnouncementBar />
       <BrandHeader />
-      <main className="container py-10 sm:py-16">
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} className="container py-10 sm:py-16">
         <div className="mx-auto max-w-3xl rounded-3xl border border-brand-border bg-white p-6 shadow-sm sm:p-10">
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-yellow/25 text-brand-navy"><Gift aria-hidden="true" /></span>
           <p className="mt-5 text-sm font-bold text-brand-blue">مكافآت عمران تويز</p>

@@ -14,7 +14,7 @@ export function OfficialSocialEmbeds() {
         <button
           type="button"
           onClick={reloadEmbeds}
-          className="inline-flex min-h-10 items-center gap-2 rounded-full px-3 font-bold text-brand-blue transition hover:bg-brand-blue/5 hover:text-brand-blue-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15"
+          className="inline-flex min-h-10 items-center gap-2 rounded-full px-3 font-bold text-brand-blue transition hover:bg-brand-blue/5 hover:text-brand-blue-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue"
         >
           <RefreshCw size={16} /> إعادة تحميل
         </button>
@@ -27,12 +27,12 @@ export function OfficialSocialEmbeds() {
         >
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-bold text-[#1877f2]">Facebook</p>
+              <p className="text-sm font-bold text-[#1666d0]">Facebook</p>
               <h3 id="facebook-feed-heading" className="mt-1 text-2xl font-extrabold text-brand-navy">
                 صفحتنا الرسمية
               </h3>
             </div>
-            <Facebook className="text-[#1877f2]" size={26} aria-hidden="true" />
+            <Facebook className="text-[#1666d0]" size={26} aria-hidden="true" />
           </div>
           <div className="flex min-h-[560px] flex-col justify-between rounded-2xl border border-brand-border bg-brand-cream p-7">
             <div>
@@ -50,7 +50,7 @@ export function OfficialSocialEmbeds() {
               href={SOCIAL_EMBED_CONFIG.facebookPageUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-8 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 text-sm font-bold text-white transition hover:bg-brand-blue-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
+              className="mt-8 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 text-sm font-bold text-white transition hover:bg-brand-blue-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue"
             >
               فتح صفحة Facebook الرسمية <ArrowUpLeft size={18} />
             </a>
@@ -87,7 +87,7 @@ export function OfficialSocialEmbeds() {
                 href={SOCIAL_EMBED_CONFIG.instagramFeaturedPostUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 text-sm font-bold text-white transition hover:bg-brand-blue-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 text-sm font-bold text-white transition hover:bg-brand-blue-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue"
               >
                 فتح المنشور المميز <ArrowUpLeft size={18} />
               </a>

@@ -6,6 +6,7 @@ import { SeoMetadata } from "@/components/SeoMetadata";
 import SiteFooter from "@/components/SiteFooter";
 import { filterProductsByCatalog } from "@/lib/productCatalog";
 import { fetchProducts } from "@/lib/productsClient";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 export default function Videos() {
   const query = useQuery({ queryKey: ["products"], queryFn: fetchProducts, staleTime: Infinity });
@@ -20,7 +21,7 @@ export default function Videos() {
       />
       <AnnouncementBar />
       <BrandHeader />
-      <main className="container py-10 sm:py-16">
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} className="container py-10 sm:py-16">
         <p className="text-sm font-bold text-brand-red">فيديوهات المنتجات</p>
         <h1 className="mt-2 text-3xl font-black text-brand-navy">شوف اللعبة وهي بتشتغل</h1>
         <p className="mt-3 max-w-2xl leading-7 text-brand-muted">شوف فيديوهات الألعاب المتاحة واختار الأنسب ليك بسهولة.</p>

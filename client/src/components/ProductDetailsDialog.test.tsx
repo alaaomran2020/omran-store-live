@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { ProductDetailsDialog } from "./ProductDetailsDialog";
 import type { Product } from "@/lib/productsClient";
+import { getFocusableElements } from "@/lib/a11y";
 
 const product: Product = {
   id: "OMR-TEST-1",
@@ -165,5 +166,83 @@ describe("تفاصيل المنتج", () => {
 
     fireEvent.click(closeLightbox);
     await waitFor(() => expect(document.activeElement).toBe(trigger));
+  });
+});
+
+describe("تفاصيل المنتج — سلوك التركيز داخل النوافذ", () => {
+  const productWithGallery: Product = {
+    ...product,
+    image: "/products/main.webp",
+    processedImage: "/products/main.webp",
+    galleryImages: ["/products/second.webp"],
+  };
+
+  it("لا يغلق تفاصيل المنتج عند Escape داخل الـLightbox", () => {
+    const onClose = vi.fn();
+    render(<ProductDetailsDialog product={productWithGallery} onClose={onClose} />);
+
+    fireEvent.click(screen.getByRole("button", { name: `فتح صورة ${product.name} بالحجم الكامل` }));
+    expect(screen.getByRole("dialog", { name: `معرض صور ${product.name}` })).toBeTruthy();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog", { name: `معرض صور ${product.name}` })).toBeNull();
+    expect(screen.getByTestId("product-details")).toBeTruthy();
+  });
+
+  it("يحبس التركيز داخل الـDialog عند Tab وShift+Tab", async () => {
+    render(<ProductDetailsDialog product={product} onClose={vi.fn()} />);
+    await waitFor(() => expect(screen.getByRole("button", { name: "إغلاق" })).toBe(document.activeElement));
+
+    const dialog = screen.getByTestId("product-details");
+    const focusable = getFocusableElements(dialog);
+    expect(focusable.length).toBeGreaterThan(1);
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    last.focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(document.activeElement).toBe(first);
+
+    first.focus();
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(last);
+  });
+
+  it("يعيد التركيز إلى كارت المنتج عندما يختفي العنصر الذي فتح التفاصيل", async () => {
+    const card = document.createElement("article");
+    card.setAttribute("data-product-id", product.id);
+    const imageTrigger = document.createElement("button");
+    imageTrigger.textContent = "صورة المنتج";
+    const detailsTrigger = document.createElement("button");
+    detailsTrigger.textContent = "التفاصيل";
+    card.append(imageTrigger, detailsTrigger);
+    document.body.appendChild(card);
+    imageTrigger.focus();
+
+    const view = render(<ProductDetailsDialog product={product} onClose={vi.fn()} />);
+    await waitFor(() => expect(screen.getByRole("button", { name: "إغلاق" })).toBe(document.activeElement));
+
+    // Back/Forward أو إعادة الفلترة قد تحذف العنصر الأصلي من الصفحة
+    imageTrigger.remove();
+    view.unmount();
+
+    expect(document.activeElement).toBe(detailsTrigger);
+    card.remove();
+  });
+
+  it("يعرض مجموعات الخيارات كمجموعات مسماة بدل قائمة غير صحيحة", () => {
+    const productWithOptions: Product = {
+      ...product,
+      options: [{ name: "المقاس", values: ["صغير", "كبير"] }],
+    };
+    render(<ProductDetailsDialog product={productWithOptions} onClose={vi.fn()} />);
+
+    const group = screen.getByRole("group", { name: "اختار المقاس" });
+    expect(group).toBeTruthy();
+    // أول قيمة تُختار تلقائيًا وتُعلن عبر aria-pressed بدل الاعتماد على اللون فقط
+    expect(within(group).getByRole("button", { name: "صغير" }).getAttribute("aria-pressed")).toBe("true");
+    expect(within(group).getByRole("button", { name: "كبير" }).getAttribute("aria-pressed")).toBe("false");
   });
 });

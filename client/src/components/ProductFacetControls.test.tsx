@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ProductFacetControls } from "./ProductFacetControls";
+import { getFocusableElements } from "@/lib/a11y";
 
 afterEach(cleanup);
 
@@ -50,5 +51,31 @@ describe("فلاتر المنتجات", () => {
     const { onClearBrand } = renderFilters();
     fireEvent.click(screen.getByRole("button", { name: "إلغاء فلتر الماركة: Omran Kids" }));
     expect(onClearBrand).toHaveBeenCalledOnce();
+  });
+});
+
+describe("فلاتر المنتجات — الوصولية", () => {
+  it("لا تعلن نفسها كـdialog وهي مغلقة على الشاشات الكبيرة", () => {
+    renderFilters();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("تحبس التركيز داخل لوحة الفلاتر عند فتحها على الموبايل", async () => {
+    renderFilters();
+    const openButton = screen.getByRole("button", { name: "فتح الفلاتر الإضافية" });
+    fireEvent.click(openButton);
+    await waitFor(() => expect(screen.getByRole("button", { name: "إغلاق الفلاتر" })).toBe(document.activeElement));
+
+    const drawer = document.getElementById("advanced-filter-fields")!;
+    const focusable = getFocusableElements(drawer);
+    expect(focusable.length).toBeGreaterThan(1);
+
+    focusable[focusable.length - 1].focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(document.activeElement).toBe(focusable[0]);
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(openButton.getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(openButton);
   });
 });

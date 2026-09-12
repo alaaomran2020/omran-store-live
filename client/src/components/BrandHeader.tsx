@@ -72,7 +72,7 @@ export default function BrandHeader() {
                   page_location: window.location.href,
                 })
               }
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-whatsapp px-3.5 py-2.5 text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-whatsapp-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-whatsapp/20 sm:px-4"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-whatsapp px-3.5 py-2.5 text-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:bg-whatsapp-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-whatsapp-hover sm:px-4"
             >
               <MessageCircle size={18} aria-hidden="true" />
               <span className="hidden sm:inline">واتساب</span>

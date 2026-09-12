@@ -55,6 +55,16 @@ afterEach(() => {
 });
 
 describe("كتالوج المنتجات مع fallback محلي", () => {
+  it("يعرض landmark واحد باسم main-content يطابق هدف رابط التخطي", async () => {
+    renderCatalog();
+    await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
+
+    const mains = document.querySelectorAll("main");
+    expect(mains).toHaveLength(1);
+    expect(mains[0].getAttribute("id")).toBe("main-content");
+    expect(screen.getByRole("main")).toBe(mains[0]);
+  });
+
   it("يعرض Snapshot المحلي إذا تعذر الكتالوج الحي", async () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));

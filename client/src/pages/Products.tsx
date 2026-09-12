@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { OfficialSocialEmbeds } from "@/components/OfficialSocialEmbeds";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
@@ -17,6 +17,7 @@ import { canonicalCategory, displayCategoryName } from "@shared/taxonomy";
 import { shareProductsPage, type ProductShareOutcome } from "@/lib/productShare";
 import { Facebook, Instagram, RefreshCw, Share2, Sparkles } from "lucide-react";
 import { findSimilarProducts } from "@/lib/similarProducts";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 const ALL = "__all__";
 const PRODUCTS_PAGE_SIZE = 24;
@@ -66,6 +67,8 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   const [sort, setSort] = useState<ProductSortMode>(initial.sort);
   const [openProductId, setOpenProductId] = useState<string | null>(initial.product);
   const [renderLimit, setRenderLimit] = useState(PRODUCTS_PAGE_SIZE);
+  const categoryGroupLabelId = useId();
+  const ageGroupLabelId = useId();
 
   const productsQuery = useQuery({
     queryKey: ["products"],
@@ -275,7 +278,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   );
   const ageChip = (value: string, label: string) => (
     <button key={value} type="button" onClick={() => handleAgeFilter(value)} aria-pressed={age === value} data-testid="age-chip"
-      className={`min-h-11 shrink-0 snap-start rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15 ${age === value ? "bg-brand-blue text-white shadow" : "border border-brand-border bg-brand-sky/40 text-brand-navy hover:border-brand-blue hover:bg-brand-sky"}`}>
+      className={`min-h-11 shrink-0 snap-start rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${age === value ? "bg-brand-blue text-white shadow" : "border border-brand-border bg-brand-sky/40 text-brand-navy hover:border-brand-blue hover:bg-brand-sky"}`}>
       {label}
     </button>
   );
@@ -283,7 +286,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   return (
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
       {showAnnouncement && <AnnouncementBar />}
-      <main>
+      <main id={MAIN_CONTENT_ID} tabIndex={-1}>
         <section className={`container grid gap-5 py-8 sm:gap-8 sm:py-12 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:py-20 ${isPopup ? "relative" : ""}`}>
           <CatalogBreadcrumbs catalog={catalog} category={category === ALL ? undefined : category} className="lg:col-span-2" />
           <div>
@@ -293,7 +296,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-brand-muted sm:mt-5 sm:text-lg sm:leading-8">{isPopup ? "اكتشف هدايا وبالونات ومستلزمات حفلات POP UP، وللسعر والتوفر تواصل معنا عبر واتساب." : "اكتشف لعب الأطفال وصورها وتفاصيلها، واختار بسهولة حسب السن، وللسعر والتوفر تواصل معنا عبر واتساب."}</p>
             <div className="mt-5 sm:mt-6">
-              <button type="button" onClick={handleShare} className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white shadow-md transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 sm:w-auto sm:rounded-full sm:shadow-lg ${isPopup ? "bg-[#6b278f] hover:bg-[#572073] focus-visible:ring-[#6b278f]/20" : "bg-brand-blue hover:bg-brand-blue-hover focus-visible:ring-brand-blue/20"}`}><Share2 size={18} aria-hidden="true" /> مشاركة المنتجات</button>
+              <button type="button" onClick={handleShare} className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white shadow-md transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 sm:w-auto sm:rounded-full sm:shadow-lg ${isPopup ? "bg-[#6b278f] hover:bg-[#572073] focus-visible:ring-[#6b278f]" : "bg-brand-blue hover:bg-brand-blue-hover focus-visible:ring-brand-blue"}`}><Share2 size={18} aria-hidden="true" /> مشاركة المنتجات</button>
               <p aria-live="polite" className={`mt-2 min-h-5 text-xs font-semibold sm:mt-3 sm:text-sm ${isPopup ? "text-[#6b278f]" : "text-brand-blue"}`}>{shareOutcome ? shareMessage[shareOutcome] : ""}</p>
             </div>
           </div>
@@ -309,14 +312,14 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                 <p className={`text-xs font-bold sm:text-sm ${isPopup ? "text-[#a13b87]" : "text-brand-red"}`}>{isPopup ? "Gifts & Balloons & Party Supplies" : "اكتشف الاختيار المناسب"}</p>
                 <h2 className={`mt-1 text-2xl font-extrabold sm:text-3xl ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>{isPopup ? "كتالوج POP UP" : "كتالوج لعب الأطفال"}</h2>
               </div>
-              <button type="button" onClick={() => productsQuery.refetch()} aria-label="تحديث الكتالوج" className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-4 sm:rounded-full sm:px-4 ${isPopup ? "border-[#e4d3ee] text-[#6b278f] hover:border-[#8a3aaa] hover:bg-white focus-visible:ring-[#8a3aaa]/15" : "border-brand-border text-brand-blue hover:border-brand-blue hover:bg-brand-blue/5 focus-visible:ring-brand-blue/15"}`}><RefreshCw size={16} className={productsQuery.isFetching ? "animate-spin" : ""} /><span className="hidden sm:inline">تحديث</span></button>
+              <button type="button" onClick={() => productsQuery.refetch()} aria-label="تحديث الكتالوج" className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-4 sm:rounded-full sm:px-4 ${isPopup ? "border-[#e4d3ee] text-[#6b278f] hover:border-[#8a3aaa] hover:bg-white focus-visible:ring-[#8a3aaa]" : "border-brand-border text-brand-blue hover:border-brand-blue hover:bg-brand-blue/5 focus-visible:ring-brand-blue"}`}><RefreshCw size={16} className={productsQuery.isFetching ? "animate-spin motion-reduce:animate-none" : ""} /><span className="hidden sm:inline">تحديث</span></button>
             </div>
             {products.length > 0 && (
               <div className="mb-5 space-y-3 sm:mb-8 sm:space-y-4">
                 <SmartProductSearch value={search} onChange={handleSearchChange} result={searchResult} isPopup={isPopup} />
                 {categories.length > 0 && (
-                  <div>
-                    <p className={`mb-2 text-xs font-extrabold sm:hidden ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>التصنيف</p>
+                  <div role="group" aria-labelledby={categoryGroupLabelId}>
+                    <p id={categoryGroupLabelId} className={`mb-2 text-xs font-extrabold sm:hidden ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>التصنيف</p>
                     <div className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
                       {categoryChip(ALL, isPopup ? "كل POP UP" : "كل التصنيفات", products.length)}
                       {categories.map(name => categoryChip(name, name, categoryCounts.get(name)))}
@@ -326,10 +329,10 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                 {!isPopup && (
                   <div className="rounded-2xl border border-brand-border bg-brand-cream p-3.5 sm:p-4">
                     <div className="mb-2.5 flex items-center justify-between gap-3 sm:mb-3">
-                      <p className="text-sm font-extrabold text-brand-navy">اختار حسب السن</p>
-                      {age !== ALL && <button type="button" onClick={() => handleAgeFilter(ALL)} className="min-h-9 rounded-lg px-2 text-xs font-bold text-brand-blue hover:bg-brand-sky hover:underline">إلغاء الفلتر</button>}
+                      <p id={ageGroupLabelId} className="text-sm font-extrabold text-brand-navy">اختار حسب السن</p>
+                      {age !== ALL && <button type="button" onClick={() => handleAgeFilter(ALL)} className="min-h-9 rounded-lg px-2 text-xs font-bold text-brand-blue hover:bg-brand-sky hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue">إلغاء الفلتر</button>}
                     </div>
-                    <div className="-mx-3.5 flex snap-x snap-mandatory gap-2 overflow-x-auto px-3.5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+                    <div role="group" aria-labelledby={ageGroupLabelId} className="-mx-3.5 flex snap-x snap-mandatory gap-2 overflow-x-auto px-3.5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
                       {ageChip(ALL, "كل الأعمار")}
                       {AGE_FILTER_OPTIONS.map(range => ageChip(range.key, range.key === "13+" ? "13+ سنة" : `${range.key} سنوات`))}
                     </div>

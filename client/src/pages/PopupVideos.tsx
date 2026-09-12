@@ -4,6 +4,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import BrandHeader from "@/components/BrandHeader";
 import { SeoMetadata } from "@/components/SeoMetadata";
 import SiteFooter from "@/components/SiteFooter";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 const POPUP_VIDEOS = [
   {
@@ -39,7 +40,7 @@ export default function PopupVideos() {
       <AnnouncementBar />
       <BrandHeader />
 
-      <main className="container py-10 sm:py-14">
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} className="container py-10 sm:py-14">
         <div className="mx-auto max-w-3xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-fuchsia-200 bg-white px-3 py-1.5 text-xs font-black text-fuchsia-700 shadow-sm">
             <PlayCircle size={15} aria-hidden="true" />
@@ -76,7 +77,7 @@ export default function PopupVideos() {
                     <button
                       type="button"
                       onClick={() => setActiveVideoId(video.id)}
-                      className="group relative h-full w-full overflow-hidden text-right focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-fuchsia-300"
+                      className="group relative h-full w-full overflow-hidden text-right focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-fuchsia-700"
                       aria-label={`تشغيل ${video.title}`}
                     >
                       <img

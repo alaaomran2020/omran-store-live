@@ -3,6 +3,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import BrandHeader from "@/components/BrandHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { SeoMetadata } from "@/components/SeoMetadata";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 const sections = [
   ["البيانات المستخدمة", "الاسم ورقم الهاتف وبيانات العضوية والكروت والاستخدامات والمشتريات والنقاط والشكاوى، بالإضافة إلى الموظف الذي سجل أو راجع العملية."],
@@ -17,7 +18,7 @@ export default function VipPrivacy() {
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
       <SeoMetadata path="/vip/privacy" title="خصوصية برنامج Omran VIP" description="إشعار خصوصية برنامج Omran VIP واستخدام بيانات العضوية والكروت." />
       <AnnouncementBar /><BrandHeader />
-      <main className="container max-w-4xl py-10 sm:py-14">
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} className="container max-w-4xl py-10 sm:py-14">
         <Link href="/vip" className="text-sm font-black text-brand-blue">العودة لبرنامج Omran VIP</Link>
         <h1 className="mt-4 text-3xl font-black text-brand-navy">خصوصية برنامج Omran VIP</h1>
         <p className="mt-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm font-bold leading-7 text-sky-950">

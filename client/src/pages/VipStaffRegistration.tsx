@@ -23,6 +23,7 @@ import {
   type StaffRequestedRole,
 } from "@/lib/staffEnrollment";
 import BrandHeader from "@/components/BrandHeader";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 export default function VipStaffRegistration() {
   const [displayName, setDisplayName] = useState("");
@@ -95,7 +96,7 @@ export default function VipStaffRegistration() {
   return (
     <div dir="rtl" className="min-h-screen bg-slate-950">
       <BrandHeader />
-      <main className="px-4 py-10 text-slate-100">
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} className="px-4 py-10 text-slate-100">
       <div className="mx-auto max-w-xl">
         <PageTitle
           title="تسجيل موظف في Omran VIP"
@@ -198,7 +199,7 @@ export default function VipStaffRegistration() {
                   setRequestedRole(event.target.value as StaffRequestedRole);
                   resetPreparedRequest();
                 }}
-                className="w-full border-2 border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-electric focus:outline-none"
+                className="w-full border-2 border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-electric focus:outline-none focus:ring-2 focus:ring-electric"
               >
                 <option value="CARD_ISSUER">إصدار وتفعيل الكروت</option>
                 <option value="BRANCH_STAFF">موظف فرع وتسجيل الخصومات</option>

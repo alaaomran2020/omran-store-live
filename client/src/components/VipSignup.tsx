@@ -166,7 +166,7 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
             ) : (
               <form onSubmit={submit} className="rounded-2xl border border-brand-border bg-brand-cream/70 p-4 sm:p-5" noValidate>
                 <label htmlFor={`vip-phone-${source}`} className="text-sm font-black text-brand-ink">رقم الموبايل</label>
-                <div className="mt-2 flex min-h-12 items-center gap-2 rounded-xl border border-brand-border bg-white px-3 shadow-sm focus-within:border-brand-blue focus-within:ring-4 focus-within:ring-brand-blue/10">
+                <div className="mt-2 flex min-h-12 items-center gap-2 rounded-xl border border-brand-border bg-white px-3 shadow-sm focus-within:border-brand-blue focus-within:ring-4 focus-within:ring-brand-blue">
                   <Phone size={18} className="shrink-0 text-brand-muted" aria-hidden="true" />
                   <input
                     id={`vip-phone-${source}`}
@@ -178,7 +178,7 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
                     onChange={event => setPhone(event.target.value)}
                     placeholder="01XXXXXXXXX"
                     disabled={submitting}
-                    className="min-w-0 flex-1 bg-transparent py-3 text-left text-base font-bold text-brand-ink outline-none placeholder:text-brand-muted/55 disabled:opacity-60"
+                    className="min-w-0 flex-1 bg-transparent py-3 text-left text-base font-bold text-brand-ink outline-none placeholder:text-brand-muted disabled:opacity-60"
                     aria-describedby={`vip-help-${source}`}
                   />
                 </div>
@@ -200,13 +200,13 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
                   type="submit"
                   disabled={submitting}
                   className={isPopup
-                    ? "mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-fuchsia-600 px-5 py-3 text-sm font-black text-white shadow-md transition hover:-translate-y-0.5 hover:bg-fuchsia-700 disabled:cursor-wait disabled:opacity-70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-fuchsia-200"
-                    : "mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 py-3 text-sm font-black text-white shadow-md transition hover:-translate-y-0.5 hover:bg-brand-blue-hover disabled:cursor-wait disabled:opacity-70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"}
+                    ? "mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-fuchsia-600 px-5 py-3 text-sm font-black text-white shadow-md transition hover:-translate-y-0.5 hover:bg-fuchsia-700 disabled:cursor-wait disabled:opacity-70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-fuchsia-700"
+                    : "mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 py-3 text-sm font-black text-white shadow-md transition hover:-translate-y-0.5 hover:bg-brand-blue-hover disabled:cursor-wait disabled:opacity-70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue"}
                 >
-                  {submitting ? <LoaderCircle size={18} className="animate-spin" aria-hidden="true" /> : <BadgeCheck size={18} aria-hidden="true" />}
+                  {submitting ? <LoaderCircle size={18} className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <BadgeCheck size={18} aria-hidden="true" />}
                   {submitting ? "جاري التسجيل..." : "سجلني في الجديد"}
                 </button>
-                <p id={`vip-help-${source}`} className="mt-2 text-center text-[11px] font-semibold leading-5 text-brand-muted/80">
+                <p id={`vip-help-${source}`} className="mt-2 text-center text-[11px] font-semibold leading-5 text-brand-muted">
                   لا نطلب كلمة مرور أو بيانات دفع. رقمك يُستخدم فقط للتحديثات التي وافقت عليها.
                 </p>
               </form>
