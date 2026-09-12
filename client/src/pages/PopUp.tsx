@@ -166,7 +166,7 @@ function PopUpOfficialSocials() {
 
 export default function PopUp() {
   return (
-    <div className="[&>div>main>footer]:hidden">
+    <div>
       <SeoMetadata path="/popup" title={POPUP_TITLE} description={POPUP_DESCRIPTION} />
       <AnnouncementBar />
       <BrandHeader />

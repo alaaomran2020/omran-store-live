@@ -11,7 +11,7 @@ export default function Storefront() {
       <BrandHeader />
       <PopUpPromo />
 
-      <div className="[&>div>main>footer]:hidden">
+      <div>
         <Products showAnnouncement={false} />
       </div>
 

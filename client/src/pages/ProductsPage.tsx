@@ -10,7 +10,7 @@ const PRODUCTS_DESCRIPTION =
 
 export default function ProductsPage() {
   return (
-    <div className="[&>div>main>footer]:hidden">
+    <div>
       <SeoMetadata path="/products" title={PRODUCTS_TITLE} description={PRODUCTS_DESCRIPTION} />
       <AnnouncementBar />
       <BrandHeader />

@@ -1,9 +1,6 @@
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { ThemeProvider } from "./contexts/ThemeContext";
 
 const AdminAccess = lazy(() => import("@/admin/AdminAccess"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -45,15 +42,9 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
-        <TooltipProvider>
-          <style>{`section[aria-labelledby="home-videos-title"] { display: none !important; }`}</style>
-          <Toaster />
-          <Suspense fallback={<div className="min-h-screen bg-brand-cream" aria-label="جاري تحميل الصفحة" />}>
-            <Router />
-          </Suspense>
-        </TooltipProvider>
-      </ThemeProvider>
+      <Suspense fallback={<div className="min-h-screen bg-brand-cream" aria-label="جاري تحميل الصفحة" />}>
+        <Router />
+      </Suspense>
     </ErrorBoundary>
   );
 }

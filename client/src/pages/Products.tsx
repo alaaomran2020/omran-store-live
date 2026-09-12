@@ -15,8 +15,7 @@ import { filterProductsByCatalog, type ProductCatalog } from "@/lib/productCatal
 import { trackEvent } from "@/lib/analytics";
 import { canonicalCategory, displayCategoryName } from "@shared/taxonomy";
 import { shareProductsPage, type ProductShareOutcome } from "@/lib/productShare";
-import { Facebook, Instagram, MessageCircle, Play, RefreshCw, Share2, Sparkles } from "lucide-react";
-import { whatsappNumber } from "@/lib/productFormat";
+import { Facebook, Instagram, RefreshCw, Share2, Sparkles } from "lucide-react";
 import { findSimilarProducts } from "@/lib/similarProducts";
 
 const ALL = "__all__";
@@ -27,13 +26,6 @@ const AVAILABILITY_LABELS: Record<ProductAvailability, string> = {
   preorder: "طلب مسبق",
   unknown: "غير محدد",
 };
-
-const storeWhatsAppUrl = (() => {
-  const number = whatsappNumber();
-  if (!number) return null;
-  const text = encodeURIComponent("مرحبًا، أريد الاستفسار عن منتجات شركة عمران التجارية.");
-  return `https://wa.me/${number}?text=${text}`;
-})();
 
 function readInitialParams() {
   if (typeof window === "undefined") {
@@ -394,20 +386,6 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
             )}
           </div>
         </section>
-        {!isPopup && (
-          <section className="border-t border-brand-border bg-white py-8 sm:py-12" aria-labelledby="home-videos-title">
-            <div className="container flex flex-col gap-5 rounded-2xl bg-brand-navy p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
-              <div>
-                <p className="text-sm font-bold text-brand-yellow">فيديوهات المنتجات</p>
-                <h2 id="home-videos-title" className="mt-2 text-2xl font-extrabold">شوف اللعبة وهي بتشتغل قبل الاستفسار</h2>
-                <p className="mt-2 text-sm leading-7 text-white/75">شوف فيديوهات الألعاب المتاحة قبل ما تختار.</p>
-              </div>
-              <a href="/videos" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-yellow px-5 py-3 text-sm font-extrabold text-brand-navy transition hover:bg-white">
-                <Play size={18} aria-hidden="true" /> عرض الفيديوهات
-              </a>
-            </div>
-          </section>
-        )}
         <section className="border-t border-brand-border bg-brand-cream py-8 sm:py-10">
           <div className="container flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <p className="text-sm font-bold text-brand-muted">تابعنا على المنصات الرسمية:</p>
@@ -417,13 +395,6 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
             </div>
           </div>
         </section>
-        <footer className={`border-t py-8 text-white sm:py-10 ${isPopup ? "border-[#35134f] bg-[#35134f]" : "border-brand-navy bg-brand-navy"}`}>
-          <div className="container flex flex-col items-stretch gap-5 text-center sm:flex-row sm:items-center sm:justify-between sm:text-right">
-            <div><p className="text-lg font-extrabold">شركة عمران التجارية</p><p className="mt-2 max-w-md text-sm leading-7 text-white/70">{isPopup ? "POP UP – Gifts & Balloons — هدايا، بالونات ومستلزمات حفلات ضمن شركة عمران التجارية." : "لعب أطفال — صور وتفاصيل تساعدك تختار، والاستفسار مباشرة عبر واتساب."}</p></div>
-            {storeWhatsAppUrl && <a href={storeWhatsAppUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-12 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-whatsapp px-6 py-3 text-sm font-bold text-white transition active:scale-[0.99] hover:bg-whatsapp-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-whatsapp/25 sm:w-auto sm:rounded-full"><MessageCircle size={18} aria-hidden="true" /> تواصل معنا عبر واتساب</a>}
-          </div>
-          <div className="container mt-6 border-t border-white/15 pt-4 text-center text-xs font-bold text-white/55">© 2026 شركة عمران التجارية — جميع الحقوق محفوظة</div>
-        </footer>
       </main>
       <ProductDetailsDialog
         product={openProduct}
