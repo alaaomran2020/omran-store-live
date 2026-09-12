@@ -6,6 +6,8 @@ export type SearchableProduct = Product & {
   search_synonyms?: string[] | string;
   search_normalized_name?: string;
   search_boost?: number;
+  brand?: string | null;
+  tags?: string[];
 };
 
 export type SearchResult<T> = { product: T; score: number };
@@ -18,6 +20,9 @@ const synonymGroups = [
   ["مطبخ", "مطابخ", "kitchen", "kitchens"],
   ["سكوتر", "سكوترات", "scooter", "scooters"],
   ["كرة", "كرات", "ball", "balls"],
+  ["بالون", "بلونه", "بالونات", "بلالين", "balloon", "balloons"],
+  ["عجلة", "دراجة", "دراجات", "bike", "bicycle", "bicycles"],
+  ["مسدس", "بندقية", "رشاش", "blaster", "gun"],
 ] as const;
 
 export function normalizeSearchText(value: string): string {
@@ -68,15 +73,24 @@ function tokenScore(query: string, value: string, fuzzy: boolean): number {
 }
 
 type SearchField = { value: string; weight: number; tokens: string[] };
+const fieldCache = new WeakMap<SearchableProduct, SearchField[]>();
+
 function fieldsFor(product: SearchableProduct): SearchField[] {
+  const cached = fieldCache.get(product);
+  if (cached) return cached;
   const fields: Array<[string, number]> = [
     [product.name, 1], [product.search_normalized_name ?? "", 0.95],
+    [product.sku ?? "", 0.9],
     ...entries(product.search_synonyms).map(value => [value, 0.85] as [string, number]),
     ...entries(product.search_keywords_ar).map(value => [value, 0.75] as [string, number]),
     ...entries(product.search_keywords_en).map(value => [value, 0.75] as [string, number]),
+    [product.brand ?? "", 0.55],
+    ...(product.tags ?? []).map(value => [value, 0.5] as [string, number]),
     [product.category, 0.45], [product.description, 0.15],
   ];
-  return fields.map(([value, weight]) => ({ value: normalizeSearchText(value), weight, tokens: words(value) })).filter(field => field.value);
+  const normalized = fields.map(([value, weight]) => ({ value: normalizeSearchText(value), weight, tokens: words(value) })).filter(field => field.value);
+  fieldCache.set(product, normalized);
+  return normalized;
 }
 
 function rank(product: SearchableProduct, query: string, fuzzy: boolean): number {

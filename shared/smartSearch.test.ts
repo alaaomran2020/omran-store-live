@@ -31,6 +31,20 @@ describe("smart search", () => {
     for (const query of ["عرايس", "عروسة", "doll"]) {
       expect(smartSearch([glasses, car, doll], query).results[0]?.product.id).toBe("T3");
     }
+    const balloon = product("T4", "بالون حفلات");
+    for (const query of ["بلالين", "بلونه", "balloons"]) {
+      expect(smartSearch([glasses, balloon], query).results[0]?.product.id).toBe("T4");
+    }
+  });
+  it("searches documented SKU, brand and tags", () => {
+    const branded = product("T5", "لعبة تركيب", {
+      sku: "OT-BLOCK-25",
+      brand: "Fun Blocks",
+      tags: ["تنمية المهارات"],
+    });
+    for (const query of ["OT-BLOCK-25", "fun blocks", "المهارات"]) {
+      expect(smartSearch([glasses, branded], query).results[0]?.product.id).toBe("T5");
+    }
   });
   it("ranks exact names above synonyms and descriptions", () => {
     const exact = product("E", "سيارة");

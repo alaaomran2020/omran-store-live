@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import type { CatalogSearchResult } from "@/lib/catalogSearch";
 
 type Props = {
@@ -33,6 +33,8 @@ export function SmartProductSearch({ value, onChange, result, isPopup }: Props) 
             if (event.key === "Escape") { setFocused(false); setActive(-1); }
             if (event.key === "ArrowDown" && suggestions.length) { event.preventDefault(); setFocused(true); setActive(current => Math.min(current + 1, suggestions.length - 1)); }
             if (event.key === "ArrowUp" && suggestions.length) { event.preventDefault(); setActive(current => Math.max(current - 1, 0)); }
+            if (event.key === "Home" && suggestions.length) { event.preventDefault(); setActive(0); }
+            if (event.key === "End" && suggestions.length) { event.preventDefault(); setActive(suggestions.length - 1); }
             if (event.key === "Enter" && open && active >= 0) { event.preventDefault(); choose(suggestions[active].value); }
           }}
           placeholder={isPopup ? "ابحث في بالونات أو هدايا أو مستلزمات حفلات…" : "ابحث عن لعبة…"}
@@ -40,8 +42,18 @@ export function SmartProductSearch({ value, onChange, result, isPopup }: Props) 
           aria-controls={open ? id : undefined}
           aria-activedescendant={open && active >= 0 ? `${id}-${active}` : undefined}
           role="combobox" data-testid="product-search"
-          className={`min-h-12 w-full rounded-xl border bg-white py-3 pl-4 pr-11 text-base font-semibold text-brand-ink outline-none transition placeholder:text-brand-muted focus:ring-4 sm:rounded-full sm:text-sm ${isPopup ? "border-[#e4d3ee] focus:border-[#8a3aaa] focus:ring-[#8a3aaa]/15" : "border-brand-border focus:border-brand-blue focus:ring-brand-blue/15"}`}
+          className={`min-h-12 w-full rounded-xl border bg-white py-3 pl-11 pr-11 text-base font-semibold text-brand-ink outline-none transition placeholder:text-brand-muted focus:ring-4 sm:rounded-full sm:text-sm ${isPopup ? "border-[#e4d3ee] focus:border-[#8a3aaa] focus:ring-[#8a3aaa]/15" : "border-brand-border focus:border-brand-blue focus:ring-brand-blue/15"}`}
         />
+        {value && (
+          <button
+            type="button"
+            onClick={() => choose("")}
+            aria-label="مسح البحث"
+            className="absolute left-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-cream hover:text-brand-navy focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/15"
+          >
+            <X size={16} aria-hidden="true" />
+          </button>
+        )}
       </label>
       {open && (
         <div id={id} role="listbox" className="absolute inset-x-0 top-full z-30 mt-2 max-h-72 overflow-y-auto rounded-xl border border-brand-border bg-white p-1 shadow-lg">
