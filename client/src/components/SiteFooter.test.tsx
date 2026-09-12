@@ -14,7 +14,6 @@ describe("SiteFooter", () => {
       { label: "POP UP", href: "/popup" },
       { label: "الفيديوهات", href: "/videos" },
       { label: "نقاط عمران", href: "/rewards" },
-      { label: "Omran VIP", href: "/vip" },
     ]);
   });
 
@@ -27,6 +26,14 @@ describe("SiteFooter", () => {
     render(<SiteFooter />);
     expect(screen.getByText(new RegExp(`© ${new Date().getFullYear()} شركة عمران التجارية`))).toBeTruthy();
     expect(screen.getAllByText("شركة عمران التجارية").length).toBeGreaterThan(0);
+  });
+
+  it("يعرض بيانات الفروع وأرقام التواصل المعتمدة بالترتيب", () => {
+    render(<SiteFooter />);
+    const footerText = screen.getByRole("contentinfo").textContent ?? "";
+    expect(footerText.indexOf("فرع السيد البدوي")).toBeLessThan(footerText.indexOf("فرع الاستاد"));
+    expect(screen.getByRole("link", { name: /01555570269/ }).getAttribute("href")).toBe("tel:+201555570269");
+    expect(screen.getByRole("link", { name: /040 3411149/ }).getAttribute("href")).toBe("tel:+20403411149");
   });
 
   it("لا يضيف روابط قانونية غير موجودة", () => {
