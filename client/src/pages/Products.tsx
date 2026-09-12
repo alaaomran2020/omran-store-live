@@ -12,7 +12,7 @@ import { fetchProducts, type Product, type ProductAvailability } from "@/lib/pro
 import { AGE_FILTER_OPTIONS, filterProductsByAge, parseAgeRange } from "@/lib/productAge";
 import { filterProductsByCatalog, type ProductCatalog } from "@/lib/productCatalog";
 import { trackEvent } from "@/lib/analytics";
-import { productCategories } from "@shared/products";
+import { canonicalCategory, displayCategoryName } from "@shared/taxonomy";
 import { shareProductsPage, type ProductShareOutcome } from "@/lib/productShare";
 import { Facebook, Instagram, MessageCircle, Play, RefreshCw, Share2, Sparkles } from "lucide-react";
 import { whatsappNumber } from "@/lib/productFormat";
@@ -47,7 +47,7 @@ function readInitialParams() {
   const sort: ProductSortMode = sortParam === "name-asc" || sortParam === "name-desc" ? sortParam : "catalog";
   return {
     search: params.get("search") ?? "",
-    category: params.get("category") ?? ALL,
+    category: params.get("category") ? displayCategoryName(params.get("category")!) : ALL,
     age: parseAgeRange(age) ? age! : ALL,
     brand: params.get("brand") ?? ALL,
     tag: params.get("tag") ?? ALL,
@@ -86,13 +86,25 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   const sourceProducts = payload?.products ?? [];
   const products = useMemo(() => filterProductsByCatalog(sourceProducts, catalog), [sourceProducts, catalog]);
   const sourceError = payload?.status === "error";
-  const categories = useMemo(() => productCategories(products), [products]);
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const product of products) {
+      const name = displayCategoryName(product.category);
+      if (name) counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return counts;
+  }, [products]);
+  const categories = useMemo(() => Array.from(categoryCounts.keys()).sort((a, b) => {
+    const orderA = canonicalCategory(a)?.sortOrder ?? Number.MAX_SAFE_INTEGER;
+    const orderB = canonicalCategory(b)?.sortOrder ?? Number.MAX_SAFE_INTEGER;
+    return orderA - orderB || a.localeCompare(b, "ar");
+  }), [categoryCounts]);
   const brands = useMemo(() => Array.from(new Set(products.map(product => product.brand).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b, "ar")), [products]);
   const tags = useMemo(() => Array.from(new Set(products.flatMap(product => product.tags))).sort((a, b) => a.localeCompare(b, "ar")), [products]);
   const availabilityValues = useMemo(() => Array.from(new Set(products.map(product => product.availability))), [products]);
 
   const filteredProducts = useMemo(() => {
-    let result = category === ALL ? products : products.filter(product => product.category === category);
+    let result = category === ALL ? products : products.filter(product => displayCategoryName(product.category) === category);
     if (!isPopup && age !== ALL) result = filterProductsByAge(result, age);
     if (brand !== ALL) result = result.filter(product => product.brand === brand);
     if (tag !== ALL) result = result.filter(product => product.tags.includes(tag));
@@ -248,10 +260,11 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     unavailable: "تعذر النسخ تلقائياً؛ يمكنك نسخ الرابط من شريط العنوان.",
   } as const;
 
-  const categoryChip = (value: string, label: string) => (
+  const categoryChip = (value: string, label: string, count?: number) => (
     <button key={value} type="button" onClick={() => handleCategoryFilter(value)} aria-pressed={category === value} data-testid="category-chip"
       className={`min-h-11 shrink-0 snap-start rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-4 ${category === value ? isPopup ? "bg-[#5e2181] text-white shadow" : "bg-brand-navy text-white shadow" : isPopup ? "border border-[#e8d8f1] bg-white text-[#5e2181] hover:border-[#8a3aaa]" : "border border-brand-border bg-brand-surface text-brand-muted hover:border-brand-blue hover:text-brand-blue"}`}>
-      {label}
+      <span>{label}</span>
+      {typeof count === "number" && <span className="mr-1 opacity-70" aria-label={`${count} منتج`}>({count})</span>}
     </button>
   );
   const ageChip = (value: string, label: string) => (
@@ -307,8 +320,8 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                   <div>
                     <p className={`mb-2 text-xs font-extrabold sm:hidden ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>التصنيف</p>
                     <div className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
-                      {categoryChip(ALL, isPopup ? "كل POP UP" : "كل التصنيفات")}
-                      {categories.map(name => categoryChip(name, name))}
+                      {categoryChip(ALL, isPopup ? "كل POP UP" : "كل التصنيفات", products.length)}
+                      {categories.map(name => categoryChip(name, name, categoryCounts.get(name)))}
                     </div>
                   </div>
                 )}

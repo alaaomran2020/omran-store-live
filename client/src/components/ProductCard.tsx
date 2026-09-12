@@ -2,6 +2,7 @@ import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, productPermalink } from "@/lib/productFormat";
 import { isPopUpProduct } from "@/lib/productCatalog";
+import { displayCategoryName } from "@shared/taxonomy";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Info, Images, MessageCircle, Play } from "lucide-react";
 
@@ -58,7 +59,7 @@ export function ProductCard({
           />
           {product.category && (
             <span className="absolute right-2 top-2 inline-flex max-w-[70%] truncate rounded-full bg-brand-surface/95 px-2 py-1 text-[10px] font-bold text-brand-navy shadow-sm ring-1 ring-brand-border sm:right-3 sm:top-3 sm:px-3 sm:text-[11px]">
-              {product.category}
+              {displayCategoryName(product.category)}
             </span>
           )}
           {(product.galleryImages.length > 0 || product.videoUrl) && (

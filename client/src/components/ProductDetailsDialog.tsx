@@ -8,6 +8,7 @@ import { productColorHex } from "@/lib/productColors";
 import { nonColorProductOptions, productColors } from "@/lib/productOptions";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Check, MessageCircle, X } from "lucide-react";
+import { displayCategoryName } from "@shared/taxonomy";
 
 const AVAILABILITY_LABELS: Record<Product["availability"], string> = {
   available: "متاح للاستفسار",
@@ -126,7 +127,7 @@ export function ProductDetailsDialog({
             <div className="flex flex-col gap-3.5 sm:gap-4">
               {product.category && (
                 <span className="inline-flex w-fit rounded-full bg-brand-sky px-3 py-1.5 text-xs font-extrabold text-brand-navy">
-                  {product.category}
+                  {displayCategoryName(product.category)}
                 </span>
               )}
               <h2 id={titleId} className="hidden text-2xl font-extrabold leading-9 text-brand-ink sm:block sm:text-3xl">

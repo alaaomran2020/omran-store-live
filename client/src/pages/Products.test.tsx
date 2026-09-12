@@ -57,7 +57,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     });
     await waitFor(() => expect(screen.getByText(target.name)).toBeTruthy());
 
-    fireEvent.click(screen.getByRole("button", { name: target.category }));
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(target.category) }));
     expect(cards().every(card => {
       const id = card.getAttribute("data-product-id");
       return PUBLIC_PRODUCTS_SNAPSHOT.find(product => product.id === id)?.category === target.category;

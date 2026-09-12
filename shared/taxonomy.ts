@@ -60,7 +60,7 @@ export const CATEGORIES: readonly Category[] = [
     slug: "rc-electronic",
     visibility: "visible",
     sortOrder: 3,
-    description: "سيارات دريفت، طائرات درون، وروبوتات تفاعلية تتحدث وتتحرك",
+    description: "عربيات دريفت، طائرات درون، وروبوتات تفاعلية تتحدث وتتحرك",
     aliases: [
       "سيارات",
       "السيارات",
@@ -76,12 +76,12 @@ export const CATEGORIES: readonly Category[] = [
   },
   {
     id: "dolls-figures",
-    name: "دمى وشخصيات أبطال",
+    name: "عرايس وشخصيات أبطال",
     nameEn: "Dolls & Action Figures",
     slug: "dolls-figures",
     visibility: "visible",
     sortOrder: 4,
-    description: "شخصيات أبطال خارقين، دمى لطيفة، وبيوت دمى خيالية",
+    description: "شخصيات أبطال، عرايس، وبيوت عرايس للعب التخيلي",
     aliases: ["دمى", "عرائس", "عروسة", "شخصيات", "مطبخ ألعاب", "ألعاب تقليدية"],
   },
   {
@@ -101,7 +101,7 @@ export const CATEGORIES: readonly Category[] = [
     slug: "outdoor",
     visibility: "visible",
     sortOrder: 6,
-    description: "سكوترات، سيارات كهربائية، ومعدات رياضية لصحة ونشاط دائم",
+    description: "سكوترات، عربيات كهربائية، ومعدات رياضية للحركة واللعب الخارجي",
     aliases: ["خارجية", "سكوتر", "دراجات", "حركية"],
   },
   {
@@ -213,6 +213,12 @@ export function canonicalCategory(raw: string): Category | null {
   const bySlug = slugById.get(text);
   if (bySlug) return bySlug;
   return aliasIndex.get(normalizeCategoryName(text)) ?? null;
+}
+
+/** اسم التصنيف المناسب للواجهة؛ يحفظ الاسم الخام إذا لم يوجد تطابق موثوق. */
+export function displayCategoryName(raw: string): string {
+  const trimmed = (raw ?? "").trim();
+  return canonicalCategory(trimmed)?.name ?? trimmed;
 }
 
 /** التصنيفات الظاهرة فعليًا في الواجهة. */

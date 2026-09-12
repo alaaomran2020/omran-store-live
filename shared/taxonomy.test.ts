@@ -3,6 +3,7 @@ import {
   AGE_GROUPS,
   CATEGORIES,
   canonicalCategory,
+  displayCategoryName,
   normalizeCategoryName,
 } from "./taxonomy";
 
@@ -39,6 +40,12 @@ describe("canonicalCategory", () => {
   it("يرد null للاسم غير المعروف (لا اختراع)", () => {
     expect(canonicalCategory("")).toBeNull();
     expect(canonicalCategory("تصنيف غير موجود إطلاقًا")).toBeNull();
+  });
+
+  it("يعرض مصطلحات عمران المعتمدة ويحتفظ بالتصنيف غير المعروف", () => {
+    expect(displayCategoryName("سيارات أطفال")).toBe("تحكم عن بعد وروبوتات");
+    expect(displayCategoryName("دمى")).toBe("عرايس وشخصيات أبطال");
+    expect(displayCategoryName("قسم خاص")).toBe("قسم خاص");
   });
 });
 
