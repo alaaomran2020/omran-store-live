@@ -1,46 +1,117 @@
-import { Blocks, BrainCircuit, CarFront, Gamepad2, Palette, Shapes } from "lucide-react";
+import {
+  ArrowLeft,
+  Blocks,
+  BrainCircuit,
+  CarFront,
+  Gamepad2,
+  Palette,
+  Shapes,
+} from "lucide-react";
 import { VISIBLE_CATEGORIES } from "@shared/taxonomy";
 
-const CATEGORY_ICONS = {
-  educational: BrainCircuit,
-  building: Blocks,
-  "rc-electronic": CarFront,
-  "dolls-figures": Shapes,
-  "board-games": Gamepad2,
-  "arts-crafts": Palette,
+const CATEGORY_PRESENTATION = {
+  educational: {
+    icon: BrainCircuit,
+    image: "/products/processed/generated/product-omr-raw-010-main.webp",
+  },
+  building: {
+    icon: Blocks,
+    image: "/products/processed/product-kitchen-46pcs-main.webp",
+  },
+  "rc-electronic": {
+    icon: CarFront,
+    image: "/products/processed/generated/product-omr-raw-015-main.webp",
+  },
+  "dolls-figures": {
+    icon: Shapes,
+    image: "/products/processed/generated/product-omr-raw-019-main.webp",
+  },
+  "board-games": {
+    icon: Gamepad2,
+    image: "/products/processed/generated/product-omr-raw-022-main.webp",
+  },
+  "arts-crafts": {
+    icon: Palette,
+    image: "/products/processed/generated/product-omr-raw-002-main.webp",
+  },
 } as const;
 
 const highlightedCategories = VISIBLE_CATEGORIES
-  .filter(category => category.id in CATEGORY_ICONS)
+  .filter(category => category.id in CATEGORY_PRESENTATION)
   .slice(0, 6);
 
 export default function HomeCategoryHighlights() {
   return (
-    <section className="border-b border-brand-border bg-white py-8 sm:py-11" aria-labelledby="home-categories-title">
+    <section
+      className="border-b border-brand-border bg-white py-8 sm:py-11"
+      aria-labelledby="home-categories-title"
+    >
       <div className="container">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-extrabold text-brand-red sm:text-sm">وصل لاختيارك أسرع</p>
-            <h2 id="home-categories-title" className="mt-1 text-2xl font-black text-brand-navy sm:text-3xl">ابدأ من نوع اللعبة</h2>
+            <p className="text-xs font-extrabold text-brand-red sm:text-sm">
+              وصل لاختيارك أسرع
+            </p>
+            <h2
+              id="home-categories-title"
+              className="mt-1 text-2xl font-black text-brand-navy sm:text-3xl"
+            >
+              ابدأ من نوع اللعبة
+            </h2>
           </div>
-          <a href="/products#feed" className="inline-flex min-h-11 w-fit items-center rounded-xl px-2 text-sm font-extrabold text-brand-blue hover:bg-brand-sky">
+          <a
+            href="/products#feed"
+            className="inline-flex min-h-11 w-fit items-center rounded-xl px-2 text-sm font-extrabold text-brand-blue transition hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue/15"
+          >
             كل لعب الأطفال
           </a>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {highlightedCategories.map(category => {
-            const Icon = CATEGORY_ICONS[category.id as keyof typeof CATEGORY_ICONS];
+            const presentation =
+              CATEGORY_PRESENTATION[
+                category.id as keyof typeof CATEGORY_PRESENTATION
+              ];
+            const Icon = presentation.icon;
+
             return (
               <a
                 key={category.id}
                 href={`/products?category=${encodeURIComponent(category.name)}#feed`}
-                className="group flex min-h-32 flex-col justify-between rounded-2xl border border-brand-border bg-brand-cream p-4 transition hover:-translate-y-0.5 hover:border-brand-blue/35 hover:bg-brand-sky/55 hover:shadow-sm focus-visible:ring-4 focus-visible:ring-brand-blue/15"
+                aria-label={`تصفح قسم ${category.name}`}
+                className="group relative flex min-h-52 flex-col overflow-hidden rounded-3xl border border-brand-border bg-white shadow-[0_10px_30px_rgba(15,48,87,0.07)] transition duration-300 hover:-translate-y-1 hover:border-brand-blue/30 hover:shadow-[0_18px_42px_rgba(15,48,87,0.14)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
               >
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white text-brand-blue shadow-sm ring-1 ring-brand-border transition group-hover:bg-brand-blue group-hover:text-white">
-                  <Icon size={21} aria-hidden="true" />
+                <span className="relative block h-32 overflow-hidden bg-brand-cream sm:h-36 lg:h-32 xl:h-36">
+                  <img
+                    src={presentation.image}
+                    alt=""
+                    width="360"
+                    height="240"
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-105"
+                  />
+                  <span
+                    className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-brand-navy/35 to-transparent"
+                    aria-hidden="true"
+                  />
+                  <span className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/70 bg-white/90 text-brand-blue shadow-md backdrop-blur-sm transition group-hover:bg-brand-blue group-hover:text-white">
+                    <Icon size={20} strokeWidth={2.2} aria-hidden="true" />
+                  </span>
                 </span>
-                <span className="mt-4 text-sm font-black leading-6 text-brand-navy">{category.name}</span>
+
+                <span className="flex min-h-20 flex-1 items-center justify-between gap-2 px-3.5 py-3">
+                  <span className="text-sm font-black leading-6 text-brand-navy">
+                    {category.name}
+                  </span>
+                  <span
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-sky text-brand-blue transition group-hover:-translate-x-0.5 group-hover:bg-brand-blue group-hover:text-white"
+                    aria-hidden="true"
+                  >
+                    <ArrowLeft size={16} strokeWidth={2.4} />
+                  </span>
+                </span>
               </a>
             );
           })}
