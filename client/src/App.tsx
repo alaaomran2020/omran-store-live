@@ -47,6 +47,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
+          <style>{`section[aria-labelledby="home-videos-title"] { display: none !important; }`}</style>
           <Toaster />
           <Suspense fallback={<div className="min-h-screen bg-brand-cream" aria-label="جاري تحميل الصفحة" />}>
             <Router />
