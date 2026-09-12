@@ -25,4 +25,12 @@ describe("store shell responsive smoke", () => {
     const bar = screen.getByLabelText("مستجدات المتجر");
     expect(within(bar).queryByRole("button")).toBeNull();
   });
+
+  it("marks the current customer section and keeps toys navigation visible", () => {
+    window.history.replaceState({}, "", "/products");
+    render(<BrandHeader />);
+    const toys = screen.getByRole("link", { name: "لعب الأطفال" });
+    expect(toys.getAttribute("aria-current")).toBe("page");
+    expect(toys.className).not.toContain("hidden");
+  });
 });

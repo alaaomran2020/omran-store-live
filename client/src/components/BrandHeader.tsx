@@ -2,13 +2,22 @@ import { MessageCircle } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
 import { whatsappNumber } from "@/lib/productFormat";
 
-const whatsappUrl = (() => {
-  const number = whatsappNumber();
-  if (!number) return null;
-  return `https://wa.me/${number}?text=${encodeURIComponent("مرحبًا، أريد الاستفسار عن منتجات شركة عمران التجارية.")}`;
-})();
-
 export default function BrandHeader() {
+  const pathname = typeof window === "undefined" ? "/" : window.location.pathname;
+  const isPopup = pathname.startsWith("/popup");
+  const number = whatsappNumber();
+  const whatsappMessage = isPopup
+    ? "مرحبًا، أريد الاستفسار عن منتجات POP UP للهدايا والبالونات."
+    : "مرحبًا، أريد الاستفسار عن منتجات شركة عمران التجارية.";
+  const whatsappUrl = number
+    ? `https://wa.me/${number}?text=${encodeURIComponent(whatsappMessage)}`
+    : null;
+  const navClass = (active: boolean, popup = false) => `min-h-11 items-center rounded-xl px-3 transition ${
+    active
+      ? popup ? "bg-[#f7effb] text-[#542170]" : "bg-brand-sky text-brand-blue"
+      : popup ? "text-[#6b278f] hover:bg-[#f7effb] hover:text-[#542170]" : "text-brand-navy hover:bg-brand-sky hover:text-brand-blue"
+  }`;
+
   return (
     <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-white/95 shadow-[0_8px_30px_rgba(15,23,42,0.04)] backdrop-blur-xl">
       <div className="container flex flex-col items-stretch gap-1.5 py-2 sm:min-h-[88px] sm:flex-row sm:items-center sm:justify-between sm:gap-5">
@@ -17,6 +26,8 @@ export default function BrandHeader() {
             <img
               src="/brand/logo.png"
               alt="لوجو عمران"
+              width="512"
+              height="512"
               className="h-full w-full object-contain p-1.5"
               loading="eager"
               decoding="async"
@@ -36,18 +47,20 @@ export default function BrandHeader() {
         <nav className="flex w-full shrink-0 items-center justify-between gap-1 border-t border-brand-border/70 pt-1.5 text-xs font-bold sm:w-auto sm:justify-start sm:border-0 sm:pt-0 sm:text-sm" aria-label="أقسام المتجر">
           <a
             href="/products"
-            className="hidden min-h-11 items-center rounded-xl px-3 text-brand-navy transition hover:bg-brand-sky hover:text-brand-blue sm:inline-flex"
+            className={`inline-flex ${navClass(pathname === "/products")}`}
+            aria-current={pathname === "/products" ? "page" : undefined}
           >
             لعب الأطفال
           </a>
           <a
             href="/popup"
-            className="inline-flex min-h-11 items-center rounded-xl px-3 font-black text-[#6b278f] transition hover:bg-[#f7effb] hover:text-[#542170]"
+            className={`inline-flex ${navClass(isPopup, true)} font-black`}
+            aria-current={isPopup ? "page" : undefined}
           >
             POP UP
           </a>
-          <a href="/videos" className="hidden min-h-11 items-center rounded-xl px-3 text-brand-navy transition hover:bg-brand-sky hover:text-brand-blue lg:inline-flex">الفيديوهات</a>
-          <a href="/rewards" className="hidden min-h-11 items-center rounded-xl px-3 text-brand-navy transition hover:bg-brand-sky hover:text-brand-blue lg:inline-flex">نقاط عمران</a>
+          <a href="/videos" aria-current={pathname === "/videos" ? "page" : undefined} className={`hidden lg:inline-flex ${navClass(pathname === "/videos")}`}>الفيديوهات</a>
+          <a href="/rewards" aria-current={pathname === "/rewards" ? "page" : undefined} className={`hidden lg:inline-flex ${navClass(pathname === "/rewards")}`}>نقاط عمران</a>
           {whatsappUrl && (
             <a
               href={whatsappUrl}

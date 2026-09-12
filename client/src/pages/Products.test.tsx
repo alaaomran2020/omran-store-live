@@ -36,6 +36,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
   it("يعرض Snapshot المحلي إذا تعذر الكتالوج الحي", async () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
+    expect(screen.queryByRole("banner")).toBeNull();
     expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(
       PUBLIC_PRODUCTS_SNAPSHOT.slice(0, initialVisibleCount).map(product => product.id)
     );

@@ -277,15 +277,6 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   return (
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
       {showAnnouncement && <AnnouncementBar />}
-      <header className="sticky top-0 z-40 border-b border-brand-border/80 bg-brand-cream/95 backdrop-blur">
-        <div className="container flex min-h-16 items-center justify-between gap-3 sm:min-h-20 sm:gap-4">
-          <a href="/" className="min-w-0 truncate text-base font-extrabold tracking-tight text-brand-navy sm:text-xl">شركة عمران التجارية</a>
-          <nav className="flex shrink-0 items-center gap-1 text-xs font-bold text-brand-muted sm:gap-3 sm:text-sm">
-            <a href="/products" className={`inline-flex min-h-11 items-center rounded-xl px-3 transition hover:bg-brand-sky hover:text-brand-blue ${!isPopup ? "text-brand-blue" : ""}`}>لعب الأطفال</a>
-            <a href="/popup" className={`inline-flex min-h-11 items-center rounded-xl px-3 transition hover:bg-[#f7effb] hover:text-[#6b278f] ${isPopup ? "text-[#6b278f]" : ""}`}>POP UP</a>
-          </nav>
-        </div>
-      </header>
       <main>
         <section className={`container grid gap-5 py-8 sm:gap-8 sm:py-12 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:py-20 ${isPopup ? "relative" : ""}`}>
           <div>
