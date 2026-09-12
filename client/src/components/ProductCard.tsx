@@ -1,6 +1,6 @@
 import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
-import { buildWhatsAppUrl, productPermalink } from "@/lib/productFormat";
+import { buildWhatsAppUrl } from "@/lib/productFormat";
 import { isPopUpProduct } from "@/lib/productCatalog";
 import { displayCategoryName } from "@shared/taxonomy";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
@@ -22,11 +22,14 @@ export function ProductCard({
   onOpenDetails: (product: Product) => void;
 }) {
   const isPopup = isPopUpProduct(product);
+  /* رابط المنتج الثابت (canonical) — يظل واحدًا مهما كانت الصفحة المعروضة،
+     حتى لا يتولد duplicate URL لنفس المنتج من الرئيسية أو من /products. */
+  const productHref = `${isPopup ? "/popup" : "/products"}?product=${encodeURIComponent(product.id)}`;
 
   const waUrl = buildWhatsAppUrl(product, {
     pageUrl:
       typeof window !== "undefined"
-        ? productPermalink(product.id, window.location.origin + window.location.pathname)
+        ? window.location.origin + productHref
         : undefined,
   });
 
@@ -46,9 +49,13 @@ export function ProductCard({
       className="group flex min-w-0 flex-col overflow-hidden rounded-[1.1rem] border border-brand-border bg-brand-surface shadow-[0_3px_14px_rgba(23,32,51,.07)] transition duration-200 sm:rounded-2xl sm:shadow-[0_4px_18px_rgba(23,32,51,.08)] sm:hover:-translate-y-0.5 sm:hover:shadow-lg"
     >
       <div className="relative">
-        <button
-          type="button"
-          onClick={() => onOpenDetails(product)}
+        {/* رابط دلالي حقيقي (crawlable) — الـSPA تفتح الـdialog برمجياً. */}
+        <a
+          href={productHref}
+          onClick={event => {
+            event.preventDefault();
+            onOpenDetails(product);
+          }}
           className={`relative block w-full overflow-hidden bg-brand-cream text-right focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${isPopup ? "aspect-[4/3]" : "aspect-square"}`}
           aria-label={`عرض تفاصيل ${product.name}`}
         >
@@ -68,7 +75,7 @@ export function ProductCard({
               {product.videoUrl ? "فيديو" : `${product.galleryImages.length + 1} صور`}
             </span>
           )}
-        </button>
+        </a>
       </div>
 
       <div className={`flex flex-1 flex-col gap-2.5 ${isPopup ? "p-3 sm:p-4" : "p-3 sm:gap-3 sm:p-5"}`}>
@@ -92,9 +99,9 @@ export function ProductCard({
               <span>للاستفسار والكميات</span>
             </a>
           )}
-          <button type="button" onClick={() => onOpenDetails(product)} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-brand-surface px-2.5 py-2.5 text-[12px] font-bold text-brand-blue transition active:scale-[0.98] hover:border-brand-blue hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue sm:gap-2 sm:px-4 sm:text-sm">
+          <a href={productHref} onClick={event => { event.preventDefault(); onOpenDetails(product); }} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-brand-surface px-2.5 py-2.5 text-[12px] font-bold text-brand-blue transition active:scale-[0.98] hover:border-brand-blue hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue sm:gap-2 sm:px-4 sm:text-sm">
             التفاصيل <Info size={14} aria-hidden="true" />
-          </button>
+          </a>
         </div>
       </div>
     </article>

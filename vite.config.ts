@@ -2,6 +2,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
+import { writeSitemap } from "./scripts/sitemap-generate-core.mjs";
 import {
   defineConfig,
   loadEnv,
@@ -267,6 +268,31 @@ function vitePluginEdgeHeaders(): Plugin {
   };
 }
 
+/**
+ * يولّد `dist/public/sitemap.xml` بعد البناء من الكتالوج المعتمد (نفس
+ * snapshots الحزمة). يفشل بصمت لصالح النسخة الثابتة `public/sitemap.xml`
+ * المنسوخة مسبقًا — sitemap ناقصة أفضل من فشل بناء.
+ */
+function vitePluginSitemap(): Plugin {
+  return {
+    name: "sitemap-build",
+    apply: "build",
+    enforce: "post",
+    async closeBundle() {
+      const outDir = path.resolve(import.meta.dirname, "dist", "public");
+      if (!fs.existsSync(outDir)) return;
+      try {
+        const { count } = await writeSitemap(path.resolve(import.meta.dirname), outDir);
+        console.log(`[sitemap] dist/public/sitemap.xml → ${count} URLs`);
+      } catch (error) {
+        console.warn(
+          `[sitemap] generation failed, keeping the static sitemap: ${String(error)}`
+        );
+      }
+    },
+  };
+}
+
 function buildPlugins(): PluginOption[] {
   // Vite's mode only decides which .env.[mode] file wins; the analytics ids are
   // plain VITE_* vars, so merge the env dir over process.env and read them there.
@@ -280,6 +306,7 @@ function buildPlugins(): PluginOption[] {
     vitePluginManusDebugCollector(),
     vitePluginOptionalAnalytics(env),
     vitePluginEdgeHeaders(),
+    vitePluginSitemap(),
   ];
 }
 

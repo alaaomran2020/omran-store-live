@@ -1,56 +1,173 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  خريطة الموقع — تُمدَّد تلقائيًا لاحقًا عند إضافة صفحات /products/[slug]
-  و/categories/[slug] (المرحلة SEO الكاملة). النطاق الأساسي الوحيد:
+  خريطة الموقع — توليد آلي من الكتالوج المعتمد وقت البناء
+  (scripts/generate-sitemap.mjs + vite plugin). لا يحتوي search/filter ولا مسارات داخلية،
+  وبدون تاريخ تعديل لأنه لا يوجد timestamp موثوق. النطاق الأساسي الوحيد:
   https://omrantoys.store
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://omrantoys.store/</loc>
-    <lastmod>2026-09-02</lastmod>
-    <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://omrantoys.store/products</loc>
-    <lastmod>2026-09-11</lastmod>
-    <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://omrantoys.store/popup</loc>
-    <lastmod>2026-09-11</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/popup/videos</loc>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://omrantoys.store/videos</loc>
-    <lastmod>2026-09-11</lastmod>
-    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://omrantoys.store/rewards</loc>
-    <lastmod>2026-09-11</lastmod>
-    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://omrantoys.store/vip</loc>
-    <lastmod>2026-09-11</lastmod>
-    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://omrantoys.store/vip/terms</loc>
-    <lastmod>2026-09-11</lastmod>
-    <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://omrantoys.store/vip/privacy</loc>
-    <lastmod>2026-09-11</lastmod>
-    <changefreq>monthly</changefreq>
     <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-IG-KIT-46</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-IG-HC-104</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-IG-SQ-01</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-001</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-002</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-003</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-004</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-005</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-006</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-007</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-008</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-010</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-011</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-012</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-013</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-014</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-015</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-017</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-019</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-020</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-021</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-022</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-023</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-026</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-027</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-028</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products?product=OMR-RAW-029</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/popup?product=POP-BAL-US-100</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/popup?product=POP-BAL-MET-050</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/popup?product=POP-BAL-PANDA-100</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/popup?product=POP-BAL-MET-100</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/popup?product=POP-BAL-CHR-050</loc>
+    <priority>0.6</priority>
   </url>
 </urlset>

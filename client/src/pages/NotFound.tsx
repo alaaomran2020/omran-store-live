@@ -2,14 +2,22 @@ import { AlertCircle, Home } from "lucide-react";
 import { useLocation } from "wouter";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import BrandHeader from "@/components/BrandHeader";
+import { SeoMetadata } from "@/components/SeoMetadata";
 import SiteFooter from "@/components/SiteFooter";
 import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 export default function NotFound() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
 
   return (
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
+      {/* noindex + عنوان مستقل: لا تبقى metadata الصفحة السابقة على 404. */}
+      <SeoMetadata
+        path={location}
+        title="الصفحة غير موجودة | عمران تويز"
+        description="الرابط الذي فتحتَه غير موجود أو تغيّر. ارجع للرئيسية وكمل تصفح لعب الأطفال والهدايا."
+        robots="noindex,follow"
+      />
       <AnnouncementBar />
       <BrandHeader />
       <main id={MAIN_CONTENT_ID} tabIndex={-1} className="container flex min-h-[55vh] items-center justify-center py-12">

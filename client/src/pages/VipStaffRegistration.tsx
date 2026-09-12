@@ -23,6 +23,7 @@ import {
   type StaffRequestedRole,
 } from "@/lib/staffEnrollment";
 import BrandHeader from "@/components/BrandHeader";
+import { SeoMetadata } from "@/components/SeoMetadata";
 import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 export default function VipStaffRegistration() {
@@ -95,6 +96,13 @@ export default function VipStaffRegistration() {
 
   return (
     <div dir="rtl" className="min-h-screen bg-slate-950">
+      {/* مسار عملي للموظفين (تسجيل عبر واتساب) — لا يدخل الفهرسة ولا sitemap. */}
+      <SeoMetadata
+        path="/vip/staff-register"
+        title="تسجيل موظف Omran VIP"
+        description="نموذج داخلي لطلب انضمام موظف إلى فريق Omran VIP عبر واتساب."
+        robots="noindex,follow"
+      />
       <BrandHeader />
       <main id={MAIN_CONTENT_ID} tabIndex={-1} className="px-4 py-10 text-slate-100">
       <div className="mx-auto max-w-xl">
