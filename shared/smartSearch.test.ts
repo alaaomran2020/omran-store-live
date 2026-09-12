@@ -46,6 +46,15 @@ describe("smart search", () => {
       expect(smartSearch([glasses, branded], query).results[0]?.product.id).toBe("T5");
     }
   });
+  it("يتعامل مع المسافات الزائدة وحالة الأحرف دون خلط النتائج", () => {
+    const branded = product("T5", "لعبة تركيب", {
+      sku: "OT-BLOCK-25",
+      brand: "Fun Blocks",
+      tags: ["تنمية المهارات"],
+    });
+    expect(smartSearch([glasses, branded], "  FUN   blocks  ").results.map(item => item.product.id)).toEqual(["T5"]);
+    expect(smartSearch([glasses, branded], "  ot-block-25 ").results.map(item => item.product.id)).toEqual(["T5"]);
+  });
   it("ranks exact names above synonyms and descriptions", () => {
     const exact = product("E", "سيارة");
     const synonym = product("S", "مركبة", { search_synonyms: ["سيارة"] });
