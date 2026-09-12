@@ -5,6 +5,7 @@ import SiteFooter from "@/components/SiteFooter";
 import { whatsappNumber } from "@/lib/productFormat";
 import { Link } from "wouter";
 import { SeoMetadata } from "@/components/SeoMetadata";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 const tiers = [
   { name: "Omran VIP", description: "كارت المزايا الرئيسي لعروض وخصومات مستمرة طوال مدة الكارت.", features: ["عروض عمران تويز", "عروض الأماكن المشاركة", "مكافآت ومزايا خاصة"] },
@@ -18,7 +19,7 @@ export default function VipProgram() {
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
       <SeoMetadata path="/vip" title="برنامج Omran VIP" description="تعرف على كروت Omran VIP ومزاياها وشروط الخصومات لدى عمران تويز والأماكن المشاركة." />
       <AnnouncementBar /><BrandHeader />
-      <main>
+      <main id={MAIN_CONTENT_ID} tabIndex={-1}>
         <section className="border-b border-brand-border bg-gradient-to-l from-brand-navy via-brand-blue to-sky-600 py-12 text-white sm:py-16">
           <div className="container max-w-5xl">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-2 text-sm font-black"><Sparkles size={17} /> Omran VIP Card Program</span>

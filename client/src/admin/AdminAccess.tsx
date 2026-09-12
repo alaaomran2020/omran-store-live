@@ -3,6 +3,7 @@ import { LogOut, MessageCircle, ShieldCheck } from "lucide-react";
 import { BrutalCard, Notice, PageTitle } from "@/admin/ui";
 import ProductIntake from "@/pages/ProductIntake";
 import VipOperations from "@/pages/VipOperations";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 type AccessIdentity = {
   email?: string;
@@ -82,7 +83,7 @@ export default function AdminAccess() {
   }
 
   return (
-    <main
+    <main id={MAIN_CONTENT_ID} tabIndex={-1}
       dir="rtl"
       className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100"
     >

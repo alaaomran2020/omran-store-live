@@ -34,3 +34,20 @@ describe("store shell responsive smoke", () => {
     expect(toys.className).not.toContain("hidden");
   });
 });
+
+describe("شريط المستجدات والوصولية", () => {
+  it("يحجب النسخة المكررة من الشريط عن قارئ الشاشة وعن الكيبورد", () => {
+    render(<AnnouncementBar />);
+    const bar = screen.getByLabelText("مستجدات المتجر");
+
+    const links = within(bar).queryAllByRole("link");
+    const hiddenLinks = Array.from(bar.querySelectorAll('a[aria-hidden="true"]'));
+    for (const link of hiddenLinks) {
+      expect(link.getAttribute("tabindex")).toBe("-1");
+    }
+    // لا يظهر رابط مخفي عن قارئ الشاشة وقابل للوصول بالكيبورد في نفس الوقت
+    for (const link of links) {
+      expect(link.getAttribute("aria-hidden")).toBeNull();
+    }
+  });
+});

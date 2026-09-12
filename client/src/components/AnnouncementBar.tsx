@@ -11,9 +11,27 @@ export default function AnnouncementBar() {
         <Megaphone size={16} className="shrink-0 text-brand-yellow" aria-hidden="true" />
         <div className="min-w-0 flex-1 overflow-hidden">
           <div className="flex w-max items-center gap-10 animate-[marquee_16s_linear_infinite] motion-reduce:transform-none motion-reduce:animate-none">
-            {[...items, ...items].map((item, index) => item.href ? (
-              <a key={`${item.id}-${index}`} href={item.href} className="whitespace-nowrap hover:text-brand-yellow">{item.message}</a>
-            ) : <span key={`${item.id}-${index}`} className="whitespace-nowrap">{item.message}</span>)}
+            {[...items, ...items].map((item, index) => {
+              /* The second half is a visual loop copy: hide it from screen readers and
+                 keep it out of the tab order so nothing hidden stays keyboard reachable.
+                 It also removes the duplicate announcement. */
+              const isLoopCopy = index >= items.length;
+              return item.href ? (
+                <a
+                  key={`${item.id}-${index}`}
+                  href={item.href}
+                  aria-hidden={isLoopCopy || undefined}
+                  tabIndex={isLoopCopy ? -1 : undefined}
+                  className="whitespace-nowrap hover:text-brand-yellow"
+                >
+                  {item.message}
+                </a>
+              ) : (
+                <span key={`${item.id}-${index}`} aria-hidden={isLoopCopy || undefined} className="whitespace-nowrap">
+                  {item.message}
+                </span>
+              );
+            })}
           </div>
         </div>
       </div>

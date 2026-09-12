@@ -141,7 +141,7 @@ function PopUpOfficialSocials() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`افتح حساب ${label} الرسمي لـ POP UP`}
-              className={`group relative flex min-h-20 items-center justify-between gap-4 overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-l p-4 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-fuchsia-200 ${accentClass}`}
+              className={`group relative flex min-h-20 items-center justify-between gap-4 overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-l p-4 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-fuchsia-700 ${accentClass}`}
             >
               <span className="flex min-w-0 items-center gap-3">
                 <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/60 shadow-inner ${iconClass}`}>

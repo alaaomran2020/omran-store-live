@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import BrandHeader from "@/components/BrandHeader";
 import SiteFooter from "@/components/SiteFooter";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 export default function NotFound() {
   const [, setLocation] = useLocation();
@@ -11,7 +12,7 @@ export default function NotFound() {
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
       <AnnouncementBar />
       <BrandHeader />
-      <main className="container flex min-h-[55vh] items-center justify-center py-12">
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} className="container flex min-h-[55vh] items-center justify-center py-12">
         <section className="w-full max-w-lg rounded-3xl border border-brand-border bg-white p-7 text-center shadow-sm sm:p-10">
           <span className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-brand-red">
             <AlertCircle size={32} aria-hidden="true" />
@@ -22,7 +23,7 @@ export default function NotFound() {
           <button
             type="button"
             onClick={() => setLocation("/")}
-            className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-blue px-6 py-3 text-sm font-black text-white transition hover:bg-brand-blue-hover focus-visible:ring-4 focus-visible:ring-brand-blue/20"
+            className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-blue px-6 py-3 text-sm font-black text-white transition hover:bg-brand-blue-hover focus-visible:ring-4 focus-visible:ring-brand-blue"
           >
             <Home size={18} aria-hidden="true" /> العودة للرئيسية
           </button>

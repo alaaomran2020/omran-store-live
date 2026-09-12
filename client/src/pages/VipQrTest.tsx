@@ -9,6 +9,7 @@ import {
   TextInput,
 } from "@/admin/ui";
 import { createVipQrSvg, normalizeCardSerial } from "@/lib/vipQr";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 export default function VipQrTest() {
   const [serial, setSerial] = useState("");
@@ -35,7 +36,7 @@ export default function VipQrTest() {
   };
 
   return (
-    <main
+    <main id={MAIN_CONTENT_ID} tabIndex={-1}
       dir="rtl"
       className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100"
     >

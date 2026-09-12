@@ -11,6 +11,8 @@ import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Check, MessageCircle, X } from "lucide-react";
 import { displayCategoryName } from "@shared/taxonomy";
 import { isPopUpProduct } from "@/lib/productCatalog";
+import { productCardTrigger, restoreFocusTo } from "@/lib/a11y";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 const AVAILABILITY_LABELS: Record<Product["availability"], string> = {
   available: "متاح للاستفسار",
@@ -32,8 +34,11 @@ export function ProductDetailsDialog({
 }) {
   const titleId = useId();
   const descriptionId = useId();
+  const colorGroupId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const lastProductIdRef = useRef<string | null>(null);
   const colors = useMemo(() => (product ? productColors(product) : []), [product]);
   const extraOptions = useMemo(() => (product ? nonColorProductOptions(product) : []), [product]);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -49,25 +54,29 @@ export function ProductDetailsDialog({
   const isOpen = Boolean(product);
 
   useEffect(() => {
+    if (product) lastProductIdRef.current = product.id;
+  }, [product?.id]);
+
+  /* Escape and Tab are owned by the modal stack so a nested lightbox closes first. */
+  useFocusTrap(dialogRef, isOpen, onClose);
+
+  useEffect(() => {
     if (!isOpen) return;
     previouslyFocusedRef.current = document.activeElement instanceof HTMLElement
       ? document.activeElement
       : null;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus());
     return () => {
       window.cancelAnimationFrame(focusFrame);
-      document.removeEventListener("keydown", onKey);
       document.body.style.overflow = previousOverflow;
-      previouslyFocusedRef.current?.focus();
+      /* Back/Forward or a re-filtered list can remove the original trigger, so fall
+         back to the matching product card and finally to the main landmark. */
+      restoreFocusTo(previouslyFocusedRef.current, productCardTrigger(lastProductIdRef.current));
       previouslyFocusedRef.current = null;
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!product) return null;
   const waUrl = buildWhatsAppUrl(product, {
@@ -91,13 +100,15 @@ export function ProductDetailsDialog({
 
   return (
     <div
+      ref={dialogRef}
+      tabIndex={-1}
       dir="rtl"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       aria-describedby={product.description ? descriptionId : undefined}
       data-testid="product-details"
-      className="fixed inset-0 z-50 flex items-end justify-center bg-brand-navy/65 p-0 backdrop-blur-[2px] sm:items-center sm:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-brand-navy/65 p-0 outline-none backdrop-blur-[2px] sm:items-center sm:p-6"
       onClick={onClose}
     >
       <div
@@ -116,7 +127,7 @@ export function ProductDetailsDialog({
             type="button"
             onClick={onClose}
             aria-label="إغلاق"
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-brand-border bg-white text-brand-muted transition active:scale-95 hover:border-brand-blue hover:bg-brand-sky hover:text-brand-blue focus-visible:ring-4 focus-visible:ring-brand-blue/15"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-brand-border bg-white text-brand-muted transition active:scale-95 hover:border-brand-blue hover:bg-brand-sky hover:text-brand-blue focus-visible:ring-4 focus-visible:ring-brand-blue"
           >
             <X size={18} aria-hidden="true" />
           </button>
@@ -173,10 +184,10 @@ export function ProductDetailsDialog({
               </dl>
 
               {colors.length > 0 && (
-                <div className="rounded-2xl border border-brand-border bg-white p-3.5 sm:p-4">
+                <div role="group" aria-labelledby={colorGroupId} className="rounded-2xl border border-brand-border bg-white p-3.5 sm:p-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-extrabold text-brand-navy">اختار اللون</p>
+                      <p id={colorGroupId} className="text-sm font-extrabold text-brand-navy">اختار اللون</p>
                       <p className="mt-0.5 text-xs font-bold text-brand-muted">اللون المختار هيظهر تلقائيًا في رسالة واتساب</p>
                     </div>
                     {selectedColor && (
@@ -194,7 +205,7 @@ export function ProductDetailsDialog({
                           type="button"
                           onClick={() => setSelectedColor(color)}
                           aria-pressed={active}
-                          className={`flex min-h-11 items-center gap-2 rounded-xl border px-2.5 py-2 text-right text-xs font-extrabold transition active:scale-[0.98] ${
+                          className={`flex min-h-11 items-center gap-2 rounded-xl border px-2.5 py-2 text-right text-xs font-extrabold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${
                             active
                               ? "border-brand-blue bg-brand-sky text-brand-navy ring-2 ring-brand-blue/10"
                               : "border-brand-border bg-white text-brand-muted hover:border-brand-blue/50"
@@ -214,38 +225,43 @@ export function ProductDetailsDialog({
                 </div>
               )}
 
-              {extraOptions.map(group => (
-                <div key={group.name} className="rounded-2xl border border-brand-border bg-white p-3.5 sm:p-4">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <p className="text-sm font-extrabold text-brand-navy">اختار {group.name}</p>
-                    {selectedOptions[group.name] && (
-                      <span className="rounded-full bg-brand-sky px-2.5 py-1 text-xs font-extrabold text-brand-navy">
-                        {selectedOptions[group.name]}
-                      </span>
-                    )}
+              {extraOptions.map((group, groupIndex) => {
+                /* Group names can contain spaces, which aria-labelledby would split,
+                   so the id is derived from the stable index instead. */
+                const groupTitleId = `${titleId}-option-${groupIndex}`;
+                return (
+                  <div key={group.name} role="group" aria-labelledby={groupTitleId} className="rounded-2xl border border-brand-border bg-white p-3.5 sm:p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p id={groupTitleId} className="text-sm font-extrabold text-brand-navy">اختار {group.name}</p>
+                      {selectedOptions[group.name] && (
+                        <span className="rounded-full bg-brand-sky px-2.5 py-1 text-xs font-extrabold text-brand-navy">
+                          {selectedOptions[group.name]}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {group.values.map(value => {
+                        const active = selectedOptions[group.name] === value;
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => setSelectedOptions(current => ({ ...current, [group.name]: value }))}
+                            aria-pressed={active}
+                            className={`min-h-11 rounded-xl border px-3 py-2 text-xs font-extrabold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${
+                              active
+                                ? "border-brand-blue bg-brand-sky text-brand-navy ring-2 ring-brand-blue/10"
+                                : "border-brand-border bg-white text-brand-muted hover:border-brand-blue/50"
+                            }`}
+                          >
+                            {value}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2" role="list" aria-label={`${group.name} ${product.name}`}>
-                    {group.values.map(value => {
-                      const active = selectedOptions[group.name] === value;
-                      return (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() => setSelectedOptions(current => ({ ...current, [group.name]: value }))}
-                          aria-pressed={active}
-                          className={`min-h-11 rounded-xl border px-3 py-2 text-xs font-extrabold transition active:scale-[0.98] ${
-                            active
-                              ? "border-brand-blue bg-brand-sky text-brand-navy ring-2 ring-brand-blue/10"
-                              : "border-brand-border bg-white text-brand-muted hover:border-brand-blue/50"
-                          }`}
-                        >
-                          {value}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
 
               {product.description && (
                 <div>
@@ -278,7 +294,7 @@ export function ProductDetailsDialog({
                         key={item.id}
                         type="button"
                         onClick={() => onSelectProduct(item)}
-                        className="min-w-0 overflow-hidden rounded-xl border border-brand-border bg-white text-right transition hover:border-brand-blue hover:shadow-sm focus-visible:ring-4 focus-visible:ring-brand-blue/15"
+                        className="min-w-0 overflow-hidden rounded-xl border border-brand-border bg-white text-right transition hover:border-brand-blue hover:shadow-sm focus-visible:ring-4 focus-visible:ring-brand-blue"
                         aria-label={`عرض تفاصيل ${item.name}`}
                       >
                         <span className="block aspect-square overflow-hidden bg-brand-cream">
@@ -307,7 +323,7 @@ export function ProductDetailsDialog({
                     target="_blank"
                     rel="noreferrer"
                     onClick={handleWhatsAppClick}
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25"
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp-hover"
                   >
                     <MessageCircle size={18} aria-hidden="true" />
                     للاستفسار والكميات
@@ -320,7 +336,7 @@ export function ProductDetailsDialog({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-border px-5 py-2.5 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue/15"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-border px-5 py-2.5 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue"
                 >
                   متابعة التصفح
                 </button>
@@ -336,7 +352,7 @@ export function ProductDetailsDialog({
               target="_blank"
               rel="noreferrer"
               onClick={handleWhatsAppClick}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-3 py-3 text-xs font-extrabold text-white shadow-lg transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-whatsapp/25"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-3 py-3 text-xs font-extrabold text-white shadow-lg transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-whatsapp-hover"
             >
               <MessageCircle size={17} aria-hidden="true" />
               للاستفسار والكميات

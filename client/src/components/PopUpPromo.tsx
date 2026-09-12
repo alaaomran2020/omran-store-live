@@ -12,7 +12,7 @@ export default function PopUpPromo() {
       <div className="container">
         <a
           href="/popup"
-          className="group relative isolate mx-auto block max-w-5xl overflow-hidden rounded-[1.35rem] border border-[#eadcf6] bg-[linear-gradient(115deg,#35134f_0%,#5e2181_48%,#84369f_100%)] px-4 py-3.5 text-white shadow-[0_12px_34px_rgba(76,29,103,0.18)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_17px_42px_rgba(76,29,103,0.26)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#7a38a6]/20 sm:px-5 sm:py-4 lg:px-6"
+          className="group relative isolate mx-auto block max-w-5xl overflow-hidden rounded-[1.35rem] border border-[#eadcf6] bg-[linear-gradient(115deg,#35134f_0%,#5e2181_48%,#84369f_100%)] px-4 py-3.5 text-white shadow-[0_12px_34px_rgba(76,29,103,0.18)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_17px_42px_rgba(76,29,103,0.26)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#c9a0e0] sm:px-5 sm:py-4 lg:px-6"
           aria-label="افتح قسم POP UP للهدايا والبالونات ومستلزمات الحفلات"
         >
           <span className="pointer-events-none absolute -right-8 -top-12 h-32 w-32 rounded-full bg-[#ffc938]/30 blur-2xl transition duration-700 group-hover:scale-125" />
@@ -25,7 +25,9 @@ export default function PopUpPromo() {
                   <Sparkles size={12} aria-hidden="true" /> Special Department
                 </span>
                 <div className="flex items-baseline gap-2">
-                  <h2 className="text-2xl font-black tracking-[-0.04em] text-white drop-shadow sm:text-3xl">POP UP</h2>
+                  {/* Promo badge, not a section heading: an <h2> here would precede the
+                      page <h1> and break the heading order. Styling is unchanged. */}
+                  <p className="text-2xl font-black tracking-[-0.04em] text-white drop-shadow sm:text-3xl">POP UP</p>
                   <span className="text-xs font-extrabold text-[#ffd85d] sm:text-sm">Gifts & Balloons</span>
                 </div>
               </div>

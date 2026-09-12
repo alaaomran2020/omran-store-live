@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import SkipLink from "./components/SkipLink";
 
 const AdminAccess = lazy(() => import("@/admin/AdminAccess"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -42,7 +43,17 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <Suspense fallback={<div className="min-h-screen bg-brand-cream" aria-label="جاري تحميل الصفحة" />}>
+      <SkipLink />
+      <Suspense
+        fallback={
+          <div
+            className="min-h-screen bg-brand-cream"
+            role="status"
+            aria-live="polite"
+            aria-label="جاري تحميل الصفحة"
+          />
+        }
+      >
         <Router />
       </Suspense>
     </ErrorBoundary>

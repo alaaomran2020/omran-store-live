@@ -17,6 +17,7 @@ import {
   type CardPaymentMethod,
   type ManualOperationType,
 } from "@/lib/vipManualOperation";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 const SHEET_ID = "1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc";
 const CONSOLE_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=155540235`;
@@ -132,7 +133,7 @@ export default function VipOperations() {
   });
 
   return (
-    <main
+    <main id={MAIN_CONTENT_ID} tabIndex={-1}
       dir="rtl"
       className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100"
     >
@@ -181,7 +182,7 @@ export default function VipOperations() {
                   setOperationType(event.target.value as ManualOperationType);
                   resetPrepared();
                 }}
-                className="w-full border-2 border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-electric focus:outline-none"
+                className="w-full border-2 border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-electric focus:outline-none focus:ring-2 focus:ring-electric"
               >
                 {Object.entries(manualOperationLabels).map(([value, label]) => (
                   <option key={value} value={value}>
@@ -212,7 +213,7 @@ export default function VipOperations() {
                     setCardTypeId(event.target.value);
                     resetPrepared();
                   }}
-                  className="w-full border-2 border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-electric focus:outline-none"
+                  className="w-full border-2 border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-electric focus:outline-none focus:ring-2 focus:ring-electric"
                 >
                   <option value="VIP">Omran VIP</option>
                   <option value="SILVER">Omran Silver</option>
@@ -271,7 +272,7 @@ export default function VipOperations() {
                     setPaymentMethod(event.target.value as CardPaymentMethod);
                     resetPrepared();
                   }}
-                  className="w-full border-2 border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-electric focus:outline-none"
+                  className="w-full border-2 border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-electric focus:outline-none focus:ring-2 focus:ring-electric"
                 >
                   <option value="CASH">نقدي</option>
                   <option value="CARD">بطاقة بنكية</option>
