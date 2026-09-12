@@ -12,27 +12,27 @@ import { VISIBLE_CATEGORIES } from "@shared/taxonomy";
 const CATEGORY_PRESENTATION = {
   educational: {
     icon: BrainCircuit,
-    image: "/products/processed/generated/product-omr-raw-010-main.webp",
+    image: "/categories/category-educational.webp",
   },
   building: {
     icon: Blocks,
-    image: "/products/processed/product-kitchen-46pcs-main.webp",
+    image: "/categories/category-building.webp",
   },
   "rc-electronic": {
     icon: CarFront,
-    image: "/products/processed/generated/product-omr-raw-015-main.webp",
+    image: "/categories/category-cars.webp",
   },
   "dolls-figures": {
     icon: Shapes,
-    image: "/products/processed/generated/product-omr-raw-019-main.webp",
+    image: "/categories/category-dolls.webp",
   },
   "board-games": {
     icon: Gamepad2,
-    image: "/products/processed/generated/product-omr-raw-022-main.webp",
+    image: "/categories/category-family-games.webp",
   },
   "arts-crafts": {
     icon: Palette,
-    image: "/products/processed/generated/product-omr-raw-002-main.webp",
+    image: "/categories/category-arts.webp",
   },
 } as const;
 
