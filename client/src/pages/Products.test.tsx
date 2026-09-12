@@ -39,6 +39,8 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(
       PUBLIC_PRODUCTS_SNAPSHOT.slice(0, initialVisibleCount).map(product => product.id)
     );
+    expect(within(cards()[0]).getByText("اسأل عن التوفر")).toBeTruthy();
+    expect(within(cards()[0]).getByRole("link", { name: "للاستفسار والكميات" })).toBeTruthy();
     expect(fetch).toHaveBeenCalledWith(
       makeCatalogUrl(),
       expect.objectContaining({ method: "GET", cache: "no-store" })

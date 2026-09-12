@@ -1,12 +1,16 @@
-import { useMemo, useState } from "react";
 import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl, productPermalink } from "@/lib/productFormat";
-import { productColorHex } from "@/lib/productColors";
-import { productColors } from "@/lib/productOptions";
 import { isPopUpProduct } from "@/lib/productCatalog";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Info, Images, MessageCircle, Play } from "lucide-react";
+
+const AVAILABILITY_LABELS: Record<Product["availability"], string> = {
+  available: "متاح للاستفسار",
+  unavailable: "غير متاح حاليًا",
+  preorder: "متاح بالطلب",
+  unknown: "اسأل عن التوفر",
+};
 
 /** Omran product card — separate POP UP media and WhatsApp-first conversion. */
 export function ProductCard({
@@ -16,12 +20,9 @@ export function ProductCard({
   product: Product;
   onOpenDetails: (product: Product) => void;
 }) {
-  const colors = useMemo(() => productColors(product), [product]);
-  const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null);
   const isPopup = isPopUpProduct(product);
 
   const waUrl = buildWhatsAppUrl(product, {
-    selectedColor,
     pageUrl:
       typeof window !== "undefined"
         ? productPermalink(product.id, window.location.origin + window.location.pathname)
@@ -71,39 +72,18 @@ export function ProductCard({
 
       <div className={`flex flex-1 flex-col gap-2.5 ${isPopup ? "p-3 sm:p-4" : "p-3 sm:gap-3 sm:p-5"}`}>
         <h3 className="line-clamp-2 min-h-[2.75rem] text-sm font-extrabold leading-[1.4rem] text-brand-ink sm:min-h-0 sm:text-lg sm:leading-7">{product.name}</h3>
-        <p className="text-[11px] font-bold leading-5 text-brand-muted sm:text-xs" dir="ltr">SKU: {product.sku || product.id}</p>
-
-        {colors.length > 0 && (
-          <div className="rounded-xl border border-brand-border bg-white/80 p-2.5">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <span className="text-[11px] font-extrabold text-brand-navy sm:text-xs">اختار اللون</span>
-              {selectedColor && <span className="truncate text-[10px] font-bold text-brand-muted sm:text-[11px]">{selectedColor}</span>}
-            </div>
-            <div className="flex flex-wrap gap-1.5" role="list" aria-label={`ألوان ${product.name}`}>
-              {colors.map(color => {
-                const active = selectedColor === color;
-                return (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => setSelectedColor(color)}
-                    title={color}
-                    aria-label={`اختيار اللون ${color}`}
-                    aria-pressed={active}
-                    className={`h-7 w-7 rounded-full border-2 shadow-sm transition active:scale-95 ${active ? "border-brand-blue ring-2 ring-brand-blue/20" : "border-white ring-1 ring-brand-border"}`}
-                    style={{ backgroundColor: productColorHex(color) }}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        )}
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold leading-5 sm:text-xs">
+          <span className="text-brand-muted" dir="ltr">SKU: {product.sku || product.id}</span>
+          <span className={`rounded-full px-2.5 py-1 ${product.availability === "unavailable" ? "bg-red-50 text-brand-red" : "bg-brand-sky text-brand-navy"}`}>
+            {AVAILABILITY_LABELS[product.availability]}
+          </span>
+        </div>
 
         <div className="mt-auto grid grid-cols-1 gap-2 pt-1 sm:pt-2">
           {waUrl && (
             <a href={waUrl} target="_blank" rel="noreferrer" onClick={handleWhatsAppClick} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-whatsapp px-2.5 py-2.5 text-[12px] font-bold leading-4 text-white transition active:scale-[0.98] hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp/25 sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm">
               <MessageCircle size={16} aria-hidden="true" className="shrink-0" />
-              <span>{selectedColor ? `استفسر عن ${selectedColor}` : "للاستفسار والكميات"}</span>
+              <span>للاستفسار والكميات</span>
             </a>
           )}
           <button type="button" onClick={() => onOpenDetails(product)} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-brand-surface px-2.5 py-2.5 text-[12px] font-bold text-brand-blue transition active:scale-[0.98] hover:border-brand-blue hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue/15 sm:gap-2 sm:px-4 sm:text-sm">
