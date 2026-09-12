@@ -18,6 +18,7 @@ function renderCatalog() {
 }
 
 const cards = () => screen.getAllByTestId("product-card");
+const initialVisibleCount = Math.min(24, PUBLIC_PRODUCTS_SNAPSHOT.length);
 
 beforeEach(() => {
   window.history.replaceState({}, "", "/products");
@@ -34,9 +35,9 @@ afterEach(() => {
 describe("كتالوج المنتجات مع fallback محلي", () => {
   it("يعرض Snapshot المحلي إذا تعذر الكتالوج الحي", async () => {
     renderCatalog();
-    await waitFor(() => expect(cards()).toHaveLength(PUBLIC_PRODUCTS_SNAPSHOT.length));
+    await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
     expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(
-      PUBLIC_PRODUCTS_SNAPSHOT.map(product => product.id)
+      PUBLIC_PRODUCTS_SNAPSHOT.slice(0, initialVisibleCount).map(product => product.id)
     );
     expect(fetch).toHaveBeenCalledWith(
       makeCatalogUrl(),
@@ -46,7 +47,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
 
   it("يبحث ويفلتر داخل البيانات المتاحة", async () => {
     renderCatalog();
-    await waitFor(() => expect(cards()).toHaveLength(PUBLIC_PRODUCTS_SNAPSHOT.length));
+    await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
 
     const target = PUBLIC_PRODUCTS_SNAPSHOT[0];
     fireEvent.change(screen.getByTestId("product-search"), {
@@ -72,7 +73,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
 
   it("يبني رابط واتساب للاستفسار عن السعر والتوفر مع بقاء fallback الكتالوج مستقلًا", async () => {
     renderCatalog();
-    await waitFor(() => expect(cards()).toHaveLength(PUBLIC_PRODUCTS_SNAPSHOT.length));
+    await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
 
     const links = screen.getAllByRole("link", { name: /للاستفسار والكميات|استفسر عن/ }) as HTMLAnchorElement[];
     expect(links[0].href).toContain("wa.me/201000000000");
@@ -82,5 +83,15 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
       expect.objectContaining({ method: "GET" })
     );
     expect(screen.queryByText(/طلبك|إضافة للسلة|أضف لطلبك|مقارنة المنتجات/)).toBeNull();
+  });
+
+  it("يرسم النتائج على دفعات بدل تحميل كل بطاقات الكتالوج دفعة واحدة", async () => {
+    renderCatalog();
+    await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
+
+    if (PUBLIC_PRODUCTS_SNAPSHOT.length > initialVisibleCount) {
+      fireEvent.click(screen.getByRole("button", { name: "عرض منتجات أكتر" }));
+      expect(cards()).toHaveLength(PUBLIC_PRODUCTS_SNAPSHOT.length);
+    }
   });
 });

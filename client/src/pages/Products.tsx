@@ -18,6 +18,7 @@ import { Facebook, Instagram, MessageCircle, Play, RefreshCw, Share2, Sparkles }
 import { whatsappNumber } from "@/lib/productFormat";
 
 const ALL = "__all__";
+const PRODUCTS_PAGE_SIZE = 24;
 const AVAILABILITY_LABELS: Record<ProductAvailability, string> = {
   available: "متاح",
   unavailable: "غير متاح",
@@ -70,6 +71,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   const [availability, setAvailability] = useState<string>(initial.availability);
   const [sort, setSort] = useState<ProductSortMode>(initial.sort);
   const [openProductId, setOpenProductId] = useState<string | null>(initial.product);
+  const [renderLimit, setRenderLimit] = useState(PRODUCTS_PAGE_SIZE);
 
   const productsQuery = useQuery({
     queryKey: ["products"],
@@ -106,6 +108,15 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
       return sort === "name-asc" ? comparison : -comparison;
     });
   }, [searchResult.products, sort]);
+  const renderedProducts = useMemo(
+    () => visibleProducts.slice(0, renderLimit),
+    [renderLimit, visibleProducts]
+  );
+  const hasMoreProducts = renderedProducts.length < visibleProducts.length;
+
+  useEffect(() => {
+    setRenderLimit(PRODUCTS_PAGE_SIZE);
+  }, [search, category, age, brand, tag, availability, sort, catalog]);
 
   useEffect(() => {
     const term = search.trim();
@@ -355,7 +366,25 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                     <button type="button" onClick={clearAllFilters} className={`mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border px-5 py-2 text-sm font-bold transition sm:w-auto sm:rounded-full ${isPopup ? "border-[#e4d3ee] text-[#6b278f] hover:border-[#8a3aaa] hover:bg-[#f7effb]" : "border-brand-border text-brand-blue hover:border-brand-blue hover:bg-brand-blue/5"}`}>مسح البحث والفلاتر</button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">{visibleProducts.map(product => <ProductCard key={product.id} product={product} onOpenDetails={handleOpenDetails} />)}</div>
+                  <div>
+                    <p className="mb-4 text-xs font-bold text-brand-muted" aria-live="polite">
+                      عرض {renderedProducts.length} من {visibleProducts.length} منتج
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                      {renderedProducts.map(product => <ProductCard key={product.id} product={product} onOpenDetails={handleOpenDetails} />)}
+                    </div>
+                    {hasMoreProducts && (
+                      <div className="mt-7 flex justify-center sm:mt-10">
+                        <button
+                          type="button"
+                          onClick={() => setRenderLimit(current => current + PRODUCTS_PAGE_SIZE)}
+                          className={`inline-flex min-h-12 w-full items-center justify-center rounded-xl px-6 py-3 text-sm font-extrabold text-white shadow-sm transition active:scale-[0.99] sm:w-auto sm:min-w-52 sm:rounded-full ${isPopup ? "bg-[#6b278f] hover:bg-[#572073]" : "bg-brand-blue hover:bg-brand-blue-hover"}`}
+                        >
+                          عرض منتجات أكتر
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </>
             )}
