@@ -147,6 +147,21 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     window.history.replaceState({}, "", url.toString());
   }, []);
 
+  const pushProductUrl = useCallback((productId: string) => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("product") === productId) return;
+    url.searchParams.set("product", productId);
+    window.history.pushState({}, "", url.toString());
+  }, []);
+
+  useEffect(() => {
+    const syncProductFromUrl = () => {
+      setOpenProductId(new URL(window.location.href).searchParams.get("product"));
+    };
+    window.addEventListener("popstate", syncProductFromUrl);
+    return () => window.removeEventListener("popstate", syncProductFromUrl);
+  }, []);
+
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     updateUrl({ search: value || null });
@@ -166,8 +181,8 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
       category: product.category,
       catalog,
     });
-    updateUrl({ product: product.id });
-  }, [updateUrl, catalog]);
+    pushProductUrl(product.id);
+  }, [catalog, pushProductUrl]);
   const handleCloseDetails = useCallback(() => {
     setOpenProductId(null);
     updateUrl({ product: null });
@@ -182,8 +197,8 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
       catalog,
       source: "related_products",
     });
-    updateUrl({ product: product.id });
-  }, [catalog, updateUrl]);
+    pushProductUrl(product.id);
+  }, [catalog, pushProductUrl]);
   const handleCategoryFilter = (value: string) => {
     setCategory(value);
     updateUrl({ category: value });

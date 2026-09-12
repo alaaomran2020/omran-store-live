@@ -107,4 +107,63 @@ describe("تفاصيل المنتج", () => {
     fireEvent.touchEnd(stage, { changedTouches: [{ clientX: 120 }] });
     expect(screen.getByText("2 / 2")).toBeTruthy();
   });
+
+  it("يغلق الـLightbox بمفتاح Escape دون إغلاق تفاصيل المنتج", () => {
+    const productWithGallery: Product = {
+      ...product,
+      image: "/products/main.webp",
+      processedImage: "/products/main.webp",
+      galleryImages: ["/products/second.webp"],
+    };
+    render(<ProductDetailsDialog product={productWithGallery} onClose={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: `فتح صورة ${product.name} بالحجم الكامل` }));
+    expect(screen.getByRole("dialog", { name: `معرض صور ${product.name}` })).toBeTruthy();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(screen.queryByRole("dialog", { name: `معرض صور ${product.name}` })).toBeNull();
+    expect(screen.getByTestId("product-details")).toBeTruthy();
+  });
+
+  it("يدور بين الصور دون تكرار ويدعم الأسهم داخل الـLightbox", () => {
+    const productWithGallery: Product = {
+      ...product,
+      image: "/products/main.webp",
+      processedImage: "/products/main.webp",
+      galleryImages: ["/products/main.webp", "/products/second.webp"],
+    };
+    render(<ProductDetailsDialog product={productWithGallery} onClose={vi.fn()} />);
+
+    expect(screen.getByText("1 / 2")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "الصورة التالية" }));
+    expect(screen.getByText("2 / 2")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "الصورة التالية" }));
+    expect(screen.getByText("1 / 2")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: `فتح صورة ${product.name} بالحجم الكامل` }));
+    fireEvent.keyDown(document, { key: "ArrowLeft" });
+    const lightbox = screen.getByRole("dialog", { name: `معرض صور ${product.name}` });
+    expect(lightbox).toBeTruthy();
+    expect(within(lightbox).getByText("2 / 2")).toBeTruthy();
+  });
+
+  it("يعيد التركيز إلى زر فتح الصورة بعد إغلاق الـLightbox", async () => {
+    const productWithGallery: Product = {
+      ...product,
+      image: "/products/main.webp",
+      processedImage: "/products/main.webp",
+      galleryImages: ["/products/second.webp"],
+    };
+    render(<ProductDetailsDialog product={productWithGallery} onClose={vi.fn()} />);
+
+    const trigger = screen.getByRole("button", { name: `فتح صورة ${product.name} بالحجم الكامل` });
+    trigger.focus();
+    fireEvent.click(trigger);
+    const closeLightbox = screen.getByRole("button", { name: "إغلاق عرض الصورة" });
+    expect(document.activeElement).toBe(closeLightbox);
+
+    fireEvent.click(closeLightbox);
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+  });
 });

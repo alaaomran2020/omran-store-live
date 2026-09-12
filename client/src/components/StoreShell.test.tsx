@@ -7,7 +7,7 @@ import BrandHeader from "./BrandHeader";
 afterEach(cleanup);
 
 describe("store shell responsive smoke", () => {
-  for (const width of [320, 375, 390, 768, 1280]) {
+  for (const width of [320, 360, 375, 390, 412, 768, 1280]) {
     it(`keeps the full brand identity and primary navigation at ${width}px`, () => {
       Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
       render(<BrandHeader />);

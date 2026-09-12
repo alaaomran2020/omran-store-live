@@ -4,21 +4,43 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Products from "@/pages/Products";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "@/lib/publicProductsSnapshot";
+import { POPUP_PRODUCTS_SNAPSHOT } from "@/lib/popupProductsSnapshot";
 import { makeCatalogUrl } from "@/lib/makeGateway";
 
-function renderCatalog() {
+function renderCatalog(catalog: "toys" | "popup" = "toys") {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <Products />
+      <Products catalog={catalog} />
     </QueryClientProvider>
   );
 }
 
 const cards = () => screen.getAllByTestId("product-card");
 const initialVisibleCount = Math.min(24, PUBLIC_PRODUCTS_SNAPSHOT.length);
+
+const liveHeaders = [
+  "id", "name", "price", "category", "description", "image", "active", "sort_order",
+  "product_prompt", "workflow_status", "qa_status", "source_drive_id", "processed_image",
+  "review_reason", "sku", "age_min", "age_max", "brand", "tags", "availability",
+];
+
+const liveRow = (
+  id: string,
+  name: string,
+  category: string,
+  brand: string,
+  tags: string,
+  availability: string,
+  ageMin: string,
+  ageMax: string,
+  sortOrder: string
+) => [
+  id, name, "", category, "وصف موثق", "", "TRUE", sortOrder, "", "PUBLISHED", "PASS", "", "", "", id,
+  ageMin, ageMax, brand, tags, availability,
+];
 
 beforeEach(() => {
   window.history.replaceState({}, "", "/products");
@@ -98,5 +120,88 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
       fireEvent.click(screen.getByRole("button", { name: "عرض منتجات أكتر" }));
       expect(cards()).toHaveLength(PUBLIC_PRODUCTS_SNAPSHOT.length);
     }
+  });
+
+  it("يدعم دمج البحث والفئة والفلتر المتقدم ثم يعيد كل الحالة عبر مسح الكل", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        values: [
+          liveHeaders,
+          liveRow("LIVE-A", "سيارة سباق", "سيارات", "Fun Toys", "سريع", "available", "3", "8", "1"),
+          liveRow("LIVE-B", "عروسة حفلات", "عرايس", "Dolls", "ناعم", "preorder", "6", "10", "2"),
+          liveRow("LIVE-C", "سيارة تعليمية", "سيارات", "Fun Toys", "سريع", "unavailable", "9", "12", "3"),
+        ],
+      }),
+    })));
+    renderCatalog();
+    await waitFor(() => expect(cards()).toHaveLength(3));
+
+    fireEvent.click(screen.getByRole("button", { name: /تحكم عن بعد وروبوتات/ }));
+    expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(["LIVE-A", "LIVE-C"]);
+
+    fireEvent.click(screen.getByRole("button", { name: "فتح الفلاتر الإضافية" }));
+    fireEvent.change(screen.getByLabelText("الماركة"), { target: { value: "Fun Toys" } });
+    fireEvent.change(screen.getByLabelText("التوفر"), { target: { value: "available" } });
+    expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(["LIVE-A"]);
+
+    fireEvent.change(screen.getByTestId("product-search"), { target: { value: "سيارة" } });
+    await waitFor(() => expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(["LIVE-A"]));
+
+    fireEvent.click(screen.getByRole("button", { name: "مسح الكل" }));
+    await waitFor(() => expect(cards()).toHaveLength(3));
+    expect((screen.getByTestId("product-search") as HTMLInputElement).value).toBe("");
+    expect(window.location.search).toBe("");
+  });
+
+  it("يعزل كتالوج POP UP ويعيد الحالة بعد إزالة بحث لا ينتمي إليه", async () => {
+    renderCatalog("popup");
+    await waitFor(() => expect(cards()).toHaveLength(POPUP_PRODUCTS_SNAPSHOT.length));
+
+    expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(
+      POPUP_PRODUCTS_SNAPSHOT.map(product => product.id)
+    );
+    expect(cards().every(card => card.getAttribute("data-catalog") === "popup")).toBe(true);
+    expect(screen.queryByText("كتالوج لعب الأطفال")).toBeNull();
+
+    fireEvent.change(screen.getByTestId("product-search"), { target: { value: "سيارة" } });
+    await waitFor(() => expect(screen.getByText("لا توجد نتائج مطابقة لبحثك أو الفلاتر")).toBeTruthy());
+
+    fireEvent.click(screen.getByRole("button", { name: "مسح البحث والفلاتر" }));
+    await waitFor(() => expect(cards()).toHaveLength(POPUP_PRODUCTS_SNAPSHOT.length));
+    expect(cards().every(card => card.getAttribute("data-catalog") === "popup")).toBe(true);
+  });
+
+  it("يمسح search وsort من الحالة والرابط معًا", async () => {
+    const target = PUBLIC_PRODUCTS_SNAPSHOT[0];
+    window.history.replaceState({}, "", `/products?search=${encodeURIComponent(target.name)}&sort=name-desc`);
+    renderCatalog();
+    await waitFor(() => expect(cards()).toHaveLength(1));
+
+    expect((screen.getByTestId("product-search") as HTMLInputElement).value).toBe(target.name);
+    fireEvent.click(screen.getByRole("button", { name: "مسح الكل" }));
+
+    await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
+    expect((screen.getByTestId("product-search") as HTMLInputElement).value).toBe("");
+    expect(window.location.search).toBe("");
+  });
+
+  it("يربط فتح المنتج بـback وforward بدل ترك Dialog عالقًا على حالة قديمة", async () => {
+    const target = PUBLIC_PRODUCTS_SNAPSHOT[0];
+    renderCatalog();
+    await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
+
+    fireEvent.click(within(cards()[0]).getByRole("button", { name: "التفاصيل" }));
+    await waitFor(() => expect(screen.getByTestId("product-details")).toBeTruthy());
+    expect(window.location.search).toContain(`product=${encodeURIComponent(target.id)}`);
+
+    window.history.replaceState({}, "", "/products");
+    fireEvent.popState(window);
+    await waitFor(() => expect(screen.queryByTestId("product-details")).toBeNull());
+
+    window.history.replaceState({}, "", `/products?product=${encodeURIComponent(target.id)}`);
+    fireEvent.popState(window);
+    await waitFor(() => expect(screen.getByTestId("product-details")).toBeTruthy());
   });
 });

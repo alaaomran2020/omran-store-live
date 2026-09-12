@@ -20,6 +20,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const lightboxTriggerRef = useRef<HTMLButtonElement>(null);
 
   const selected = images[selectedIndex] ?? null;
   const selectedProduct = { ...product, image: selected, processedImage: selected };
@@ -66,6 +67,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false);
     trackGallery("lightbox_close");
+    window.requestAnimationFrame(() => lightboxTriggerRef.current?.focus());
   }, [trackGallery]);
 
   useEffect(() => {
@@ -137,6 +139,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
 
         {selected && (
           <button
+            ref={lightboxTriggerRef}
             type="button"
             onClick={openLightbox}
             aria-label={`فتح صورة ${product.name} بالحجم الكامل`}

@@ -64,6 +64,29 @@ describe("buildWhatsAppUrl", () => {
     expect(text).toContain("الكود: SKU-123");
     expect(text).not.toContain("الكود: OT-001");
   });
+
+  it("يرمز الاختيارات الخاصة ولا يرسل قيمًا مفقودة أو كائنات خام", () => {
+    const url = buildWhatsAppUrl(
+      {
+        id: "POP-001",
+        name: "بالون خاص / حفلات",
+        price: null,
+        category: "بالونات",
+        sku: " POP-001 ",
+      },
+      {
+        number: "+20 (100) 000-0000",
+        pageUrl: "https://omrantoys.store/popup?product=POP-001&utm_source=qa",
+        selectedColor: "روز جولد",
+        selectedOptions: { اللون: "روز جولد", المقاس: "50 بالونة", غير_موجود: null },
+      }
+    );
+    const text = decodeURIComponent(new URL(url!).searchParams.get("text")!);
+    expect(text).toContain("اللون المختار: روز جولد");
+    expect(text).toContain("المقاس: 50 بالونة");
+    expect(text).not.toMatch(/undefined|null|\[object Object\]/);
+    expect(url).toContain("wa.me/201000000000");
+  });
 });
 
 describe("productPermalink", () => {
