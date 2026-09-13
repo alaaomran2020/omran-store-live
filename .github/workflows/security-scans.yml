@@ -13,18 +13,22 @@ permissions:
 
 jobs:
   semgrep:
-    name: Semgrep CE
+    name: Semgrep SAST
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]'
-    container:
-      image: semgrep/semgrep
     steps:
       - uses: actions/checkout@v6
-      - name: Scan source code (baseline reporting)
-        run: semgrep scan --config auto .
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install Semgrep
+        run: pip install --disable-pip-version-check semgrep==1.176.0
+      - name: Scan application source
+        run: semgrep scan --config p/security-audit --config p/typescript --error --metrics=off client/src shared vite.config.ts
 
   gitleaks:
-    name: Gitleaks
+    name: Gitleaks secrets scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -37,7 +41,7 @@ jobs:
           GITLEAKS_ENABLE_COMMENTS: 'false'
 
   trivy:
-    name: Trivy filesystem
+    name: Trivy filesystem and dependency scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -53,13 +57,15 @@ jobs:
           format: table
 
   checkov:
-    name: Checkov IaC and workflow config
+    name: Checkov infrastructure scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Scan infrastructure and configuration
-        uses: bridgecrewio/checkov-action@v12.1347.0
+      - uses: actions/setup-python@v6
         with:
-          directory: .
-          quiet: true
-          soft_fail: false
+          python-version: '3.12'
+          cache: pip
+      - name: Install Checkov
+        run: pip install --disable-pip-version-check checkov==3.3.8
+      - name: Scan IaC and GitHub Actions
+        run: checkov -d . --framework dockerfile github_actions --quiet --compact
