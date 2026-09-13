@@ -1,0 +1,25 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices"],
+  "labels": ["dependencies", "security"],
+  "dependencyDashboard": true,
+  "vulnerabilityAlerts": { "enabled": true },
+  "schedule": ["before 6am on monday"],
+  "timezone": "Africa/Cairo",
+  "prConcurrentLimit": 5,
+  "rangeStrategy": "replace",
+  "packageRules": [
+    {
+      "description": "Automerge non-major development tooling only after CI passes",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Never automerge major updates",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    }
+  ]
+}
