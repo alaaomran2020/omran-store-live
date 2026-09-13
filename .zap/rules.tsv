@@ -1,0 +1,4 @@
+# rule_id	action	comment
+10021	IGNORE	X-Content-Type-Options is handled by Cloudflare/static headers where applicable
+10038	WARN	Review CSP findings manually before promotion to blocking
+10049	WARN	Review cache-control findings against static storefront requirements
