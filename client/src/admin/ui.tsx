@@ -3,7 +3,12 @@
  * ألوان مخصصة من @theme في index.css: electric / sunbeam / ink.
  */
 import { useRef } from "react";
-import type { ReactNode, InputHTMLAttributes, TextareaHTMLAttributes, ButtonHTMLAttributes } from "react";
+import type {
+  ReactNode,
+  InputHTMLAttributes,
+  TextareaHTMLAttributes,
+  ButtonHTMLAttributes,
+} from "react";
 import { cn } from "@/lib/utils";
 
 export function BrutalCard({
@@ -28,17 +33,31 @@ export function BrutalCard({
 export function Field({
   label,
   hint,
+  error,
   children,
 }: {
   label: string;
   hint?: string;
+  error?: string;
   children: ReactNode;
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-bold text-slate-300">{label}</span>
+      <span className="mb-1.5 block text-xs font-bold text-slate-300">
+        {label}
+      </span>
       {children}
-      {hint ? <span className="mt-1 block text-[11px] text-slate-500">{hint}</span> : null}
+      {hint ? (
+        <span className="mt-1 block text-[11px] text-slate-500">{hint}</span>
+      ) : null}
+      {error ? (
+        <span
+          role="alert"
+          className="mt-1 block text-xs font-bold text-red-400"
+        >
+          {error}
+        </span>
+      ) : null}
     </label>
   );
 }
@@ -55,7 +74,12 @@ export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
 
 export function TextArea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   const { className, ...rest } = props;
-  return <textarea {...rest} className={cn(inputBase, "min-h-24 resize-y", className)} />;
+  return (
+    <textarea
+      {...rest}
+      className={cn(inputBase, "min-h-24 resize-y", className)}
+    />
+  );
 }
 
 export function PrimaryButton({
@@ -143,12 +167,20 @@ export function Spinner({ label }: { label?: string }) {
   return (
     <div className="flex items-center justify-center gap-3 py-10 text-electric-soft">
       <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-electric border-t-transparent" />
-      {label ? <span className="font-mono text-xs tracking-widest">{label}</span> : null}
+      {label ? (
+        <span className="font-mono text-xs tracking-widest">{label}</span>
+      ) : null}
     </div>
   );
 }
 
-export function PageTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+export function PageTitle({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle?: string;
+}) {
   return (
     <div className="mb-6">
       <h1 className="text-xl font-black text-slate-100">{title}</h1>

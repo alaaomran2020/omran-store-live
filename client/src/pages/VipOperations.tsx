@@ -17,7 +17,6 @@ import {
   type CardPaymentMethod,
   type ManualOperationType,
 } from "@/lib/vipManualOperation";
-import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 const SHEET_ID = "1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc";
 const CONSOLE_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=155540235`;
@@ -43,8 +42,7 @@ export default function VipOperations() {
   const [partnerOrBranchId, setPartnerOrBranchId] = useState("");
   const [invoiceReference, setInvoiceReference] = useState("");
   const [amountEgp, setAmountEgp] = useState("");
-  const [paymentMethod, setPaymentMethod] =
-    useState<CardPaymentMethod>("CASH");
+  const [paymentMethod, setPaymentMethod] = useState<CardPaymentMethod>("CASH");
   const [discountEgp, setDiscountEgp] = useState("");
   const [previousStatus, setPreviousStatus] = useState("");
   const [evidenceLink, setEvidenceLink] = useState("");
@@ -133,9 +131,9 @@ export default function VipOperations() {
   });
 
   return (
-    <main id={MAIN_CONTENT_ID} tabIndex={-1}
+    <section
       dir="rtl"
-      className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100"
+      className="rounded-2xl bg-slate-950 px-4 py-10 text-slate-100"
     >
       <div className="mx-auto max-w-3xl">
         <PageTitle
@@ -376,8 +374,16 @@ export default function VipOperations() {
                     className="h-20 w-full border border-slate-700 bg-slate-950 p-2 font-mono text-xs text-slate-300"
                     aria-label="سطر تحصيل الكارت الجاهز للنسخ"
                   />
-                  <GhostButton type="button" onClick={copyPaymentRow} className="mt-2">
-                    {paymentCopied ? <Check size={15} /> : <ClipboardCopy size={15} />}
+                  <GhostButton
+                    type="button"
+                    onClick={copyPaymentRow}
+                    className="mt-2"
+                  >
+                    {paymentCopied ? (
+                      <Check size={15} />
+                    ) : (
+                      <ClipboardCopy size={15} />
+                    )}
                     {paymentCopied ? "تم نسخ سطر التحصيل" : "نسخ سطر التحصيل"}
                   </GhostButton>
                 </div>
@@ -394,6 +400,6 @@ export default function VipOperations() {
           </p>
         </div>
       </div>
-    </main>
+    </section>
   );
 }

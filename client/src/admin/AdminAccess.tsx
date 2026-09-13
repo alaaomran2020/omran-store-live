@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
-import { LogOut, MessageCircle, ShieldCheck } from "lucide-react";
+import { useLocation } from "wouter";
+import { MessageCircle, ShieldCheck } from "lucide-react";
 import { SeoMetadata } from "@/components/SeoMetadata";
 import { BrutalCard, Notice, PageTitle } from "@/admin/ui";
+import { AdminLayout } from "@/admin/AdminLayout";
+import AdminDashboard from "@/admin/AdminDashboard";
+import AdminProducts from "@/admin/AdminProducts";
+import AdminCategories from "@/admin/AdminCategories";
+import AdminInventory from "@/admin/AdminInventory";
+import AdminEmptyPage from "@/admin/AdminEmptyPage";
+import AdminVipDashboard from "@/admin/AdminVipDashboard";
+import AdminDiagnostics from "@/admin/AdminDiagnostics";
 import ProductIntake from "@/pages/ProductIntake";
 import VipOperations from "@/pages/VipOperations";
 import { MAIN_CONTENT_ID } from "@/lib/a11y";
@@ -15,9 +24,7 @@ type AccessIdentity = {
 type AccessState = "checking" | "allowed" | "denied";
 
 const IDENTITY_URL = "/cdn-cgi/access/get-identity";
-const LOGOUT_URL = "/cdn-cgi/access/logout";
-
-async function readAccessIdentity(): Promise<AccessIdentity | null> {
+export async function readAccessIdentity(): Promise<AccessIdentity | null> {
   try {
     const response = await fetch(IDENTITY_URL, {
       credentials: "include",
@@ -40,6 +47,8 @@ async function readAccessIdentity(): Promise<AccessIdentity | null> {
 export default function AdminAccess() {
   const [accessState, setAccessState] = useState<AccessState>("checking");
   const [identity, setIdentity] = useState<AccessIdentity | null>(null);
+  const [location, navigate] = useLocation();
+  const currentPath = location.replace(/\/$/, "") || "/admin";
 
   useEffect(() => {
     let cancelled = false;
@@ -48,50 +57,60 @@ export default function AdminAccess() {
       if (cancelled) return;
       setIdentity(result);
       setAccessState(result ? "allowed" : "denied");
+      if (
+        result &&
+        (window.location.pathname === "/admin" ||
+          window.location.pathname === "/admin/")
+      ) {
+        navigate("/admin/dashboard", { replace: true });
+      }
     });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [navigate]);
 
   if (accessState === "allowed" && identity) {
-    const content =
-      window.location.pathname === "/admin/vip-operations" ? (
-        <VipOperations />
-      ) : (
-        <ProductIntake />
-      );
+    const content = (() => {
+      switch (currentPath) {
+        case "/admin/dashboard":
+          return <AdminDashboard />;
+        case "/admin/products":
+          return <AdminProducts />;
+        case "/admin/product-intake":
+          return <ProductIntake />;
+        case "/admin/categories":
+          return <AdminCategories />;
+        case "/admin/inventory":
+          return <AdminInventory />;
+        case "/admin/vip":
+          return <AdminVipDashboard />;
+        case "/admin/vip-operations":
+          return <VipOperations />;
+        case "/admin/diagnostics":
+          return <AdminDiagnostics />;
+        default:
+          return <AdminEmptyPage path={currentPath} />;
+      }
+    })();
     return (
-      <div className="relative">
-        {/* لوحة الإدارة خلف Cloudflare Access — noindex إضافية (defense in depth). */}
+      <>
         <SeoMetadata
-          path="/admin"
+          path={currentPath}
           title="لوحة الإدارة | شركة عمران التجارية"
           description="لوحة عمليات شركة عمران التجارية — وصول الموظفين المعتمدين فقط."
-          robots="noindex,follow"
+          robots="noindex,nofollow"
         />
-        <div
-          dir="rtl"
-          className="absolute left-4 top-4 z-50 flex items-center gap-2"
-        >
-          <span className="hidden border-2 border-emerald-700 bg-emerald-950/90 px-3 py-2 text-xs font-black text-emerald-200 sm:inline-block">
-            {identity.email || identity.name || "موظف معتمد"}
-          </span>
-          <a
-            href={LOGOUT_URL}
-            className="inline-flex items-center gap-2 border-2 border-slate-700 bg-slate-950 px-3 py-2 text-xs font-black text-slate-100"
-          >
-            <LogOut size={15} /> خروج
-          </a>
-        </div>
-        {content}
-      </div>
+        <AdminLayout identity={identity}>{content}</AdminLayout>
+      </>
     );
   }
 
   return (
-    <main id={MAIN_CONTENT_ID} tabIndex={-1}
+    <main
+      id={MAIN_CONTENT_ID}
+      tabIndex={-1}
       dir="rtl"
       className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100"
     >
@@ -100,7 +119,7 @@ export default function AdminAccess() {
         path="/admin"
         title="لوحة الإدارة | شركة عمران التجارية"
         description="لوحة عمليات شركة عمران التجارية — وصول الموظفين المعتمدين فقط."
-        robots="noindex,follow"
+        robots="noindex,nofollow"
       />
       <div className="mx-auto max-w-xl">
         <PageTitle

@@ -151,12 +151,15 @@ if (exists("shared/vipProgram.ts")) {
 
 if (exists("client/src/admin/AdminAccess.tsx")) {
   const admin = read("client/src/admin/AdminAccess.tsx");
+  const adminLayout = exists("client/src/admin/AdminLayout.tsx")
+    ? read("client/src/admin/AdminLayout.tsx")
+    : "";
   assert(
     admin.includes("/cdn-cgi/access/get-identity"),
     "admin must verify Cloudflare Access identity"
   );
   assert(
-    admin.includes("/cdn-cgi/access/logout"),
+    `${admin}\n${adminLayout}`.includes("/cdn-cgi/access/logout"),
     "admin logout must use Cloudflare Access logout"
   );
   assert(
