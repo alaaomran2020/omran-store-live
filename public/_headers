@@ -1,0 +1,9 @@
+/admin
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: private, no-store, max-age=0
+  Referrer-Policy: no-referrer
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: private, no-store, max-age=0
+  Referrer-Policy: no-referrer

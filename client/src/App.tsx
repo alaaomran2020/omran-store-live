@@ -32,8 +32,21 @@ function Router() {
       <Route path={"/vip/staff-register"} component={VipStaffRegistration} />
       <Route path={"/vip/qr-test"} component={VipQrTest} />
       <Route path={"/admin"} component={AdminAccess} />
+      <Route path={"/admin/dashboard"} component={AdminAccess} />
+      <Route path={"/admin/products"} component={AdminAccess} />
       <Route path={"/admin/product-intake"} component={AdminAccess} />
+      <Route path={"/admin/reviews"} component={AdminAccess} />
+      <Route path={"/admin/categories"} component={AdminAccess} />
+      <Route path={"/admin/search"} component={AdminAccess} />
+      <Route path={"/admin/inventory"} component={AdminAccess} />
+      <Route path={"/admin/leads"} component={AdminAccess} />
+      <Route path={"/admin/vip"} component={AdminAccess} />
       <Route path={"/admin/vip-operations"} component={AdminAccess} />
+      <Route path={"/admin/staff"} component={AdminAccess} />
+      <Route path={"/admin/reports"} component={AdminAccess} />
+      <Route path={"/admin/activity"} component={AdminAccess} />
+      <Route path={"/admin/settings"} component={AdminAccess} />
+      <Route path={"/admin/diagnostics"} component={AdminAccess} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
