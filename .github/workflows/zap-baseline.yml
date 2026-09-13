@@ -1,0 +1,22 @@
+name: OWASP ZAP Baseline
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '43 3 * * 1,4'
+
+permissions:
+  contents: read
+
+jobs:
+  zap-baseline:
+    name: ZAP baseline against production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baseline scan omrantoys.store
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: 'https://omrantoys.store'
+          fail_action: false
+          allow_issue_writing: false
+          artifact_name: zap-baseline-report
