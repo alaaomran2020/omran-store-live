@@ -137,7 +137,7 @@ export default function VipOperations() {
     >
       <div className="mx-auto max-w-3xl">
         <PageTitle
-          title="تشغيل كروت Omran VIP"
+          title="تشغيل كروت عمران VIP"
           subtitle="تجهيز عمليات الموظفين للشيت اليدوي"
         />
 
@@ -213,8 +213,8 @@ export default function VipOperations() {
                   }}
                   className="w-full border-2 border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-electric focus:outline-none focus:ring-2 focus:ring-electric"
                 >
-                  <option value="VIP">Omran VIP</option>
-                  <option value="SILVER">Omran Silver</option>
+                  <option value="VIP">عمران VIP</option>
+                  <option value="SILVER">عمران Silver</option>
                 </select>
               </Field>
             ) : null}

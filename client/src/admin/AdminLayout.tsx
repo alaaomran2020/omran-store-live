@@ -127,7 +127,7 @@ export function AdminLayout({
       <div className="flex h-20 items-center gap-3 border-b border-slate-800 px-5">
         <img
           src="/brand/logo-256.png"
-          alt="عمران تويز"
+          alt="شعار شركة عمران التجارية"
           className="h-11 w-11 rounded-xl bg-white object-contain p-1"
         />
         <div>
