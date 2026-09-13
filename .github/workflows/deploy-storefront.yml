@@ -6,16 +6,6 @@ on:
     - cron: "*/15 * * * *"
   pull_request:
     branches: [main]
-    paths:
-      - "client/**"
-      - "public/**"
-      - "shared/**"
-      - "scripts/**"
-      - ".env.production"
-      - "vite.config.ts"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - ".github/workflows/deploy-storefront.yml"
   push:
     branches: [main]
     paths:
