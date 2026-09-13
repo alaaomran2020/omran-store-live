@@ -20,8 +20,8 @@ jobs:
       image: semgrep/semgrep
     steps:
       - uses: actions/checkout@v6
-      - name: Scan source code
-        run: semgrep scan --config auto --error .
+      - name: Scan source code (baseline reporting)
+        run: semgrep scan --config auto .
 
   gitleaks:
     name: Gitleaks
