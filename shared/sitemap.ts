@@ -26,7 +26,6 @@ export const STATIC_SITEMAP_ENTRIES: readonly SitemapEntry[] = [
   { loc: "/products", priority: 0.9 },
   { loc: "/popup", priority: 0.9 },
   { loc: "/popup/videos", priority: 0.7 },
-  { loc: "/videos", priority: 0.7 },
   { loc: "/rewards", priority: 0.7 },
   { loc: "/vip", priority: 0.7 },
   { loc: "/vip/terms", priority: 0.5 },
