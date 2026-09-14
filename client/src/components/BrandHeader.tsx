@@ -59,7 +59,6 @@ export default function BrandHeader() {
           >
             POP UP
           </a>
-          <a href="/videos" aria-current={pathname === "/videos" ? "page" : undefined} className={`hidden lg:inline-flex ${navClass(pathname === "/videos")}`}>الفيديوهات</a>
           <a href="/rewards" aria-current={pathname === "/rewards" ? "page" : undefined} className={`hidden lg:inline-flex ${navClass(pathname === "/rewards")}`}>نقاط عمران</a>
           {whatsappUrl && (
             <a
