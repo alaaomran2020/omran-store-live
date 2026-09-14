@@ -9,6 +9,7 @@ import { productColorHex } from "@/lib/productColors";
 import { nonColorProductOptions, productColors } from "@/lib/productOptions";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Check, MessageCircle, X } from "lucide-react";
+import { WishlistButton } from "@/components/WishlistButton";
 import { displayCategoryName } from "@shared/taxonomy";
 import { isPopUpProduct } from "@/lib/productCatalog";
 import { productCardTrigger, restoreFocusTo } from "@/lib/a11y";
@@ -318,20 +319,26 @@ export function ProductDetailsDialog({
 
               <div className="mt-auto hidden flex-col gap-2 pt-2 sm:flex">
                 {waUrl ? (
-                  <a
-                    href={waUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={handleWhatsAppClick}
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp-hover"
-                  >
-                    <MessageCircle size={18} aria-hidden="true" />
-                    للاستفسار والكميات
-                  </a>
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <a
+                      href={waUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={handleWhatsAppClick}
+                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp-hover"
+                    >
+                      <MessageCircle size={18} aria-hidden="true" />
+                      للاستفسار والكميات
+                    </a>
+                    <WishlistButton productId={product.id} productName={product.name} />
+                  </div>
                 ) : (
-                  <p className="rounded-xl border border-brand-border bg-brand-cream px-4 py-3 text-sm font-bold text-brand-muted">
-                    للاستفسار عن هذا المنتج تواصل معنا عبر صفحاتنا الرسمية.
-                  </p>
+                  <>
+                    <p className="rounded-xl border border-brand-border bg-brand-cream px-4 py-3 text-sm font-bold text-brand-muted">
+                      للاستفسار عن هذا المنتج تواصل معنا عبر صفحاتنا الرسمية.
+                    </p>
+                    <WishlistButton productId={product.id} productName={product.name} />
+                  </>
                 )}
                 <button
                   type="button"
@@ -345,8 +352,9 @@ export function ProductDetailsDialog({
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 z-20 grid grid-cols-1 gap-2 border-t border-brand-border bg-white/96 p-3 pb-[max(.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:hidden">
+        <div className="absolute inset-x-0 bottom-0 z-20 grid grid-cols-[1fr_auto] gap-2 border-t border-brand-border bg-white/96 p-3 pb-[max(.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:hidden">
           {waUrl ? (
+            <>
             <a
               href={waUrl}
               target="_blank"
@@ -357,7 +365,10 @@ export function ProductDetailsDialog({
               <MessageCircle size={17} aria-hidden="true" />
               للاستفسار والكميات
             </a>
+            <WishlistButton productId={product.id} productName={product.name} className="min-h-12 px-3 py-3" />
+            </>
           ) : (
+            <>
             <button
               type="button"
               onClick={onClose}
@@ -365,6 +376,8 @@ export function ProductDetailsDialog({
             >
               متابعة التصفح
             </button>
+            <WishlistButton productId={product.id} productName={product.name} className="min-h-12 px-3 py-3" />
+            </>
           )}
         </div>
       </div>

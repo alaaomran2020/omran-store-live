@@ -1,30 +1,18 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { MessageCircle, ShieldCheck } from "lucide-react";
+import { LogOut, MessageCircle, ShieldCheck } from "lucide-react";
 import { SeoMetadata } from "@/components/SeoMetadata";
 import { BrutalCard, Notice, PageTitle } from "@/admin/ui";
-import { AdminLayout } from "@/admin/AdminLayout";
-import AdminDashboard from "@/admin/AdminDashboard";
-import AdminProducts from "@/admin/AdminProducts";
-import AdminCategories from "@/admin/AdminCategories";
-import AdminInventory from "@/admin/AdminInventory";
-import AdminEmptyPage from "@/admin/AdminEmptyPage";
-import AdminVipDashboard from "@/admin/AdminVipDashboard";
-import AdminDiagnostics from "@/admin/AdminDiagnostics";
-import ProductIntake from "@/pages/ProductIntake";
-import VipOperations from "@/pages/VipOperations";
+import AdminApp from "@/admin/AdminApp";
+import type { CloudflareIdentity } from "@/admin/AdminIdentity";
 import { MAIN_CONTENT_ID } from "@/lib/a11y";
-
-type AccessIdentity = {
-  email?: string;
-  name?: string;
-  id?: string;
-};
 
 type AccessState = "checking" | "allowed" | "denied";
 
 const IDENTITY_URL = "/cdn-cgi/access/get-identity";
-export async function readAccessIdentity(): Promise<AccessIdentity | null> {
+const LOGOUT_URL = "/cdn-cgi/access/logout";
+
+export async function readAccessIdentity(): Promise<CloudflareIdentity | null> {
   try {
     const response = await fetch(IDENTITY_URL, {
       credentials: "include",
@@ -36,7 +24,7 @@ export async function readAccessIdentity(): Promise<AccessIdentity | null> {
 
     const data = (await response
       .json()
-      .catch(() => null)) as AccessIdentity | null;
+      .catch(() => null)) as CloudflareIdentity | null;
     if (!data || (!data.email && !data.name && !data.id)) return null;
     return data;
   } catch {
@@ -46,9 +34,8 @@ export async function readAccessIdentity(): Promise<AccessIdentity | null> {
 
 export default function AdminAccess() {
   const [accessState, setAccessState] = useState<AccessState>("checking");
-  const [identity, setIdentity] = useState<AccessIdentity | null>(null);
-  const [location, navigate] = useLocation();
-  const currentPath = location.replace(/\/$/, "") || "/admin";
+  const [identity, setIdentity] = useState<CloudflareIdentity | null>(null);
+  const [, navigate] = useLocation();
 
   useEffect(() => {
     let cancelled = false;
@@ -72,37 +59,16 @@ export default function AdminAccess() {
   }, [navigate]);
 
   if (accessState === "allowed" && identity) {
-    const content = (() => {
-      switch (currentPath) {
-        case "/admin/dashboard":
-          return <AdminDashboard />;
-        case "/admin/products":
-          return <AdminProducts />;
-        case "/admin/product-intake":
-          return <ProductIntake />;
-        case "/admin/categories":
-          return <AdminCategories />;
-        case "/admin/inventory":
-          return <AdminInventory />;
-        case "/admin/vip":
-          return <AdminVipDashboard />;
-        case "/admin/vip-operations":
-          return <VipOperations />;
-        case "/admin/diagnostics":
-          return <AdminDiagnostics />;
-        default:
-          return <AdminEmptyPage path={currentPath} />;
-      }
-    })();
     return (
       <>
+        {/* لوحة الإدارة خلف Cloudflare Access — noindex إضافية (defense in depth). */}
         <SeoMetadata
-          path={currentPath}
+          path="/admin"
           title="لوحة الإدارة | شركة عمران التجارية"
           description="لوحة عمليات شركة عمران التجارية — وصول الموظفين المعتمدين فقط."
           robots="noindex,nofollow"
         />
-        <AdminLayout identity={identity}>{content}</AdminLayout>
+        <AdminApp identity={identity} />
       </>
     );
   }
@@ -156,7 +122,13 @@ export default function AdminAccess() {
                 </div>
               </div>
 
-              <div className="mt-5">
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href={LOGOUT_URL}
+                  className="inline-flex items-center gap-2 border-2 border-slate-700 bg-slate-950 px-4 py-2 text-xs font-black text-slate-100"
+                >
+                  <LogOut size={15} /> إعادة فحص الجلسة
+                </a>
                 <a
                   href="/vip/staff-register"
                   className="inline-flex items-center gap-2 border-2 border-sunbeam-hover bg-sunbeam px-4 py-2 text-sm font-black text-sunbeam-ink shadow-[3px_3px_0_0_#050A18] transition-colors hover:bg-sunbeam-hover"

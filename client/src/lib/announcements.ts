@@ -1,16 +1,15 @@
-export type Announcement = {
-  id: string;
-  message: string;
-  href?: string;
-  startsAt?: string;
-  endsAt?: string;
-  active: boolean;
-};
+import {
+  STORE_ANNOUNCEMENTS,
+  type StoreAnnouncement,
+} from "@shared/storeContent";
 
-export const ANNOUNCEMENTS: Announcement[] = [
-  { id: "catalog", message: "تشكيلات لعب أطفال جديدة بتتضاف للكتالوج باستمرار", href: "/products", active: true },
-  { id: "whatsapp", message: "للسعر والتوفر: استفسر مباشرة عبر واتساب", active: true },
-];
+export type Announcement = StoreAnnouncement;
+
+/**
+ * المصدر المرجعي لشريط المستجدات أصبح shared/storeContent.ts حتى تديره لوحة
+ * الإدارة من مصدر واحد. يبقى هذا الملف توافقًا للمكوّنات الحالية.
+ */
+export const ANNOUNCEMENTS: Announcement[] = STORE_ANNOUNCEMENTS;
 
 export function activeAnnouncements(items: Announcement[], now = new Date()): Announcement[] {
   const time = now.getTime();

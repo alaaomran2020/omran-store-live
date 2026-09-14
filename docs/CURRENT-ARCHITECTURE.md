@@ -27,21 +27,34 @@
 
 ## Admin Security Architecture
 
-مسارات الإدارة:
+مسارات الإدارة (كلها تحت نفس بوابة Cloudflare Access على نمط `/admin*`):
 
-- `/admin`
-- `/admin/product-intake`
+- `/admin` و`/admin/dashboard` — مركز العمليات
+- `/admin/products` و`/admin/products/:id` و`/admin/categories`
+- `/admin/inventory` و`/admin/quality` و`/admin/content`
+- `/admin/whatsapp` و`/admin/reports`
+- `/admin/customers` و`/admin/users` و`/admin/audit-log` و`/admin/settings`
+- `/admin/product-intake` (قائم سابقًا) و`/admin/vip-operations` (قائم سابقًا)
 
-الحماية المعتمدة هي **Cloudflare Access** على مستوى الدومين، وليست كلمة مرور داخل JavaScript وليست جلسة مخزنة في `localStorage` أو `sessionStorage`.
+تفاصيل اللوحة، نموذج الأدوار RBAC، صفحات حساب العميل، والبوابات غير المنشورة
+موثّقة في [`ADMIN-ACCOUNTS-ARCHITECTURE.md`](./ADMIN-ACCOUNTS-ARCHITECTURE.md).
+
+الحماية المعتمدة للمسار الإداري هي **Cloudflare Access** على مستوى الدومين،
+وليست كلمة مرور داخل JavaScript وليست جلسة مخزنة في `localStorage` أو
+`sessionStorage`. OTP الموظفين طبقة تحقق ثانية اختيارية **تكمل ولا تحل محل**
+Cloudflare Access، وهي غير مفعّلة حتى تُنشر البوابة الموثوقة (الواجهة تفشل
+بأمان بدونها).
 
 قواعد الأمان:
 
-1. Cloudflare Access يجب أن يحمي المسارين `/admin*` قبل وصول الطلب إلى Cloudflare Pages.
+1. Cloudflare Access يجب أن يحمي كل مسارات `/admin*` قبل وصول الطلب إلى Cloudflare Pages.
 2. سياسة Access تحتوي فقط على الموظفين الذين وافق عليهم الأدمن.
 3. هوية المستخدم يتم التحقق منها داخل الواجهة عبر `/cdn-cgi/access/get-identity`.
-4. إذا لم ترجع Cloudflare هوية صالحة، لوحة الإدارة تعمل Fail Closed ولا تعرض Product Intake.
-5. تسجيل الخروج يستخدم `/cdn-cgi/access/logout`.
-6. لا يوجد `VITE_ADMIN_AUTH_URL` ولا Custom Auth API ولا كلمات مرور مخزنة داخل الواجهة.
+4. إذا لم ترجع Cloudflare هوية صالحة، لوحة الإدارة تعمل Fail Closed.
+5. تسجيل الخروج الإداري يستخدم `/cdn-cgi/access/logout`.
+6. لا يوجد `VITE_ADMIN_AUTH_URL` ولا كلمات مرور مخزنة داخل الواجهة. أي بوابة
+   OTP/جلسات مستقبلية (للموظفين أو العملاء) منفصلة، Same-origin، موثّقة في
+   `ADMIN-ACCOUNTS-ARCHITECTURE.md`، وتفشل الواجهة بأمان حتى تُنشر.
 7. طلبات الموظفين الجدد يمكن تجهيزها عبر WhatsApp، لكن إضافة الموظف الفعلية تتم في Cloudflare Access Policy فقط بعد موافقة الأدمن.
 
 ### Cloudflare Access production policy
@@ -64,6 +77,12 @@
 - Shared product publication logic is in `shared/products.ts`.
 - Public product images are same-origin assets under `public/products/processed/`.
 - WhatsApp is the customer conversion/contact path configured through `VITE_WHATSAPP_NUMBER`.
+- Customer account routes live under `/account/*` (mobile + OTP login, profile,
+  addresses, wishlist, VIP, settings). The account domain is fully separate
+  from employee identity: a customer session never authorizes `/admin*`, and
+  the OTP/session gateway fails closed (no fake codes, no browser-stored
+  tokens) until the documented gateway is published. The device-local wishlist
+  stores product ids only; cross-device sync waits for the customer backend.
 
 ## Product Publication Guard
 
