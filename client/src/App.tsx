@@ -4,6 +4,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import SkipLink from "./components/SkipLink";
 
 const AdminAccess = lazy(() => import("@/admin/AdminAccess"));
+const AccountApp = lazy(() => import("@/account/AccountApp"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PopUp = lazy(() => import("@/pages/PopUp"));
 const PopupVideos = lazy(() => import("@/pages/PopupVideos"));
@@ -16,6 +17,49 @@ const VipPrivacy = lazy(() => import("@/pages/VipPrivacy"));
 const VipQrTest = lazy(() => import("@/pages/VipQrTest"));
 const VipStaffRegistration = lazy(() => import("@/pages/VipStaffRegistration"));
 const VipTerms = lazy(() => import("@/pages/VipTerms"));
+
+/**
+ * كل مسارات الإدارة تُركّب AdminAccess نفسه (بوابة Cloudflare Access على
+ * الحافة) ثم يتولى الراوتر المتداخل في admin/AdminApp.tsx توزيع الصفحات.
+ * المسارات القديمة (product-intake/vip-operations) ومسارات النسخة المبسطة
+ * السابقة (reviews/search/leads/vip/staff/activity/diagnostics) محفوظة هنا؛
+ * غير المعروف منها يحوّله الراوتر المتداخل إلى لوحة التحكم.
+ */
+const ADMIN_PATHS = [
+  "/admin/dashboard",
+  "/admin/products",
+  "/admin/products/:id",
+  "/admin/categories",
+  "/admin/inventory",
+  "/admin/content",
+  "/admin/whatsapp",
+  "/admin/quality",
+  "/admin/reports",
+  "/admin/customers",
+  "/admin/users",
+  "/admin/audit-log",
+  "/admin/settings",
+  "/admin/product-intake",
+  "/admin/vip-operations",
+  // مسارات محفوظة من نسخة اللوحة السابقة (تُعاد توجيهها داخل AdminApp).
+  "/admin/reviews",
+  "/admin/search",
+  "/admin/leads",
+  "/admin/vip",
+  "/admin/staff",
+  "/admin/activity",
+  "/admin/diagnostics",
+];
+
+const ACCOUNT_PATHS = [
+  "/account",
+  "/account/login",
+  "/account/profile",
+  "/account/addresses",
+  "/account/wishlist",
+  "/account/vip",
+  "/account/settings",
+];
 
 function Router() {
   return (
@@ -31,22 +75,19 @@ function Router() {
       <Route path={"/vip/privacy"} component={VipPrivacy} />
       <Route path={"/vip/staff-register"} component={VipStaffRegistration} />
       <Route path={"/vip/qr-test"} component={VipQrTest} />
+
+      {ACCOUNT_PATHS.map(path => (
+        <Route key={path} path={path} component={AccountApp} />
+      ))}
+
       <Route path={"/admin"} component={AdminAccess} />
-      <Route path={"/admin/dashboard"} component={AdminAccess} />
-      <Route path={"/admin/products"} component={AdminAccess} />
+      {ADMIN_PATHS.map(path => (
+        <Route key={path} path={path} component={AdminAccess} />
+      ))}
+      {/* المساران التشغيليان الإلزاميان بعقود صريحة (يطلبها integration-audit). */}
       <Route path={"/admin/product-intake"} component={AdminAccess} />
-      <Route path={"/admin/reviews"} component={AdminAccess} />
-      <Route path={"/admin/categories"} component={AdminAccess} />
-      <Route path={"/admin/search"} component={AdminAccess} />
-      <Route path={"/admin/inventory"} component={AdminAccess} />
-      <Route path={"/admin/leads"} component={AdminAccess} />
-      <Route path={"/admin/vip"} component={AdminAccess} />
       <Route path={"/admin/vip-operations"} component={AdminAccess} />
-      <Route path={"/admin/staff"} component={AdminAccess} />
-      <Route path={"/admin/reports"} component={AdminAccess} />
-      <Route path={"/admin/activity"} component={AdminAccess} />
-      <Route path={"/admin/settings"} component={AdminAccess} />
-      <Route path={"/admin/diagnostics"} component={AdminAccess} />
+
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

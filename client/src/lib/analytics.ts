@@ -22,7 +22,9 @@ export type ProductEvent =
   | "whatsapp_product_inquiry"
   | "whatsapp_conversion"
   | "product_share"
-  | "product_gallery_interaction";
+  | "product_gallery_interaction"
+  | "wishlist_added"
+  | "wishlist_removed";
 
 export type WhatsAppProductInquiryPayload = {
   product_id: string;
