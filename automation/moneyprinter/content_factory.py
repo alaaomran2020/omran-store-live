@@ -24,7 +24,7 @@ def enrich_factory_draft(product: dict[str, Any]) -> dict[str, Any]:
         "social_publish_allowed": False,
     }
     draft["creative"]["storyboard"] = [
-        {"scene": 1, "purpose": "HOOK", "text": f"شوف {clean_text(product.get('name'))} من عمران تويز"},
+        {"scene": 1, "purpose": "HOOK", "text": f"شوف {clean_text(product.get('name'))}"},
         {"scene": 2, "purpose": "PRODUCT_VIEW", "image": image, "text": clean_text(product.get("description"))},
         {"scene": 3, "purpose": "DETAILS", "components": components, "dimensions": dimensions},
         {"scene": 4, "purpose": "CTA", "text": draft["creative"]["cta"]},
