@@ -221,7 +221,7 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
     id: "OMR-RAW-011",
     name: "طائرة مقاتلة بالريموت",
     price: null,
-    category: "سيارات وريموت",
+    category: "عربيات وريموت",
     description:
       "طائرة لعبة بالريموت بتصميم مقاتلة مع مراوح مدمجة ووحدة تحكم لاسلكية، كما يظهر على العبوة والصورة.",
     image: "/products/processed/generated/product-omr-raw-011-main.webp",
@@ -279,11 +279,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
   }),
   verified({
     id: "OMR-RAW-015",
-    name: "سيارة سباق بالريموت",
+    name: "عربية سباق بالريموت",
     price: null,
-    category: "سيارات وريموت",
+    category: "عربيات وريموت",
     description:
-      "سيارة Speed Racing بالريموت بمقياس 1:18 وتحكم لاسلكي 27MHz، مع وحدة تحكم على شكل عجلة قيادة كما يظهر على العبوة.",
+      "عربية Speed Racing بالريموت بمقياس 1:18 وتحكم لاسلكي 27MHz، مع وحدة تحكم على شكل عجلة قيادة كما يظهر على العبوة.",
     image: "/products/processed/generated/product-omr-raw-015-main.webp",
     imageSource: driveSource("176s-ansOHYcOZRHFHmgVIuu-mXAT59fW"),
     sortOrder: 18,
@@ -324,11 +324,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
   }),
   verified({
     id: "OMR-RAW-020",
-    name: "سيارة ريموت خضراء",
+    name: "عربية ريموت خضراء",
     price: null,
-    category: "سيارات وريموت",
+    category: "عربيات وريموت",
     description:
-      "سيارة ريموت خضراء بمقياس 1:16 وتحكم 4 اتجاهات، مع إضاءة LED كما هو موضح على العبوة.",
+      "عربية ريموت خضراء بمقياس 1:16 وتحكم 4 اتجاهات، مع إضاءة LED كما هو موضح على العبوة.",
     image: "/products/processed/generated/product-omr-raw-020-main.webp",
     imageSource: driveSource("1zMv-gcrm6jTytQ3HgcRtME5ZmFDxtAiE"),
     sortOrder: 21,
@@ -339,11 +339,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
   }),
   verified({
     id: "OMR-RAW-021",
-    name: "سيارة ريموت رمادية",
+    name: "عربية ريموت رمادية",
     price: null,
-    category: "سيارات وريموت",
+    category: "عربيات وريموت",
     description:
-      "سيارة ريموت رمادية بتصميم شاحنة كهربائية، مع وحدة تحكم لاسلكية وملحق شحن لعب ظاهر على العبوة.",
+      "عربية ريموت رمادية بتصميم شاحنة كهربائية، مع وحدة تحكم لاسلكية وملحق شحن لعب ظاهر على العبوة.",
     image: "/products/processed/generated/product-omr-raw-021-main.webp",
     imageSource: driveSource("1AA8Cb31Hk9sTqNJfNLubRpeSeE41JF_X"),
     sortOrder: 22,
@@ -369,11 +369,11 @@ export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
   }),
   verified({
     id: "OMR-RAW-023",
-    name: "طقم سيارتي Bumper Car بالريموت",
+    name: "طقم عربيتين Bumper Car بالريموت",
     price: null,
-    category: "سيارات وريموت",
+    category: "عربيات وريموت",
     description:
-      "طقم لعب يضم سيارتي Bumper Car صغيرتين وشخصيتين مع وحدتي تحكم بالريموت كما يظهر بوضوح في العبوة.",
+      "طقم لعب يضم عربيتين Bumper Car صغيرتين وشخصيتين مع وحدتي تحكم بالريموت كما يظهر بوضوح في العبوة.",
     image: "/products/processed/generated/product-omr-raw-023-main.webp",
     imageSource: driveSource("1m681A4UBUOgLwxg0v7KETKFNa4MYk84y"),
     sortOrder: 24,

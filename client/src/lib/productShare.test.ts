@@ -9,7 +9,7 @@ describe("shareProductsPage", () => {
     const copyToClipboard = vi.fn();
 
     await expect(shareProductsPage({ url, nativeShare, copyToClipboard })).resolves.toBe("shared");
-    expect(nativeShare).toHaveBeenCalledWith(expect.objectContaining({ url, title: "عمران للألعاب" }));
+    expect(nativeShare).toHaveBeenCalledWith(expect.objectContaining({ url, title: "عمران تويز" }));
     expect(copyToClipboard).not.toHaveBeenCalled();
   });
 

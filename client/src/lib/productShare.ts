@@ -7,8 +7,8 @@ export type ProductShareOptions = {
 };
 
 const shareData = (url: string): ShareData => ({
-  title: "عمران للألعاب",
-  text: "شاهد منتجات عمران للألعاب على Instagram وFacebook.",
+  title: "عمران تويز",
+  text: "شوف منتجات عمران تويز وشاركها على Instagram وFacebook.",
   url,
 });
 
