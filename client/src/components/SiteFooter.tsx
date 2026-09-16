@@ -7,7 +7,7 @@ export const FOOTER_NAVIGATION = [
   { label: "الرئيسية", href: "/" },
   { label: "لعب الأطفال", href: "/products" },
   { label: "POP UP", href: "/popup" },
-  { label: "نقاط عمران", href: "/rewards" },
+  { label: "مزايا وعروض", href: "/rewards" },
 ] as const;
 
 const whatsappUrl = (() => {
