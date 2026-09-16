@@ -1,0 +1,197 @@
+/* OMRAN TOYS — canonical production design-system layer, v2026.09.
+ * Additive by design: existing storefront classes stay compatible.
+ * POP UP may reuse foundations only; Admin remains visually restrained.
+ */
+
+@theme {
+  /* Raw brand scales — anchored to the current shipped palette. */
+  --color-omran-blue-50: #eef5ff;
+  --color-omran-blue-100: #d9e9ff;
+  --color-omran-blue-200: #bcd8ff;
+  --color-omran-blue-300: #8fbeff;
+  --color-omran-blue-400: #5b9aff;
+  --color-omran-blue-500: #2f80ed;
+  --color-omran-blue-600: #1769e0;
+  --color-omran-blue-700: #1258bd;
+  --color-omran-blue-800: #164a95;
+  --color-omran-blue-900: #183f76;
+
+  --color-omran-navy-50: #f0f5fa;
+  --color-omran-navy-100: #dce7f2;
+  --color-omran-navy-200: #bdd0e4;
+  --color-omran-navy-300: #90b0d0;
+  --color-omran-navy-400: #608db9;
+  --color-omran-navy-500: #3d6e9f;
+  --color-omran-navy-600: #285783;
+  --color-omran-navy-700: #1e486f;
+  --color-omran-navy-800: #123b6d;
+  --color-omran-navy-900: #102f53;
+
+  --color-omran-red-50: #fff1f0;
+  --color-omran-red-100: #ffe0de;
+  --color-omran-red-200: #ffc5c1;
+  --color-omran-red-300: #ff9b94;
+  --color-omran-red-400: #f6665e;
+  --color-omran-red-500: #e53935;
+  --color-omran-red-600: #c62828;
+  --color-omran-red-700: #a61f1f;
+  --color-omran-red-800: #891f1f;
+  --color-omran-red-900: #701f1f;
+
+  --color-omran-yellow-50: #fffbea;
+  --color-omran-yellow-100: #fff3c4;
+  --color-omran-yellow-200: #ffe786;
+  --color-omran-yellow-300: #ffd750;
+  --color-omran-yellow-400: #ffc83d;
+  --color-omran-yellow-500: #f5ad0b;
+  --color-omran-yellow-600: #d88906;
+  --color-omran-yellow-700: #b66309;
+  --color-omran-yellow-800: #934d0e;
+  --color-omran-yellow-900: #793f0f;
+
+  --color-omran-neutral-0: #ffffff;
+  --color-omran-neutral-50: #f7f9fc;
+  --color-omran-neutral-100: #f1f4f8;
+  --color-omran-neutral-200: #e4e9f0;
+  --color-omran-neutral-300: #cfd6df;
+  --color-omran-neutral-400: #a9b2bf;
+  --color-omran-neutral-500: #7d8998;
+  --color-omran-neutral-600: #5f6b7a;
+  --color-omran-neutral-700: #445064;
+  --color-omran-neutral-800: #2c374b;
+  --color-omran-neutral-900: #172033;
+  --color-omran-neutral-950: #101728;
+
+  /* Semantic Tailwind tokens. */
+  --color-action-primary: #1769e0;
+  --color-action-primary-hover: #1258bd;
+  --color-action-primary-active: #164a95;
+  --color-action-secondary: #123b6d;
+  --color-surface-page: #f7f9fc;
+  --color-surface-default: #ffffff;
+  --color-surface-subtle: #f1f4f8;
+  --color-surface-brand-soft: #eaf4ff;
+  --color-surface-elevated: #ffffff;
+  --color-content-primary: #172033;
+  --color-content-secondary: #5f6b7a;
+  --color-content-muted: #7d8998;
+  --color-content-inverse: #ffffff;
+  --color-stroke-default: #e4e9f0;
+  --color-stroke-strong: #cfd6df;
+  --color-focus-brand: #1769e0;
+  --color-state-success: #1d9d62;
+  --color-state-warning: #f0a202;
+  --color-state-error: #d92d20;
+  --color-state-info: #2f80ed;
+
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-standard: 220ms;
+  --duration-slow: 320ms;
+}
+
+:root {
+  /* Semantic aliases for non-Tailwind consumers. */
+  --color-brand-primary: var(--color-brand-blue);
+  --color-brand-secondary: var(--color-brand-navy);
+  --color-brand-accent: var(--color-brand-red);
+  --color-bg-page: var(--color-brand-cream);
+  --color-bg-surface: var(--color-brand-surface);
+  --color-bg-subtle: #f1f4f8;
+  --color-bg-elevated: var(--color-brand-surface);
+  --color-text-primary: var(--color-brand-ink);
+  --color-text-secondary: var(--color-brand-muted);
+  --color-text-muted: #7d8998;
+  --color-text-inverse: #ffffff;
+  --color-border-default: var(--color-brand-border);
+  --color-border-strong: #cfd6df;
+  --color-focus: var(--color-brand-blue);
+
+  /* Typography. Arabic-first, Cairo remains canonical. */
+  --font-family-ui: Cairo, "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+  --font-size-display: 2.5rem;
+  --line-height-display: 3rem;
+  --font-size-h1: 2rem;
+  --line-height-h1: 2.5rem;
+  --font-size-h2: 1.75rem;
+  --line-height-h2: 2.25rem;
+  --font-size-h3: 1.5rem;
+  --line-height-h3: 2rem;
+  --font-size-title: 1.25rem;
+  --line-height-title: 1.75rem;
+  --font-size-body-lg: 1.125rem;
+  --line-height-body-lg: 1.875rem;
+  --font-size-body: 1rem;
+  --line-height-body: 1.625rem;
+  --font-size-body-sm: 0.875rem;
+  --line-height-body-sm: 1.375rem;
+  --font-size-caption: 0.75rem;
+  --line-height-caption: 1.125rem;
+
+  /* Spacing. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* Radius. Existing storefront values remain compatible. */
+  --radius-xs: 6px;
+  --radius-sm-system: 8px;
+  --radius-md-system: 12px;
+  --radius-lg-system: 16px;
+  --radius-xl-system: 24px;
+  --radius-full-system: 9999px;
+
+  /* Elevation. */
+  --elevation-0: none;
+  --elevation-1: 0 1px 3px rgba(23, 32, 51, 0.06);
+  --elevation-2: 0 4px 18px rgba(23, 32, 51, 0.08);
+  --elevation-3: 0 12px 32px rgba(23, 32, 51, 0.12);
+  --elevation-overlay: 0 20px 60px rgba(16, 23, 40, 0.2);
+
+  /* Motion. */
+  --motion-instant: 100ms;
+  --motion-fast: 150ms;
+  --motion-standard: 220ms;
+  --motion-slow: 320ms;
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Layout. */
+  --container-max: 1280px;
+  --container-inline-mobile: 16px;
+  --container-inline-tablet: 24px;
+  --container-inline-desktop: 32px;
+  --tap-target-min: 44px;
+}
+
+.dark {
+  --color-bg-page: #101728;
+  --color-bg-surface: #172033;
+  --color-bg-subtle: #253047;
+  --color-bg-elevated: #172033;
+  --color-text-primary: #f7f9fc;
+  --color-text-secondary: #b7c0ce;
+  --color-text-muted: #9aa6b7;
+  --color-text-inverse: #172033;
+  --color-border-default: rgb(255 255 255 / 12%);
+  --color-border-strong: rgb(255 255 255 / 20%);
+  --color-focus: #2f80ed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-instant: 0ms;
+    --motion-fast: 0ms;
+    --motion-standard: 0ms;
+    --motion-slow: 0ms;
+  }
+}
