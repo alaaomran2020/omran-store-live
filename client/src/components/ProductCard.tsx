@@ -22,8 +22,6 @@ export function ProductCard({
   onOpenDetails: (product: Product) => void;
 }) {
   const isPopup = isPopUpProduct(product);
-  /* رابط المنتج الثابت (canonical) — يظل واحدًا مهما كانت الصفحة المعروضة،
-     حتى لا يتولد duplicate URL لنفس المنتج من الرئيسية أو من /products. */
   const productHref = `${isPopup ? "/popup" : "/products"}?product=${encodeURIComponent(product.id)}`;
 
   const waUrl = buildWhatsAppUrl(product, {
@@ -46,10 +44,9 @@ export function ProductCard({
       data-testid="product-card"
       data-product-id={product.id}
       data-catalog={isPopup ? "popup" : "toys"}
-      className="group flex min-w-0 flex-col overflow-hidden rounded-[1.1rem] border border-brand-border bg-brand-surface shadow-[0_3px_14px_rgba(23,32,51,.07)] transition duration-200 sm:rounded-2xl sm:shadow-[0_4px_18px_rgba(23,32,51,.08)] sm:hover:-translate-y-0.5 sm:hover:shadow-lg"
+      className="group flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-lg-system)] border border-brand-border bg-brand-surface shadow-[var(--elevation-2)] transition duration-200 sm:hover:-translate-y-0.5 sm:hover:shadow-[var(--elevation-3)] motion-reduce:transition-none motion-reduce:sm:hover:translate-y-0"
     >
       <div className="relative">
-        {/* رابط دلالي حقيقي (crawlable) — الـSPA تفتح الـdialog برمجياً. */}
         <a
           href={productHref}
           onClick={event => {
@@ -61,7 +58,7 @@ export function ProductCard({
         >
           <ProductImage
             product={product}
-            className={`h-full w-full transition duration-300 sm:group-hover:scale-[1.02] ${isPopup ? "object-contain p-2 sm:p-3" : "object-cover"}`}
+            className={`h-full w-full transition duration-300 motion-reduce:transition-none sm:group-hover:scale-[1.02] motion-reduce:sm:group-hover:scale-100 ${isPopup ? "object-contain p-2 sm:p-3" : "object-cover"}`}
             sizesHint="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
           />
           {product.category && (
@@ -81,8 +78,6 @@ export function ProductCard({
       <div className={`flex flex-1 flex-col gap-2.5 ${isPopup ? "p-3 sm:p-4" : "p-3 sm:gap-3 sm:p-5"}`}>
         <h3 className="line-clamp-2 min-h-[2.75rem] text-sm font-extrabold leading-[1.4rem] text-brand-ink sm:min-h-0 sm:text-lg sm:leading-7">{product.name}</h3>
         <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold leading-5 sm:text-xs">
-          {/* Latin "SKU:" reads as letters in an Arabic screen reader; expose the Arabic
-              label to assistive tech and keep the Latin form for sighted readers only. */}
           <span className="text-brand-muted">
             <span className="sr-only">كود المنتج: {product.sku || product.id}</span>
             <span dir="ltr" aria-hidden="true">SKU: {product.sku || product.id}</span>
@@ -94,12 +89,12 @@ export function ProductCard({
 
         <div className="mt-auto grid grid-cols-1 gap-2 pt-1 sm:pt-2">
           {waUrl && (
-            <a href={waUrl} target="_blank" rel="noreferrer" onClick={handleWhatsAppClick} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-whatsapp px-2.5 py-2.5 text-[12px] font-bold leading-4 text-white transition active:scale-[0.98] hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp-hover max-[359px]:gap-1 max-[359px]:px-1.5 max-[359px]:text-[11px] sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm">
+            <a href={waUrl} target="_blank" rel="noreferrer" onClick={handleWhatsAppClick} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-whatsapp px-2.5 py-2.5 text-[12px] font-bold leading-4 text-white transition active:scale-[0.98] hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp-hover motion-reduce:transition-none motion-reduce:active:scale-100 max-[359px]:gap-1 max-[359px]:px-1.5 max-[359px]:text-[11px] sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm">
               <MessageCircle size={16} aria-hidden="true" className="shrink-0" />
               <span>للاستفسار والكميات</span>
             </a>
           )}
-          <a href={productHref} onClick={event => { event.preventDefault(); onOpenDetails(product); }} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-brand-surface px-2.5 py-2.5 text-[12px] font-bold text-brand-blue transition active:scale-[0.98] hover:border-brand-blue hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue sm:gap-2 sm:px-4 sm:text-sm">
+          <a href={productHref} onClick={event => { event.preventDefault(); onOpenDetails(product); }} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-brand-surface px-2.5 py-2.5 text-[12px] font-bold text-brand-blue transition active:scale-[0.98] hover:border-brand-blue hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue motion-reduce:transition-none motion-reduce:active:scale-100 sm:gap-2 sm:px-4 sm:text-sm">
             التفاصيل <Info size={14} aria-hidden="true" />
           </a>
         </div>
@@ -110,7 +105,7 @@ export function ProductCard({
 
 export function ProductCardSkeleton() {
   return (
-    <div className="animate-pulse overflow-hidden rounded-[1.1rem] motion-reduce:animate-none border border-brand-border bg-brand-surface shadow-[0_3px_14px_rgba(23,32,51,.06)] sm:rounded-2xl">
+    <div className="animate-pulse overflow-hidden rounded-[var(--radius-lg-system)] border border-brand-border bg-brand-surface shadow-[var(--elevation-1)] motion-reduce:animate-none">
       <div className="aspect-square bg-brand-cream" />
       <div className="space-y-2.5 p-3 sm:space-y-3 sm:p-5">
         <div className="h-4 w-3/4 rounded-full bg-brand-border/70 sm:h-5" />
