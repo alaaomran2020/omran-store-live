@@ -43,7 +43,7 @@ export const ADMIN_NAV: NavItem[] = [
 
 /** أدوات تشغيلية قائمة بالفعل قبل إعادة الهيكلة — تبقى كما هي داخل الهيكل. */
 export const LEGACY_NAV: NavItem[] = [
-  { to: "/admin/product-intake", label: "إدخال منتج بالصورة", icon: Camera, permission: "product:view" },
+  { to: "/admin/product-intake", label: "إدخال منتج بالصورة", icon: Camera, permission: "product:create" },
   { to: "/admin/vip-operations", label: "عمليات VIP اليدوية", icon: CreditCard, permission: "dashboard:view" },
 ];
 
