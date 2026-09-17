@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Supabase publishable key is intentionally public browser configuration; keep service-role and database secrets prohibited."
+paths = ['''^\.env\.production$''']
+regexTarget = "match"
+regexes = ['''VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_[A-Za-z0-9_-]+''']
