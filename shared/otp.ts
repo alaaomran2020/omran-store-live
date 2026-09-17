@@ -104,10 +104,8 @@ export async function createOtpChallenge(
     throw new Error("INVALID_OTP_CODE_SHAPE");
   }
   const now = input.now ?? Date.now();
-  const challengeId =
-    input.challengeId ??
-    (globalThis.crypto?.randomUUID?.() ??
-      `otp-${now}-${Math.random().toString(16).slice(2, 12)}`);
+  const challengeId = input.challengeId ?? globalThis.crypto?.randomUUID?.();
+  if (!challengeId) throw new Error("SECURE_RANDOM_ID_UNAVAILABLE");
   const codeHash = await hashOtpCode(input.code, challengeId);
   return {
     challengeId,
