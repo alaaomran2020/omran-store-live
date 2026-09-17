@@ -65,6 +65,40 @@ describe("normalizeAdminGatewayPayload", () => {
     expect(products.find(p => p.id === "OMR-2")?.workflowStatus).toBe("DRAFT");
   });
 
+  it("accepts SQL-shaped product rows without losing gate fields", () => {
+    const products = normalizeAdminGatewayPayload({
+      products: [{
+        product_id: "OMR-SQL-1",
+        sku: "SQL-1",
+        name: "SQL Product",
+        category_legacy: "Toys",
+        description: "",
+        price: 125,
+        availability: "available",
+        tags: ["sql", "catalog"],
+        image_url: "/products/sql.webp",
+        image_source: "/products/sql.webp",
+        source_drive_id: null,
+        processed_image: "/products/sql.webp",
+        product_prompt: "",
+        active: true,
+        workflow_status: "PUBLISHED",
+        qa_status: "PASS",
+        review_reason: null,
+        sort_order: 1,
+        legacy_row_index: 1,
+      }],
+    });
+    expect(products).toHaveLength(1);
+    expect(products[0]).toMatchObject({
+      id: "OMR-SQL-1",
+      workflowStatus: "PUBLISHED",
+      qaStatus: "PASS",
+      availability: "available",
+      tags: ["sql", "catalog"],
+    });
+  });
+
   it("tags brands by id prefix so POP UP never mixes with Omran", () => {
     const payload = {
       values: [

@@ -13,6 +13,16 @@
  * — وهو نمط التشغيل المعتمد حاليًا في المشروع (راجع VipOperations).
  */
 import { MAKE_GATEWAY_URL } from "@/lib/makeGateway";
+import {
+  mapSqlCustomerRow,
+  mapSqlEmployeeRow,
+  mapSqlInventoryRow,
+  type CustomerRecord,
+  type EmployeeRecord,
+  type InventoryRecord,
+} from "@shared/sqlCoreEntities";
+
+export type { CustomerRecord, EmployeeRecord, InventoryRecord } from "@shared/sqlCoreEntities";
 
 export type ReadStatus = "live" | "not_configured" | "error";
 
@@ -132,28 +142,6 @@ export function readWhatsAppMetrics(): Promise<ReadResult<WhatsAppMetrics>> {
 // الموظفون والعملاء وسجل التدقيق
 // ---------------------------------------------------------------------------
 
-export type EmployeeRecord = {
-  employeeId: string;
-  fullName: string;
-  mobile: string;
-  accessEmail: string | null;
-  role: string;
-  status: string;
-  mobileVerifiedAt: string | null;
-  lastLoginAt: string | null;
-  createdAt: string;
-};
-
-export type CustomerRecord = {
-  customerId: string;
-  fullName: string;
-  mobile: string;
-  status: string;
-  mobileVerifiedAt: string | null;
-  lastLoginAt: string | null;
-  createdAt: string;
-};
-
 export type AuditRecord = {
   id: string;
   occurredAt: string;
@@ -176,35 +164,54 @@ function readList<T>(action: string, listKey: string, mapItem: (item: Record<str
   });
 }
 
-export const readEmployees = () =>
-  readList<EmployeeRecord>("employees", "employees", item => {
-    if (typeof item.employee_id !== "string" && typeof item.employeeId !== "string") return null;
-    return {
-      employeeId: String(item.employee_id ?? item.employeeId),
-      fullName: String(item.full_name ?? item.fullName ?? ""),
-      mobile: String(item.mobile ?? ""),
-      accessEmail: (item.access_email ?? item.accessEmail ?? null) as string | null,
-      role: String(item.role ?? "VIEWER"),
-      status: String(item.status ?? "INVITED"),
-      mobileVerifiedAt: (item.mobile_verified_at ?? item.mobileVerifiedAt ?? null) as string | null,
-      lastLoginAt: (item.last_login_at ?? item.lastLoginAt ?? null) as string | null,
-      createdAt: String(item.created_at ?? item.createdAt ?? ""),
-    };
+export function normalizeEmployeeRecord(item: Record<string, unknown>): EmployeeRecord | null {
+  return mapSqlEmployeeRow({
+    employee_id: item.employee_id ?? item.employeeId,
+    full_name: item.full_name ?? item.fullName,
+    mobile: item.mobile ?? null,
+    access_email: item.access_email ?? item.accessEmail ?? null,
+    role: item.role,
+    status: item.status,
+    mobile_verified_at: item.mobile_verified_at ?? item.mobileVerifiedAt ?? null,
+    last_login_at: item.last_login_at ?? item.lastLoginAt ?? null,
+    created_at: item.created_at ?? item.createdAt,
   });
+}
+
+export function normalizeCustomerRecord(item: Record<string, unknown>): CustomerRecord | null {
+  return mapSqlCustomerRow({
+    customer_id: item.customer_id ?? item.customerId,
+    mobile: item.mobile,
+    status: item.status,
+    mobile_verified_at: item.mobile_verified_at ?? item.mobileVerifiedAt ?? null,
+    full_name: item.full_name ?? item.fullName ?? null,
+    last_login_at: item.last_login_at ?? item.lastLoginAt ?? null,
+    created_at: item.created_at ?? item.createdAt,
+  });
+}
+
+export function normalizeInventoryRecord(item: Record<string, unknown>): InventoryRecord | null {
+  return mapSqlInventoryRow({
+    product_id: item.product_id ?? item.productId,
+    sku: item.sku ?? null,
+    on_hand_qty: item.on_hand_qty ?? item.onHandQty ?? null,
+    reserved_qty: item.reserved_qty ?? item.reservedQty ?? 0,
+    low_stock_threshold: item.low_stock_threshold ?? item.lowStockThreshold ?? null,
+    reorder_qty: item.reorder_qty ?? item.reorderQty ?? null,
+    inventory_status: item.inventory_status ?? item.inventoryStatus,
+    last_counted_at: item.last_counted_at ?? item.lastCountedAt ?? null,
+    updated_at: item.updated_at ?? item.updatedAt ?? "",
+  });
+}
+
+export const readEmployees = () =>
+  readList<EmployeeRecord>("employees", "employees", normalizeEmployeeRecord);
 
 export const readCustomers = () =>
-  readList<CustomerRecord>("customers", "customers", item => {
-    if (typeof item.customer_id !== "string" && typeof item.customerId !== "string") return null;
-    return {
-      customerId: String(item.customer_id ?? item.customerId),
-      fullName: String(item.full_name ?? item.fullName ?? ""),
-      mobile: String(item.mobile ?? ""),
-      status: String(item.status ?? "ACTIVE"),
-      mobileVerifiedAt: (item.mobile_verified_at ?? item.mobileVerifiedAt ?? null) as string | null,
-      lastLoginAt: (item.last_login_at ?? item.lastLoginAt ?? null) as string | null,
-      createdAt: String(item.created_at ?? item.createdAt ?? ""),
-    };
-  });
+  readList<CustomerRecord>("customers", "customers", normalizeCustomerRecord);
+
+export const readInventory = () =>
+  readList<InventoryRecord>("inventory", "inventory", normalizeInventoryRecord);
 
 export const readAuditLog = () =>
   readList<AuditRecord>("audit_log", "events", item => {
