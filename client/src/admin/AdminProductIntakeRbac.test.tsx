@@ -54,7 +54,7 @@ describe("Admin Product Intake RBAC", () => {
   it("blocks an ACTIVE VIEWER without product:create", async () => {
     mount("viewer@example.com");
 
-    expect(await screen.findByText("ليس لديك صلاحية لإضافة منتج")).toBeTruthy();
+    expect(await screen.findByText("ليس لديك صلاحية لفتح هذه الصفحة")).toBeTruthy();
     expect(screen.queryByText("Product Intake Test Page")).toBeNull();
   });
 
@@ -62,6 +62,6 @@ describe("Admin Product Intake RBAC", () => {
     mount("catalog@example.com");
 
     expect(await screen.findByText("Product Intake Test Page")).toBeTruthy();
-    expect(screen.queryByText("ليس لديك صلاحية لإضافة منتج")).toBeNull();
+    expect(screen.queryByText("ليس لديك صلاحية لفتح هذه الصفحة")).toBeNull();
   });
 });

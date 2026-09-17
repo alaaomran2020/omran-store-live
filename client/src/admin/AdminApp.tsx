@@ -5,7 +5,7 @@
  * وتمرير الهوية يأتي من AdminAccess. الأدوات التشغيلية القديمة (إدخال منتج /
  * عمليات VIP) تبقى تعمل بصفحاتها الأصلية الكاملة بلا هيكل جديد.
  */
-import { lazy, Suspense, type ComponentType } from "react";
+import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
 import { Redirect, Route, Router, Switch, useRoute } from "wouter";
 import { SeoMetadata } from "@/components/SeoMetadata";
 import { LogOut, ShieldAlert } from "lucide-react";
@@ -14,7 +14,11 @@ import {
   useAdminIdentity,
   type CloudflareIdentity,
 } from "./AdminIdentity";
-import { ROLE_LABELS_AR } from "@shared/rbac";
+import {
+  PERMISSION_LABELS_AR,
+  ROLE_LABELS_AR,
+  type Permission,
+} from "@shared/rbac";
 import { LoadingState } from "./components/primitives";
 import ProductIntake from "@/pages/ProductIntake";
 import VipOperations from "@/pages/VipOperations";
@@ -80,24 +84,24 @@ function AccessBlocked({ reason }: { reason: "SUSPENDED" | "DISABLED" | "INVITED
   );
 }
 
-function PermissionBlocked() {
+function PermissionBlocked({ permission, path }: { permission: Permission; path: string }) {
   const { resolved } = useAdminIdentity();
 
   return (
     <div dir="rtl" className="grid min-h-screen place-items-center bg-brand-cream px-4">
       <SeoMetadata
-        path="/admin/product-intake"
+        path={`/admin${path === "/" ? "" : path}`}
         title="صلاحية مطلوبة | لوحة إدارة عمران تويز"
-        description="هذه الصفحة تتطلب صلاحية إضافة منتج."
+        description={`هذه الصفحة تتطلب صلاحية: ${PERMISSION_LABELS_AR[permission]}.`}
         robots="noindex,nofollow"
       />
       <div className="w-full max-w-md rounded-2xl border border-brand-border bg-white p-6 text-center shadow-sm">
         <span className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 text-amber-700">
           <ShieldAlert size={26} aria-hidden="true" />
         </span>
-        <h1 className="text-lg font-black text-brand-ink">ليس لديك صلاحية لإضافة منتج</h1>
+        <h1 className="text-lg font-black text-brand-ink">ليس لديك صلاحية لفتح هذه الصفحة</h1>
         <p className="mt-2 text-sm leading-7 text-brand-muted">
-          صفحة إدخال المنتجات متاحة فقط للحسابات التي تملك صلاحية إضافة منتج.
+          الصلاحية المطلوبة: {PERMISSION_LABELS_AR[permission]}.
         </p>
         <p className="mt-4 rounded-xl bg-brand-cream px-3 py-2 text-xs font-bold text-brand-navy">
           {resolved.fullName} — {ROLE_LABELS_AR[resolved.role]}
@@ -105,6 +109,19 @@ function PermissionBlocked() {
       </div>
     </div>
   );
+}
+
+function RoutePermissionGuard({
+  permission,
+  path,
+  children,
+}: {
+  permission: Permission;
+  path: string;
+  children: ReactNode;
+}) {
+  const { can } = useAdminIdentity();
+  return can(permission) ? children : <PermissionBlocked permission={permission} path={path} />;
 }
 
 function lazyPage(Component: ComponentType) {
@@ -116,7 +133,7 @@ function lazyPage(Component: ComponentType) {
 }
 
 function AdminRoutes() {
-  const { resolved, can } = useAdminIdentity();
+  const { resolved } = useAdminIdentity();
 
   if (resolved.status !== "ACTIVE") {
     return <AccessBlocked reason={resolved.status === "SUSPENDED" ? "SUSPENDED" : resolved.status === "DISABLED" ? "DISABLED" : "INVITED"} />;
@@ -126,26 +143,87 @@ function AdminRoutes() {
     <Switch>
       {/* أدوات قديمة بملء الشاشة بهويتها الأصلية */}
       <Route path="/product-intake">
-        {can("product:create") ? <ProductIntake /> : <PermissionBlocked />}
+        <RoutePermissionGuard permission="product:create" path="/product-intake">
+          <ProductIntake />
+        </RoutePermissionGuard>
       </Route>
-      <Route path="/vip-operations">{<VipOperations />}</Route>
+      <Route path="/vip-operations">
+        <RoutePermissionGuard permission="dashboard:view" path="/vip-operations">
+          <VipOperations />
+        </RoutePermissionGuard>
+      </Route>
 
-      <Route path="/">{lazyPage(DashboardPage)}</Route>
-      <Route path="/dashboard">{lazyPage(DashboardPage)}</Route>
-      <Route path="/products">{lazyPage(ProductsPage)}</Route>
-      <Route path="/products/:id">{lazyPage(ProductEditorPage)}</Route>
-      <Route path="/categories">{lazyPage(CategoriesPage)}</Route>
-      <Route path="/inventory">{lazyPage(InventoryPage)}</Route>
-      <Route path="/content">{lazyPage(ContentPage)}</Route>
-      <Route path="/whatsapp">{lazyPage(WhatsAppPage)}</Route>
-      <Route path="/quality">{lazyPage(QualityPage)}</Route>
-      <Route path="/reports">{lazyPage(ReportsPage)}</Route>
-      <Route path="/customers">{lazyPage(CustomersPage)}</Route>
-      <Route path="/users">{lazyPage(UsersPage)}</Route>
-      <Route path="/audit-log">{lazyPage(AuditLogPage)}</Route>
-      <Route path="/settings">{lazyPage(SettingsPage)}</Route>
+      <Route path="/">
+        <RoutePermissionGuard permission="dashboard:view" path="/">
+          {lazyPage(DashboardPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/dashboard">
+        <RoutePermissionGuard permission="dashboard:view" path="/dashboard">
+          {lazyPage(DashboardPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/products/:id">
+        <RoutePermissionGuard permission="product:view" path="/products/:id">
+          {lazyPage(ProductEditorPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/products">
+        <RoutePermissionGuard permission="product:view" path="/products">
+          {lazyPage(ProductsPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/categories">
+        <RoutePermissionGuard permission="category:view" path="/categories">
+          {lazyPage(CategoriesPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/inventory">
+        <RoutePermissionGuard permission="inventory:view" path="/inventory">
+          {lazyPage(InventoryPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/content">
+        <RoutePermissionGuard permission="content:view" path="/content">
+          {lazyPage(ContentPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/whatsapp">
+        <RoutePermissionGuard permission="whatsapp:view" path="/whatsapp">
+          {lazyPage(WhatsAppPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/quality">
+        <RoutePermissionGuard permission="quality:view" path="/quality">
+          {lazyPage(QualityPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/reports">
+        <RoutePermissionGuard permission="analytics:view" path="/reports">
+          {lazyPage(ReportsPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/customers">
+        <RoutePermissionGuard permission="customer:view" path="/customers">
+          {lazyPage(CustomersPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/users">
+        <RoutePermissionGuard permission="user:view" path="/users">
+          {lazyPage(UsersPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/audit-log">
+        <RoutePermissionGuard permission="audit:view" path="/audit-log">
+          {lazyPage(AuditLogPage)}
+        </RoutePermissionGuard>
+      </Route>
+      <Route path="/settings">
+        <RoutePermissionGuard permission="settings:view" path="/settings">
+          {lazyPage(SettingsPage)}
+        </RoutePermissionGuard>
+      </Route>
 
-      {/* روابط النسخة المبسطة السابقة تُعاد توجيهها للصفحات الكاملة. */}
       <Route path="/reviews">
         <Redirect to="/quality" />
       </Route>
