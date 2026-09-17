@@ -40,6 +40,7 @@ export function emitAudit(
 
   try {
     const body = new URLSearchParams({
+      action: "admin_audit",
       event_id: event.id,
       event_at: event.occurredAt,
       event_name: "admin_audit",
@@ -51,8 +52,22 @@ export function emitAudit(
       target_name: event.targetName ?? "",
       metadata_json: JSON.stringify(event.metadata ?? {}),
     });
+    const encoded = body.toString();
     if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
-      navigator.sendBeacon(MAKE_GATEWAY_URL, new Blob([body.toString()], { type: "application/x-www-form-urlencoded;charset=UTF-8" }));
+      const sent = navigator.sendBeacon(
+        MAKE_GATEWAY_URL,
+        new Blob([encoded], { type: "application/x-www-form-urlencoded;charset=UTF-8" })
+      );
+      if (sent) return event;
+    }
+    if (typeof fetch !== "undefined") {
+      void fetch(MAKE_GATEWAY_URL, {
+        method: "POST",
+        mode: "no-cors",
+        keepalive: true,
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        body: encoded,
+      }).catch(() => undefined);
     }
   } catch {
     // التدقيق غير الحرج للتنقّل لا يكسر إجراءً إداريًا؛ البوابة اليدوية تبقى قناة موثّقة.

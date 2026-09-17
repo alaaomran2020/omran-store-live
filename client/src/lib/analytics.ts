@@ -90,6 +90,7 @@ function persistStorefrontEvent(
     const pageUrl = new URL(pageLocation, window.location.origin);
 
     const body = new URLSearchParams({
+      action: "analytics_event",
       event_id: createEventId(eventName),
       event_at: new Date().toISOString(),
       event_name: eventName,

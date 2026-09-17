@@ -21,8 +21,15 @@ import {
   type EmployeeRecord,
   type InventoryRecord,
 } from "@shared/sqlCoreEntities";
+import {
+  aggregateWhatsAppMetrics,
+  mapAnalyticsEventRow,
+  type AnalyticsEventRecord,
+  type WhatsAppMetrics,
+} from "@shared/observability";
 
 export type { CustomerRecord, EmployeeRecord, InventoryRecord } from "@shared/sqlCoreEntities";
+export type { AnalyticsEventRecord, WhatsAppMetrics } from "@shared/observability";
 
 export type ReadStatus = "live" | "not_configured" | "error";
 
@@ -77,18 +84,20 @@ async function gatewayGet<T>(
 // ضغطات واتساب
 // ---------------------------------------------------------------------------
 
-export type WhatsAppMetrics = {
-  total: number;
-  today: number;
-  last7: number;
-  trend: { date: string; label: string; count: number }[];
-  topProducts: { key: string; label: string; count: number }[];
-  topCategories: { key: string; label: string; count: number }[];
-};
-
 export function readWhatsAppMetrics(): Promise<ReadResult<WhatsAppMetrics>> {
   return gatewayGet("whatsapp_metrics", {}, body => {
     if (!isRecord(body)) return null;
+    const rawEvents = Array.isArray(body.analytics_events)
+      ? body.analytics_events
+      : Array.isArray(body.events)
+        ? body.events
+        : null;
+    if (rawEvents) {
+      const events = rawEvents
+        .map(mapAnalyticsEventRow)
+        .filter((event): event is AnalyticsEventRecord => event !== null);
+      return aggregateWhatsAppMetrics(events);
+    }
     const trend = Array.isArray(body.trend) ? body.trend : [];
     const topProducts = Array.isArray(body.top_products)
       ? body.top_products
@@ -214,19 +223,32 @@ export const readInventory = () =>
   readList<InventoryRecord>("inventory", "inventory", normalizeInventoryRecord);
 
 export const readAuditLog = () =>
-  readList<AuditRecord>("audit_log", "events", item => {
-    if (typeof item.id !== "string" || typeof item.action !== "string") return null;
-    return {
-      id: item.id,
-      occurredAt: String(item.occurred_at ?? item.occurredAt ?? ""),
-      actorId: String(item.actor_id ?? item.actorId ?? ""),
-      actorName: String(item.actor_name ?? item.actorName ?? ""),
-      action: item.action,
-      targetType: String(item.target_type ?? item.targetType ?? ""),
-      targetId: String(item.target_id ?? item.targetId ?? ""),
-      targetName: (item.target_name ?? item.targetName ?? null) as string | null,
-      metadata: isRecord(item.metadata) ? item.metadata : null,
-    };
+  gatewayGet<AuditRecord[]>("audit_log", {}, body => {
+    if (!isRecord(body)) return null;
+    const raw = Array.isArray(body.audit_log)
+      ? body.audit_log
+      : Array.isArray(body.events)
+        ? body.events
+        : null;
+    if (!raw) return null;
+    return raw
+      .filter(isRecord)
+      .map(item => {
+        const id = item.audit_id ?? item.id;
+        if (typeof id !== "string" || typeof item.action !== "string") return null;
+        return {
+          id,
+          occurredAt: String(item.occurred_at ?? item.occurredAt ?? ""),
+          actorId: String(item.actor_employee_id ?? item.actor_id ?? item.actorId ?? ""),
+          actorName: String(item.actor_name ?? item.actorName ?? ""),
+          action: item.action,
+          targetType: String(item.target_type ?? item.targetType ?? ""),
+          targetId: String(item.target_id ?? item.targetId ?? ""),
+          targetName: (item.target_name ?? item.targetName ?? null) as string | null,
+          metadata: isRecord(item.metadata) ? item.metadata : null,
+        };
+      })
+      .filter((item): item is AuditRecord => item !== null);
   });
 
 // ---------------------------------------------------------------------------

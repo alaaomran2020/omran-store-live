@@ -66,6 +66,10 @@ describe("trackWhatsAppInquiry", () => {
     trackWhatsAppInquiry(baseProduct, "product_details");
 
     expect(umami.track).toHaveBeenCalledTimes(3);
+    const fetchMock = vi.mocked(fetch);
+    expect(fetchMock).toHaveBeenCalled();
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(String(init?.body)).toContain("action=analytics_event");
 
     const [conversionEvent, conversionPayload] = umami.track.mock.calls[0] as [string, Record<string, unknown>];
     expect(conversionEvent).toBe("whatsapp_conversion");
