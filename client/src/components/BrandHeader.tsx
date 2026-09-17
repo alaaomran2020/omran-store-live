@@ -25,7 +25,7 @@ export default function BrandHeader() {
           <span className="relative flex h-13 w-13 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-brand-border bg-white shadow-md ring-1 ring-black/[0.02] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg sm:h-[68px] sm:w-[68px]">
             <img
               src="/brand/logo.png"
-              alt="لوجو عمران تويز"
+              alt="لوجو عمران"
               width="512"
               height="512"
               className="h-full w-full object-contain p-1.5"
