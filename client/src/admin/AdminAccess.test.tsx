@@ -4,12 +4,8 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AdminAccess from "./AdminAccess";
 
-vi.mock("@/lib/productsClient", () => ({
-  fetchProducts: vi.fn(async () => ({
-    products: [],
-    status: "ok",
-    fetchedAt: "2026-09-13T00:00:00.000Z",
-  })),
+vi.mock("./pages/DashboardPage", () => ({
+  default: () => <h2>نظرة عامة</h2>,
 }));
 
 function mount(path: string) {
@@ -51,12 +47,21 @@ describe("AdminAccess", () => {
   });
 
   it("يحوّل /admin إلى Dashboard بعد إثبات الهوية", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ email: "admin@example.com" }), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      })
-    );
+    vi.spyOn(globalThis, "fetch").mockImplementation(async input => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
+      if (url === "/cdn-cgi/access/get-identity") {
+        return new Response(JSON.stringify({ email: "admin@example.com" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      throw new Error(`Unexpected fetch in AdminAccess test: ${url}`);
+    });
     mount("/admin");
     expect(await screen.findByText("نظرة عامة")).toBeTruthy();
     await waitFor(() =>

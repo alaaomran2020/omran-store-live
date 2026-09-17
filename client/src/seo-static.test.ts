@@ -1,9 +1,10 @@
 // @vitest-environment node
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const repoRoot = path.resolve(new URL(".", import.meta.url).pathname, "..", "..");
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const html = readFileSync(new URL("../../client/index.html", import.meta.url), "utf8");
 const robots = readFileSync(new URL("../../public/robots.txt", import.meta.url), "utf8");
 const manifest = readFileSync(new URL("../../public/manifest.webmanifest", import.meta.url), "utf8");
