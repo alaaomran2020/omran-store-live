@@ -80,6 +80,33 @@ function AccessBlocked({ reason }: { reason: "SUSPENDED" | "DISABLED" | "INVITED
   );
 }
 
+function PermissionBlocked() {
+  const { resolved } = useAdminIdentity();
+
+  return (
+    <div dir="rtl" className="grid min-h-screen place-items-center bg-brand-cream px-4">
+      <SeoMetadata
+        path="/admin/product-intake"
+        title="صلاحية مطلوبة | لوحة إدارة عمران تويز"
+        description="هذه الصفحة تتطلب صلاحية إضافة منتج."
+        robots="noindex,nofollow"
+      />
+      <div className="w-full max-w-md rounded-2xl border border-brand-border bg-white p-6 text-center shadow-sm">
+        <span className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 text-amber-700">
+          <ShieldAlert size={26} aria-hidden="true" />
+        </span>
+        <h1 className="text-lg font-black text-brand-ink">ليس لديك صلاحية لإضافة منتج</h1>
+        <p className="mt-2 text-sm leading-7 text-brand-muted">
+          صفحة إدخال المنتجات متاحة فقط للحسابات التي تملك صلاحية إضافة منتج.
+        </p>
+        <p className="mt-4 rounded-xl bg-brand-cream px-3 py-2 text-xs font-bold text-brand-navy">
+          {resolved.fullName} — {ROLE_LABELS_AR[resolved.role]}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function lazyPage(Component: ComponentType) {
   return (
     <Suspense fallback={<LoadingState />}>
@@ -89,7 +116,7 @@ function lazyPage(Component: ComponentType) {
 }
 
 function AdminRoutes() {
-  const { resolved } = useAdminIdentity();
+  const { resolved, can } = useAdminIdentity();
 
   if (resolved.status !== "ACTIVE") {
     return <AccessBlocked reason={resolved.status === "SUSPENDED" ? "SUSPENDED" : resolved.status === "DISABLED" ? "DISABLED" : "INVITED"} />;
@@ -98,7 +125,9 @@ function AdminRoutes() {
   return (
     <Switch>
       {/* أدوات قديمة بملء الشاشة بهويتها الأصلية */}
-      <Route path="/product-intake">{<ProductIntake />}</Route>
+      <Route path="/product-intake">
+        {can("product:create") ? <ProductIntake /> : <PermissionBlocked />}
+      </Route>
       <Route path="/vip-operations">{<VipOperations />}</Route>
 
       <Route path="/">{lazyPage(DashboardPage)}</Route>
