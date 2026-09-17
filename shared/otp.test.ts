@@ -42,6 +42,13 @@ describe("OTP generation", () => {
     expect(isOtpCodeShape("12345")).toBe(false);
     expect(isOtpCodeShape("12345a")).toBe(false);
   });
+
+  it("never falls back to Math.random for challenge ids", async () => {
+    const originalCrypto = globalThis.crypto;
+    Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true });
+    await expect(createOtpChallenge({ mobile: "+201012345678", domain: "CUSTOMER", code: "123456", now: 1 })).rejects.toThrow("SECURE_RANDOM_ID_UNAVAILABLE");
+    Object.defineProperty(globalThis, "crypto", { value: originalCrypto, configurable: true });
+  });
 });
 
 describe("OTP challenge lifecycle", () => {
