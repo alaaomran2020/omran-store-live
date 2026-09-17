@@ -8,7 +8,7 @@ export default function BrandHeader() {
   const number = whatsappNumber();
   const whatsappMessage = isPopup
     ? "مرحبًا، أريد الاستفسار عن منتجات POP UP للهدايا والبالونات."
-    : "مرحبًا، أريد الاستفسار عن منتجات شركة عمران التجارية.";
+    : "مرحبًا، أريد الاستفسار عن منتجات عمران تويز.";
   const whatsappUrl = number
     ? `https://wa.me/${number}?text=${encodeURIComponent(whatsappMessage)}`
     : null;
@@ -19,10 +19,10 @@ export default function BrandHeader() {
   }`;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-white/95 pt-[env(safe-area-inset-top)] shadow-[0_8px_30px_rgba(15,23,42,0.04)] backdrop-blur-xl">
-      <div className="container flex flex-col items-stretch gap-1.5 py-2 sm:min-h-[88px] sm:flex-row sm:items-center sm:justify-between sm:gap-5">
-        <a href="/" className="group flex min-w-0 items-center gap-3 sm:gap-4" aria-label="شركة عمران التجارية - الصفحة الرئيسية">
-          <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-brand-border bg-white shadow-sm ring-1 ring-black/[0.02] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md sm:h-16 sm:w-16 sm:rounded-2xl">
+    <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-white/95 pt-[env(safe-area-inset-top)] shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+      <div className="container flex flex-col items-stretch gap-2 py-2.5 sm:min-h-[92px] sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+        <a href="/" className="group flex min-w-0 items-center gap-3 sm:gap-4" aria-label="عمران تويز - الصفحة الرئيسية">
+          <span className="relative flex h-13 w-13 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-brand-border bg-white shadow-md ring-1 ring-black/[0.02] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg sm:h-[68px] sm:w-[68px]">
             <img
               src="/brand/logo.png"
               alt="لوجو عمران"
@@ -35,16 +35,16 @@ export default function BrandHeader() {
           </span>
 
           <span className="min-w-0">
-            <span className="block whitespace-nowrap text-[13px] font-black leading-tight tracking-[-0.02em] text-brand-navy min-[360px]:text-sm sm:text-2xl sm:tracking-tight">
-              شركة عمران التجارية
+            <span className="block whitespace-nowrap text-xl font-black leading-tight tracking-[-0.03em] text-brand-navy sm:text-3xl">
+              عمران تويز
             </span>
             <span className="mt-1 block text-[11px] font-bold tracking-wide text-brand-muted sm:text-sm">
-              لعب أطفال - هدايا
+              شركة عمران التجارية
             </span>
           </span>
         </a>
 
-        <nav className="flex w-full shrink-0 items-center justify-between gap-1 border-t border-brand-border/70 pt-1.5 text-xs font-bold sm:w-auto sm:justify-start sm:border-0 sm:pt-0 sm:text-sm" aria-label="أقسام المتجر">
+        <nav className="flex w-full shrink-0 items-center justify-between gap-1 border-t border-brand-border/70 pt-2 text-xs font-bold sm:w-auto sm:justify-start sm:border-0 sm:pt-0 sm:text-sm" aria-label="أقسام المتجر">
           <a
             href="/products"
             className={`inline-flex ${navClass(pathname === "/products")}`}
@@ -59,7 +59,7 @@ export default function BrandHeader() {
           >
             POP UP
           </a>
-          <a href="/rewards" aria-current={pathname === "/rewards" ? "page" : undefined} className={`hidden lg:inline-flex ${navClass(pathname === "/rewards")}`}>نقاط عمران</a>
+          <a href="/rewards" aria-current={pathname === "/rewards" ? "page" : undefined} className={`hidden lg:inline-flex ${navClass(pathname === "/rewards")}`}>مميزات عمران</a>
           {whatsappUrl && (
             <a
               href={whatsappUrl}

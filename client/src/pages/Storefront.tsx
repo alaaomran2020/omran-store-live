@@ -1,4 +1,5 @@
 import BrandHeader from "@/components/BrandHeader";
+import HomeHero from "@/components/HomeHero";
 import PopUpPromo from "@/components/PopUpPromo";
 import SiteFooter from "@/components/SiteFooter";
 import Products from "@/pages/Products";
@@ -11,14 +12,15 @@ export default function Storefront() {
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
       <AnnouncementBar />
       <BrandHeader />
-      <PopUpPromo />
+      <HomeHero />
       <HomeCategoryHighlights />
-      <StoreTrustFeatures />
 
-      <div>
+      <main id="products" className="scroll-mt-28">
         <Products showAnnouncement={false} />
-      </div>
+      </main>
 
+      <StoreTrustFeatures />
+      <PopUpPromo />
       <SiteFooter />
     </div>
   );
