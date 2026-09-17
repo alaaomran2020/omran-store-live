@@ -19,6 +19,7 @@ import { PUBLIC_PRODUCTS_SNAPSHOT } from "@/lib/publicProductsSnapshot";
 import { POPUP_PRODUCTS_SNAPSHOT } from "@/lib/popupProductsSnapshot";
 import { MAKE_GATEWAY_URL } from "@/lib/makeGateway";
 import { inferSourceBrand, type ImageReadiness, type SourceBrand } from "@shared/catalogQuality";
+import { mapSqlProductRow } from "@shared/sqlCoreEntities";
 
 export type AdminAvailability =
   | "available"
@@ -152,6 +153,21 @@ function extrasFromRows(rows: readonly (readonly unknown[])[]): Map<string, { ta
 /** يحوّل حمولة البوابة {values: [[...]]} إلى منتجات إدارية (بلا فلترة نشر). */
 export function normalizeAdminGatewayPayload(payload: unknown): AdminProduct[] {
   if (!payload || typeof payload !== "object") return [];
+
+  const sqlRows = (payload as { products?: unknown }).products;
+  if (Array.isArray(sqlRows)) {
+    return sqlRows.flatMap(row => {
+      const product = mapSqlProductRow(row);
+      if (!product) return [];
+      const record = row && typeof row === "object" ? row as Record<string, unknown> : {};
+      return [enrich(product, {
+        tags: Array.isArray(record.tags) ? record.tags.map(String) : [],
+        availability: parseAvailability(typeof record.availability === "string" ? record.availability : null),
+        rawWorkflow: typeof record.workflow_status === "string" ? record.workflow_status : null,
+      })];
+    });
+  }
+
   const values = (payload as { values?: unknown }).values;
   if (!Array.isArray(values) || values.length === 0) return [];
   const rows = values.filter(Array.isArray) as unknown[][];
