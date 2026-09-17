@@ -6,6 +6,10 @@ import { BrutalCard, Notice, PageTitle } from "@/admin/ui";
 import AdminApp from "@/admin/AdminApp";
 import type { CloudflareIdentity } from "@/admin/AdminIdentity";
 import { MAIN_CONTENT_ID } from "@/lib/a11y";
+import {
+  checkSupabaseConnection,
+  type SupabaseConnectionStatus,
+} from "@/lib/supabaseBridge";
 
 type AccessState = "checking" | "allowed" | "denied";
 
@@ -35,15 +39,25 @@ export async function readAccessIdentity(): Promise<CloudflareIdentity | null> {
 export default function AdminAccess() {
   const [accessState, setAccessState] = useState<AccessState>("checking");
   const [identity, setIdentity] = useState<CloudflareIdentity | null>(null);
+  const [supabaseStatus, setSupabaseStatus] =
+    useState<SupabaseConnectionStatus | null>(null);
   const [, navigate] = useLocation();
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
 
     readAccessIdentity().then(result => {
       if (cancelled) return;
       setIdentity(result);
       setAccessState(result ? "allowed" : "denied");
+
+      if (result) {
+        void checkSupabaseConnection(controller.signal).then(status => {
+          if (!cancelled) setSupabaseStatus(status);
+        });
+      }
+
       if (
         result &&
         (window.location.pathname === "/admin" ||
@@ -55,6 +69,7 @@ export default function AdminAccess() {
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [navigate]);
 
@@ -68,6 +83,17 @@ export default function AdminAccess() {
           description="لوحة عمليات شركة عمران التجارية — وصول الموظفين المعتمدين فقط."
           robots="noindex,nofollow"
         />
+
+        {supabaseStatus && !supabaseStatus.ok ? (
+          <div dir="rtl" className="mx-auto max-w-7xl px-4 pt-3">
+            <Notice kind="warn">
+              اتصال Supabase غير متاح حاليًا. لوحة الإدارة ما زالت محمية عبر
+              Cloudflare Access، ولن يتم تفعيل صلاحيات Supabase التشغيلية قبل
+              اكتمال حساب OWNER واختبارات RLS.
+            </Notice>
+          </div>
+        ) : null}
+
         <AdminApp identity={identity} />
       </>
     );
