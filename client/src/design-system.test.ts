@@ -56,8 +56,23 @@ describe("Omran Toys design system 2026.09", () => {
     expect(button).toContain('default: "bg-primary');
   });
 
+  it("rolls the system visibly across the remaining storefront surfaces", () => {
+    expect(designSystem).toContain('[data-testid="product-card"]');
+    expect(designSystem).toContain('[data-testid="product-search"]');
+    expect(designSystem).toContain('section[aria-labelledby="advanced-filters-title"]');
+    expect(designSystem).toContain('[data-testid="product-details"]');
+    expect(designSystem).toContain('footer[dir="rtl"]');
+  });
+
+  it("keeps Admin on the shared foundations with a restrained operations treatment", () => {
+    expect(designSystem).toContain('nav[aria-label="أقسام لوحة الإدارة"]');
+    expect(designSystem).toContain("#main-admin");
+    expect(designSystem).toContain("omran-admin-enter");
+  });
+
   it("neutralizes motion durations when reduced motion is requested", () => {
     expect(designSystem).toContain("@media (prefers-reduced-motion: reduce)");
     expect(designSystem).toContain("--motion-standard: 0ms");
+    expect(designSystem).toContain("animation: none !important");
   });
 });
