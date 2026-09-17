@@ -24,6 +24,7 @@
 import type { SessionIdentity } from "@shared/identity";
 import type { CustomerSessionResult } from "@shared/identity";
 
+const AUTH_ENABLED = String(import.meta.env.VITE_AUTH_ENABLED ?? "true").trim().toLowerCase() !== "false";
 const AUTH_BASE = (import.meta.env.VITE_AUTH_API_BASE ?? "/api/auth").replace(/\/$/, "");
 
 export type AuthDomain = "CUSTOMER" | "EMPLOYEE";
@@ -57,6 +58,7 @@ export class AuthClientError extends Error {
 }
 
 async function postJson(path: string, body: Record<string, unknown>): Promise<Response> {
+  if (!AUTH_ENABLED) throw new AuthClientError("PROVIDER_NOT_CONFIGURED");
   return fetch(`${AUTH_BASE}${path}`, {
     method: "POST",
     credentials: "include",
@@ -140,6 +142,7 @@ export async function verifyOtp(
 
 /** جلسة العميل الحالية (للنطاق customer) — قراءة آمنة بلا توكن في JS. */
 export async function fetchCustomerSession(signal?: AbortSignal): Promise<CustomerSessionResult | null> {
+  if (!AUTH_ENABLED) return null;
   try {
     const response = await fetch(`${AUTH_BASE}/session?domain=CUSTOMER`, {
       credentials: "include",
@@ -154,6 +157,7 @@ export async function fetchCustomerSession(signal?: AbortSignal): Promise<Custom
 }
 
 export async function logout(domain: AuthDomain): Promise<void> {
+  if (!AUTH_ENABLED) return;
   try {
     await postJson("/logout", { domain });
   } catch {
@@ -174,6 +178,9 @@ export async function postCustomerAction(
   action: string,
   payload: Record<string, string | number | boolean | null>
 ): Promise<CustomerWriteResult> {
+  if (!AUTH_ENABLED) {
+    return { ok: false, code: "NOT_CONFIGURED", message: "????? ???????? ????????? ??? ????? ??????" };
+  }
   let response: Response;
   try {
     response = await postJson("/account/action", { action, payload });
@@ -198,6 +205,7 @@ export async function postCustomerAction(
 
 /** فحص أمين لتفعيل المزوّد (لا يكشف أي سر). */
 export async function isAuthProviderConfigured(): Promise<boolean> {
+  if (!AUTH_ENABLED) return false;
   try {
     const response = await fetch(`${AUTH_BASE}/health`, {
       credentials: "include",
