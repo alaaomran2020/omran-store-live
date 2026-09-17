@@ -93,12 +93,8 @@ export default function SettingsPage() {
             state={isLoading ? "loading" : "live"}
             detail={
               source === "live-gateway"
-                ? "مصدر حي من بوابة Make — كل الصفوف والحالات."
-                : source === "bundled-csv"
-                  ? "كتالوج مضمّن في نسخة النشر /catalog/products.csv (البوابة الحية غير متاحة الآن)."
-                  : source === "bundle-snapshots"
-                    ? "لقطات المنتجات المعتمدة المضمّنة في الحزمة."
-                    : "جرى التحميل من المصدر الاحتياطي."
+                ? "مصدر حي من البوابة — كل الصفوف والحالات الإدارية."
+                : "البوابة الحية غير متاحة؛ لا يتم استخدام CSV أو Snapshot كمصدر إداري بديل."
             }
           />
           <StatusRow
@@ -107,8 +103,8 @@ export default function SettingsPage() {
             state={writeEnabled ? "live" : "off"}
             detail={
               writeEnabled
-                ? "VITE_ADMIN_ACTIONS_WEBHOOK_URL مضبوط: تعديلات المنتجات/المحتوى/المخزون تُرسل مباشرة."
-                : "غير مضبوط: الإجراءات تُصدر حزم TSV موثّقة للاعتماد اليدوي في الشيت الرئيسي (نمط التشغيل الحالي)."
+                ? "الكتابة الحية مفعّلة عبر بوابة الإجراءات؛ لا توجد حزم TSV كقناة تشغيل."
+                : "الكتابة الحية غير متاحة؛ الإجراءات تفشل بوضوح ولا تنشئ حزم TSV بديلة."
             }
           />
           <StatusRow

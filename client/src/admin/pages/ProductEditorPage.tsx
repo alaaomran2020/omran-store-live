@@ -1,23 +1,15 @@
 /**
- * محرّر/عارض منتج واحد — كل الحقول من الكتالوج الحقيقي.
- *
- * قنوات الحفظ (صادقة بلا حفظ وهمي في المتصفح):
- *   1. بوابة إجراءات مباشرة إن كانت VITE_ADMIN_ACTIONS_WEBHOOK_URL مفعّلة
- *      (تُنفّذ بصلاحيات الموظف وتتحقق من الهوية على الخادم).
- *   2. حزمة تعديل TSV موثّقة جاهزة للصق في الشيت الرئيسي (قناة التشغيل
- *      اليدوية المعتمدة حاليًا) مع سجل تدقيق.
- * لا يمكن للمحرر تجاوز بوابة النشر: النشر يتطلب PASS + PUBLISHED + active.
+ * محرّر/عارض منتج واحد — كل الحقول من الكتالوج الحي.
+ * الحفظ وتغيير حالات النشر يتمان عبر البوابة الحية فقط مع سجل تدقيق؛
+ * لا توجد حزم TSV كقناة تشغيل. بوابة النشر تظل PASS + PUBLISHED + active.
  */
 import { useMemo, useState, useEffect } from "react";
 import { Link, useParams } from "wouter";
 import { toast, Toaster } from "sonner";
 import {
   ArrowRight,
-  ClipboardCopy,
-  Download,
   ExternalLink,
   Save,
-  Send,
 } from "lucide-react";
 import { AdminPageShell } from "@/admin/shell/AdminPageShell";
 import {
@@ -41,13 +33,8 @@ import {
 } from "@/admin/components/StatusBadges";
 import { useAdminCatalog } from "@/admin/dataHooks";
 import { useAdminIdentity } from "@/admin/AdminIdentity";
-import { postAdminAction, adminActionsConfigured } from "@/lib/admin/adminGateway";
+import { postAdminAction } from "@/lib/admin/adminGateway";
 import { emitAudit } from "@/lib/admin/auditClient";
-import {
-  copyPacket,
-  downloadPacket,
-  productChangePacket,
-} from "@/lib/admin/changePackets";
 import { formatPrice } from "@/admin/adminFormat";
 import type { AdminProduct } from "@/lib/admin/adminCatalog";
 import type { QaStatus, WorkflowStatus } from "@shared/products";
@@ -99,7 +86,7 @@ function diffDraft(product: AdminProduct, draft: EditableDraft): Record<string, 
 export default function ProductEditorPage() {
   const params = useParams();
   const productId = useMemo(() => decodeURIComponent(params.id ?? ""), [params.id]);
-  const { products, isLoading } = useAdminCatalog();
+  const { products, isLoading, refresh } = useAdminCatalog();
   const { actor, can } = useAdminIdentity();
 
   const product = products.find(p => p.id === productId) ?? null;
@@ -114,7 +101,6 @@ export default function ProductEditorPage() {
 
   const changes = product && draft ? diffDraft(product, draft) : {};
   const dirty = Object.keys(changes).length > 0;
-  const directWrite = adminActionsConfigured();
 
   useEffect(() => {
     if (!product || !draft) return;
@@ -159,13 +145,7 @@ export default function ProductEditorPage() {
     return null;
   })();
 
-  const handoffPacket = () =>
-    productChangePacket(
-      product,
-      changes,
-      actor,
-      reason.trim() || "تعديل من لوحة الإدارة"
-    );
+
 
   async function save() {
     if (validationError) {
@@ -174,77 +154,53 @@ export default function ProductEditorPage() {
     }
     setSaving(true);
     try {
-      if (directWrite) {
-        const result = await postAdminAction("product_update", {
-          product_id: product!.id,
-          changes_json: JSON.stringify(changes),
-          reason: reason.trim(),
-          actor_id: actor.id,
-        });
-        if (result.ok) {
-          emitAudit(actor, {
-            action: "PRODUCT_UPDATED",
-            targetType: "PRODUCT",
-            targetId: product!.id,
-            targetName: product!.name,
-            metadata: { fields: Object.keys(changes).join(","), newStatus: draft!.active ? "active" : "hidden" },
-          });
-          toast.success("تم إرسال التعديل لبوابة التشغيل بنجاح");
-          setReason("");
-        } else {
-          downloadPacket(handoffPacket());
-          toast.warning("تعذّر الإرسال المباشر — تم تنزيل حزمة تعديل للصق اليدوي");
-        }
-      } else {
-        downloadPacket(handoffPacket());
-        emitAudit(actor, {
-          action: "PRODUCT_UPDATED",
-          targetType: "PRODUCT",
-          targetId: product!.id,
-          targetName: product!.name,
-          metadata: { fields: Object.keys(changes).join(","), channel: "manual_packet" },
-        });
-        toast.success("تم إعداد حزمة التعديل للصق في الشيت الرئيسي");
+      const result = await postAdminAction("product_update", {
+        product_id: product!.id,
+        changes_json: JSON.stringify(changes),
+        reason: reason.trim(),
+        actor_id: actor.id,
+      });
+      if (!result.ok) {
+        toast.error(`فشل الحفظ على البوابة الحية: ${result.message}`);
+        return;
       }
+      emitAudit(actor, {
+        action: "PRODUCT_UPDATED",
+        targetType: "PRODUCT",
+        targetId: product!.id,
+        targetName: product!.name,
+        metadata: { fields: Object.keys(changes).join(","), newStatus: draft!.active ? "active" : "hidden", channel: "live_gateway" },
+      });
+      toast.success("تم حفظ التعديل على البوابة الحية");
+      setReason("");
+      await refresh();
     } finally {
       setSaving(false);
     }
   }
 
-  async function copyPacketToClipboard() {
-    if (await copyPacket(handoffPacket())) toast.success("تم نسخ حزمة التعديل");
-    else toast.error("تعذّر النسخ — استخدم زر التنزيل");
-  }
-
   async function statusAction(nextWorkflow: WorkflowStatus, nextQa: QaStatus | null, action: "PRODUCT_PUBLISHED" | "PRODUCT_UNPUBLISHED" | "PRODUCT_ARCHIVED", label: string) {
     const target = product!;
-    const fields: Record<string, string | null> = { workflow_status: nextWorkflow };
-    if (nextQa !== null) fields.qa_status = nextQa;
-    if (directWrite) {
-      const result = await postAdminAction("product_status", {
-        product_id: target.id,
-        workflow_status: nextWorkflow,
-        qa_status: nextQa ?? "",
-        actor_id: actor.id,
-      });
-      if (!result.ok) {
-        downloadPacket(productChangePacket(target, fields, actor, `تغيير حالة نشر: ${label}`));
-        toast.warning("تعذّر الإرسال المباشر — تم تنزيل حزمة التغيير للصق اليدوي");
-      } else {
-        toast.success(label === "نشر" ? "تم اعتماد النشر عبر البوابة" : "تم تنفيذ تغيير الحالة");
-      }
-    } else {
-      downloadPacket(productChangePacket(target, fields, actor, `تغيير حالة نشر: ${label}`));
-      toast.success("حزمة تغيير الحالة جاهزة للصق في الشيت الرئيسي");
+    const result = await postAdminAction("product_status", {
+      product_id: target.id,
+      workflow_status: nextWorkflow,
+      qa_status: nextQa ?? "",
+      actor_id: actor.id,
+    });
+    if (!result.ok) {
+      toast.error(`فشل تغيير الحالة على البوابة الحية: ${result.message}`);
+      return;
     }
     emitAudit(actor, {
       action,
       targetType: "PRODUCT",
       targetId: target.id,
       targetName: target.name,
-      metadata: { newStatus: nextWorkflow },
+      metadata: { newStatus: nextWorkflow, channel: "live_gateway" },
     });
+    toast.success(label === "نشر" ? "تم اعتماد النشر عبر البوابة الحية" : "تم تنفيذ تغيير الحالة");
     setConfirmPublish(false);
+    await refresh();
   }
 
   const canEdit = can("product:update");
@@ -327,7 +283,7 @@ export default function ProductEditorPage() {
                 </label>
               </div>
               <p className="text-[11px] leading-5 text-brand-muted sm:col-span-2">
-                الكميات الرقمية وعتبة المخزون المنخفض غير موجودة في مصادر المتجر الحالية، لذلك لا تُعرض ولا تُقدَّر. فعّل ورقة مخزون موثوقة لإتاحة تحديث الكميات.
+                الكميات الرقمية وعتبات المخزون تُدار من صفحة المخزون عبر المصدر الحي. هذا المحرر يغيّر حالة التوفر فقط ولا يقدّر أي كمية.
               </p>
             </div>
           </Card>
@@ -353,7 +309,7 @@ export default function ProductEditorPage() {
 
           {canEdit ? (
             <Card>
-              <CardHeader title="حفظ التعديلات" subtitle={directWrite ? "البوابة المباشرة مفعّلة" : "القناة اليدوية المعتمدة حاليًا"} />
+              <CardHeader title="حفظ التعديلات" subtitle="الحفظ يتم عبر البوابة الحية فقط" />
               <div className="space-y-3 p-5">
                 {validationError ? <InfoBanner tone="warning">{validationError}</InfoBanner> : null}
                 <TextAreaField label="سبب التعديل (للمراجعة والتدقيق)" value={reason} onChange={e => setReason(e.target.value)} placeholder="مثال: تصحيح السعر من المصدر" />
@@ -364,14 +320,7 @@ export default function ProductEditorPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <AdminButton onClick={save} loading={saving} disabled={!dirty}>
-                    {directWrite ? <Save size={16} /> : <Send size={16} />}
-                    {directWrite ? "حفظ عبر البوابة" : "إصدار حزمة تعديل"}
-                  </AdminButton>
-                  <AdminButton variant="secondary" size="sm" onClick={copyPacketToClipboard} disabled={!dirty}>
-                    <ClipboardCopy size={15} /> نسخ
-                  </AdminButton>
-                  <AdminButton variant="ghost" size="sm" onClick={() => downloadPacket(handoffPacket())} disabled={!dirty}>
-                    <Download size={15} /> تنزيل TSV
+                    <Save size={16} /> حفظ عبر البوابة الحية
                   </AdminButton>
                 </div>
               </div>
@@ -426,7 +375,7 @@ export default function ProductEditorPage() {
       {confirmPublish ? (
         <ConfirmDialog
           title="اعتماد ونشر المنتج"
-          description="تأكيد النشر يصدر حزمة/إجراء بحالة PUBLISHED و PASS. هل تمت المراجعة البصرية للصورة والبيانات؟"
+          description="تأكيد النشر يرسل حالة PUBLISHED و PASS مباشرة إلى البوابة الحية. هل تمت المراجعة البصرية للصورة والبيانات؟"
           confirmLabel="نعم، اعتمد وانشر"
           onConfirm={() => statusAction("PUBLISHED", "PASS", "PRODUCT_PUBLISHED", "نشر")}
           onCancel={() => setConfirmPublish(false)}

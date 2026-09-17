@@ -1,16 +1,7 @@
 /**
- * بوابة بيانات الإدارة (قراءات + إجراءات كتابية موثّقة).
- *
- * فلسفة صادقة: المتجر ثابت بلا خادم. القراءات التشغيلية (ضغطات واتساب،
- * الموظفون، العملاء، سجل التدقيق) تتطلب سيناريوهات/قراءات على بوابة Make أو
- * Apps Script تُنشر بشكل منفصل. كل قراءة هنا تُرجع حالة واضحة:
- *   - "live": البيانات وصلت فعلاً وتطابق العقد.
- *   - "not_configured": البوابة لم ترد بالشكل المتوقع → الواجهة تُظهر حالة
- *     فارغة صادقة بلا أي أرقام مختلقة.
- *
- * الكتابة تُرسل عبر VITE_ADMIN_ACTIONS_WEBHOOK_URL اختياريًا؛ عند غيابه/فشله
- * تُنتِج الصفحات "حزمة تعديل" يدوية موثّقة (CSV/TSV) تُلصق في الشيت الرئيسي
- * — وهو نمط التشغيل المعتمد حاليًا في المشروع (راجع VipOperations).
+ * بوابة البيانات الحية للإدارة. القراءات والكتابات التشغيلية تمر عبر بوابة Make
+ * الموحّدة أو VITE_ADMIN_ACTIONS_WEBHOOK_URL كـoverride للكتابة. لا يوجد fallback
+ * تشغيلي إلى TSV/Sheets؛ الفشل يُعاد للواجهة بوضوح بدل ادعاء نجاح محلي.
  */
 import { MAKE_GATEWAY_URL } from "@/lib/makeGateway";
 import {
@@ -251,13 +242,49 @@ export const readAuditLog = () =>
       .filter((item): item is AuditRecord => item !== null);
   });
 
+export type AdminContentRecord = {
+  announcements: string[];
+  contact: { whatsapp: string; landline: string };
+  social: { instagram: string; facebook: string };
+  branches: Array<{ id: string; name: string; address: string; city: string }>;
+};
+
+export function normalizeAdminContent(value: unknown): AdminContentRecord | null {
+  if (!isRecord(value)) return null;
+  const source = isRecord(value.content) ? value.content : value;
+  const announcementsRaw = source.announcements;
+  const contact = isRecord(source.contact) ? source.contact : source;
+  const social = isRecord(source.social) ? source.social : source;
+  const branchesRaw = Array.isArray(source.branches) ? source.branches : [];
+  const announcements = Array.isArray(announcementsRaw)
+    ? announcementsRaw.map(item => typeof item === "string" ? item : isRecord(item) ? String(item.message ?? "") : "").filter(Boolean)
+    : typeof announcementsRaw === "string"
+      ? announcementsRaw.split(/\r?\n|\s*\|\s*/).map(item => item.trim()).filter(Boolean)
+      : [];
+  const branches = branchesRaw.filter(isRecord).map(branch => ({
+    id: String(branch.id ?? ""),
+    name: String(branch.name ?? ""),
+    address: String(branch.address ?? ""),
+    city: String(branch.city ?? ""),
+  })).filter(branch => branch.id && branch.name);
+  const whatsapp = String(contact.whatsapp ?? "");
+  const landline = String(contact.landline ?? "");
+  const instagram = String(social.instagram ?? "");
+  const facebook = String(social.facebook ?? "");
+  if (!announcements.length && !whatsapp && !landline && !instagram && !facebook && !branches.length) return null;
+  return { announcements, contact: { whatsapp, landline }, social: { instagram, facebook }, branches };
+}
+
+export const readAdminContent = () =>
+  gatewayGet<AdminContentRecord>("content", {}, normalizeAdminContent);
+
 // ---------------------------------------------------------------------------
 // إجراءات الكتابة
 // ---------------------------------------------------------------------------
 
-function actionsWebhookUrl(): string | null {
+function actionsWebhookUrl(): string {
   const configured = (import.meta.env.VITE_ADMIN_ACTIONS_WEBHOOK_URL ?? "").trim();
-  return configured || null;
+  return configured || MAKE_GATEWAY_URL;
 }
 
 export type AdminWriteResult =
@@ -274,9 +301,6 @@ export async function postAdminAction(
   payload: Record<string, string | number | boolean | null>
 ): Promise<AdminWriteResult> {
   const endpoint = actionsWebhookUrl();
-  if (!endpoint) {
-    return { ok: false, code: "NOT_CONFIGURED", message: "بوابة الإجراءات غير مفعلة" };
-  }
   try {
     const body = new URLSearchParams({ action, payload_json: JSON.stringify(payload) });
     const response = await fetch(endpoint, {
@@ -297,5 +321,5 @@ export async function postAdminAction(
 }
 
 export function adminActionsConfigured(): boolean {
-  return Boolean(actionsWebhookUrl());
+  return true;
 }

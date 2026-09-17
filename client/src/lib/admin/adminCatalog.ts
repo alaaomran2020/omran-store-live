@@ -1,22 +1,13 @@
 /**
- * طبقة وصول الإدارة للكتالوج الكامل (كل الصفوف بما فيها غير المنشورة).
- *
- * مصادر القراءة بترتيب الأفضلية:
- *   1. بوابة Make الحية (نفس بوابة المتجر) بصيغة {values: [[...rows]]} — تُحلَّل
- *      بوضع التشخيص (includeInactive) فلا تُخفي أي حالات نشر/جودة.
- *   2. ملف الكتالوج المضمّن في النشر /catalog/products.csv (بيانات حقيقية).
- *   3. لقطات المنتجات المعتمدة المضمّنة في الحزمة (آخر حالة جيدة معروفة).
- *
- * لا تُفلتر البوابة هنا ببوابة النشر — الإدارة ترى كل شيء بعلامات حالته،
- * بينما يظل المتجر نفسه يستخدم productsClient المفلتر للجمهور فقط.
+ * طبقة وصول الإدارة للكتالوج الكامل. الإدارة تعتمد على البوابة الحية فقط؛
+ * يمكن للبوابة إرجاع صفوف SQL-shaped أو مصفوفة values القديمة أثناء الانتقال.
+ * لا يستخدم Admin ملف CSV المضمّن أو snapshots كبديل قابل للتعديل.
  */
 import {
   parseCsv,
   parseProductsCsv,
   type Product,
 } from "@shared/products";
-import { PUBLIC_PRODUCTS_SNAPSHOT } from "@/lib/publicProductsSnapshot";
-import { POPUP_PRODUCTS_SNAPSHOT } from "@/lib/popupProductsSnapshot";
 import { MAKE_GATEWAY_URL } from "@/lib/makeGateway";
 import { inferSourceBrand, type ImageReadiness, type SourceBrand } from "@shared/catalogQuality";
 import { mapSqlProductRow } from "@shared/sqlCoreEntities";
@@ -36,15 +27,13 @@ export type AdminProduct = Product & {
   rawWorkflow: string | null;
 };
 
-export type AdminCatalogSource =
-  | "live-gateway"
-  | "bundled-csv"
-  | "bundle-snapshots";
+export type AdminCatalogSource = "live-gateway" | "unavailable";
 
 export type AdminCatalogPayload = {
   products: AdminProduct[];
   source: AdminCatalogSource;
   fetchedAt: string;
+  error?: string;
 };
 
 const ADMIN_TIMEOUT_MS = 10_000;
@@ -202,29 +191,9 @@ async function fetchGatewayCatalog(signal?: AbortSignal): Promise<AdminProduct[]
   return products;
 }
 
-async function fetchBundledCsv(signal?: AbortSignal): Promise<AdminProduct[]> {
-  const response = await fetch("/catalog/products.csv", { signal, cache: "no-store" });
-  if (!response.ok) throw new Error(`bundled_csv_${response.status}`);
-  const csv = await response.text();
-  if (!csv.trim() || /^\s*<(!doctype|html)/i.test(csv)) {
-    throw new Error("bundled_csv_invalid");
-  }
-  return parseProductsCsv(csv, { includeInactive: true }).map(product =>
-    enrich(product, {})
-  );
-}
-
-function snapshotCatalog(): AdminProduct[] {
-  const all: Product[] = [
-    ...PUBLIC_PRODUCTS_SNAPSHOT,
-    ...POPUP_PRODUCTS_SNAPSHOT.map(product => ({ ...product })),
-  ];
-  return all.map(product => enrich(product, { availability: "unknown" }));
-}
-
 /**
- * يجلب كتالوج الإدارة الكامل. لا يرمي أبدًا في الوجهات الطبيعية: يجرّب المصادر
- * بالترتيب ويُرجع المصدر المستخدم فعليًا (للإفصاح الصادق في الواجهة).
+ * Admin operations use the live gateway only. Storefront fallbacks remain separate
+ * and are never treated as an editable Admin source.
  */
 export async function fetchAdminCatalog(): Promise<AdminCatalogPayload> {
   const fetchedAt = new Date().toISOString();
@@ -233,20 +202,16 @@ export async function fetchAdminCatalog(): Promise<AdminCatalogPayload> {
   try {
     const live = await fetchGatewayCatalog(controller.signal);
     return { products: live, source: "live-gateway", fetchedAt: new Date().toISOString() };
-  } catch {
-    // البوابة غير متاحة/محظورة — جرّب الكتالوج المضمّن.
+  } catch (error) {
+    return {
+      products: [],
+      source: "unavailable",
+      fetchedAt,
+      error: error instanceof Error ? error.message : "live_gateway_unavailable",
+    };
   } finally {
     clearTimeout(timer);
   }
-
-  try {
-    const bundled = await fetchBundledCsv();
-    if (bundled.length > 0) return { products: bundled, source: "bundled-csv", fetchedAt };
-  } catch {
-    // استمر للقطات.
-  }
-
-  return { products: snapshotCatalog(), source: "bundle-snapshots", fetchedAt };
 }
 
 /** عدد صفوف بيانات CSV خام — فائدة اختبارية/تشخيصية. */

@@ -1,12 +1,12 @@
 /**
  * إدارة الأقسام — يربط التصنيفات المرجعية المعتمدة (shared/taxonomy) مع
  * الأقسام الواردة فعليًا من الكتالوج، ويكشف التغطية والأقسام غير المطابقة
- * دون تخمين. التعديل/الترتيب يُرسل عبر البوابة أو كحزمة TSV موثّقة.
+ * دون تخمين. التعديل/الترتيب يُرسل عبر البوابة الحية فقط.
  */
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { toast, Toaster } from "sonner";
-import { ArrowUpDown, ClipboardCopy, FolderTree, Link2 } from "lucide-react";
+import { ArrowUpDown, FolderTree, Link2 } from "lucide-react";
 import { AdminPageShell } from "@/admin/shell/AdminPageShell";
 import {
   AdminButton,
@@ -23,8 +23,7 @@ import { BrandBadge } from "@/admin/components/StatusBadges";
 import { useAdminCatalog } from "@/admin/dataHooks";
 import { useAdminIdentity } from "@/admin/AdminIdentity";
 import { canonicalCategory, VISIBLE_CATEGORIES } from "@shared/taxonomy";
-import { adminActionsConfigured, postAdminAction } from "@/lib/admin/adminGateway";
-import { categoryChangePacket, copyPacket, downloadPacket } from "@/lib/admin/changePackets";
+import { postAdminAction } from "@/lib/admin/adminGateway";
 import { emitAudit } from "@/lib/admin/auditClient";
 
 type CategoryRow = {
@@ -37,10 +36,9 @@ type CategoryRow = {
 };
 
 export default function CategoriesPage() {
-  const { products, isLoading } = useAdminCatalog();
+  const { products, isLoading, refresh } = useAdminCatalog();
   const { actor } = useAdminIdentity();
   const [brandFilter, setBrandFilter] = useState<"OMRAN" | "POPUP" | "ALL">("OMRAN");
-  const directWrite = adminActionsConfigured();
 
   const { rows, unmapped, mappedTaxonomy } = useMemo(() => {
     const live = new Map<string, { omran: number; popup: number; canonical: string | null }>();
@@ -79,21 +77,17 @@ export default function CategoriesPage() {
   );
 
   async function emitReorder() {
-    const packet = categoryChangePacket(
-      mappedTaxonomy.map(c => ({ id: c.id, name: c.name, sortOrder: c.sortOrder, visible: c.visibility === "visible" })),
-      actor
-    );
-    if (directWrite) {
-      const result = await postAdminAction("category_reorder", {
-        categories_json: JSON.stringify(mappedTaxonomy.map(c => ({ id: c.id, sortOrder: c.sortOrder }))),
-        actor_id: actor.id,
-      });
-      if (!result.ok) downloadPacket(packet);
-    } else {
-      downloadPacket(packet);
+    const result = await postAdminAction("category_reorder", {
+      categories_json: JSON.stringify(mappedTaxonomy.map(c => ({ id: c.id, sortOrder: c.sortOrder }))),
+      actor_id: actor.id,
+    });
+    if (!result.ok) {
+      toast.error(`فشل حفظ ترتيب الأقسام على البوابة الحية: ${result.message}`);
+      return;
     }
-    emitAudit(actor, { action: "CATEGORY_REORDERED", targetType: "CATEGORY", targetId: "all", targetName: "كل الأقسام" });
-    toast.success(directWrite ? "تم إرسال ترتيب الأقسام" : "تم تنزيل حزمة ترتيب الأقسام للصق في الشيت");
+    emitAudit(actor, { action: "CATEGORY_REORDERED", targetType: "CATEGORY", targetId: "all", targetName: "كل الأقسام", metadata: { channel: "live_gateway" } });
+    toast.success("تم حفظ ترتيب الأقسام على البوابة الحية");
+    await refresh();
   }
 
   const columns: DataTableColumn<CategoryRow>[] = [
@@ -133,7 +127,7 @@ export default function CategoriesPage() {
       actions={
         <PermissionGate permission="category:reorder">
           <AdminButton variant="secondary" size="sm" onClick={emitReorder}>
-            <ArrowUpDown size={15} /> إصدار حزمة ترتيب
+            <ArrowUpDown size={15} /> حفظ الترتيب
           </AdminButton>
         </PermissionGate>
       }
@@ -200,21 +194,12 @@ export default function CategoriesPage() {
                   )}
                   <PermissionGate permission="category:update">
                     <p className="mt-3 text-[11px] leading-5 text-brand-muted">
-                      لإضافة ربط: أضف الاسم إلى مرادفات القسم في shared/taxonomy ثم أصدِر حزمة التعديل للمراجعة.
+                      لإضافة ربط: أضف الاسم إلى مرادفات القسم المعتمدة ثم احفظ التغيير عبر البوابة الحية.
                     </p>
                   </PermissionGate>
                 </div>
               </Card>
             </div>
-          </div>
-          <div className="mt-4">
-            <AdminButton variant="ghost" size="sm" onClick={async () => {
-              const packet = categoryChangePacket([], actor);
-              const ok = await copyPacket({ ...packet, rows: rows.map(r => [r.id, r.name, r.omran + r.popup, "", actor.name, new Date().toISOString()]), headers: ["id", "name", "product_count", "note", "changed_by", "changed_at"] });
-              toast(ok ? "تم نسخ الأقسام" : "تعذّر النسخ — استخدم التنزيل");
-            }}>
-              <ClipboardCopy size={14} /> نسخ جدول الأقسام
-            </AdminButton>
           </div>
         </>
       )}

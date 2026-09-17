@@ -2,11 +2,11 @@
  * إدارة المحتوى — جرد للمحتوى التسويقي الحقيقي المعروض للعملاء (شريط
  * المستجدات، بيانات التواصل، الفروع، الروابط الرسمية) مع تعديل موثّق.
  * المحتوى الحالي مُصدَر في الكود (shared/storeContent.ts)؛ التغيير يُعتمد عبر
- * بوابة الإجراءات إن فُعّلت أو كحزمة تغيير يدوية — لا يُحفظ وهميًا بالمتصفح.
+ * بوابة الإجراءات الحية فقط — لا يُحفظ وهميًا بالمتصفح ولا تُنشأ حزم TSV تشغيلية.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
-import { Check, Download, Edit3, Megaphone, MapPin, MessageCircle, Share2 } from "lucide-react";
+import { Check, Edit3, Megaphone, MapPin, MessageCircle, Share2 } from "lucide-react";
 import { AdminPageShell } from "@/admin/shell/AdminPageShell";
 import {
   AdminButton,
@@ -19,10 +19,9 @@ import {
   TextInput,
 } from "@/admin/components/primitives";
 import { useAdminIdentity } from "@/admin/AdminIdentity";
-import { adminActionsConfigured, postAdminAction } from "@/lib/admin/adminGateway";
+import { useAdminContent } from "@/admin/dataHooks";
+import { postAdminAction } from "@/lib/admin/adminGateway";
 import { emitAudit } from "@/lib/admin/auditClient";
-import { downloadPacket } from "@/lib/admin/changePackets";
-import { safeCsvCell } from "@shared/audit";
 import {
   CONTENT_SECTION_LABELS_AR,
   POPUP_SOCIAL,
@@ -33,13 +32,7 @@ import {
   type StoreContentSection,
 } from "@shared/storeContent";
 
-type ContentPacket = {
-  title: string;
-  fileName: string;
-  headers: string[];
-  rows: (string | number)[][];
-  notes: string[];
-};
+
 
 function Section({ id, icon, title, subtitle, children }: { id: string; icon: React.ReactNode; title: string; subtitle: string; children: React.ReactNode }) {
   return (
@@ -54,60 +47,54 @@ function Section({ id, icon, title, subtitle, children }: { id: string; icon: Re
 
 export default function ContentPage() {
   const { actor, can } = useAdminIdentity();
+  const contentQuery = useAdminContent();
+  const liveContent = contentQuery.data?.status === "live" ? contentQuery.data.data : null;
   const [announcement, setAnnouncement] = useState(STORE_ANNOUNCEMENTS.map(a => a.message).join("\n"));
   const [whatsapp, setWhatsapp] = useState(STORE_CONTACT.whatsapp);
   const [landline, setLandline] = useState(STORE_CONTACT.landline ?? "");
   const [instagram, setInstagram] = useState(STORE_SOCIAL.instagram);
   const [facebook, setFacebook] = useState(STORE_SOCIAL.facebook);
-  const directWrite = adminActionsConfigured();
 
-  function packetFor(section: StoreContentSection, rows: (string | number)[][], headers: string[]): ContentPacket {
-    return {
-      title: CONTENT_SECTION_LABELS_AR[section],
-      fileName: `content-${section}-${Date.now()}.tsv`,
-      headers,
-      rows,
-      notes: [`الموظف: ${actor.name}`, "محتوى المتجر مُصدَر في الكود حاليًا: تُعتمد الحزمة عبر المراجعة ثم النشر."],
-    };
-  }
+  useEffect(() => {
+    if (!liveContent) return;
+    setAnnouncement(liveContent.announcements.join("\n"));
+    setWhatsapp(liveContent.contact.whatsapp);
+    setLandline(liveContent.contact.landline);
+    setInstagram(liveContent.social.instagram);
+    setFacebook(liveContent.social.facebook);
+  }, [liveContent]);
 
-  async function submit(section: StoreContentSection, packet: ContentPacket, changes: Record<string, string>) {
-    const payload = {
+  async function submit(section: StoreContentSection, changes: Record<string, string>) {
+    const result = await postAdminAction("content_update", {
       section,
       changes_json: JSON.stringify(changes),
       actor_id: actor.id,
-    };
-    if (directWrite) {
-      const result = await postAdminAction("content_update", payload);
-      if (result.ok) {
-        toast.success("تم إرسال تعديل المحتوى للاعتماد");
-      } else {
-        downloadPacket(packet);
-        toast.warning("البوابة المباشرة غير متاحة — تم تنزيل حزمة التغيير");
-      }
-    } else {
-      downloadPacket(packet);
-      toast.success("تم إصدار حزمة تعديل المحتوى للاعتماد اليدوي");
+    });
+    if (!result.ok) {
+      toast.error(`فشل حفظ المحتوى على البوابة الحية: ${result.message}`);
+      return;
     }
     emitAudit(actor, {
       action: "CONTENT_UPDATED",
       targetType: "CONTENT",
       targetId: section,
       targetName: CONTENT_SECTION_LABELS_AR[section],
-      metadata: { section, fields: Object.keys(changes).join(",") },
+      metadata: { section, fields: Object.keys(changes).join(","), channel: "live_gateway" },
     });
+    toast.success("تم حفظ تعديل المحتوى على البوابة الحية");
   }
 
-  const canEdit = can("content:update");
+  const canEdit = can("content:update") && contentQuery.data?.status === "live";
+  const branches = liveContent?.branches.length ? liveContent.branches : STORE_BRANCHES;
 
   return (
     <AdminPageShell title="إدارة المحتوى" subtitle="المحتوى التسويقي المعروض للعملاء حاليًا وقنوات تعديله">
       <Toaster position="top-center" dir="rtl" richColors closeButton />
 
-      <InfoBanner tone="info">
-        المحتوى الحالي مُصدَر ضمن حزمة المتجر (shared/storeContent.ts) ويصل للعملاء فور نشر النسخة. التعديلات هنا إما تُرسل
-        لبوابة الاعتماد إن فُعّلت ({directWrite ? "مفعّلة الآن" : "غير مفعّلة"}) أو تُصدَّر كحزمة تغيير للصق والمراجعة. لا تُحفظ
-        تغييرات وهمية في المتصفح. POP UP يبقى محتوى منفصلًا تمامًا.
+      <InfoBanner tone={contentQuery.data?.status === "live" ? "info" : "warning"}>
+        {contentQuery.data?.status === "live"
+          ? "المحتوى مقروء من البوابة الحية، والتعديلات تُحفظ عليها فقط. POP UP يبقى منفصلًا تمامًا."
+          : "تعذّر تحميل المحتوى من البوابة الحية؛ القيم الظاهرة مرجع للنسخة الحالية فقط والتعديل متوقف حتى عودة المصدر. لا يوجد fallback تشغيلي إلى TSV/Sheets."}
       </InfoBanner>
 
       <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -124,11 +111,7 @@ export default function ContentPage() {
               size="sm"
               onClick={() => {
                 const lines = announcement.split("\n").map(s => s.trim()).filter(Boolean);
-                submit(
-                  "announcements",
-                  packetFor("announcements", lines.map((message, i) => [i + 1, message, "TRUE"]), ["row", "message", "active"]),
-                  { announcements: lines.join(" | ") }
-                );
+                submit("announcements", { announcements: lines.join(" | ") });
               }}
             >
               <Check size={15} /> اعتماد النصوص
@@ -141,15 +124,14 @@ export default function ContentPage() {
           <TextInput label="الهاتف الأرضي (دولي بلا +)" inputMode="tel" value={landline} disabled={!canEdit} onChange={e => setLandline(e.target.value.replace(/[^\d]/g, ""))} />
           <div className="flex items-center gap-2 text-xs font-bold text-brand-muted">
             <Badge tone="green">معروض</Badge>
-            زر التواصل عبر واتساب يستخدم الرقم {STORE_CONTACT.whatsapp}
+            زر التواصل عبر واتساب يستخدم الرقم {whatsapp || STORE_CONTACT.whatsapp}
           </div>
           <PermissionGate permission="content:update">
             <AdminButton
               size="sm"
               variant="secondary"
               onClick={() => {
-                const packet = packetFor("contact", [["whatsapp", whatsapp], ["landline", landline]], ["key", "value"]);
-                submit("contact", packet, { whatsapp, landline });
+                submit("contact", { whatsapp, landline });
               }}
             >
               <Edit3 size={15} /> اعتماد بيانات التواصل
@@ -165,8 +147,7 @@ export default function ContentPage() {
               size="sm"
               variant="secondary"
               onClick={() => {
-                const packet = packetFor("social", [["instagram", instagram], ["facebook", facebook]], ["key", "value"]);
-                submit("social", packet, { instagram, facebook });
+                submit("social", { instagram, facebook });
               }}
             >
               <Edit3 size={15} /> اعتماد الروابط
@@ -176,7 +157,7 @@ export default function ContentPage() {
 
         <Section id="branches" icon={<MapPin size={18} />} title="الفروع" subtitle="مصدرها الفوتر الحالي">
           <ul className="space-y-2">
-            {STORE_BRANCHES.map(branch => (
+            {branches.map(branch => (
               <li key={branch.id} className="rounded-xl border border-brand-border bg-brand-cream/60 p-3">
                 <p className="text-sm font-extrabold text-brand-ink">{branch.name}</p>
                 <p className="text-xs font-semibold text-brand-muted">{branch.address}</p>
@@ -188,15 +169,10 @@ export default function ContentPage() {
               size="sm"
               variant="secondary"
               onClick={() => {
-                const packet = packetFor(
-                  "branches",
-                  STORE_BRANCHES.map(b => [b.id, b.name, b.address, b.city] as (string | number)[]),
-                  ["id", "name", "address", "city"]
-                );
-                submit("branches", packet, { branches: STORE_BRANCHES.length.toString() });
+                submit("branches", { branches_json: JSON.stringify(branches) });
               }}
             >
-              <Download size={15} /> إصدار حزمة الفروع
+              <Check size={15} /> اعتماد بيانات الفروع
             </AdminButton>
           </PermissionGate>
         </Section>
@@ -210,9 +186,6 @@ export default function ContentPage() {
         </div>
       </Card>
 
-      <p className="mt-4 text-[11px] font-semibold text-brand-disabled">
-        جميع الحزم TSV محصّنة ضد حقن الصيغ ({safeCsvCell("=cmd")}) ولا تكتب إلا من موظف بصلاحية content:update.
-      </p>
     </AdminPageShell>
   );
 }

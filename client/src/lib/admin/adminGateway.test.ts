@@ -3,6 +3,7 @@ import {
   normalizeCustomerRecord,
   normalizeEmployeeRecord,
   normalizeInventoryRecord,
+  normalizeAdminContent,
 } from "./adminGateway";
 
 describe("admin SQL gateway normalization", () => {
@@ -38,4 +39,19 @@ describe("admin SQL gateway normalization", () => {
       last_counted_at: null, updated_at: "2026-09-18T00:00:00Z",
     })).toMatchObject({ productId: "OMR-1", onHandQty: null, availableQty: null });
   });
+  it("maps live Admin content payloads", () => {
+    expect(normalizeAdminContent({
+      content: {
+        announcements: ["A", "B"],
+        contact: { whatsapp: "201555570269", landline: "20403411149" },
+        social: { instagram: "https://instagram.example", facebook: "https://facebook.example" },
+        branches: [{ id: "b1", name: "Branch", address: "Address", city: "Tanta" }],
+      },
+    })).toMatchObject({
+      announcements: ["A", "B"],
+      contact: { whatsapp: "201555570269" },
+      branches: [{ id: "b1", city: "Tanta" }],
+    });
+  });
+
 });

@@ -2,13 +2,13 @@
  * إدارة المخزون — تعرض فقط ما توثّقه المصادر:
  *   - متوفر / نفد / طلب مسبق مشتقة من عمود availability الحقيقي.
  *   - "بلا بيانات" لمن لا يوثّق توفره (لا يُفترض أنه متوفر!).
- * لا توجد كميات رقمية ولا عتبات مخزون منخفض في أي مصدر حالي، لذلك تظهر
- * الحالة صراحةً بدل اختراع أرقام، مع قناة تحديث موثّقة (بوابة/حزمة TSV).
+ * الكميات والعتبات الرقمية تُقرأ من عقد inventory الحي فقط؛ القيم غير الموثقة
+ * تظل null ولا يتم تقديرها أو الرجوع إلى TSV/Sheets كقناة تشغيل.
  */
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { toast, Toaster } from "sonner";
-import { Download, Save, Warehouse } from "lucide-react";
+import { Save, Warehouse } from "lucide-react";
 import { AdminPageShell } from "@/admin/shell/AdminPageShell";
 import {
   AdminButton,
@@ -24,10 +24,9 @@ import {
 } from "@/admin/components/primitives";
 import { AvailabilityBadge } from "@/admin/components/StatusBadges";
 import { useDebouncedProducts } from "@/admin/hooks/useDebouncedProducts";
-import { useAdminCatalog } from "@/admin/dataHooks";
+import { useAdminCatalog, useInventory } from "@/admin/dataHooks";
 import { useAdminIdentity } from "@/admin/AdminIdentity";
-import { adminActionsConfigured, postAdminAction } from "@/lib/admin/adminGateway";
-import { inventoryChangePacket, downloadPacket } from "@/lib/admin/changePackets";
+import { postAdminAction, type InventoryRecord } from "@/lib/admin/adminGateway";
 import { emitAudit } from "@/lib/admin/auditClient";
 import type { AdminAvailability, AdminProduct } from "@/lib/admin/adminCatalog";
 
@@ -39,22 +38,24 @@ const OPTIONS: { value: AdminAvailability; label: string }[] = [
 
 export default function InventoryPage() {
   const { products, isLoading } = useAdminCatalog();
+  const inventoryQuery = useInventory();
+  const inventoryRows = inventoryQuery.data?.status === "live" ? inventoryQuery.data.data : [];
+  const inventoryByProduct = useMemo(() => new Map(inventoryRows.map(row => [row.productId, row])), [inventoryRows]);
   const { filtered, search, setSearch, filter, setFilter } = useDebouncedProducts(products);
   const { actor } = useAdminIdentity();
   const [edits, setEdits] = useState<Record<string, AdminAvailability>>({});
-  const directWrite = adminActionsConfigured();
 
   const counts = useMemo(
     () => ({
-      available: products.filter(p => p.availability === "available").length,
-      unavailable: products.filter(p => p.availability === "unavailable").length,
-      preorder: products.filter(p => p.availability === "preorder").length,
-      unknown: products.filter(p => p.availability === "unknown").length,
+      available: inventoryRows.filter(row => row.inventoryStatus === "IN_STOCK" || row.inventoryStatus === "LOW_STOCK").length,
+      unavailable: inventoryRows.filter(row => row.inventoryStatus === "OUT_OF_STOCK").length,
+      preorder: 0,
+      unknown: inventoryRows.filter(row => row.inventoryStatus === "UNKNOWN" || row.inventoryStatus === "DISCONTINUED").length,
     }),
-    [products]
+    [inventoryRows]
   );
 
-  if (isLoading) {
+  if (isLoading || inventoryQuery.isLoading) {
     return (
       <AdminPageShell title="المخزون">
         <LoadingState />
@@ -62,32 +63,42 @@ export default function InventoryPage() {
     );
   }
 
-  const rows = filtered.filter(p => (filter === "ALL" ? true : p.availability === filter));
-  const effectiveStatus = (product: AdminProduct): AdminAvailability => edits[product.id] ?? product.availability;
+  const statusFromInventory = (record: InventoryRecord | undefined): AdminAvailability => {
+    if (!record) return "unknown";
+    if (record.inventoryStatus === "IN_STOCK" || record.inventoryStatus === "LOW_STOCK") return "available";
+    if (record.inventoryStatus === "OUT_OF_STOCK") return "unavailable";
+    return "unknown";
+  };
+  const effectiveStatus = (product: AdminProduct): AdminAvailability =>
+    edits[product.id] ?? statusFromInventory(inventoryByProduct.get(product.id));
+  const rows = filtered.filter(p => (filter === "ALL" ? true : effectiveStatus(p) === filter));
   const editedCount = Object.keys(edits).length;
 
   async function applyEdits() {
-    const changes = Object.entries(edits).map(([id, availability]) => ({ id, availability, availableQty: null, lowStockThreshold: null }));
-    if (directWrite) {
-      const result = await postAdminAction("inventory_update", { changes_json: JSON.stringify(changes), actor_id: actor.id });
-      if (!result.ok) {
-        downloadPacket(inventoryChangePacket(changes, actor));
-        toast.warning("تعذّر الإرسال المباشر — تم تنزيل حزمة المخزون للصق اليدوي");
-      } else {
-        toast.success("تم إرسال تحديث المخزون");
-      }
-    } else {
-      downloadPacket(inventoryChangePacket(changes, actor));
-      toast.success("حزمة تحديث المخزون جاهزة للصق في الشيت الرئيسي");
+    const changes = Object.entries(edits).map(([id, availability]) => ({
+      id,
+      availability,
+      availableQty: inventoryByProduct.get(id)?.availableQty ?? null,
+      lowStockThreshold: inventoryByProduct.get(id)?.lowStockThreshold ?? null,
+    }));
+    const result = await postAdminAction("inventory_update", {
+      changes_json: JSON.stringify(changes),
+      actor_id: actor.id,
+    });
+    if (!result.ok) {
+      toast.error(`فشل حفظ المخزون على البوابة الحية: ${result.message}`);
+      return;
     }
     emitAudit(actor, {
       action: "INVENTORY_UPDATED",
       targetType: "INVENTORY",
       targetId: `batch-${editedCount}`,
       targetName: `${editedCount} منتج`,
-      metadata: { updatedCount: editedCount },
+      metadata: { updatedCount: editedCount, channel: "live_gateway" },
     });
+    toast.success("تم حفظ تحديث المخزون على البوابة الحية");
     setEdits({});
+    await inventoryQuery.refetch();
   }
 
   return (
@@ -117,11 +128,11 @@ export default function InventoryPage() {
           subtitle="غياب بيانات الكميات يعني أن 'مخزون منخفض' و'الكمية المتبقية' غير متاحين حاليًا"
         />
         <div className="p-4">
-          {counts.unknown === products.length ? (
+          {inventoryQuery.data?.status !== "live" ? (
             <EmptyState
               tone="warning"
-              title="لا توجد بيانات توفر رقمية/صرحية في الكتالوج"
-              description="الكميات تُحفظ في الشيت الرئيسي. فعّل عمود availability أو أوراق المخزون المرتبطة، أو حدّث الحالات يدويًا هنا لإصدار حزمة اعتماد — لا تُعرض أرقام مخزون تقديرية أبدًا."
+              title="المخزون الحي غير متاح"
+              description="تعذّر قراءة inventory من البوابة الحية. لا توجد عودة تلقائية إلى TSV أو الشيتات كقناة تشغيل."
             />
           ) : null}
           <div className="grid grid-cols-1 gap-3 pb-4 md:grid-cols-3">
@@ -162,7 +173,12 @@ export default function InventoryPage() {
                       <p dir="ltr" className="text-[10px] font-bold text-brand-disabled">{product.id}</p>
                     </td>
                     <td className="px-4 py-3"><AvailabilityBadge availability={effectiveStatus(product)} /></td>
-                    <td className="px-4 py-3 text-xs font-bold text-brand-disabled">غير موثّقة رقميًا</td>
+                    <td className="px-4 py-3 text-xs font-bold tabular-nums text-brand-muted">
+                      {inventoryByProduct.get(product.id)?.onHandQty ?? "—"}
+                      {inventoryByProduct.get(product.id)?.availableQty !== null && inventoryByProduct.get(product.id)?.availableQty !== undefined
+                        ? ` / متاح ${inventoryByProduct.get(product.id)?.availableQty}`
+                        : ""}
+                    </td>
                     <PermissionGate permission="inventory:update">
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1.5">
@@ -198,12 +214,8 @@ export default function InventoryPage() {
       </Card>
 
       <div className="mt-4 flex items-center gap-2 text-xs font-bold text-brand-muted">
-        <Badge tone="slate">تشغيلي</Badge>
-        <span>
-          العتبات الرقمية للأسهم المنخفض وكميات إعادة الطلب تتطلب ورقة مخزون موثوقة — راجع{" "}
-          <Link href="/admin/settings" className="font-extrabold text-brand-blue hover:underline">الإعدادات</Link> لحالة المصدر.
-        </span>
-        <Download size={13} className="opacity-0" aria-hidden="true" />
+        <Badge tone="green">Live</Badge>
+        <span>الكمية والعتبات تُقرأ من عقد inventory الحي فقط. لا يوجد fallback تشغيلي إلى TSV/Sheets.</span>
       </div>
     </AdminPageShell>
   );

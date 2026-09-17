@@ -7,8 +7,10 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAdminCatalog, type AdminProduct } from "@/lib/admin/adminCatalog";
 import {
+  readAdminContent,
   readAuditLog,
   readCustomers,
+  readInventory,
   readWhatsAppMetrics,
 } from "@/lib/admin/adminGateway";
 import {
@@ -87,6 +89,24 @@ export function useAuditLog() {
   return useQuery({
     queryKey: ["admin", "audit-log"],
     queryFn: readAuditLog,
+    staleTime: STALE_MS,
+    retry: 1,
+  });
+}
+
+export function useAdminContent() {
+  return useQuery({
+    queryKey: ["admin", "content-live"],
+    queryFn: readAdminContent,
+    staleTime: STALE_MS,
+    retry: 1,
+  });
+}
+
+export function useInventory() {
+  return useQuery({
+    queryKey: ["admin", "inventory-live"],
+    queryFn: readInventory,
     staleTime: STALE_MS,
     retry: 1,
   });

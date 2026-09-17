@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  fetchAdminCatalog,
   normalizeAdminGatewayPayload,
   parseAvailability,
 } from "./adminCatalog";
@@ -136,5 +137,21 @@ describe("parseAvailability", () => {
     ["غير معروف", "unknown"],
   ])("maps %s → %s", (input, expected) => {
     expect(parseAvailability(input)).toBe(expected);
+  });
+});
+
+describe("fetchAdminCatalog live-only", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("fails closed without requesting bundled CSV or snapshots", async () => {
+    const fetchMock = vi.fn(async () => new Response("Queue is full.", { status: 400 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await fetchAdminCatalog();
+    expect(result.source).toBe("unavailable");
+    expect(result.products).toEqual([]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("action=catalog");
   });
 });

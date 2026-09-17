@@ -5,9 +5,8 @@
  *   - إنشاء الموظف OWNER/ADMIN فقط؛ لا تسجيل ذاتي؛ الحالة تبدأ INVITED.
  *   - المالك وحده يُعيّن مالكًا، والمالك الأخير لا يُعطَّل ولا يُنزَّل.
  *   - الموظف المعطّل/الموقوف يُمنع عن اللوحة (AdminApp) وعلى البوابة أيضًا.
- * القناة: بوابة إجراءات (user_create/user_update) أو حزمة تشغيل يدوية +
- * توجيه WhatsApp/Cloudflare Access. الدعوة بـOTP تُرسل عبر المزوّد الخادمي
- * إن فُعّل، وإلا تُعرض تسوية يدوية صادقة بلا أي رمز وهمي.
+ * القناة: بوابة إجراءات حية (user_create/user_update) فقط. بعد إنشاء الموظف
+ * تُحاول دعوة OTP؛ إن لم تتوفر قناة الإرسال يبقى الموظف INVITED مع حالة واضحة.
  */
 import { useState } from "react";
 import { toast, Toaster } from "sonner";
@@ -28,9 +27,8 @@ import {
 import { ConfirmDialog } from "@/admin/components/ConfirmDialog";
 import { useAdminIdentity } from "@/admin/AdminIdentity";
 import { useQuery } from "@tanstack/react-query";
-import { readEmployees, adminActionsConfigured, postAdminAction, type EmployeeRecord } from "@/lib/admin/adminGateway";
+import { readEmployees, postAdminAction, type EmployeeRecord } from "@/lib/admin/adminGateway";
 import { emitAudit } from "@/lib/admin/auditClient";
-import { downloadRows } from "@/admin/exports";
 import {
   EMPLOYEE_ROLES,
   ROLE_DESCRIPTIONS_AR,
@@ -67,7 +65,6 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
   const [mobileInput, setMobileInput] = useState("");
   const [role, setRole] = useState<EmployeeRole>("CATALOG_MANAGER");
   const [busy, setBusy] = useState(false);
-  const directWrite = adminActionsConfigured();
 
   const mobile = normalizeEgyptianMobile(mobileInput);
   const valid = fullName.trim().length >= 3 && isEgyptianE164(mobile ?? "") && canAssignRole(principal, role);
@@ -79,33 +76,27 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
     }
     setBusy(true);
     try {
-      // 1) محاولة دعوة OTP عبر المزوّد الخادمي (لا رمز يُولّد في الواجهة).
-      let otpInvited = false;
-      try {
-        await requestOtp("EMPLOYEE", mobile);
-        otpInvited = true;
-      } catch (error) {
-        if (!(error instanceof AuthClientError) || error.code !== "PROVIDER_NOT_CONFIGURED") {
-          throw error;
-        }
-      }
-
       const record = {
         full_name: fullName.trim(),
         mobile,
         role,
         status: "INVITED",
         invited_by: actor.id,
-        otp_invited: otpInvited ? "TRUE" : "FALSE",
       };
+      const created = await postAdminAction("user_create", record);
+      if (!created.ok) {
+        toast.error(`فشل إنشاء الموظف على البوابة الحية: ${created.message}`);
+        return;
+      }
 
-      if (directWrite) {
-        const result = await postAdminAction("user_create", record);
-        if (!result.ok) {
-          downloadRows("employee-invite.tsv", ["full_name", "mobile", "role", "status", "invited_by", "otp_invited"], [[record.full_name, record.mobile, record.role, record.status, record.invited_by, record.otp_invited]]);
+      let otpInvited = false;
+      try {
+        await requestOtp("EMPLOYEE", mobile);
+        otpInvited = true;
+      } catch (error) {
+        if (!(error instanceof AuthClientError) || error.code !== "PROVIDER_NOT_CONFIGURED") {
+          toast.warning("تم إنشاء الموظف، لكن تعذّر إرسال OTP حاليًا.");
         }
-      } else {
-        downloadRows("employee-invite.tsv", ["full_name", "mobile", "role", "status", "invited_by", "otp_invited"], [[record.full_name, record.mobile, record.role, record.status, record.invited_by, record.otp_invited]]);
       }
 
       emitAudit(actor, {
@@ -113,17 +104,13 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
         targetType: "EMPLOYEE",
         targetId: mobile,
         targetName: fullName.trim(),
-        metadata: { role, status: "INVITED", otpInvited: otpInvited ? "true" : "false", channel: directWrite ? "gateway" : "manual_packet" },
+        metadata: { role, status: "INVITED", otpInvited: otpInvited ? "true" : "false", channel: "live_gateway" },
       });
 
-      if (otpInvited) {
-        toast.success("أُرسل رمز التحقق للموظف، وسيُفعَّل حسابه بعد تأكيد موبايله.");
-      } else {
-        toast.success("أُنشئت دعوة الموظف. الخطوات اليدوية موضّحة بالأسفل (Access + واتساب).");
-      }
+      toast.success(otpInvited
+        ? "تم إنشاء الموظف وإرسال رمز التحقق."
+        : "تم إنشاء الموظف على البوابة الحية، وقناة OTP ما زالت غير مفعّلة.");
       onClose();
-    } catch (error) {
-      toast.error(error instanceof AuthClientError ? `تعذّر إرسال الدعوة (${error.code})` : "تعذّر إتمام الدعوة");
     } finally {
       setBusy(false);
     }
@@ -175,33 +162,29 @@ export default function UsersPage() {
   const [roleEdit, setRoleEdit] = useState<Record<string, string>>({});
 
   const records = query.data?.status === "live" ? query.data.data : [];
-  const directWrite = adminActionsConfigured();
 
   async function runStatusAction() {
     if (!confirm) return;
     const { record, action, nextStatus } = confirm;
-    const payload = {
+    const result = await postAdminAction("user_update_status", {
       employee_id: record.employeeId,
       next_status: nextStatus,
       actor_id: actor.id,
-    };
-    if (directWrite) {
-      const result = await postAdminAction("user_update_status", payload);
-      if (!result.ok) {
-        downloadRows("employee-status.tsv", ["employee_id", "next_status", "actor_id"], [[payload.employee_id, payload.next_status, payload.actor_id]]);
-      }
-    } else {
-      downloadRows("employee-status.tsv", ["employee_id", "next_status", "actor_id"], [[payload.employee_id, payload.next_status, payload.actor_id]]);
+    });
+    if (!result.ok) {
+      toast.error(`فشل تحديث حالة الموظف: ${result.message}`);
+      return;
     }
     emitAudit(actor, {
       action: action === "REACTIVATE" ? "USER_REACTIVATED" : action === "SUSPEND" ? "USER_SUSPENDED" : "USER_DISABLED",
       targetType: "EMPLOYEE",
       targetId: record.employeeId,
       targetName: record.fullName,
-      metadata: { nextStatus },
+      metadata: { nextStatus, channel: "live_gateway" },
     });
-    toast.success("تم إصدار إجراء الحالة" + (directWrite ? "" : " كحزمة يدوية"));
+    toast.success("تم تحديث حالة الموظف على البوابة الحية");
     setConfirm(null);
+    await query.refetch();
   }
 
   async function changeRole(record: EmployeeRecord, nextRole: EmployeeRole) {
@@ -210,20 +193,20 @@ export default function UsersPage() {
       toast.error("غير مصرّح لك بهذا التغيير (المالك الأخير محمي / صلاحياتك لا تسمح).");
       return;
     }
-    if (directWrite) {
-      const result = await postAdminAction("user_update_role", { employee_id: record.employeeId, next_role: nextRole, actor_id: actor.id });
-      if (!result.ok) downloadRows("employee-role.tsv", ["employee_id", "next_role", "actor_id"], [[record.employeeId, nextRole, actor.id]]);
-    } else {
-      downloadRows("employee-role.tsv", ["employee_id", "next_role", "actor_id"], [[record.employeeId, nextRole, actor.id]]);
+    const result = await postAdminAction("user_update_role", { employee_id: record.employeeId, next_role: nextRole, actor_id: actor.id });
+    if (!result.ok) {
+      toast.error(`فشل تغيير الدور على البوابة الحية: ${result.message}`);
+      return;
     }
     emitAudit(actor, {
       action: "USER_ROLE_CHANGED",
       targetType: "EMPLOYEE",
       targetId: record.employeeId,
       targetName: record.fullName,
-      metadata: { oldRole: record.role, nextRole },
+      metadata: { oldRole: record.role, nextRole, channel: "live_gateway" },
     });
-    toast.success("تم إصدار تغيير الدور");
+    toast.success("تم تغيير الدور على البوابة الحية");
+    await query.refetch();
   }
 
   const columns: DataTableColumn<EmployeeRecord>[] = [
@@ -330,7 +313,7 @@ export default function UsersPage() {
               tone="warning"
               icon={<ShieldAlert size={22} />}
               title="قراءة دليل الموظفين غير مفعّلة على البوابة"
-              description="أضف إجراء employees (قراءة محمية بهوية Cloudflare Access) لعرض كل الموظفين. حماية /admin تبقى على عاتق Cloudflare Access على الحافة، ودعوات الموظفين هنا تُنشئ حزم اعتماد جاهزة للدليل + Access Policy."
+              description="تعذّر تحميل دليل employees من البوابة الحية. لا يوجد fallback تشغيلي إلى TSV/Sheets. حماية /admin تبقى على عاتق Cloudflare Access على الحافة."
               action={canPrincipal(principal, "user:create") ? (
                 <AdminButton size="sm" onClick={() => setInviteOpen(true)}>
                   <UserPlus size={15} /> دعوة موظف
