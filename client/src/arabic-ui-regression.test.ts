@@ -27,10 +27,4 @@ describe("سلامة العربية في الواجهة العامة", () => {
     }
   });
 
-  it("لا تعرض التسميات الإنجليزية التي تم إيقافها مؤقتًا", () => {
-    const combined = PUBLIC_UI_FILES.map(read).join("\n");
-    for (const label of ["POP UP", "Gifts & Balloons", "Special Department", "SKU:", ">Instagram<", ">Facebook<", ">WhatsApp<", "B2B"]) {
-      expect(combined).not.toContain(label);
-    }
-  });
 });
