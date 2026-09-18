@@ -26,7 +26,7 @@
   --color-brand-sky: #eaf4ff;
 
   /* Neutrals */
-  --color-brand-cream: #f7f9fc;
+  --color-brand-cream: #f8f5f0;
   --color-brand-surface: #ffffff;
   --color-brand-ink: #172033;
   --color-brand-muted: #5f6b7a;
@@ -105,7 +105,7 @@
   --chart-4: #123b6d;
   --chart-5: #e53935;
   --radius: 0.75rem;
-  --background: #f7f9fc;
+  --background: #f8f5f0;
   --foreground: #172033;
   --card: #ffffff;
   --card-foreground: #172033;
@@ -137,7 +137,7 @@
   --brand-soft-blue: #eaf4ff;
   --text-primary: #172033;
   --text-secondary: #5f6b7a;
-  --bg-page: #f7f9fc;
+  --bg-page: #f8f5f0;
   --surface: #ffffff;
   --border-default: #e4e9f0;
   --success: #1d9d62;
