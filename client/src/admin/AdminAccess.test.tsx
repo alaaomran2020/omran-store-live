@@ -32,7 +32,7 @@ describe("AdminAccess", () => {
     );
     mount("/admin/dashboard");
     expect(
-      screen.getByText("جاري التحقق من جلسة Cloudflare Access...")
+      screen.getByRole("status", { name: "جاري التحقق من جلسة الإدارة" })
     ).toBeTruthy();
     expect(screen.queryByText("نظرة عامة")).toBeNull();
   });
