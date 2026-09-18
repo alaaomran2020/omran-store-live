@@ -24,7 +24,7 @@ import {
 } from "@/admin/components/primitives";
 import { AvailabilityBadge } from "@/admin/components/StatusBadges";
 import { useDebouncedProducts } from "@/admin/hooks/useDebouncedProducts";
-import { useAdminCatalog } from "@/admin/dataHooks";
+import { useAdminCatalog, useInventory } from "@/admin/dataHooks";
 import { useAdminIdentity } from "@/admin/AdminIdentity";
 import { adminActionsConfigured, postAdminAction } from "@/lib/admin/adminGateway";
 import { inventoryChangePacket, downloadPacket } from "@/lib/admin/changePackets";
@@ -39,6 +39,9 @@ const OPTIONS: { value: AdminAvailability; label: string }[] = [
 
 export default function InventoryPage() {
   const { products, isLoading } = useAdminCatalog();
+  const inventoryQuery = useInventory();
+  const liveInventory = inventoryQuery.data?.status === "live" ? inventoryQuery.data.data : [];
+  const inventoryByProduct = useMemo(() => new Map(liveInventory.map(record => [record.productId, record])), [liveInventory]);
   const { filtered, search, setSearch, filter, setFilter } = useDebouncedProducts(products);
   const { actor } = useAdminIdentity();
   const [edits, setEdits] = useState<Record<string, AdminAvailability>>({});
@@ -65,6 +68,11 @@ export default function InventoryPage() {
   const rows = filtered.filter(p => (filter === "ALL" ? true : p.availability === filter));
   const effectiveStatus = (product: AdminProduct): AdminAvailability => edits[product.id] ?? product.availability;
   const editedCount = Object.keys(edits).length;
+  const quantityLabel = (productId: string): string => {
+    const record = inventoryByProduct.get(productId);
+    if (!record || record.onHandQty === null) return "غير موثقة رقميًا";
+    return `${record.onHandQty} فعلي • ${record.reservedQty} محجوز • ${record.availableQty ?? 0} متاح`;
+  };
 
   async function applyEdits() {
     const changes = Object.entries(edits).map(([id, availability]) => ({ id, availability, availableQty: null, lowStockThreshold: null }));
@@ -162,7 +170,7 @@ export default function InventoryPage() {
                       <p dir="ltr" className="text-[10px] font-bold text-brand-disabled">{product.id}</p>
                     </td>
                     <td className="px-4 py-3"><AvailabilityBadge availability={effectiveStatus(product)} /></td>
-                    <td className="px-4 py-3 text-xs font-bold text-brand-disabled">غير موثّقة رقميًا</td>
+                    <td className="px-4 py-3 text-xs font-bold text-brand-disabled">{quantityLabel(product.id)}</td>
                     <PermissionGate permission="inventory:update">
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1.5">

@@ -9,6 +9,7 @@ import { fetchAdminCatalog, type AdminProduct } from "@/lib/admin/adminCatalog";
 import {
   readAuditLog,
   readCustomers,
+  readInventory,
   readWhatsAppMetrics,
 } from "@/lib/admin/adminGateway";
 import {
@@ -96,6 +97,15 @@ export function useCustomers() {
   return useQuery({
     queryKey: ["admin", "customers"],
     queryFn: readCustomers,
+    staleTime: STALE_MS,
+    retry: 1,
+  });
+}
+
+export function useInventory() {
+  return useQuery({
+    queryKey: ["admin", "inventory"],
+    queryFn: readInventory,
     staleTime: STALE_MS,
     retry: 1,
   });

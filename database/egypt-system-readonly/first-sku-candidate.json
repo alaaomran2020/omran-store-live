@@ -1,0 +1,21 @@
+{
+  "candidate_id": "EGYPT-20260514-16-POP-PDF-0316098ECE",
+  "canonical_product_id": "POP-PDF-0316098ECE",
+  "product_name_ar": "سبورة بروجيكتور",
+  "report_source": "عمران.pdf",
+  "report_page": 8,
+  "transaction_date": "2026-05-14",
+  "report_transaction_no": "16",
+  "reported_qty": 2,
+  "reported_unit_cost_egp": 310,
+  "reported_total_egp": 620,
+  "qty_lineage": "Trans_Details.Qty -> VwTransactions/RptTransactions.Qty -> RptItemCard",
+  "qty_source": "TRANS_DETAILS_QTY",
+  "source_transaction_id": null,
+  "source_detail_id": null,
+  "item_package_id": null,
+  "store_id": null,
+  "color_id": null,
+  "lineage_status": "UNVERIFIED",
+  "verification_reason": "Canonical product and report movement match. Live Egypt System operational identifiers are still required before inventory can change."
+}
