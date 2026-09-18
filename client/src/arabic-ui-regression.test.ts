@@ -19,6 +19,7 @@ function read(relative: string) {
   return readFileSync(new URL(relative, import.meta.url), "utf8");
 }
 
+// بوابة منع رجوع الترميز المشوّه في الواجهة العامة.
 describe("سلامة العربية في الواجهة العامة", () => {
   it("لا تحتوي ملفات الواجهة العامة على علامات ترميز عربي مشوه", () => {
     for (const file of PUBLIC_UI_FILES) {
