@@ -143,7 +143,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
 
   useEffect(() => {
     trackEvent("category_view", {
-      category: category === ALL ? (isPopup ? "POP UP" : "لعب الأطفال") : category,
+      category: category === ALL ? (isPopup ? "بوب أب" : "لعب الأطفال") : category,
       catalog,
     });
   }, [catalog, category, isPopup]);
@@ -315,7 +315,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
         <section className={`container grid gap-5 py-8 sm:gap-8 sm:py-12 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:py-20 ${isPopup ? "relative" : ""}`}>
           <CatalogBreadcrumbs catalog={catalog} category={category === ALL ? undefined : category} className="lg:col-span-2" />
           <div>
-            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${isPopup ? "bg-[#f6e8fb] text-[#6b278f]" : "bg-brand-yellow/25 text-brand-navy"}`}><Sparkles size={15} /> {isPopup ? "POP UP – Gifts & Balloons" : "كتالوج لعب الأطفال"}</span>
+            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${isPopup ? "bg-[#f6e8fb] text-[#6b278f]" : "bg-brand-yellow/25 text-brand-navy"}`}><Sparkles size={15} /> {isPopup ? "بوب أب للهدايا والبالونات" : "كتالوج لعب الأطفال"}</span>
             <h1 className={`mt-4 max-w-3xl text-[2rem] font-extrabold leading-[1.16] sm:mt-5 sm:text-5xl lg:text-6xl ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>
               {isPopup ? <>هدايا، بالونات ومستلزمات حفلات <span className="text-[#8a3aaa]">POP UP</span></> : <>اكتشف لعب الأطفال من <span className="text-brand-blue">شركة عمران التجارية</span></>}
             </h1>
@@ -384,8 +384,16 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                 />
               </div>
             )}
+            {(sourceError || productsQuery.isError) && products.length > 0 ? (
+              <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite">
+                <span>بنعرض النسخة المحفوظة من المنتجات حاليًا لأن التحديث المباشر متعذر.</span>
+                <button type="button" onClick={() => productsQuery.refetch()} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-amber-300 bg-white px-4 text-xs font-extrabold text-amber-900 hover:bg-amber-100">
+                  <RefreshCw size={15} aria-hidden="true" /> حاول التحديث
+                </button>
+              </div>
+            ) : null}
             {productsQuery.isLoading ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }).map((_, index) => <ProductCardSkeleton key={index} />)}</div>
+              <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }).map((_, index) => <ProductCardSkeleton key={index} />)}</div>
             ) : products.length === 0 ? (
               <div className="space-y-8 sm:space-y-10">
                 <div className={`rounded-2xl border p-6 text-center sm:rounded-[2rem] sm:p-10 ${isPopup ? "border-[#e4d3ee] bg-white" : "border-brand-border bg-brand-cream"}`}>
@@ -409,7 +417,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                     <p className="mb-4 text-xs font-bold text-brand-muted" aria-live="polite">
                       عرض {renderedProducts.length} من {visibleProducts.length} منتج
                     </p>
-                    <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                       {renderedProducts.map(product => <ProductCard key={product.id} product={product} onOpenDetails={handleOpenDetails} />)}
                     </div>
                     {hasMoreProducts && (

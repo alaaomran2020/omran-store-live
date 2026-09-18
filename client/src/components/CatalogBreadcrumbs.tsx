@@ -17,7 +17,7 @@ type Props = {
 
 export function CatalogBreadcrumbs({ catalog, category, productName, className = "" }: Props) {
   const catalogPath = catalog === "popup" ? "/popup" : "/products";
-  const catalogLabel = catalog === "popup" ? "POP UP" : "لعب الأطفال";
+  const catalogLabel = catalog === "popup" ? "بوب أب" : "لعب الأطفال";
   const categoryPath = category
     ? `${catalogPath}?category=${encodeURIComponent(category)}`
     : catalogPath;

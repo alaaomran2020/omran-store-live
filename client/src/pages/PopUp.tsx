@@ -6,20 +6,20 @@ import Products from "@/pages/Products";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import AnnouncementBar from "@/components/AnnouncementBar";
 
-const POPUP_TITLE = "POP UP – Gifts & Balloons | شركة عمران التجارية";
-const POPUP_DESCRIPTION = "هدايا وبالونات ومستلزمات حفلات من POP UP ضمن شركة عمران التجارية.";
+const POPUP_TITLE = "بوب أب – الهدايا والبالونات | شركة عمران التجارية";
+const POPUP_DESCRIPTION = "هدايا وبالونات ومستلزمات حفلات من بوب أب ضمن شركة عمران التجارية.";
 
 const POPUP_SOCIALS = [
   {
-    label: "Facebook",
-    account: "POP UP – Gifts & Balloons",
+    label: "فيسبوك",
+    account: "بوب أب – الهدايا والبالونات",
     href: SOCIAL_EMBED_CONFIG.popupFacebookPageUrl,
     icon: Facebook,
     accentClass: "from-[#1877F2]/20 via-white/[0.07] to-white/[0.03] hover:border-[#1877F2]/45",
     iconClass: "bg-[#1877F2]/18 text-[#8fc0ff]",
   },
   {
-    label: "Instagram",
+    label: "إنستجرام",
     account: "@popup.gifts_balloons",
     href: SOCIAL_EMBED_CONFIG.popupInstagramProfileUrl,
     icon: Instagram,
@@ -45,10 +45,10 @@ function PopUpVideosCta() {
       <div className="container">
         <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-5 rounded-3xl bg-gradient-to-l from-fuchsia-700 via-purple-700 to-rose-600 p-6 text-center text-white shadow-[0_18px_50px_rgba(126,34,206,0.18)] sm:p-8 lg:flex-row lg:text-start">
           <div>
-            <p className="text-xs font-black text-fuchsia-100">فيديوهات POP UP</p>
+            <p className="text-xs font-black text-fuchsia-100">فيديوهات بوب أب</p>
             <h2 id="popup-videos-title" className="mt-2 text-2xl font-black sm:text-3xl">شوف التنسيقات بالفيديو</h2>
             <p className="mt-2 max-w-xl text-sm font-semibold leading-7 text-white/85">
-              فيديوهات حقيقية للهدايا والبالونات وتنسيقات المناسبات من POP UP.
+              فيديوهات حقيقية للهدايا والبالونات وتنسيقات المناسبات من بوب أب.
             </p>
           </div>
           <a
@@ -78,7 +78,7 @@ function PopUpRealReviews() {
             ريفيوهات حقيقية
           </span>
           <h2 id="popup-reviews-title" className="mt-3 text-2xl font-black tracking-tight text-brand-ink sm:text-3xl">
-            عملاؤنا قالوا إيه عن POP UP؟
+            عملاؤنا قالوا إيه عن بوب أب؟
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-7 text-brand-muted sm:text-[15px]">
             آراء حقيقية وصلتنا من عملائنا بعد استلام وتجربة تنسيقات البالونات.
@@ -95,7 +95,7 @@ function PopUpRealReviews() {
               <div className="relative">
                 <div className="flex items-center justify-between gap-3">
                   <span className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1.5 text-xs font-black text-rose-700">
-                    عميل POP UP
+                    عميل بوب أب
                   </span>
                   <Quote className="text-fuchsia-300" size={25} aria-hidden="true" />
                 </div>
@@ -123,13 +123,13 @@ function PopUpOfficialSocials() {
       <div className="container">
         <div className="mx-auto max-w-3xl text-center">
           <span className="inline-flex items-center rounded-full border border-fuchsia-200 bg-white px-3 py-1.5 text-xs font-black text-fuchsia-700 shadow-sm">
-            POP UP · الحسابات الرسمية
+            بوب أب · الحسابات الرسمية
           </span>
           <h2 id="popup-social-title" className="mt-3 text-2xl font-black tracking-tight text-brand-ink sm:text-3xl">
-            تابع POP UP – Gifts & Balloons
+            تابع بوب أب – الهدايا والبالونات
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-7 text-brand-muted sm:text-[15px]">
-            تابع أحدث الهدايا والبالونات ومستلزمات الحفلات من الحسابات الرسمية الخاصة بـ POP UP فقط.
+            تابع أحدث الهدايا والبالونات ومستلزمات الحفلات من الحسابات الرسمية الخاصة بـ بوب أب فقط.
           </p>
         </div>
 
@@ -140,7 +140,7 @@ function PopUpOfficialSocials() {
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`افتح حساب ${label} الرسمي لـ POP UP`}
+              aria-label={`افتح حساب ${label} الرسمي لـ بوب أب`}
               className={`group relative flex min-h-20 items-center justify-between gap-4 overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-l p-4 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-fuchsia-700 ${accentClass}`}
             >
               <span className="flex min-w-0 items-center gap-3">

@@ -16,7 +16,7 @@ export const BRAND_NAME = "شركة عمران التجارية";
 /** اسم متجر اللعب المستخدم في عناوين أقسام المتجر (عمران تويز). */
 export const STORE_NAME = "عمران تويز";
 /** اسم قسم POP UP المستقل عن متجر لعب الأطفال. */
-export const POPUP_NAME = "POP UP";
+export const POPUP_NAME = "بوب أب";
 
 export const SITE_LOCALE = "ar_EG";
 

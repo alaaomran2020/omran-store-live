@@ -14,9 +14,9 @@ describe("مسار صفحات الكتالوج", () => {
     expect(screen.getByText("عروسة أطفال").getAttribute("aria-current")).toBe("page");
   });
 
-  it("يحافظ على مسار POP UP مستقلًا", () => {
+  it("يحافظ على مسار بوب أب مستقلًا", () => {
     render(<CatalogBreadcrumbs catalog="popup" category="بالونات" />);
-    expect(screen.getByRole("link", { name: "POP UP" }).getAttribute("href")).toBe("/popup");
+    expect(screen.getByRole("link", { name: "بوب أب" }).getAttribute("href")).toBe("/popup");
     expect(screen.getByText("بالونات").getAttribute("aria-current")).toBe("page");
     expect(screen.queryByText("لعب الأطفال")).toBeNull();
   });

@@ -80,7 +80,7 @@ export function ProductCard({
         <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold leading-5 sm:text-xs">
           <span className="text-brand-muted">
             <span className="sr-only">كود المنتج: {product.sku || product.id}</span>
-            <span dir="ltr" aria-hidden="true">SKU: {product.sku || product.id}</span>
+            <span aria-hidden="true">كود المنتج: <bdi>{product.sku || product.id}</bdi></span>
           </span>
           <span className={`rounded-full px-2.5 py-1 ${product.availability === "unavailable" ? "bg-red-50 text-brand-red" : "bg-brand-sky text-brand-navy"}`}>
             {AVAILABILITY_LABELS[product.availability]}
