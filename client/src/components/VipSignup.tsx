@@ -39,7 +39,7 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
   const [submitting, setSubmitting] = useState(false);
   const [registered, setRegistered] = useState(false);
 
-  const brandLabel = source === "popup" ? "POP UP" : "عمران";
+  const brandLabel = source === "popup" ? "بوب أب" : "عمران";
   const isPopup = source === "popup";
   const destination = useMemo(() => whatsappNumber(), []);
 
@@ -127,7 +127,7 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
           <div className="relative grid gap-6 lg:grid-cols-[1fr_1.08fr] lg:items-center">
             <div>
               <span className={isPopup ? "inline-flex items-center gap-2 rounded-full bg-fuchsia-100 px-3 py-1.5 text-xs font-black text-fuchsia-700" : "inline-flex items-center gap-2 rounded-full bg-brand-sky px-3 py-1.5 text-xs font-black text-brand-blue"}>
-                <Sparkles size={15} aria-hidden="true" /> {brandLabel} VIP
+                <Sparkles size={15} aria-hidden="true" /> {brandLabel} المميز
               </span>
               <h2 id={`vip-signup-title-${source}`} className="mt-3 text-2xl font-black tracking-tight text-brand-ink sm:text-3xl">
                 خليك مميز ✨ وسجّل برقم موبايلك
@@ -191,7 +191,7 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
                     disabled={submitting}
                     className="mt-1 h-4 w-4 rounded border-brand-border accent-brand-blue"
                   />
-                  <span>أوافق على استلام تحديثات المنتجات والعروض من شركة عمران التجارية وPOP UP، ويمكنني التوقف في أي وقت.</span>
+                  <span>أوافق على استلام تحديثات المنتجات والعروض من شركة عمران التجارية وبوب أب، ويمكنني التوقف في أي وقت.</span>
                 </label>
 
                 {error && <p role="alert" className="mt-2 text-xs font-bold text-red-600">{error}</p>}
