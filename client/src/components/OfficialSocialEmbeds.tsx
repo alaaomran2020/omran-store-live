@@ -1,4 +1,4 @@
-import { ArrowUpLeft, ExternalLink, فيسبوك, إنستجرام, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowUpLeft, ExternalLink, Facebook, Instagram, RefreshCw, ShieldCheck } from "lucide-react";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 
 export function OfficialSocialEmbeds() {
@@ -32,7 +32,7 @@ export function OfficialSocialEmbeds() {
                 صفحتنا الرسمية
               </h3>
             </div>
-            <فيسبوك className="text-[#1666d0]" size={26} aria-hidden="true" />
+            <Facebook className="text-[#1666d0]" size={26} aria-hidden="true" />
           </div>
           <div className="flex min-h-[560px] flex-col justify-between rounded-2xl border border-brand-border bg-brand-cream p-7">
             <div>
@@ -68,7 +68,7 @@ export function OfficialSocialEmbeds() {
                 حسابنا الرسمي
               </h3>
             </div>
-            <إنستجرام className="text-[#d62976]" size={26} aria-hidden="true" />
+            <Instagram className="text-[#d62976]" size={26} aria-hidden="true" />
           </div>
           <div className="flex min-h-[560px] flex-col justify-between rounded-2xl border border-brand-border bg-brand-cream p-7">
             <div>
