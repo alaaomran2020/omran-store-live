@@ -44,7 +44,7 @@ export default function BrandHeader() {
           </span>
         </a>
 
-        <form action="/products" method="get" role="search" className="order-3 flex w-full items-center gap-2 border-t border-brand-border/70 pt-2 sm:order-none sm:max-w-sm sm:flex-1 sm:border-0 sm:pt-0 lg:max-w-md">
+        <form action="/products" method="get" role="search" className="flex w-full items-center gap-2 border-t border-brand-border/70 pt-2 sm:max-w-sm sm:flex-1 sm:border-0 sm:pt-0 lg:max-w-md">
           <label htmlFor="site-product-search" className="sr-only">ابحث في منتجات عمران تويز</label>
           <div className="relative w-full">
             <Search size={17} aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted" />
