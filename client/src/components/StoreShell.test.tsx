@@ -7,7 +7,7 @@ import BrandHeader from "./BrandHeader";
 afterEach(cleanup);
 
 describe("store shell responsive smoke", () => {
-  for (const width of [320, 360, 375, 390, 412, 768, 1280]) {
+  for (const width of [320, 360, 375, 390, 412, 430, 768, 1280]) {
     it(`keeps the full brand identity and primary navigation at ${width}px`, () => {
       Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
       render(<BrandHeader />);
@@ -15,6 +15,9 @@ describe("store shell responsive smoke", () => {
       expect(screen.getByText("شركة عمران التجارية")).toBeTruthy();
       expect(screen.getByAltText("لوجو عمران").getAttribute("src")).toBe("/brand/logo.png");
       expect(screen.getByRole("navigation", { name: "أقسام المتجر" })).toBeTruthy();
+      expect(screen.getByText("بوب أب")).toBeTruthy();
+      expect(screen.queryByText("POP UP")).toBeNull();
+      expect(screen.queryByText("الجملة B2B")).toBeNull();
       expect(screen.queryByText("طلبك")).toBeNull();
       expect(screen.queryByText("مقارنة المنتجات")).toBeNull();
     });
