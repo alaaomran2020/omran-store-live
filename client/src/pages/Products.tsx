@@ -11,7 +11,7 @@ import { searchCatalog } from "@/lib/catalogSearch";
 import { resolveCatalogIndexing } from "@/lib/catalogIndexing";
 import { setRobotsMeta } from "@/components/SeoMetadata";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
-import { fetchProducts, type Product, type ProductAvailability } from "@/lib/productsClient";
+import { getInitialProductsSnapshot, refreshProductsFromLiveCatalog, type Product, type ProductAvailability } from "@/lib/productsClient";
 import { AGE_FILTER_OPTIONS, filterProductsByAge, parseAgeRange } from "@/lib/productAge";
 import { filterProductsByCatalog, type ProductCatalog } from "@/lib/productCatalog";
 import { trackEvent } from "@/lib/analytics";
@@ -74,12 +74,17 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
 
   const productsQuery = useQuery({
     queryKey: ["products"],
-    queryFn: () => fetchProducts(),
+    queryFn: () => refreshProductsFromLiveCatalog(),
+    initialData: () => getInitialProductsSnapshot(),
     staleTime: Infinity,
     gcTime: Infinity,
     refetchOnWindowFocus: false,
     retry: 1,
   });
+
+  useEffect(() => {
+    void productsQuery.refetch();
+  }, []);
 
   const payload = productsQuery.data;
   const sourceProducts = payload?.products ?? [];
