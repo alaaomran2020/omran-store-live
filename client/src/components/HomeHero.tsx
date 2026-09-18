@@ -62,7 +62,7 @@ export default function HomeHero() {
           <div className="relative overflow-hidden rounded-[2rem] border border-white/20 bg-white/10 p-4 shadow-2xl shadow-black/20 backdrop-blur-md sm:p-5">
             <div className="rounded-[1.5rem] bg-white p-5 shadow-xl sm:p-7">
               <div className="mx-auto flex aspect-square max-w-56 items-center justify-center rounded-[1.75rem] bg-brand-cream p-6 ring-1 ring-brand-border">
-                <img src="/brand/logo.png" alt="عمران تويز" width="512" height="512" className="h-full w-full object-contain" loading="eager" decoding="async" />
+                <img src="/brand/logo.webp" alt="عمران تويز" width="320" height="320" className="h-full w-full object-contain" loading="eager" fetchPriority="high" decoding="async" />
               </div>
               <div className="mt-5 text-center">
                 <p className="text-xl font-black text-brand-navy sm:text-2xl">عمران تويز</p>
