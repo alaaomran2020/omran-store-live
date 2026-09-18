@@ -26,7 +26,7 @@ function getSocialLinks(socialBrand: "omran" | "popup") {
     return [
       {
         label: "إنستجرام",
-        account: "@popup.gifts_balloons",
+        account: "الحساب الرسمي لبوب أب",
         href: SOCIAL_EMBED_CONFIG.popupInstagramProfileUrl,
         icon: Instagram,
         accent: "from-fuchsia-500/20 via-pink-500/10 to-orange-400/10",
@@ -44,7 +44,7 @@ function getSocialLinks(socialBrand: "omran" | "popup") {
   return [
     {
       label: "إنستجرام",
-      account: "@omrantoys.store",
+      account: "الحساب الرسمي لعمران تويز",
       href: SOCIAL_EMBED_CONFIG.instagramProfileUrl,
       icon: Instagram,
       accent: "from-fuchsia-500/20 via-pink-500/10 to-orange-400/10",
