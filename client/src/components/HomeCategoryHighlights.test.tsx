@@ -19,11 +19,11 @@ describe("تصنيفات الصفحة الرئيسية", () => {
     expect(screen.queryByText("المنتجات الموسمية")).toBeNull();
   });
 
-  it("تعرض صورة محسنة ومعبرة داخل كل كارت قسم", () => {
+  it("تعرض Collage من 3 صور محسنة داخل كل كارت قسم", () => {
     const { container } = render(<HomeCategoryHighlights />);
     const images = Array.from(container.querySelectorAll("img"));
 
-    expect(images).toHaveLength(6);
+    expect(images).toHaveLength(18);
     expect(images.every(image => image.getAttribute("src")?.endsWith(".webp"))).toBe(
       true
     );
