@@ -50,7 +50,6 @@ export type StorefrontProductsPayload = Omit<ProductsPayload, "products"> & {
 };
 
 const CATALOG_TIMEOUT_MS = 8_000;
-const BACKGROUND_CATALOG_REFRESH_DELAY_MS = 0;
 const PRODUCT_COLUMNS = [
   "id", "name", "price", "category", "description", "image", "active", "sort_order",
   "product_prompt", "workflow_status", "qa_status", "source_drive_id", "processed_image",
@@ -393,13 +392,11 @@ function mergePopupProducts(liveProducts: Product[]): Product[] {
  * from disappearing because of an upstream publication/cache lag.
  */
 export async function fetchProducts(): Promise<StorefrontProductsPayload> {
-  const snapshot = snapshotPayload();
-
-  if (typeof window !== "undefined") {
-    window.setTimeout(() => {
-      void fetchLiveCatalog().catch(() => undefined);
-    }, BACKGROUND_CATALOG_REFRESH_DELAY_MS);
+  try {
+    const live = await fetchLiveCatalog();
+    if (live.products.length > 0) return { ...live, products: mergePopupProducts(live.products) };
+  } catch {
+    // Fall through to the bundled production snapshot.
   }
-
-  return snapshot;
+  return snapshotPayload();
 }
