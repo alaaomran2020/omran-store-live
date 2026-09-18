@@ -6,7 +6,7 @@ import VipSignup from "@/components/VipSignup";
 export const FOOTER_NAVIGATION = [
   { label: "الرئيسية", href: "/" },
   { label: "لعب الأطفال", href: "/products" },
-  { label: "POP UP", href: "/popup" },
+  { label: "بوب أب", href: "/popup" },
   { label: "مزايا وعروض", href: "/rewards" },
 ] as const;
 
@@ -25,15 +25,15 @@ function getSocialLinks(socialBrand: "omran" | "popup") {
   if (socialBrand === "popup") {
     return [
       {
-        label: "Instagram",
+        label: "إنستجرام",
         account: "@popup.gifts_balloons",
         href: SOCIAL_EMBED_CONFIG.popupInstagramProfileUrl,
         icon: Instagram,
         accent: "from-fuchsia-500/20 via-pink-500/10 to-orange-400/10",
       },
       {
-        label: "Facebook",
-        account: "POP UP – Gifts & Balloons",
+        label: "فيسبوك",
+        account: "بوب أب للهدايا والبالونات",
         href: SOCIAL_EMBED_CONFIG.popupFacebookPageUrl,
         icon: Facebook,
         accent: "from-blue-500/20 via-sky-500/10 to-cyan-400/10",
@@ -43,14 +43,14 @@ function getSocialLinks(socialBrand: "omran" | "popup") {
 
   return [
     {
-      label: "Instagram",
+      label: "إنستجرام",
       account: "@omrantoys.store",
       href: SOCIAL_EMBED_CONFIG.instagramProfileUrl,
       icon: Instagram,
       accent: "from-fuchsia-500/20 via-pink-500/10 to-orange-400/10",
     },
     {
-      label: "Facebook",
+      label: "فيسبوك",
       account: "شركة عمران التجارية",
       href: SOCIAL_EMBED_CONFIG.facebookPageUrl,
       icon: Facebook,
@@ -58,7 +58,7 @@ function getSocialLinks(socialBrand: "omran" | "popup") {
     },
     ...(whatsappUrl
       ? [{
-          label: "WhatsApp",
+          label: "واتساب",
           account: "تواصل مباشر",
           href: whatsappUrl,
           icon: MessageCircle,
@@ -126,7 +126,7 @@ function FooterCompanyInfo() {
       <div className="mt-4 space-y-3">
         <p className="flex items-start gap-2.5 text-sm font-semibold leading-6 text-white/68">
           <Store size={17} className="mt-1 shrink-0 text-brand-yellow" aria-hidden="true" />
-          <span>المتجر الرسمي: omrantoys.store</span>
+          <span>المتجر الرسمي لعمران تويز</span>
         </p>
         <address className="space-y-2 not-italic">
           <p className="flex items-start gap-2.5 text-sm font-semibold leading-6 text-white/68">
@@ -168,7 +168,7 @@ function FooterCompanyInfo() {
 
 function FooterSocial({ socialBrand }: { socialBrand: "omran" | "popup" }) {
   const socialLinks = getSocialLinks(socialBrand);
-  const brandLabel = socialBrand === "popup" ? "POP UP – Gifts & Balloons" : "شركة عمران التجارية";
+  const brandLabel = socialBrand === "popup" ? "بوب أب للهدايا والبالونات" : "شركة عمران التجارية";
 
   return (
     <section aria-labelledby="footer-social-title">
@@ -225,7 +225,7 @@ function FooterBottom() {
           href="/"
           className="inline-flex min-h-10 items-center rounded-lg px-2 text-xs font-bold text-white/45 transition hover:bg-white/[0.05] hover:text-white/75 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/10"
         >
-          omrantoys.store · شركة عمران التجارية
+          شركة عمران التجارية · عمران تويز
         </a>
       </div>
     </div>
