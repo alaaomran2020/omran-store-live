@@ -22,7 +22,7 @@ export default function HomeSupportSections() {
     <>
       <section id="b2b" className="scroll-mt-28 border-b border-brand-border bg-white py-8 sm:py-11" aria-labelledby="b2b-title">
         <div className="container">
-          <div className="grid gap-4 rounded-[2rem] border border-brand-blue/15 bg-[radial-gradient(circle_at_15%_15%,rgba(255,212,92,.2),transparent_28%),linear-gradient(135deg,#102f53_0%,#123b6d_100%)] p-5 text-white shadow-[0_18px_50px_rgba(18,59,109,.16)] sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div className="grid gap-4 rounded-[2rem] border border-brand-blue/15 bg-brand-navy p-5 text-white shadow-[0_18px_50px_rgba(18,59,109,.16)] sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow px-3 py-1.5 text-xs font-black text-brand-navy"><BriefcaseBusiness size={15} aria-hidden="true" /> للجملة وB2B</span>
               <h2 id="b2b-title" className="mt-3 text-2xl font-black sm:text-3xl">صاحب محل؟ بتبيع أونلاين؟</h2>

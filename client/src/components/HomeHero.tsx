@@ -17,13 +17,11 @@ export default function HomeHero() {
   return (
     <section
       data-omran-hero
-      className="relative overflow-hidden border-b border-brand-border bg-[linear-gradient(145deg,#fffdf9_0%,#eef6ff_48%,#fff7fb_100%)]"
+      className="relative overflow-hidden border-b border-brand-border bg-brand-cream"
       aria-labelledby="home-hero-title"
     >
       <div className="pointer-events-none absolute left-[7%] top-16 h-9 w-9 rotate-12 rounded-xl bg-brand-yellow/70 shadow-sm" aria-hidden="true" />
       <div className="pointer-events-none absolute right-[8%] top-24 h-7 w-7 rounded-full bg-brand-red/15 shadow-sm" aria-hidden="true" />
-      <div className="pointer-events-none absolute bottom-12 left-[35%] h-8 w-8 rounded-full bg-brand-success/15" aria-hidden="true" />
-
       <div className="container grid gap-9 py-10 sm:py-14 lg:grid-cols-[1.02fr_.98fr] lg:items-center lg:gap-16 lg:py-18">
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/15 bg-white/85 px-3.5 py-2 text-xs font-black text-brand-navy shadow-sm backdrop-blur sm:text-sm">
@@ -31,12 +29,12 @@ export default function HomeHero() {
             شركة عمران التجارية · طنطا
           </div>
 
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-yellow/25 px-3 py-1.5 text-xs font-black text-brand-navy shadow-sm">
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-sky px-3 py-1.5 text-xs font-black text-brand-navy">
             <Sparkles size={15} aria-hidden="true" />
             اختيارات أكتر… بطريقة أسهل
           </div>
 
-          <h1 id="home-hero-title" className="mt-5 max-w-3xl text-[2.45rem] font-black leading-[1.12] tracking-[-0.045em] text-brand-navy sm:text-5xl lg:text-6xl">
+          <h1 id="home-hero-title" className="font-hand-ar mt-5 max-w-3xl text-[2.7rem] font-bold leading-[1.18] text-brand-navy sm:text-5xl lg:text-6xl">
             لما تختار عمران تويز…
             <span className="mt-1 block text-brand-blue">إنت بتختار ثقة وفرحة</span>
           </h1>

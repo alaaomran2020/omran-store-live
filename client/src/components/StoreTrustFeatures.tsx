@@ -24,7 +24,7 @@ export default function StoreTrustFeatures() {
       <div className="container">
         <div className="text-center">
           <p className="text-xs font-extrabold text-brand-blue sm:text-sm">اختيار أوضح واستفسار أسرع</p>
-          <h2 id="trust-features-title" className="mt-1 text-2xl font-black text-brand-navy sm:text-3xl">لما تختار عمران تويز… إنت بتختار ثقة</h2>
+          <h2 id="trust-features-title" className="font-hand-ar mt-1 text-3xl font-bold text-brand-navy sm:text-4xl">لما تختار عمران تويز… إنت بتختار ثقة</h2>
         </div>
         <div className="mx-auto mt-6 grid max-w-5xl gap-3 md:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, description }) => (

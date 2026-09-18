@@ -35,7 +35,7 @@ export default function HomeProductShowcase() {
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-xs font-black text-brand-blue sm:text-sm">ابدأ من المنتج نفسه</p>
-            <h2 id="featured-products-title" className="mt-1 text-2xl font-black tracking-[-0.025em] text-brand-navy sm:text-3xl">منتجات من عمران تويز</h2>
+            <h2 id="featured-products-title" className="font-hand-ar mt-1 text-3xl font-bold text-brand-navy sm:text-4xl">منتجات عمران تويز</h2>
           </div>
           <a href="/products#feed" className="hidden min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-sm font-black text-brand-navy shadow-sm ring-1 ring-brand-border transition hover:bg-brand-sky sm:inline-flex">
             عرض كل المنتجات <ArrowLeft size={16} aria-hidden="true" />

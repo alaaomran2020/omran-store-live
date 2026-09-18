@@ -1,8 +1,10 @@
-import { MessageCircle, Search } from "lucide-react";
+import { MessageCircle, Moon, Search, Sun } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
 import { whatsappNumber } from "@/lib/productFormat";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function BrandHeader() {
+  const { theme, toggleTheme } = useTheme();
   const pathname = typeof window === "undefined" ? "/" : window.location.pathname;
   const isPopup = pathname.startsWith("/popup");
   const number = whatsappNumber();
@@ -19,7 +21,7 @@ export default function BrandHeader() {
   }`;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-white/95 pt-[env(safe-area-inset-top)] shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-brand-surface/95 pt-[env(safe-area-inset-top)] shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
       <div className="container flex flex-col items-stretch gap-2 py-2.5 lg:min-h-[92px] lg:flex-row lg:items-center lg:justify-between lg:gap-5">
         <a href="/" className="group flex min-w-0 items-center gap-3 sm:gap-4" aria-label="عمران تويز - الصفحة الرئيسية">
           <span className="relative flex h-13 w-13 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-brand-border bg-white shadow-md ring-1 ring-black/[0.02] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg sm:h-[68px] sm:w-[68px]">
@@ -35,7 +37,7 @@ export default function BrandHeader() {
           </span>
 
           <span className="min-w-0">
-            <span className="block whitespace-nowrap text-xl font-black leading-tight tracking-[-0.03em] text-brand-navy sm:text-3xl">
+            <span className="font-hand-ar block whitespace-nowrap text-2xl font-bold leading-tight text-brand-navy sm:text-4xl">
               عمران تويز
             </span>
             <span className="mt-1 block text-[11px] font-bold tracking-wide text-brand-muted sm:text-sm">
@@ -74,6 +76,15 @@ export default function BrandHeader() {
             POP UP
           </a>
           <a href="/#branches" className={`hidden xl:inline-flex ${navClass(false)}`}>الفروع</a>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brand-border bg-brand-surface text-brand-navy shadow-sm transition hover:-translate-y-0.5 hover:bg-brand-sky focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
+            aria-label={theme === "dark" ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
+            title={theme === "dark" ? "الوضع الفاتح" : "الوضع الداكن"}
+          >
+            {theme === "dark" ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
+          </button>
           {whatsappUrl && (
             <a
               href={whatsappUrl}
