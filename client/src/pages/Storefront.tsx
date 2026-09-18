@@ -13,12 +13,12 @@ export default function Storefront() {
       <AnnouncementBar />
       <BrandHeader />
       <HomeHero />
-      <HomeCategoryHighlights />
 
       <main id="products" className="scroll-mt-28">
         <Products showAnnouncement={false} />
       </main>
 
+      <HomeCategoryHighlights />
       <StoreTrustFeatures />
       <PopUpPromo />
       <SiteFooter />
