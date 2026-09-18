@@ -1,4 +1,4 @@
-import { ArrowUpLeft, ExternalLink, Facebook, Instagram, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowUpLeft, ExternalLink, فيسبوك, إنستجرام, RefreshCw, ShieldCheck } from "lucide-react";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 
 export function OfficialSocialEmbeds() {
@@ -27,12 +27,12 @@ export function OfficialSocialEmbeds() {
         >
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-bold text-[#1666d0]">Facebook</p>
+              <p className="text-sm font-bold text-[#1666d0]">فيسبوك</p>
               <h3 id="facebook-feed-heading" className="mt-1 text-2xl font-extrabold text-brand-navy">
                 صفحتنا الرسمية
               </h3>
             </div>
-            <Facebook className="text-[#1666d0]" size={26} aria-hidden="true" />
+            <فيسبوك className="text-[#1666d0]" size={26} aria-hidden="true" />
           </div>
           <div className="flex min-h-[560px] flex-col justify-between rounded-2xl border border-brand-border bg-brand-cream p-7">
             <div>
@@ -40,7 +40,7 @@ export function OfficialSocialEmbeds() {
                 عرض مباشر من المصدر
               </p>
               <p className="mt-6 text-lg font-extrabold leading-9 text-brand-navy">
-                تابع أحدث الأخبار والمنشورات من صفحة شركة عمران التجارية على Facebook.
+                تابع أحدث الأخبار والمنشورات من صفحة شركة عمران التجارية على فيسبوك.
               </p>
               <p className="mt-3 text-sm leading-7 text-brand-muted">
                 بعض بيئات الويب تمنع عرض الخط الزمني داخل إطار مضمن؛ لذلك نفتح الصفحة الأصلية مباشرةً لضمان مصدر رسمي وحديث.
@@ -52,7 +52,7 @@ export function OfficialSocialEmbeds() {
               rel="noreferrer"
               className="mt-8 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 text-sm font-bold text-white transition hover:bg-brand-blue-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue"
             >
-              فتح صفحة Facebook الرسمية <ArrowUpLeft size={18} />
+              فتح صفحة فيسبوك الرسمية <ArrowUpLeft size={18} />
             </a>
           </div>
         </section>
@@ -63,12 +63,12 @@ export function OfficialSocialEmbeds() {
         >
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-bold text-[#d62976]">Instagram</p>
+              <p className="text-sm font-bold text-[#d62976]">إنستجرام</p>
               <h3 id="instagram-feed-heading" className="mt-1 text-2xl font-extrabold text-brand-navy">
                 حسابنا الرسمي
               </h3>
             </div>
-            <Instagram className="text-[#d62976]" size={26} aria-hidden="true" />
+            <إنستجرام className="text-[#d62976]" size={26} aria-hidden="true" />
           </div>
           <div className="flex min-h-[560px] flex-col justify-between rounded-2xl border border-brand-border bg-brand-cream p-7">
             <div>
@@ -76,10 +76,10 @@ export function OfficialSocialEmbeds() {
                 محتوى من الحساب الرسمي
               </p>
               <p className="mt-6 text-lg font-extrabold leading-9 text-brand-navy">
-                شاهد المحتوى المميز من شركة عمران التجارية مباشرةً على Instagram.
+                شاهد المحتوى المميز من شركة عمران التجارية مباشرةً على إنستجرام.
               </p>
               <p className="mt-3 text-sm leading-7 text-brand-muted">
-                إذا منع المتصفح عرض Instagram داخل الموقع، نفتح المصدر الرسمي مباشرةً بدل عرض مساحة فارغة أو نسخة قديمة.
+                إذا منع المتصفح عرض إنستجرام داخل الموقع، نفتح المصدر الرسمي مباشرةً بدل عرض مساحة فارغة أو نسخة قديمة.
               </p>
             </div>
             <div className="mt-8 space-y-3">
@@ -97,7 +97,7 @@ export function OfficialSocialEmbeds() {
                 rel="noreferrer"
                 className="flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-brand-border bg-brand-surface px-5 py-3 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-blue/5"
               >
-                فتح حساب @omrantoys.store <ExternalLink size={16} />
+                فتح حساب عمران تويز <ExternalLink size={16} />
               </a>
             </div>
           </div>
