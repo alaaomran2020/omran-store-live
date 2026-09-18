@@ -5,8 +5,9 @@
   "license": "MIT",
   "scripts": {
     "lint": "oxlint client/src shared vite.config.ts",
-    "dev": "vite",
-    "build": "vite build",
+    "images:variants": "node scripts/generate-responsive-images.mjs",
+    "dev": "pnpm images:variants && vite",
+    "build": "pnpm images:variants && vite build",
     "start": "vite preview --host 0.0.0.0",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
