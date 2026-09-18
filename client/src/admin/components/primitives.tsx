@@ -165,9 +165,14 @@ export function EmptyState({
 
 export function LoadingState({ label = "جاري تحميل البيانات…" }: { label?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 text-brand-muted" role="status" aria-live="polite">
-      <Loader2 className="animate-spin text-brand-blue" size={26} aria-hidden="true" />
-      <span className="text-sm font-bold">{label}</span>
+    <div className="space-y-3 py-6" role="status" aria-live="polite" aria-label={label}>
+      <div className="h-5 w-36 animate-pulse rounded-full bg-brand-border/70 motion-reduce:animate-none" />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="h-28 animate-pulse rounded-2xl border border-brand-border bg-white motion-reduce:animate-none" />
+        ))}
+      </div>
+      <span className="sr-only">{label}</span>
     </div>
   );
 }
@@ -414,7 +419,23 @@ export function DataTable<T>({
 
   return (
     <div>
-      <div className="overflow-x-auto">
+      <div className="space-y-3 sm:hidden">
+        {pageRows.length === 0 ? (
+          <EmptyState title={emptyMessage} />
+        ) : pageRows.map(row => (
+          <article key={keyOf(row)} className="rounded-2xl border border-brand-border bg-white p-4 shadow-sm">
+            <dl className="space-y-3">
+              {columns.map(column => (
+                <div key={column.key} className="grid grid-cols-[minmax(90px,.7fr)_1fr] gap-3 border-b border-brand-border/60 pb-3 last:border-0 last:pb-0">
+                  <dt className="text-[11px] font-black text-brand-muted">{column.header}</dt>
+                  <dd className={cn("min-w-0 text-sm text-brand-ink", column.className)}>{column.render(row)}</dd>
+                </div>
+              ))}
+            </dl>
+          </article>
+        ))}
+      </div>
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[640px] border-collapse text-sm">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <thead>
