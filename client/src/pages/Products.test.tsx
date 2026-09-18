@@ -68,7 +68,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
   it("يعرض Snapshot المحلي إذا تعذر الكتالوج الحي", async () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
-    expect(screen.getByText("بنعرض النسخة المحفوظة من المنتجات حاليًا لأن التحديث المباشر متعذر.")).toBeTruthy();
+    expect(await screen.findByText("بنعرض النسخة المحفوظة من المنتجات حاليًا لأن التحديث المباشر متعذر.")).toBeTruthy();
     expect(screen.getByRole("button", { name: /حاول التحديث/ })).toBeTruthy();
     expect(screen.queryByRole("banner")).toBeNull();
     expect(screen.queryByRole("contentinfo")).toBeNull();
