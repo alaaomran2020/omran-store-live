@@ -11,14 +11,14 @@ describe("SiteFooter", () => {
     expect(FOOTER_NAVIGATION).toEqual([
       { label: "الرئيسية", href: "/" },
       { label: "لعب الأطفال", href: "/products" },
-      { label: "POP UP", href: "/popup" },
+      { label: "بوب أب", href: "/popup" },
       { label: "مزايا وعروض", href: "/rewards" },
     ]);
   });
 
-  it("يفعّل رابط POP UP داخل الفوتر بعد اعتماد الصفحة", () => {
+  it("يفعّل رابط بوب أب داخل الفوتر بعد اعتماد الصفحة", () => {
     render(<SiteFooter />);
-    expect(screen.getByRole("link", { name: "POP UP" }).getAttribute("href")).toBe("/popup");
+    expect(screen.getByRole("link", { name: "بوب أب" }).getAttribute("href")).toBe("/popup");
   });
 
   it("يعرض السنة الحالية واسم شركة عمران التجارية", () => {
