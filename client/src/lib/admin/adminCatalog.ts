@@ -2,7 +2,7 @@
  * طبقة وصول الإدارة للكتالوج الكامل (كل الصفوف بما فيها غير المنشورة).
  *
  * مصادر القراءة بترتيب الأفضلية:
- *   1. بوابة Make الحية (نفس بوابة المتجر) بصيغة {values: [[...rows]]} — تُحلَّل
+ *   1. Admin Runtime الحي على نفس الأصل بصيغة {values: [[...rows]]} — تُحلَّل
  *      بوضع التشخيص (includeInactive) فلا تُخفي أي حالات نشر/جودة.
  *   2. ملف الكتالوج المضمّن في النشر /catalog/products.csv (بيانات حقيقية).
  *   3. لقطات المنتجات المعتمدة المضمّنة في الحزمة (آخر حالة جيدة معروفة).
@@ -17,7 +17,7 @@ import {
 } from "@shared/products";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "@/lib/publicProductsSnapshot";
 import { POPUP_PRODUCTS_SNAPSHOT } from "@/lib/popupProductsSnapshot";
-import { MAKE_GATEWAY_URL } from "@/lib/makeGateway";
+import { buildAdminReadUrl } from "@/lib/admin/adminGateway";
 import { inferSourceBrand, type ImageReadiness, type SourceBrand } from "@shared/catalogQuality";
 import { mapSqlProductRow } from "@shared/sqlCoreEntities";
 
@@ -187,11 +187,11 @@ export function normalizeAdminGatewayPayload(payload: unknown): AdminProduct[] {
 }
 
 async function fetchGatewayCatalog(signal?: AbortSignal): Promise<AdminProduct[]> {
-  const url = new URL(MAKE_GATEWAY_URL);
-  url.searchParams.set("action", "catalog");
-  const response = await fetch(url.toString(), {
+  const url = buildAdminReadUrl("catalog");
+  const response = await fetch(url, {
     method: "GET",
     headers: { Accept: "application/json" },
+    credentials: "include",
     signal,
     cache: "no-store",
   });

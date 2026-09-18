@@ -106,7 +106,7 @@ export default function AuditLogPage() {
               tone="warning"
               icon={<ScrollText size={22} />}
               title="قراءة سجل التدقيق غير مفعّلة على البوابة"
-              description="إجراءات اللوحة تُرسل بالفعل أحداث admin_audit إلى دفتر البوابة. فعّل إجراء القراءة audit_log (ورقة Audit Log) لتظهر هنا. لا تُختلق أحداث محلية، ولا تُسجَّل أي رموز OTP أو أسرار — التطهير إلزامي في shared/audit.ts."
+              description="إجراءات اللوحة تُرسل admin_audit إلى Admin Runtime عند تفعيل الكتابة. فعّل قراءة audit_log لتظهر هنا. لا تُختلق أحداث محلية، ولا تُسجَّل أي رموز OTP أو أسرار — التطهير إلزامي في shared/audit.ts."
             />
           </div>
         </Card>

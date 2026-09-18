@@ -1,18 +1,14 @@
 /**
  * بوابة بيانات الإدارة (قراءات + إجراءات كتابية موثّقة).
  *
- * فلسفة صادقة: المتجر ثابت بلا خادم. القراءات التشغيلية (ضغطات واتساب،
- * الموظفون، العملاء، سجل التدقيق) تتطلب سيناريوهات/قراءات على بوابة Make أو
- * Apps Script تُنشر بشكل منفصل. كل قراءة هنا تُرجع حالة واضحة:
- *   - "live": البيانات وصلت فعلاً وتطابق العقد.
- *   - "not_configured": البوابة لم ترد بالشكل المتوقع → الواجهة تُظهر حالة
- *     فارغة صادقة بلا أي أرقام مختلقة.
+ * القراءات التشغيلية (واتساب، الموظفون، العملاء، المخزون، سجل التدقيق)
+ * تمر عبر Runtime موحد على نفس الأصل افتراضيًا: /api/admin.
+ * لا تعتمد هذه الطبقة على Make أو أي مزود خارجي بعينه.
  *
- * الكتابة تُرسل عبر VITE_ADMIN_ACTIONS_WEBHOOK_URL اختياريًا؛ عند غيابه/فشله
- * تُنتِج الصفحات "حزمة تعديل" يدوية موثّقة (CSV/TSV) تُلصق في الشيت الرئيسي
- * — وهو نمط التشغيل المعتمد حاليًا في المشروع (راجع VipOperations).
+ * كل قراءة تُرجع حالة صريحة: live / not_configured / error.
+ * الكتابة تستخدم VITE_ADMIN_ACTIONS_URL عند تفعيل Runtime الكتابة، مع توافق
+ * مؤقت مع VITE_ADMIN_ACTIONS_WEBHOOK_URL القديم.
  */
-import { MAKE_GATEWAY_URL } from "@/lib/makeGateway";
 import {
   mapSqlCustomerRow,
   mapSqlEmployeeRow,
@@ -32,6 +28,19 @@ export type ReadResult<T> =
   | { status: "error"; message: string };
 
 const GET_TIMEOUT_MS = 9_000;
+const DEFAULT_ADMIN_READS_BASE_URL = "/api/admin";
+
+export function adminReadsBaseUrl(): string {
+  const configured = (import.meta.env.VITE_ADMIN_READS_BASE_URL ?? "").trim();
+  return configured || DEFAULT_ADMIN_READS_BASE_URL;
+}
+
+export function buildAdminReadUrl(action: string, params: Record<string, string> = {}): string {
+  const url = new URL(adminReadsBaseUrl(), window.location.origin);
+  url.searchParams.set("action", action);
+  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+  return url.toString();
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -43,14 +52,10 @@ async function gatewayGet<T>(
   accept: (body: unknown) => T | null
 ): Promise<ReadResult<T>> {
   try {
-    const url = new URL(MAKE_GATEWAY_URL);
-    url.searchParams.set("action", action);
-    for (const [key, value] of Object.entries(params)) {
-      url.searchParams.set(key, value);
-    }
+    const url = buildAdminReadUrl(action, params);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), GET_TIMEOUT_MS);
-    const response = await fetch(url.toString(), {
+    const response = await fetch(url, {
       headers: { Accept: "application/json" },
       credentials: "include",
       cache: "no-store",
@@ -233,8 +238,8 @@ export const readAuditLog = () =>
 // إجراءات الكتابة
 // ---------------------------------------------------------------------------
 
-function actionsWebhookUrl(): string | null {
-  const configured = (import.meta.env.VITE_ADMIN_ACTIONS_WEBHOOK_URL ?? "").trim();
+function actionsRuntimeUrl(): string | null {
+  const configured = (import.meta.env.VITE_ADMIN_ACTIONS_URL ?? import.meta.env.VITE_ADMIN_ACTIONS_WEBHOOK_URL ?? "").trim();
   return configured || null;
 }
 
@@ -251,7 +256,7 @@ export async function postAdminAction(
   action: string,
   payload: Record<string, string | number | boolean | null>
 ): Promise<AdminWriteResult> {
-  const endpoint = actionsWebhookUrl();
+  const endpoint = actionsRuntimeUrl();
   if (!endpoint) {
     return { ok: false, code: "NOT_CONFIGURED", message: "بوابة الإجراءات غير مفعلة" };
   }
@@ -275,5 +280,5 @@ export async function postAdminAction(
 }
 
 export function adminActionsConfigured(): boolean {
-  return Boolean(actionsWebhookUrl());
+  return Boolean(actionsRuntimeUrl());
 }

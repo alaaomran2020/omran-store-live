@@ -43,7 +43,7 @@ export default function WhatsAppPage() {
               tone="warning"
               icon={<MessageCircle size={22} />}
               title="قراءة تحليلات واتساب غير مفعّلة على البوابة"
-              description="الواجهة تُسجّل بالفعل أحداث product_whatsapp_click عبر بوابة Make إلى دفتر Analytics_Events. المطلوب تفعيل إجراء قراءة باسم whatsapp_metrics على نفس البوابة يُرجع الإجمالي وآخر 7 أيام وأكثر المنتجات/الأقسام ضغطًا. حتى ذلك الحين تُعرض هذه الصفحة حالة صادقة بدل أرقام مقدّرة."
+              description="الواجهة تُصدر أحداث product_whatsapp_click. المطلوب تفعيل إجراء القراءة whatsapp_metrics على Admin Runtime يُرجع الإجمالي وآخر 7 أيام وأكثر المنتجات/الأقسام ضغطًا. حتى ذلك الحين تُعرض هذه الصفحة حالة صادقة بدل أرقام مقدّرة."
               action={
                 <a
                   href={`https://wa.me/${STORE_CONTACT.whatsapp}`}

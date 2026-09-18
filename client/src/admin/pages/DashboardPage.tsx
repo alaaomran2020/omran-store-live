@@ -148,7 +148,7 @@ function RecentActivity() {
         <div className="p-5">
           <EmptyState
             title="لا توجد نشاطات مسجّلة بعد"
-            description="تظهر هنا إجراءات الموظفين الحقيقية (نشر، تعديل، أدوار…) بعد تفعيل قراءة سجل التدقيق من بوابة Make/Apps Script. لا تُختلق نشاطات محلية."
+            description="تظهر هنا إجراءات الموظفين الحقيقية (نشر، تعديل، أدوار…) بعد تفعيل قراءة سجل التدقيق من Admin Runtime. لا تُختلق نشاطات محلية."
           />
         </div>
       </Card>
@@ -208,7 +208,7 @@ function WhatsAppPanel() {
       {!data ? (
         <EmptyState
           title="قراءة تحليلات واتساب غير مفعّلة بعد"
-          description="الضغطات تُسجَّل فعلًا في دفتر Analytics_Events عبر بوابة Make. تفعيل إجراء قراءة whatsapp_metrics على البوابة يعرض الإجمالي وآخر 7 أيام وأكثر المنتجات ضغطًا — بلا أي أرقام مقدّرة."
+          description="عند تفعيل Admin Runtime للتحليلات، إجراء whatsapp_metrics يعرض الإجمالي وآخر 7 أيام وأكثر المنتجات ضغطًا — بلا أي أرقام مقدّرة."
         />
       ) : (
         <div className="space-y-4">

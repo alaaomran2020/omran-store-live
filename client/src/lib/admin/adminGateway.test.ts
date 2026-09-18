@@ -1,8 +1,10 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import {
   normalizeCustomerRecord,
   normalizeEmployeeRecord,
   normalizeInventoryRecord,
+  buildAdminReadUrl,
 } from "./adminGateway";
 
 describe("admin SQL gateway normalization", () => {
@@ -38,4 +40,11 @@ describe("admin SQL gateway normalization", () => {
       last_counted_at: null, updated_at: "2026-09-18T00:00:00Z",
     })).toMatchObject({ productId: "OMR-1", onHandQty: null, availableQty: null });
   });
-});
+
+  it("builds same-origin Admin Runtime URLs without Make", () => {
+    const url = new URL(buildAdminReadUrl("inventory", { store: "S1" }));
+    expect(url.origin).toBe(window.location.origin);
+    expect(url.pathname).toBe("/api/admin");
+    expect(url.searchParams.get("action")).toBe("inventory");
+    expect(url.searchParams.get("store")).toBe("S1");
+  });});

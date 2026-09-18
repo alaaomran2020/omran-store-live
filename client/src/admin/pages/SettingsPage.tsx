@@ -93,7 +93,7 @@ export default function SettingsPage() {
             state={isLoading ? "loading" : "live"}
             detail={
               source === "live-gateway"
-                ? "مصدر حي من بوابة Make — كل الصفوف والحالات."
+                ? "مصدر حي من Admin Runtime — كل الصفوف والحالات."
                 : source === "bundled-csv"
                   ? "كتالوج مضمّن في نسخة النشر /catalog/products.csv (البوابة الحية غير متاحة الآن)."
                   : source === "bundle-snapshots"
@@ -107,7 +107,7 @@ export default function SettingsPage() {
             state={writeEnabled ? "live" : "off"}
             detail={
               writeEnabled
-                ? "VITE_ADMIN_ACTIONS_WEBHOOK_URL مضبوط: تعديلات المنتجات/المحتوى/المخزون تُرسل مباشرة."
+                ? "VITE_ADMIN_ACTIONS_URL مضبوط: تعديلات المنتجات/المحتوى/المخزون تُرسل مباشرة."
                 : "غير مضبوط: الإجراءات تُصدر حزم TSV موثّقة للاعتماد اليدوي في الشيت الرئيسي (نمط التشغيل الحالي)."
             }
           />
@@ -125,7 +125,7 @@ export default function SettingsPage() {
             icon={<KeyRound size={17} />}
             label="مزوّد OTP الخادمي (عملاء + موظفون)"
             state={otpState}
-            detail="نقاط النهاية Same-origin تحت /api/auth (Pages Function أو بوابة Apps Script/Make مع مزوّد إرسال). المزوّد يولّد الرمز ويخزّنه مجزّأ مع صلاحية/محاولات/معدل طلبات (راجع shared/otp.ts والوثيقة المعمارية)."
+            detail="نقاط النهاية Same-origin تحت /api/auth مع مزوّد إرسال موثوق عند تفعيل OTP. المزوّد يولّد الرمز ويخزّنه مجزّأ مع صلاحية/محاولات/معدل طلبات (راجع shared/otp.ts والوثيقة المعمارية)."
           />
           <StatusRow
             icon={<ShieldCheck size={17} />}

@@ -1,12 +1,8 @@
 /**
  * عميل سجل التدقيق:
- *  - القراءة عبر readAuditLog() في adminGateway (سجل موثوق من البوابة).
- *  - الكتابة fire-and-forget إلى دفتر الأحداث نفسه الذي يغذي Analytics_Events
- *    عبر Make (event_name=admin_audit). السيناريو يحوّل الحدث لورقة Audit Log.
- *
- * القيم الحساسة تُزال في shared/audit.ts قبل الإرسال، ولا يُرسَل أي OTP/token.
- * إن لم تدعم البوابة الحدث بعد، لا تُختلق سجلات محلية مزيفة — صفحة السجل
- * تعرض حالة "لا بيانات" صادقة.
+ * - القراءة عبر readAuditLog() من Admin Runtime.
+ * - الكتابة fire-and-forget عبر postAdminAction("audit_append").
+ * - لا يعتمد على Make، ولا يخزن OTP أو أسرار في المتصفح.
  */
 import {
   buildAuditEvent,
@@ -14,7 +10,7 @@ import {
   type AuditEvent,
   type AuditTargetType,
 } from "@shared/audit";
-import { MAKE_GATEWAY_URL } from "@/lib/makeGateway";
+import { postAdminAction } from "@/lib/admin/adminGateway";
 
 export type AuditActor = { id: string; name: string };
 
@@ -38,25 +34,18 @@ export function emitAudit(
     metadata: fields.metadata,
   });
 
-  try {
-    const body = new URLSearchParams({
-      event_id: event.id,
-      event_at: event.occurredAt,
-      event_name: "admin_audit",
-      audit_action: event.action,
-      actor_id: event.actorId,
-      actor_name: event.actorName,
-      target_type: event.targetType,
-      target_id: event.targetId,
-      target_name: event.targetName ?? "",
-      metadata_json: JSON.stringify(event.metadata ?? {}),
-    });
-    if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
-      navigator.sendBeacon(MAKE_GATEWAY_URL, new Blob([body.toString()], { type: "application/x-www-form-urlencoded;charset=UTF-8" }));
-    }
-  } catch {
-    // التدقيق غير الحرج للتنقّل لا يكسر إجراءً إداريًا؛ البوابة اليدوية تبقى قناة موثّقة.
-  }
+  void postAdminAction("audit_append", {
+    event_id: event.id,
+    event_at: event.occurredAt,
+    event_name: "admin_audit",
+    audit_action: event.action,
+    actor_id: event.actorId,
+    actor_name: event.actorName,
+    target_type: event.targetType,
+    target_id: event.targetId,
+    target_name: event.targetName ?? "",
+    metadata_json: JSON.stringify(event.metadata ?? {}),
+  }).catch(() => undefined);
 
   return event;
 }
