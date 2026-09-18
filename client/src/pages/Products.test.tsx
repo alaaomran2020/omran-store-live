@@ -68,6 +68,8 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
   it("يعرض Snapshot المحلي إذا تعذر الكتالوج الحي", async () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
+    expect(await screen.findByText("بنعرض النسخة المحفوظة من المنتجات حاليًا لأن التحديث المباشر متعذر.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /حاول التحديث/ })).toBeTruthy();
     expect(screen.queryByRole("banner")).toBeNull();
     expect(screen.queryByRole("contentinfo")).toBeNull();
     expect(screen.queryByRole("heading", { name: "شوف اللعبة وهي بتشتغل قبل الاستفسار" })).toBeNull();
@@ -120,6 +122,14 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
       expect.objectContaining({ method: "GET" })
     );
     expect(screen.queryByText(/طلبك|إضافة للسلة|أضف لطلبك|مقارنة المنتجات/)).toBeNull();
+  });
+
+  it("يحمي كروت المنتجات على 320px بعمود واحد ويعود لعمودين من 360px", async () => {
+    renderCatalog();
+    await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
+    const grid = cards()[0].parentElement;
+    expect(grid?.className).toContain("grid-cols-1");
+    expect(grid?.className).toContain("min-[360px]:grid-cols-2");
   });
 
   it("يرسم النتائج على دفعات بدل تحميل كل بطاقات الكتالوج دفعة واحدة", async () => {
