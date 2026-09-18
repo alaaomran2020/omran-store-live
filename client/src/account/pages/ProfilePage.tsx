@@ -5,7 +5,7 @@
  */
 import { useState } from "react";
 import { toast, Toaster } from "sonner";
-import { AdminButton, Card, CardHeader, InfoBanner, TextInput } from "@/admin/components/primitives";
+import { AdminButton, Card, CardHeader, EmptyState, InfoBanner, TextInput } from "@/admin/components/primitives";
 import { useAccountSession } from "@/account/AccountSession";
 import { postCustomerAction } from "@/lib/auth/authClient";
 import { formatDateTime } from "@/admin/adminFormat";
@@ -17,7 +17,7 @@ export default function ProfilePage() {
   const [email, setEmail] = useState(customer?.email ?? "");
   const [saving, setSaving] = useState(false);
 
-  if (!customer) return null;
+  if (!customer) return <Card className="p-5"><EmptyState title="بيانات الحساب غير متاحة" description="تعذر تحميل بيانات حسابك. سجّل الدخول من جديد أو حاول لاحقًا." tone="warning" /></Card>;
   const pending = customer.status === "PENDING_PROFILE";
 
   async function save() {
@@ -58,7 +58,7 @@ export default function ProfilePage() {
       <Toaster position="top-center" dir="rtl" richColors closeButton />
       <h1 className="mb-4 text-xl font-black text-brand-ink">بياناتي</h1>
       {pending ? (
-        <InfoBanner tone="warning">أكمل اسمك لتفعيل الحساب بالكامل. الموبايل موثّق بالفعل عبر OTP.</InfoBanner>
+        <InfoBanner tone="warning">أهلاً بيك في عمران تويز 👋 أكمل اسمك لتفعيل الحساب بالكامل. الموبايل موثّق بالفعل عبر OTP.</InfoBanner>
       ) : null}
       <Card className="mt-4">
         <CardHeader title="المعلومات الأساسية" subtitle="الموبايل لا يُغيَّر إلا بعد تحقق OTP جديد" />
