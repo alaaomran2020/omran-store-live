@@ -143,7 +143,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
 
   useEffect(() => {
     trackEvent("category_view", {
-      category: category === ALL ? (isPopup ? "POP UP" : "لعب الأطفال") : category,
+      category: category === ALL ? (isPopup ? "بوب أب" : "لعب الأطفال") : category,
       catalog,
     });
   }, [catalog, category, isPopup]);
@@ -315,7 +315,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
         <section className={`container grid gap-5 py-8 sm:gap-8 sm:py-12 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:py-20 ${isPopup ? "relative" : ""}`}>
           <CatalogBreadcrumbs catalog={catalog} category={category === ALL ? undefined : category} className="lg:col-span-2" />
           <div>
-            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${isPopup ? "bg-[#f6e8fb] text-[#6b278f]" : "bg-brand-yellow/25 text-brand-navy"}`}><Sparkles size={15} /> {isPopup ? "POP UP – Gifts & Balloons" : "كتالوج لعب الأطفال"}</span>
+            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${isPopup ? "bg-[#f6e8fb] text-[#6b278f]" : "bg-brand-yellow/25 text-brand-navy"}`}><Sparkles size={15} /> {isPopup ? "بوب أب للهدايا والبالونات" : "كتالوج لعب الأطفال"}</span>
             <h1 className={`mt-4 max-w-3xl text-[2rem] font-extrabold leading-[1.16] sm:mt-5 sm:text-5xl lg:text-6xl ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>
               {isPopup ? <>هدايا، بالونات ومستلزمات حفلات <span className="text-[#8a3aaa]">POP UP</span></> : <>اكتشف لعب الأطفال من <span className="text-brand-blue">شركة عمران التجارية</span></>}
             </h1>
