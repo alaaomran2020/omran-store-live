@@ -95,9 +95,11 @@ export default function AdminAccess() {
 
         {accessState === "checking" ? (
           <BrutalCard className="p-5">
-            <Notice kind="info">
-              جاري التحقق من جلسة Cloudflare Access...
-            </Notice>
+            <div role="status" aria-live="polite" aria-label="جاري التحقق من جلسة الإدارة" className="space-y-3">
+              <div className="h-5 w-44 animate-pulse rounded-full bg-slate-700 motion-reduce:animate-none" />
+              <div className="h-20 animate-pulse rounded-xl bg-slate-900 motion-reduce:animate-none" />
+              <span className="sr-only">جاري التحقق من جلسة Cloudflare Access...</span>
+            </div>
           </BrutalCard>
         ) : (
           <>
