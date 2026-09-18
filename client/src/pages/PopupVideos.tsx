@@ -9,19 +9,19 @@ import { MAIN_CONTENT_ID } from "@/lib/a11y";
 const POPUP_VIDEOS = [
   {
     id: "popup-video-01",
-    title: "POP UP – فيديو 1",
+    title: "بوب أب – فيديو 1",
     src: "https://drive.google.com/file/d/1fH97KeIJMwkaNudiLpTO6Yz97ShzrjMA/preview",
     thumbnail: "https://drive.google.com/thumbnail?id=1fH97KeIJMwkaNudiLpTO6Yz97ShzrjMA&sz=w1200",
   },
   {
     id: "popup-video-02",
-    title: "POP UP – فيديو 2",
+    title: "بوب أب – فيديو 2",
     src: "https://drive.google.com/file/d/1u-2ihGnQJiIiX-VR-oi1rVBtA8alqLYv/preview",
     thumbnail: "https://drive.google.com/thumbnail?id=1u-2ihGnQJiIiX-VR-oi1rVBtA8alqLYv&sz=w1200",
   },
   {
     id: "popup-video-03",
-    title: "POP UP – فيديو 3",
+    title: "بوب أب – فيديو 3",
     src: "https://drive.google.com/file/d/1uVYhjjjM4VcIhSrjAVTFHYJ2b1_dZlBC/preview",
     thumbnail: "https://drive.google.com/thumbnail?id=1uVYhjjjM4VcIhSrjAVTFHYJ2b1_dZlBC&sz=w1200",
   },
@@ -34,8 +34,8 @@ export default function PopupVideos() {
     <div dir="rtl" className="min-h-screen bg-gradient-to-b from-fuchsia-50/60 via-white to-rose-50/40 text-brand-ink">
       <SeoMetadata
         path="/popup/videos"
-        title="فيديوهات POP UP – Gifts & Balloons"
-        description="شاهد فيديوهات POP UP للهدايا والبالونات وتنسيقات المناسبات."
+        title="فيديوهات بوب أب – الهدايا والبالونات"
+        description="شاهد فيديوهات بوب أب للهدايا والبالونات وتنسيقات المناسبات."
       />
       <AnnouncementBar />
       <BrandHeader />
@@ -44,13 +44,13 @@ export default function PopupVideos() {
         <div className="mx-auto max-w-3xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-fuchsia-200 bg-white px-3 py-1.5 text-xs font-black text-fuchsia-700 shadow-sm">
             <PlayCircle size={15} aria-hidden="true" />
-            فيديوهات POP UP
+            فيديوهات بوب أب
           </span>
           <h1 className="mt-3 text-3xl font-black tracking-tight text-brand-ink sm:text-4xl">
-            شوف تنسيقات POP UP بالفيديو
+            شوف تنسيقات بوب أب بالفيديو
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm font-semibold leading-7 text-brand-muted sm:text-base">
-            فيديوهات حقيقية للهدايا والبالونات وتنسيقات المناسبات من POP UP – Gifts & Balloons.
+            فيديوهات حقيقية للهدايا والبالونات وتنسيقات المناسبات من بوب أب – الهدايا والبالونات.
           </p>
         </div>
 
@@ -100,7 +100,7 @@ export default function PopupVideos() {
                 </div>
 
                 <div className="px-2 pb-2 pt-4">
-                  <p className="text-sm font-black text-brand-ink">فيديو POP UP #{index + 1}</p>
+                  <p className="text-sm font-black text-brand-ink">فيديو بوب أب رقم {index + 1}</p>
                 </div>
               </article>
             );
@@ -113,7 +113,7 @@ export default function PopupVideos() {
             className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-fuchsia-200 bg-white px-5 py-2.5 text-sm font-black text-fuchsia-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <ArrowRight size={17} aria-hidden="true" />
-            رجوع لصفحة POP UP
+            رجوع لصفحة بوب أب
           </a>
         </div>
       </main>
