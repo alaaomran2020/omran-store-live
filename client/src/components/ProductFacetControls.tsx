@@ -89,7 +89,7 @@ export function ProductFacetControls({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {activeFilters.length > 0 && (
-            <button type="button" onClick={onClearAll} className={`min-h-10 rounded-xl border border-brand-border px-3 py-2 text-xs font-extrabold transition hover:bg-brand-cream focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${isPopup ? "text-[#6b278f]" : "text-brand-blue"}`}>
+            <button type="button" onClick={onClearAll} className={`min-h-11 rounded-xl border border-brand-border px-3 py-2 text-xs font-extrabold transition hover:bg-brand-cream focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${isPopup ? "text-[#6b278f]" : "text-brand-blue"}`}>
               مسح الكل
             </button>
           )}
@@ -99,7 +99,7 @@ export function ProductFacetControls({
             onClick={() => setMobileOpen(true)}
             aria-expanded={mobileOpen}
             aria-controls="advanced-filter-fields"
-            className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-3 text-xs font-extrabold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue sm:hidden ${isPopup ? "text-[#6b278f]" : "text-brand-blue"}`}
+            className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-surface px-3 text-xs font-extrabold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue sm:hidden ${isPopup ? "text-[#6b278f]" : "text-brand-blue"}`}
             aria-label="فتح الفلاتر الإضافية"
           >
             <SlidersHorizontal size={16} aria-hidden="true" /> الفلاتر
@@ -181,7 +181,7 @@ export function ProductFacetControls({
         /* aria-label needs a group role to be exposed on a plain container. */
         <div role="group" aria-label="الفلاتر النشطة" className="mt-3 flex max-w-full gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
           {activeFilters.map(filter => (
-            <button key={filter.key} type="button" onClick={filter.onClear} className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-extrabold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${isPopup ? "border-[#e4d3ee] bg-[#f9f2fc] text-[#6b278f] hover:bg-[#f3e6f8]" : "border-brand-border bg-brand-sky/50 text-brand-navy hover:bg-brand-sky"}`} aria-label={`إلغاء فلتر ${filter.label}`}>
+            <button key={filter.key} type="button" onClick={filter.onClear} className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-extrabold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${isPopup ? "border-[#e4d3ee] bg-[#f9f2fc] text-[#6b278f] hover:bg-[#f3e6f8]" : "border-brand-border bg-brand-sky/50 text-brand-navy hover:bg-brand-sky"}`} aria-label={`إلغاء فلتر ${filter.label}`}>
               <X size={13} aria-hidden="true" /> {filter.label}
             </button>
           ))}

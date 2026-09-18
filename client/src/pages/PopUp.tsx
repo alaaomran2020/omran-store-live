@@ -44,7 +44,7 @@ function PopUpVideosCta() {
     <section dir="rtl" aria-labelledby="popup-videos-title" className="border-y border-fuchsia-100 bg-white py-8 sm:py-10">
       <div className="container">
         <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-5 rounded-3xl bg-gradient-to-l from-fuchsia-700 via-purple-700 to-rose-600 p-6 text-center text-white shadow-[0_18px_50px_rgba(126,34,206,0.18)] sm:p-8 lg:flex-row lg:text-start">
-          <div>
+          <div dir="rtl">
             <p className="text-xs font-black text-fuchsia-100">فيديوهات POP UP</p>
             <h2 id="popup-videos-title" className="mt-2 text-2xl font-black sm:text-3xl">شوف التنسيقات بالفيديو</h2>
             <p className="mt-2 max-w-xl text-sm font-semibold leading-7 text-white/85">
@@ -166,7 +166,7 @@ function PopUpOfficialSocials() {
 
 export default function PopUp() {
   return (
-    <div>
+    <div dir="rtl">
       <SeoMetadata path="/popup" title={POPUP_TITLE} description={POPUP_DESCRIPTION} />
       <AnnouncementBar />
       <BrandHeader />

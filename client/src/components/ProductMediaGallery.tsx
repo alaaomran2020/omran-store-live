@@ -145,7 +145,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
             aria-label={`فتح صورة ${product.name} بالحجم الكامل`}
             className="absolute inset-0 z-10 cursor-zoom-in focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue"
           >
-            <span className="absolute bottom-3 left-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-navy/85 text-white shadow-lg">
+            <span className="absolute bottom-3 start-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-navy/85 text-white shadow-lg">
               <Maximize2 size={17} aria-hidden="true" />
             </span>
           </button>
@@ -160,7 +160,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
                 showPrevious();
               }}
               aria-label="الصورة السابقة"
-              className="absolute right-2 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-brand-navy shadow-lg ring-1 ring-brand-border transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue sm:right-3"
+              className="absolute end-2 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-brand-navy shadow-lg ring-1 ring-brand-border transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue sm:end-3"
             >
               <ChevronRight size={19} aria-hidden="true" />
             </button>
@@ -171,7 +171,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
                 showNext();
               }}
               aria-label="الصورة التالية"
-              className="absolute left-2 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-brand-navy shadow-lg ring-1 ring-brand-border transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue sm:left-3"
+              className="absolute start-2 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-brand-navy shadow-lg ring-1 ring-brand-border transition hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue sm:start-3"
             >
               <ChevronLeft size={19} aria-hidden="true" />
             </button>
@@ -179,7 +179,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
         )}
 
         {images.length > 0 && (
-          <span className="absolute bottom-3 right-3 z-20 rounded-full bg-brand-navy/85 px-3 py-1.5 text-xs font-extrabold text-white shadow-lg">
+          <span className="absolute bottom-3 end-3 z-20 rounded-full bg-brand-navy/85 px-3 py-1.5 text-xs font-extrabold text-white shadow-lg">
             {selectedIndex + 1} / {images.length}
           </span>
         )}
@@ -252,7 +252,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
               onClick={closeLightbox}
               aria-label="إغلاق عرض الصورة"
               autoFocus
-              className="absolute left-0 top-0 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white"
+              className="absolute start-0 top-0 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white"
             >
               <X size={20} aria-hidden="true" />
             </button>
@@ -263,7 +263,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
                   type="button"
                   onClick={showPrevious}
                   aria-label="الصورة السابقة"
-                  className="absolute right-0 top-1/2 z-20 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white sm:right-2"
+                  className="absolute end-0 top-1/2 z-20 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white sm:end-2"
                 >
                   <ChevronRight size={24} aria-hidden="true" />
                 </button>
@@ -271,7 +271,7 @@ export function ProductMediaGallery({ product }: { product: Product }) {
                   type="button"
                   onClick={showNext}
                   aria-label="الصورة التالية"
-                  className="absolute left-0 top-1/2 z-20 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white sm:left-2"
+                  className="absolute start-0 top-1/2 z-20 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white sm:start-2"
                 >
                   <ChevronLeft size={24} aria-hidden="true" />
                 </button>

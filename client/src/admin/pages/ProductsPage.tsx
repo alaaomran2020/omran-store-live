@@ -130,7 +130,7 @@ export default function ProductsPage() {
         <div className="flex items-center gap-1">
           <Link
             href={`/products/${encodeURIComponent(p.id)}`}
-            className="grid h-9 w-9 place-items-center rounded-lg text-brand-navy hover:bg-brand-sky"
+            className="grid min-h-11 min-w-11 place-items-center rounded-xl text-brand-navy hover:bg-brand-sky focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/25"
             title="تعديل/عرض"
           >
             <PencilLine size={16} />
@@ -138,7 +138,7 @@ export default function ProductsPage() {
           {p.workflowStatus === "PUBLISHED" && p.qaStatus === "PASS" && p.active ? (
             <Link
               href={`/products?focus=${encodeURIComponent(p.id)}`}
-              className="grid h-9 w-9 place-items-center rounded-lg text-brand-navy hover:bg-brand-sky"
+              className="grid min-h-11 min-w-11 place-items-center rounded-xl text-brand-navy hover:bg-brand-sky focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/25"
               title="معاينة بالمتجر"
             >
               <Eye size={16} />
@@ -270,7 +270,7 @@ export default function ProductsPage() {
           <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold text-brand-muted">
             <Badge tone="green">منشور</Badge>
             <span>يستوفي البوابة الثلاثية: نشط + PUBLISHED + PASS</span>
-            <Badge tone="amber" className="mr-4">تحت المراجعة</Badge>
+            <Badge tone="amber" className="ms-4">تحت المراجعة</Badge>
             <span>محجوب عن الجمهور حتى الاعتماد</span>
           </div>
         </>

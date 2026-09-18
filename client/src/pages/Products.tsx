@@ -298,7 +298,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     <button key={value} type="button" onClick={() => handleCategoryFilter(value)} aria-pressed={category === value} data-testid="category-chip"
       className={`min-h-11 shrink-0 snap-start rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-4 ${category === value ? isPopup ? "bg-[#5e2181] text-white shadow" : "bg-brand-navy text-white shadow" : isPopup ? "border border-[#e8d8f1] bg-white text-[#5e2181] hover:border-[#8a3aaa]" : "border border-brand-border bg-brand-surface text-brand-muted hover:border-brand-blue hover:text-brand-blue"}`}>
       <span>{label}</span>
-      {typeof count === "number" && <span className="mr-1 opacity-70" aria-label={`${count} منتج`}>({count})</span>}
+      {typeof count === "number" && <span className="ms-1 opacity-70" aria-label={`${count} منتج`}>({count})</span>}
     </button>
   );
   const ageChip = (value: string, label: string) => (
@@ -355,7 +355,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                   <div className="rounded-2xl border border-brand-border bg-brand-cream p-3.5 sm:p-4">
                     <div className="mb-2.5 flex items-center justify-between gap-3 sm:mb-3">
                       <p id={ageGroupLabelId} className="text-sm font-extrabold text-brand-navy">اختار حسب السن</p>
-                      {age !== ALL && <button type="button" onClick={() => handleAgeFilter(ALL)} className="min-h-9 rounded-lg px-2 text-xs font-bold text-brand-blue hover:bg-brand-sky hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue">إلغاء الفلتر</button>}
+                      {age !== ALL && <button type="button" onClick={() => handleAgeFilter(ALL)} className="min-h-11 rounded-lg px-3 text-xs font-bold text-brand-blue hover:bg-brand-sky hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue">إلغاء الفلتر</button>}
                     </div>
                     <div role="group" aria-labelledby={ageGroupLabelId} className="-mx-3.5 flex snap-x snap-mandatory gap-2 overflow-x-auto px-3.5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
                       {ageChip(ALL, "كل الأعمار")}

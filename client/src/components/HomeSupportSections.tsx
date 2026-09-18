@@ -24,7 +24,7 @@ export default function HomeSupportSections() {
         <div className="container">
           <div className="grid gap-4 rounded-[2rem] border border-brand-blue/15 bg-[radial-gradient(circle_at_15%_15%,rgba(255,212,92,.2),transparent_28%),linear-gradient(135deg,#102f53_0%,#123b6d_100%)] p-5 text-white shadow-[0_18px_50px_rgba(18,59,109,.16)] sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-[#ffd45c] px-3 py-1.5 text-xs font-black text-[#4b3500]"><BriefcaseBusiness size={15} aria-hidden="true" /> للجملة وB2B</span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-brand-yellow px-3 py-1.5 text-xs font-black text-brand-navy"><BriefcaseBusiness size={15} aria-hidden="true" /> للجملة وB2B</span>
               <h2 id="b2b-title" className="mt-3 text-2xl font-black sm:text-3xl">صاحب محل؟ بتبيع أونلاين؟</h2>
               <p className="mt-2 max-w-2xl text-sm font-bold leading-7 text-white/88 sm:text-base">ابدأ من الكتالوج، اختار المنتجات اللي تهمك، وابعت الاستفسار بالكود عشان نراجع معاك السعر والكميات المتاحة.</p>
             </div>
@@ -40,7 +40,7 @@ export default function HomeSupportSections() {
       <section className="border-b border-brand-border bg-brand-cream py-8 sm:py-11" aria-labelledby="why-omran-title">
         <div className="container">
           <div className="text-center">
-            <p className="text-xs font-black text-[#1558b0] sm:text-sm">ليه عمران تويز؟</p>
+            <p className="text-xs font-black text-brand-blue sm:text-sm">ليه عمران تويز؟</p>
             <h2 id="why-omran-title" className="mt-1 text-2xl font-black text-brand-navy sm:text-3xl">اختيار أوضح من أول خطوة</h2>
           </div>
           <div className="mx-auto mt-6 grid max-w-5xl gap-3 md:grid-cols-3">
@@ -58,13 +58,13 @@ export default function HomeSupportSections() {
       <section className="border-b border-brand-border bg-white py-8 sm:py-11" aria-labelledby="faq-title">
         <div className="container grid gap-7 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
           <div>
-            <p className="text-xs font-black text-[#1558b0] sm:text-sm">أسئلة سريعة</p>
+            <p className="text-xs font-black text-brand-blue sm:text-sm">أسئلة سريعة</p>
             <h2 id="faq-title" className="mt-1 text-2xl font-black text-brand-navy sm:text-3xl">قبل ما تستفسر</h2>
             <p className="mt-3 max-w-md text-sm font-semibold leading-7 text-brand-muted">معلومات مباشرة تساعدك تستخدم الكتالوج أسرع من غير تفاصيل مالهاش لازمة.</p>
           </div>
           <div className="space-y-2">
             {faqs.map(([question, answer]) => (
-              <details key={question} className="group rounded-2xl border border-brand-border bg-[#fffdfa] px-4 py-1 open:bg-white">
+              <details key={question} className="group rounded-2xl border border-brand-border bg-brand-cream px-4 py-1 open:bg-white">
                 <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-black text-brand-navy">
                   {question}
                   <ChevronDown size={17} className="shrink-0 transition group-open:rotate-180" aria-hidden="true" />
@@ -80,7 +80,7 @@ export default function HomeSupportSections() {
         <div className="container">
           <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-black text-[#1558b0] sm:text-sm">فروعنا في طنطا</p>
+              <p className="text-xs font-black text-brand-blue sm:text-sm">فروعنا في طنطا</p>
               <h2 id="branches-title" className="mt-1 text-2xl font-black text-brand-navy sm:text-3xl">زورنا في الفرع الأقرب</h2>
             </div>
             <MapPin className="text-brand-blue" aria-hidden="true" />

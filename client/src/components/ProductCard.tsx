@@ -62,12 +62,12 @@ export function ProductCard({
             sizesHint="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
           />
           {product.category && (
-            <span className="absolute right-2 top-2 inline-flex max-w-[70%] truncate rounded-full bg-brand-surface/95 px-2 py-1 text-[10px] font-bold text-brand-navy shadow-sm ring-1 ring-brand-border sm:right-3 sm:top-3 sm:px-3 sm:text-[11px]">
+            <span className="absolute end-2 top-2 inline-flex max-w-[70%] truncate rounded-full bg-brand-surface/95 px-2 py-1 text-[10px] font-bold text-brand-navy shadow-sm ring-1 ring-brand-border sm:end-3 sm:top-3 sm:px-3 sm:text-[11px]">
               {displayCategoryName(product.category)}
             </span>
           )}
           {(product.galleryImages.length > 0 || product.videoUrl) && (
-            <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-brand-navy/85 px-2 py-1 text-[10px] font-bold text-white sm:bottom-3 sm:left-3">
+            <span className="absolute bottom-2 start-2 inline-flex items-center gap-1 rounded-full bg-brand-navy/85 px-2 py-1 text-[10px] font-bold text-white sm:bottom-3 sm:start-3">
               {product.videoUrl ? <Play size={12} aria-hidden="true" /> : <Images size={12} aria-hidden="true" />}
               {product.videoUrl ? "فيديو" : `${product.galleryImages.length + 1} صور`}
             </span>
@@ -94,7 +94,7 @@ export function ProductCard({
               <span>للاستفسار والكميات</span>
             </a>
           )}
-          <a href={productHref} onClick={event => { event.preventDefault(); onOpenDetails(product); }} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-navy/20 bg-[#eef6ff] px-2.5 py-2.5 text-[12px] font-black text-brand-navy transition active:scale-[0.98] hover:border-brand-navy/35 hover:bg-[#dcecff] focus-visible:ring-4 focus-visible:ring-brand-blue motion-reduce:transition-none motion-reduce:active:scale-100 sm:gap-2 sm:px-4 sm:text-sm">
+          <a href={productHref} onClick={event => { event.preventDefault(); onOpenDetails(product); }} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-navy/20 bg-brand-sky px-2.5 py-2.5 text-[12px] font-black text-brand-navy transition active:scale-[0.98] hover:border-brand-navy/35 hover:bg-brand-blue/10 focus-visible:ring-4 focus-visible:ring-brand-blue motion-reduce:transition-none motion-reduce:active:scale-100 sm:gap-2 sm:px-4 sm:text-sm">
             التفاصيل <Info size={14} aria-hidden="true" />
           </a>
         </div>

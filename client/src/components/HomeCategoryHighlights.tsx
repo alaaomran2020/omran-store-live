@@ -17,7 +17,7 @@ export default function HomeCategoryHighlights() {
       <div className="container">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-black text-[#1558b0] sm:text-sm">وصل لاختيارك أسرع</p>
+            <p className="text-xs font-black text-brand-blue sm:text-sm">وصل لاختيارك أسرع</p>
             <h2 id="home-categories-title" className="mt-1 text-2xl font-black text-brand-navy sm:text-3xl">تسوق حسب القسم</h2>
           </div>
           <a href="/products#feed" className="inline-flex min-h-11 w-fit items-center gap-2 rounded-xl px-2 text-sm font-extrabold text-brand-blue transition hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue/15">

@@ -113,7 +113,7 @@ export function AdminShell({
   return (
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
       {/* شريط جانبي - ديسكتوب */}
-      <aside className="fixed inset-y-0 right-0 z-30 hidden w-72 border-l border-brand-border bg-white lg:block">
+      <aside className="fixed inset-y-0 end-0 z-30 hidden w-72 border-s border-brand-border bg-white lg:block">
         <SidebarContent />
       </aside>
 
@@ -126,10 +126,10 @@ export function AdminShell({
             aria-label="إغلاق القائمة"
             onClick={() => setDrawerOpen(false)}
           />
-          <div className="absolute inset-y-0 right-0 w-80 max-w-[85vw] border-l border-brand-border bg-white shadow-xl">
+          <div className="absolute inset-y-0 end-0 w-80 max-w-[85vw] border-s border-brand-border bg-white shadow-xl">
             <button
               type="button"
-              className="absolute left-3 top-4 grid h-9 w-9 place-items-center rounded-lg text-brand-muted hover:bg-brand-cream"
+              className="absolute start-3 top-4 grid min-h-11 min-w-11 place-items-center rounded-lg text-brand-muted hover:bg-brand-cream"
               aria-label="إغلاق"
               onClick={() => setDrawerOpen(false)}
             >
@@ -140,11 +140,11 @@ export function AdminShell({
         </div>
       ) : null}
 
-      <div className="lg:pr-72">
+      <div className="lg:pe-72">
         <header className="sticky top-0 z-20 flex min-h-16 items-center gap-3 border-b border-brand-border bg-white/90 px-4 backdrop-blur sm:px-6">
           <button
             type="button"
-            className="grid h-10 w-10 place-items-center rounded-xl text-brand-navy hover:bg-brand-sky lg:hidden"
+            className="grid min-h-11 min-w-11 place-items-center rounded-xl text-brand-navy hover:bg-brand-sky focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/25 lg:hidden"
             aria-label="فتح القائمة"
             onClick={() => setDrawerOpen(true)}
           >
@@ -158,7 +158,7 @@ export function AdminShell({
                   type="button"
                   onClick={onRefresh}
                   disabled={refreshing}
-                  className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-brand-border bg-white px-3 text-xs font-extrabold text-brand-navy transition hover:bg-brand-sky disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-brand-border bg-white px-3 text-xs font-extrabold text-brand-navy transition hover:bg-brand-sky disabled:opacity-50"
                   title="تحديث البيانات"
                 >
                   <RefreshIcon spinning={Boolean(refreshing)} />
@@ -168,7 +168,7 @@ export function AdminShell({
               <IdentityChip />
               <a
                 href={LOGOUT_URL}
-                className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-brand-border px-3 text-xs font-extrabold text-red-700 transition hover:border-red-200 hover:bg-red-50"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-brand-border px-3 text-xs font-extrabold text-red-700 transition hover:border-red-200 hover:bg-red-50"
               >
                 <LogOut size={15} aria-hidden="true" />
                 <span className="hidden sm:inline">خروج</span>

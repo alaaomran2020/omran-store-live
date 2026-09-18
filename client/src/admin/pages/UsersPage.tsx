@@ -258,7 +258,7 @@ export default function UsersPage() {
                   setRoleEdit(prev => ({ ...prev, [record.employeeId]: e.target.value }));
                   changeRole(record, e.target.value as EmployeeRole);
                 }}
-                className="h-9 rounded-lg border border-brand-border bg-white px-2 text-xs font-bold"
+                className="min-h-11 rounded-lg border border-brand-border bg-white px-3 text-xs font-bold"
               >
                 {EMPLOYEE_ROLES.filter(candidate => canAssignRole(principal, candidate)).map(candidate => (
                   <option key={candidate} value={candidate}>{ROLE_LABELS_AR[candidate]}</option>

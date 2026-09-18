@@ -74,7 +74,7 @@ export default function WishlistPage() {
                 </div>
               </Link>
               <div className="p-3">
-                <Link href={`/products?focus=${encodeURIComponent(product.id)}`} className="line-clamp-2 block min-h-9 text-xs font-extrabold text-brand-ink hover:text-brand-blue">
+                <Link href={`/products?focus=${encodeURIComponent(product.id)}`} className="line-clamp-2 block min-h-11 text-xs font-extrabold text-brand-ink hover:text-brand-blue">
                   {product.name}
                 </Link>
                 <div className="mt-2 flex items-center justify-between">
@@ -83,7 +83,7 @@ export default function WishlistPage() {
                     type="button"
                     onClick={() => removeFromWishlist(product.id)}
                     aria-label={`إزالة ${product.name} من المفضلة`}
-                    className="grid h-9 w-9 place-items-center rounded-lg text-brand-red hover:bg-red-50"
+                    className="grid min-h-11 min-w-11 place-items-center rounded-xl text-brand-red hover:bg-red-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200"
                   >
                     <Trash2 size={15} />
                   </button>

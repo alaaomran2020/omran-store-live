@@ -46,13 +46,13 @@ export default function BrandHeader() {
 
         <form action="/products" method="get" role="search" className="relative order-3 w-full lg:order-none lg:max-w-sm lg:flex-1">
           <label htmlFor="header-product-search" className="sr-only">ابحث في منتجات عمران تويز</label>
-          <Search size={17} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-muted" aria-hidden="true" />
+          <Search size={17} className="pointer-events-none absolute end-3.5 top-1/2 -translate-y-1/2 text-brand-muted" aria-hidden="true" />
           <input
             id="header-product-search"
             name="search"
             type="search"
             placeholder="ابحث عن لعبة أو قسم…"
-            className="min-h-11 w-full rounded-2xl border border-brand-border bg-[#f7f9fc] py-2.5 pl-4 pr-10 text-sm font-bold text-brand-ink outline-none transition placeholder:text-[#758197] focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-blue/10"
+            className="min-h-11 w-full rounded-2xl border border-brand-border bg-muted py-2.5 pe-10 ps-4 text-sm font-bold text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-blue/10"
           />
         </form>
 
