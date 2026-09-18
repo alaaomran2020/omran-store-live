@@ -21,11 +21,11 @@ export default function HomeHero() {
           </div>
 
           <h1 id="home-hero-title" className="mt-5 max-w-3xl text-4xl font-black leading-[1.18] tracking-tight sm:text-5xl lg:text-6xl">
-            لعب أطفال تختارها بثقة
+            لما تختار عمران تويز… إنت بتختار ثقة
           </h1>
 
           <p className="mt-4 max-w-2xl text-base font-semibold leading-8 text-white/85 sm:text-lg sm:leading-9">
-            عمران تويز بيسهّل عليك الوصول للعبة المناسبة بسرعة، بصور واضحة وبيانات مؤكدة واستفسار مباشر على واتساب.
+            اكتشف لعب الأطفال بسهولة، شوف بيانات واضحة ومؤكدة، واستفسر مباشرة على واتساب — للبيت، ولأصحاب المحلات، وللي بيبيع أونلاين.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -33,7 +33,7 @@ export default function HomeHero() {
               href="#products"
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-brand-navy shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/60 sm:text-base"
             >
-              شوف لعب الأطفال
+              تصفح المنتجات
               <ArrowLeft size={18} aria-hidden="true" />
             </a>
 
