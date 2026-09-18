@@ -1,11 +1,13 @@
 import BrandHeader from "@/components/BrandHeader";
 import HomeHero from "@/components/HomeHero";
+import HomeProductShowcase from "@/components/HomeProductShowcase";
 import PopUpPromo from "@/components/PopUpPromo";
 import SiteFooter from "@/components/SiteFooter";
-import Products from "@/pages/Products";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import HomeCategoryHighlights from "@/components/HomeCategoryHighlights";
 import StoreTrustFeatures from "@/components/StoreTrustFeatures";
+import HomeSupportSections from "@/components/HomeSupportSections";
+import { MAIN_CONTENT_ID } from "@/lib/a11y";
 
 export default function Storefront() {
   return (
@@ -13,14 +15,13 @@ export default function Storefront() {
       <AnnouncementBar />
       <BrandHeader />
       <HomeHero />
-      <HomeCategoryHighlights />
-
-      <main id="products" className="scroll-mt-28">
-        <Products showAnnouncement={false} />
+      <main id={MAIN_CONTENT_ID} tabIndex={-1}>
+        <HomeProductShowcase />
+        <HomeCategoryHighlights />
+        <StoreTrustFeatures />
+        <HomeSupportSections />
+        <PopUpPromo />
       </main>
-
-      <StoreTrustFeatures />
-      <PopUpPromo />
       <SiteFooter />
     </div>
   );
