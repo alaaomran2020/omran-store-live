@@ -99,11 +99,21 @@ function App() {
       <Suspense
         fallback={
           <div
-            className="min-h-screen bg-brand-cream"
+            className="min-h-screen bg-brand-cream px-4 py-6 sm:px-6"
             role="status"
             aria-live="polite"
             aria-label="جاري تحميل الصفحة"
-          />
+          >
+            <div className="container animate-pulse space-y-5 motion-reduce:animate-none">
+              <div className="h-16 rounded-2xl border border-brand-border bg-white" />
+              <div className="h-52 rounded-3xl bg-brand-sky sm:h-64" />
+              <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="aspect-[4/5] rounded-2xl border border-brand-border bg-white" />
+                ))}
+              </div>
+            </div>
+          </div>
         }
       >
         <Router />
