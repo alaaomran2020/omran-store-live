@@ -4,11 +4,11 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Omran Trading Company â€” Brand System v2
- * Modern Playful Retail = 70% clarity/trust + 30% energy/playfulness.
- * Brand equation: Variety Ã— Easy Choice Ã— Trust Ã— Enjoyment.
- * WhatsApp green is reserved exclusively for WhatsApp conversion actions.
- * Banner briefs: see brand/omran-banner-brief.md
+ * شركة عمران التجارية — نظام الهوية البصرية
+ * اتجاه بصري: وضوح وثقة مع لمسة مبهجة.
+ * المعادلة: تنوع × اختيار سهل × ثقة × متعة.
+ * لون واتساب مخصص لإجراءات التواصل عبر واتساب.
+ * مرجع البانرات: brand/omran-banner-brief.md
  */
 @theme {
   /* Core brand
@@ -44,7 +44,7 @@
   --color-whatsapp: #0d8649;
   --color-whatsapp-hover: #0a6e3b;
 
-  /* Ù„ÙˆØ­Ø© Ø§Ù„Ø¥Ø¯Ø§Ø±Ø© â€” preserved operational tokens */
+  /* لوحة الإدارة — متغيرات تشغيلية محفوظة */
   --color-electric: #2e62ff;
   --color-electric-hover: #1f4fe0;
   --color-electric-soft: #9db4ff;
