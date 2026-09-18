@@ -384,8 +384,16 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                 />
               </div>
             )}
+            {sourceError && products.length > 0 ? (
+              <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite">
+                <span>بنعرض النسخة المحفوظة من المنتجات حاليًا لأن التحديث المباشر متعذر.</span>
+                <button type="button" onClick={() => productsQuery.refetch()} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-amber-300 bg-white px-4 text-xs font-extrabold text-amber-900 hover:bg-amber-100">
+                  <RefreshCw size={15} aria-hidden="true" /> حاول التحديث
+                </button>
+              </div>
+            ) : null}
             {productsQuery.isLoading ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }).map((_, index) => <ProductCardSkeleton key={index} />)}</div>
+              <div data-testid="product-grid-loading" className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }).map((_, index) => <ProductCardSkeleton key={index} />)}</div>
             ) : products.length === 0 ? (
               <div className="space-y-8 sm:space-y-10">
                 <div className={`rounded-2xl border p-6 text-center sm:rounded-[2rem] sm:p-10 ${isPopup ? "border-[#e4d3ee] bg-white" : "border-brand-border bg-brand-cream"}`}>
@@ -409,7 +417,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                     <p className="mb-4 text-xs font-bold text-brand-muted" aria-live="polite">
                       عرض {renderedProducts.length} من {visibleProducts.length} منتج
                     </p>
-                    <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                    <div data-testid="product-grid" className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                       {renderedProducts.map(product => <ProductCard key={product.id} product={product} onOpenDetails={handleOpenDetails} />)}
                     </div>
                     {hasMoreProducts && (
