@@ -34,10 +34,10 @@ export default function HomeProductShowcase() {
       <div className="container">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-extrabold text-brand-blue sm:text-sm">Ø§Ø¨Ø¯Ø£ Ù…Ù† Ø§Ù„Ù…Ù†ØªØ¬ Ù†ÙØ³Ù‡</p>
-            <h2 id="featured-products-title" className="mt-1 text-2xl font-black text-brand-navy sm:text-3xl">Ù…Ù†ØªØ¬Ø§Øª Ù…Ù† Ø¹Ù…Ø±Ø§Ù† ØªÙˆÙŠØ²</h2>
+            <p className="text-xs font-black text-[#1558b0] sm:text-sm">Ø§Ø¨Ø¯Ø£ Ù…Ù† Ø§Ù„Ù…Ù†ØªØ¬ Ù†ÙØ³Ù‡</p>
+            <h2 id="featured-products-title" className="mt-1 text-2xl font-black tracking-[-0.025em] text-brand-navy sm:text-3xl">Ù…Ù†ØªØ¬Ø§Øª Ù…Ù† Ø¹Ù…Ø±Ø§Ù† ØªÙˆÙŠØ²</h2>
           </div>
-          <a href="/products#feed" className="hidden min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-black text-brand-blue transition hover:bg-brand-sky sm:inline-flex">
+          <a href="/products#feed" className="hidden min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-sm font-black text-brand-navy shadow-sm ring-1 ring-brand-border transition hover:bg-[#eef6ff] sm:inline-flex">
             Ø¹Ø±Ø¶ ÙƒÙ„ Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª <ArrowLeft size={16} aria-hidden="true" />
           </a>
         </div>
