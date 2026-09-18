@@ -4,29 +4,29 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Omran Trading Company — Brand System v2
+ * Omran Trading Company â€” Brand System v2
  * Modern Playful Retail = 70% clarity/trust + 30% energy/playfulness.
- * Brand equation: Variety × Easy Choice × Trust × Enjoyment.
+ * Brand equation: Variety Ã— Easy Choice Ã— Trust Ã— Enjoyment.
  * WhatsApp green is reserved exclusively for WhatsApp conversion actions.
  * Banner briefs: see brand/omran-banner-brief.md
  */
 @theme {
   /* Core brand
-   * Accessibility note (WCAG 2.2 AA — 1.4.3 Contrast Minimum, text < 18.66px bold):
+   * Accessibility note (WCAG 2.2 AA â€” 1.4.3 Contrast Minimum, text < 18.66px bold):
    * every text token below is verified at >= 4.5:1 against white, brand-cream,
    * brand-sky and its own tinted chip background. See
-   * client/src/accessibility/wcag-aa.test.ts — the gate runs in CI.
+   * client/src/accessibility/wcag-aa.test.ts â€” the gate runs in CI.
    */
   --color-brand-blue: #1769e0;
   --color-brand-blue-hover: #1258bd;
   --color-brand-navy: #123b6d;
-  /* #e53935 measured 4.23:1 on white / 3.86:1 on red-50 → darkened to keep AA. */
+  /* #e53935 measured 4.23:1 on white / 3.86:1 on red-50 â†’ darkened to keep AA. */
   --color-brand-red: #c62828;
   --color-brand-yellow: #ffc83d;
   --color-brand-sky: #eaf4ff;
 
   /* Neutrals */
-  --color-brand-cream: #f7f9fc;
+  --color-brand-cream: #f8f5f0;
   --color-brand-surface: #ffffff;
   --color-brand-ink: #172033;
   --color-brand-muted: #5f6b7a;
@@ -39,12 +39,12 @@
   --color-brand-error: #d92d20;
   --color-brand-info: #2f80ed;
   /* WhatsApp conversion CTAs carry white text, so the green must clear 4.5:1
-   * with #ffffff. #25d366 measured 1.98:1 → replaced by the lightest
+   * with #ffffff. #25d366 measured 1.98:1 â†’ replaced by the lightest
    * WhatsApp-family green that passes (4.64:1). Resting CTA look is preserved. */
   --color-whatsapp: #0d8649;
   --color-whatsapp-hover: #0a6e3b;
 
-  /* لوحة الإدارة — preserved operational tokens */
+  /* Ù„ÙˆØ­Ø© Ø§Ù„Ø¥Ø¯Ø§Ø±Ø© â€” preserved operational tokens */
   --color-electric: #2e62ff;
   --color-electric-hover: #1f4fe0;
   --color-electric-soft: #9db4ff;
@@ -105,7 +105,7 @@
   --chart-4: #123b6d;
   --chart-5: #e53935;
   --radius: 0.75rem;
-  --background: #f7f9fc;
+  --background: #f8f5f0;
   --foreground: #172033;
   --card: #ffffff;
   --card-foreground: #172033;
@@ -137,7 +137,7 @@
   --brand-soft-blue: #eaf4ff;
   --text-primary: #172033;
   --text-secondary: #5f6b7a;
-  --bg-page: #f7f9fc;
+  --bg-page: #f8f5f0;
   --surface: #ffffff;
   --border-default: #e4e9f0;
   --success: #1d9d62;
@@ -155,11 +155,11 @@
   --sidebar-primary: #2f80ed;
   --sidebar-primary-foreground: #ffffff;
   --background: #101728;
-  --foreground: #f7f9fc;
+  --foreground: #f8f5f0;
   --card: #172033;
-  --card-foreground: #f7f9fc;
+  --card-foreground: #f8f5f0;
   --popover: #172033;
-  --popover-foreground: #f7f9fc;
+  --popover-foreground: #f8f5f0;
   --secondary: #1f2b42;
   --secondary-foreground: #eaf4ff;
   --muted: #253047;
@@ -177,7 +177,7 @@
   --chart-4: #ffc83d;
   --chart-5: #e53935;
   --sidebar: #172033;
-  --sidebar-foreground: #f7f9fc;
+  --sidebar-foreground: #f8f5f0;
   --sidebar-accent: #253047;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgb(255 255 255 / 10%);
@@ -207,7 +207,7 @@
 
   :focus-visible {
     /* Solid brand blue = 5.08:1 on white, 4.82:1 on brand-cream, 11.2:1 on navy
-     * (WCAG 2.2 AA — 1.4.11 Non-text Contrast). Element-level ring utilities
+     * (WCAG 2.2 AA â€” 1.4.11 Non-text Contrast). Element-level ring utilities
      * that opt out with `focus-visible:outline-none` must match this strength. */
     outline: 3px solid var(--color-brand-blue);
     outline-offset: 2px;
