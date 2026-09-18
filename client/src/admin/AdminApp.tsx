@@ -106,6 +106,12 @@ function PermissionBlocked({ permission, path }: { permission: Permission; path:
         <p className="mt-4 rounded-xl bg-brand-cream px-3 py-2 text-xs font-bold text-brand-navy">
           {resolved.fullName} — {ROLE_LABELS_AR[resolved.role]}
         </p>
+        <a
+          href="/admin/dashboard"
+          className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-border bg-white px-5 text-sm font-extrabold text-brand-blue hover:border-brand-blue hover:bg-brand-sky"
+        >
+          الرجوع للوحة التحكم
+        </a>
       </div>
     </div>
   );
