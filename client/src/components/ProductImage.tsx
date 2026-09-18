@@ -68,36 +68,47 @@ export function ProductImage({
   if (!src) {
     return (
       <div
-        className={`flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_30%_20%,#d1fae5,transparent_55%),linear-gradient(135deg,#f7f3ec,#ffffff)] ${className}`}
+        className="relative flex h-full w-full items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_30%_20%,#eaf4ff,transparent_55%),linear-gradient(135deg,#f8f5f0,#ffffff)]"
         role="img"
         aria-label={`لا توجد صورة متاحة للمنتج ${product.name}`}
       >
-        <ImageOff size={44} className="text-emerald-800/40" aria-hidden="true" />
+        <ImageOff size={44} className="text-brand-navy/25" aria-hidden="true" />
+        <span className="absolute bottom-3 left-3 rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-black text-brand-navy/45">عمران تويز</span>
       </div>
     );
   }
 
   return (
-    <img
-      key={`${product.id}:${src}`}
-      src={src}
-      srcSet={srcSet}
-      alt={product.name}
-      width={1200}
-      height={1200}
-      loading={priority ? "eager" : "lazy"}
-      fetchPriority={priority ? "high" : "auto"}
-      decoding="async"
-      sizes={sizesHint}
-      referrerPolicy="no-referrer"
-      draggable={false}
-      data-image-attempt={attempt + 1}
-      onLoad={() => setLoaded(true)}
-      onError={() => {
-        setLoaded(false);
-        setAttempt(current => current + 1);
-      }}
-      className={`${className} transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
-    />
+    <div className="relative h-full w-full overflow-hidden bg-brand-cream">
+      {!loaded && (
+        <div className="absolute inset-0 animate-pulse bg-[linear-gradient(110deg,#f8f5f0_20%,#ffffff_42%,#f8f5f0_64%)] bg-[length:200%_100%] motion-reduce:animate-none" aria-hidden="true" />
+      )}
+      <img
+        key={`${product.id}:${src}`}
+        src={src}
+        srcSet={srcSet}
+        alt={product.name}
+        width={1200}
+        height={1200}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
+        decoding="async"
+        sizes={sizesHint}
+        referrerPolicy="no-referrer"
+        draggable={false}
+        data-image-attempt={attempt + 1}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          setLoaded(false);
+          setAttempt(current => current + 1);
+        }}
+        className={`${className} transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+      />
+      {loaded && (
+        <span className="pointer-events-none absolute bottom-2 left-2 rounded-full border border-white/50 bg-white/78 px-2 py-1 text-[9px] font-black tracking-wide text-brand-navy/45 shadow-sm backdrop-blur-sm sm:text-[10px]" aria-hidden="true">
+          Omran Toys
+        </span>
+      )}
+    </div>
   );
 }
