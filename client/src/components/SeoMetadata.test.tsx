@@ -130,7 +130,7 @@ describe("SeoMetadata — metadata الصفحة", () => {
   it("لا يسمح بأكثر من canonical واحد بعد عدة تنقلات", () => {
     const first = render(<SeoMetadata path="/products" title="لعب أطفال | شركة عمران التجارية" description="a" />);
     first.unmount();
-    const second = render(<SeoMetadata path="/popup" title="POP UP – Gifts & Balloons | شركة عمران التجارية" description="b" />);
+    const second = render(<SeoMetadata path="/popup" title="بوب أب – الهدايا والبالونات | شركة عمران التجارية" description="b" />);
     expect(canonicalCount()).toBe(1);
     expect(currentCanonical()).toBe(`${SITE_ORIGIN}/popup`);
     expect(document.head.querySelectorAll('meta[name="description"]').length).toBe(1);
@@ -270,14 +270,14 @@ describe("ProductStructuredData — دورة الحياة (stale state)", () => 
     expect(metaContent("robots", "name")).toBe("noindex,follow");
     expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products`);
 
-    // POP UP معزول تمامًا.
+    // بوب أب معزول تمامًا.
     pageProducts.unmount();
-    const popup = render(<SeoMetadata path="/popup" title="POP UP – Gifts & Balloons | شركة عمران التجارية" description="p" />);
+    const popup = render(<SeoMetadata path="/popup" title="بوب أب – الهدايا والبالونات | شركة عمران التجارية" description="p" />);
     const popupProduct = makeProduct({ id: "POP-X", name: "بالونات معدنية", category: "بالونات", brand: null, sku: null });
     const popupDialog = render(<ProductStructuredData product={popupProduct} catalogPath="/popup" />);
     expect(currentCanonical()).toBe(`${SITE_ORIGIN}/popup?product=POP-X`);
     expect(metaContent("robots", "name")).toBe("index,follow");
-    expect(document.title).toBe(`${popupProduct.name} | POP UP`);
+    expect(document.title).toBe(`${popupProduct.name} | بوب أب`);
 
     popupDialog.unmount();
     popup.unmount();
@@ -293,15 +293,15 @@ describe("ProductStructuredData — دورة الحياة (stale state)", () => 
   });
 });
 
-describe("POP UP isolation", () => {
-  it("منتج POP UP: canonical وعنوان ومسار يتبع POP UP فقط", () => {
+describe("عزل بوب أب", () => {
+  it("منتج بوب أب: canonical وعنوان ومسار يتبع POP UP فقط", () => {
     const product = makeProduct({ id: "POP-X", name: "بالونات معدنية", category: "بالونات" });
     const { unmount } = render(<ProductStructuredData product={product} catalogPath="/popup" />);
 
     expect(currentCanonical()).toBe(`${SITE_ORIGIN}/popup?product=POP-X`);
-    expect(document.title).toBe(`${product.name} | POP UP`);
+    expect(document.title).toBe(`${product.name} | بوب أب`);
     const items = breadcrumbJsonLd().itemListElement as Record<string, unknown>[];
-    expect(items[1].name).toBe("POP UP");
+    expect(items[1].name).toBe("بوب أب");
     expect(items[1].item).toBe(`${SITE_ORIGIN}/popup`);
 
     unmount();
