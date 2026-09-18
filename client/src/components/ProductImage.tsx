@@ -3,25 +3,6 @@ import { toDisplayableImageUrl, fallbackImageUrl, type Product } from "@shared/p
 import { ImageOff } from "lucide-react";
 
 const RAW_PUBLIC_BASE = "https://raw.githubusercontent.com/alaaomran2020/omran-store-live/main/public";
-const RESPONSIVE_WIDTHS = [320, 640, 960] as const;
-
-function responsiveVariant(src: string, width: number): string | null {
-  if (!src.startsWith("/") || src.startsWith("//")) return null;
-  const match = src.match(/^(.*)\.webp$/);
-  if (!match) return null;
-  return `${match[1]}-${width}.webp`;
-}
-
-function responsiveSrcSet(src: string): string | undefined {
-  const variants = RESPONSIVE_WIDTHS
-    .map(width => {
-      const candidate = responsiveVariant(src, width);
-      return candidate ? `${candidate} ${width}w` : null;
-    })
-    .filter((value): value is string => Boolean(value));
-  return variants.length ? variants.join(", ") : undefined;
-}
-
 function repositoryAssetFallback(image: string): string | null {
   return image.startsWith("/") && !image.startsWith("//") ? `${RAW_PUBLIC_BASE}${image}` : null;
 }
@@ -97,7 +78,6 @@ export function ProductImage({
       loading={priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : "auto"}
       decoding="async"
-      srcSet={responsiveSrcSet(src)}
       sizes={sizesHint}
       referrerPolicy="no-referrer"
       draggable={false}
