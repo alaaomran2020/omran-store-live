@@ -105,7 +105,7 @@ function normalizeHeader(value: unknown): string {
   return text(value).toLowerCase().replace(/[\s-]+/g, "_");
 }
 
-function snapshotPayload(): StorefrontProductsPayload {
+export function getInitialProductsSnapshot(): StorefrontProductsPayload {
   return {
     products: FALLBACK_PRODUCTS.map(product => ({
       ...product,
@@ -348,7 +348,7 @@ function normalizeCatalogPayload(payload: unknown): Product[] {
     });
 }
 
-async function fetchLiveCatalog(): Promise<StorefrontProductsPayload> {
+export async function refreshProductsFromLiveCatalog(): Promise<StorefrontProductsPayload> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), CATALOG_TIMEOUT_MS);
   try {
@@ -393,10 +393,10 @@ function mergePopupProducts(liveProducts: Product[]): Product[] {
  */
 export async function fetchProducts(): Promise<StorefrontProductsPayload> {
   try {
-    const live = await fetchLiveCatalog();
+    const live = await refreshProductsFromLiveCatalog();
     if (live.products.length > 0) return { ...live, products: mergePopupProducts(live.products) };
   } catch {
     // Fall through to the bundled production snapshot.
   }
-  return snapshotPayload();
+  return getInitialProductsSnapshot();
 }
