@@ -303,7 +303,7 @@ export function ProductDetailsDialog({
                         </span>
                         <span className="block px-2 py-2">
                           <span className="line-clamp-2 block min-h-8 text-[11px] font-extrabold leading-4 text-brand-ink">{item.name}</span>
-                          <span className="mt-1 block truncate text-[10px] font-bold text-brand-muted" dir="ltr">SKU: {item.sku || item.id}</span>
+                          <span className="mt-1 block truncate text-[10px] font-bold text-brand-muted" >كود المنتج: <bdi>{item.sku || item.id}</bdi></span>
                         </span>
                       </button>
                     ))}
