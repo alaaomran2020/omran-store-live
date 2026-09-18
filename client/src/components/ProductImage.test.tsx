@@ -52,6 +52,13 @@ describe("صور المنتجات والدفاع ضد الصور المكسور�
     ).toBeNull();
   });
 
+  it("يعرض watermark خفيف بعد نجاح تحميل الصورة", () => {
+    render(<ProductImage product={{ ...baseProduct, image: "/products/ok.webp" }} />);
+    const image = screen.getByRole("img", { name: "لعبة اختبار الصورة" });
+    fireEvent.load(image);
+    expect(screen.getByText("Omran Toys")).toBeTruthy();
+  });
+
   it("يعيد محاولة الصورة من البداية عند تغيير المنتج أو الوسائط", () => {
     const { rerender } = render(
       <ProductImage
