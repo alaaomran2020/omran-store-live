@@ -7,14 +7,19 @@ import BrandHeader from "./BrandHeader";
 afterEach(cleanup);
 
 describe("store shell responsive smoke", () => {
-  for (const width of [320, 360, 375, 390, 412, 768, 1280]) {
+  for (const width of [320, 360, 375, 390, 412, 430, 768, 1280]) {
     it(`keeps the full brand identity and primary navigation at ${width}px`, () => {
       Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
       render(<BrandHeader />);
 
       expect(screen.getByText("شركة عمران التجارية")).toBeTruthy();
       expect(screen.getByAltText("لوجو عمران").getAttribute("src")).toBe("/brand/logo.png");
-      expect(screen.getByRole("navigation", { name: "أقسام المتجر" })).toBeTruthy();
+      const search = screen.getByRole("search");
+      const navigation = screen.getByRole("navigation", { name: "أقسام المتجر" });
+      expect(search).toBeTruthy();
+      expect(screen.getByRole("searchbox", { name: "ابحث في منتجات عمران تويز" })).toBeTruthy();
+      expect(navigation).toBeTruthy();
+      expect(search.compareDocumentPosition(navigation) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(screen.queryByText("طلبك")).toBeNull();
       expect(screen.queryByText("مقارنة المنتجات")).toBeNull();
     });
