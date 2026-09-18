@@ -14,7 +14,7 @@ export default function BrandHeader() {
     : null;
   const navClass = (active: boolean, popup = false) => `min-h-11 items-center rounded-xl px-3 transition ${
     active
-      ? popup ? "bg-[#f7effb] text-[#542170]" : "bg-brand-sky text-brand-blue"
+      ? popup ? "bg-[#f7effb] text-[#542170]" : "bg-brand-navy text-white shadow-sm"
       : popup ? "text-[#6b278f] hover:bg-[#f7effb] hover:text-[#542170]" : "text-brand-navy hover:bg-brand-sky hover:text-brand-blue"
   }`;
 
@@ -52,11 +52,11 @@ export default function BrandHeader() {
             name="search"
             type="search"
             placeholder="ابحث عن لعبة أو قسم…"
-            className="min-h-11 w-full rounded-2xl border border-brand-border bg-brand-cream py-2.5 pl-4 pr-10 text-sm font-bold text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-blue/10"
+            className="min-h-11 w-full rounded-2xl border border-brand-border bg-[#f7f9fc] py-2.5 pl-4 pr-10 text-sm font-bold text-brand-ink outline-none transition placeholder:text-[#758197] focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-blue/10"
           />
         </form>
 
-        <nav className="flex w-full shrink-0 items-center justify-between gap-1 border-t border-brand-border/70 pt-2 text-xs font-bold lg:w-auto lg:justify-start lg:border-0 lg:pt-0 lg:text-sm" aria-label="أقسام المتجر">
+        <nav className="flex w-full shrink-0 items-center justify-between gap-1 border-t border-brand-border/70 pt-2 text-xs font-extrabold lg:w-auto lg:justify-start lg:border-0 lg:pt-0 lg:text-sm" aria-label="أقسام المتجر">
           <a
             href="/products"
             className={`inline-flex ${navClass(pathname === "/products")}`}

@@ -23,13 +23,13 @@
   /* #e53935 measured 4.23:1 on white / 3.86:1 on red-50 â†’ darkened to keep AA. */
   --color-brand-red: #c62828;
   --color-brand-yellow: #ffc83d;
-  --color-brand-sky: #eaf4ff;
+  --color-brand-sky: #eef6ff;
 
   /* Neutrals */
-  --color-brand-cream: #f8f5f0;
+  --color-brand-cream: #fbf7f2;
   --color-brand-surface: #ffffff;
-  --color-brand-ink: #172033;
-  --color-brand-muted: #5f6b7a;
+  --color-brand-ink: #10233f;
+  --color-brand-muted: #526176;
   --color-brand-border: #e4e9f0;
   --color-brand-disabled: #a9b2bf;
 
@@ -41,8 +41,8 @@
   /* WhatsApp conversion CTAs carry white text, so the green must clear 4.5:1
    * with #ffffff. #25d366 measured 1.98:1 â†’ replaced by the lightest
    * WhatsApp-family green that passes (4.64:1). Resting CTA look is preserved. */
-  --color-whatsapp: #0d8649;
-  --color-whatsapp-hover: #0a6e3b;
+  --color-whatsapp: #087a43;
+  --color-whatsapp-hover: #066838;
 
   /* Ù„ÙˆØ­Ø© Ø§Ù„Ø¥Ø¯Ø§Ø±Ø© â€” preserved operational tokens */
   --color-electric: #2e62ff;
@@ -99,23 +99,23 @@
   --primary-foreground: #ffffff;
   --sidebar-primary: #1769e0;
   --sidebar-primary-foreground: #ffffff;
-  --chart-1: #eaf4ff;
+  --chart-1: #eef6ff;
   --chart-2: #2f80ed;
   --chart-3: #1769e0;
   --chart-4: #123b6d;
   --chart-5: #e53935;
   --radius: 0.75rem;
-  --background: #f8f5f0;
-  --foreground: #172033;
+  --background: #fbf7f2;
+  --foreground: #10233f;
   --card: #ffffff;
-  --card-foreground: #172033;
+  --card-foreground: #10233f;
   --popover: #ffffff;
-  --popover-foreground: #172033;
-  --secondary: #eaf4ff;
+  --popover-foreground: #10233f;
+  --secondary: #eef6ff;
   --secondary-foreground: #123b6d;
   --muted: #f1f4f8;
-  --muted-foreground: #5f6b7a;
-  --accent: #eaf4ff;
+  --muted-foreground: #526176;
+  --accent: #eef6ff;
   --accent-foreground: #123b6d;
   --destructive: #d92d20;
   --destructive-foreground: #ffffff;
@@ -123,8 +123,8 @@
   --input: #e4e9f0;
   --ring: #1769e0;
   --sidebar: #ffffff;
-  --sidebar-foreground: #172033;
-  --sidebar-accent: #eaf4ff;
+  --sidebar-foreground: #10233f;
+  --sidebar-accent: #eef6ff;
   --sidebar-accent-foreground: #123b6d;
   --sidebar-border: #e4e9f0;
   --sidebar-ring: #1769e0;
@@ -134,10 +134,10 @@
   --brand-primary-dark: #123b6d;
   --brand-accent: #e53935;
   --brand-yellow: #ffc83d;
-  --brand-soft-blue: #eaf4ff;
-  --text-primary: #172033;
-  --text-secondary: #5f6b7a;
-  --bg-page: #f8f5f0;
+  --brand-soft-blue: #eef6ff;
+  --text-primary: #10233f;
+  --text-secondary: #526176;
+  --bg-page: #fbf7f2;
   --surface: #ffffff;
   --border-default: #e4e9f0;
   --success: #1d9d62;
@@ -155,13 +155,13 @@
   --sidebar-primary: #2f80ed;
   --sidebar-primary-foreground: #ffffff;
   --background: #101728;
-  --foreground: #f8f5f0;
-  --card: #172033;
-  --card-foreground: #f8f5f0;
-  --popover: #172033;
-  --popover-foreground: #f8f5f0;
+  --foreground: #fbf7f2;
+  --card: #10233f;
+  --card-foreground: #fbf7f2;
+  --popover: #10233f;
+  --popover-foreground: #fbf7f2;
   --secondary: #1f2b42;
-  --secondary-foreground: #eaf4ff;
+  --secondary-foreground: #eef6ff;
   --muted: #253047;
   --muted-foreground: #b7c0ce;
   --accent: #253047;
@@ -176,8 +176,8 @@
   --chart-3: #1769e0;
   --chart-4: #ffc83d;
   --chart-5: #e53935;
-  --sidebar: #172033;
-  --sidebar-foreground: #f8f5f0;
+  --sidebar: #10233f;
+  --sidebar-foreground: #fbf7f2;
   --sidebar-accent: #253047;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgb(255 255 255 / 10%);
@@ -202,7 +202,10 @@
   body {
     @apply bg-background text-foreground;
     font-family: Cairo, "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
-    line-height: 1.65;
+    line-height: 1.72;
+    font-weight: 600;
+    letter-spacing: -0.008em;
+    text-rendering: optimizeLegibility;
   }
 
   :focus-visible {
