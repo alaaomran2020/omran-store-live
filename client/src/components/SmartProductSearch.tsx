@@ -29,7 +29,7 @@ export function SmartProductSearch({ value, onChange, result, isPopup }: Props) 
       </label>
       <Search
         size={18}
-        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand-muted"
+        className="pointer-events-none absolute end-4 top-1/2 -translate-y-1/2 text-brand-muted"
         aria-hidden="true"
       />
       <input
@@ -55,14 +55,14 @@ export function SmartProductSearch({ value, onChange, result, isPopup }: Props) 
         aria-activedescendant={open && active >= 0 ? `${listboxId}-${active}` : undefined}
         role="combobox"
         data-testid="product-search"
-        className={`min-h-12 w-full rounded-xl border bg-white py-3 pl-11 pr-11 text-base font-semibold text-brand-ink outline-none transition placeholder:text-brand-muted focus:ring-4 sm:rounded-full sm:text-sm ${isPopup ? "border-[#e4d3ee] focus:border-[#8a3aaa] focus:ring-[#8a3aaa]" : "border-brand-border focus:border-brand-blue focus:ring-brand-blue"}`}
+        className={`min-h-12 w-full rounded-xl border bg-white py-3 pe-11 ps-11 text-base font-semibold text-brand-ink outline-none transition placeholder:text-brand-muted focus:ring-4 sm:rounded-full sm:text-sm ${isPopup ? "border-[#e4d3ee] focus:border-[#8a3aaa] focus:ring-[#8a3aaa]" : "border-brand-border focus:border-brand-blue focus:ring-brand-blue"}`}
       />
       {value && (
         <button
           type="button"
           onClick={() => choose("")}
           aria-label="مسح البحث"
-          className="absolute left-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-cream hover:text-brand-navy focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue"
+          className="absolute start-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-brand-muted transition hover:bg-brand-cream hover:text-brand-navy focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue"
         >
           <X size={16} aria-hidden="true" />
         </button>

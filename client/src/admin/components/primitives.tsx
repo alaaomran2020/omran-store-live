@@ -213,14 +213,14 @@ export function SearchField({
       <label htmlFor={id} className="sr-only">
         {label}
       </label>
-      <Search size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted" aria-hidden="true" />
+      <Search size={16} className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-brand-muted" aria-hidden="true" />
       <input
         id={id}
         type="search"
         value={value}
         onChange={event => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-11 w-full rounded-xl border border-brand-border bg-white pr-9 pl-3 text-sm font-semibold text-brand-ink placeholder:font-normal placeholder:text-brand-disabled focus:border-brand-blue focus:outline-none focus:ring-4 focus:ring-brand-blue/15"
+        className="h-11 w-full rounded-xl border border-brand-border bg-white pe-9 ps-3 text-sm font-semibold text-brand-ink placeholder:font-normal placeholder:text-brand-disabled focus:border-brand-blue focus:outline-none focus:ring-4 focus:ring-brand-blue/15"
       />
     </div>
   );
@@ -456,7 +456,7 @@ export function DataTable<T>({
               type="button"
               onClick={() => setPage(p => Math.max(0, p - 1))}
               disabled={safePage === 0}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-navy transition hover:bg-brand-sky disabled:opacity-40"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-navy transition hover:bg-brand-sky disabled:opacity-40"
               aria-label="الصفحة السابقة"
             >
               <ChevronRight size={16} aria-hidden="true" />
@@ -468,7 +468,7 @@ export function DataTable<T>({
               type="button"
               onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))}
               disabled={safePage >= pageCount - 1}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-navy transition hover:bg-brand-sky disabled:opacity-40"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-brand-border bg-white text-brand-navy transition hover:bg-brand-sky disabled:opacity-40"
               aria-label="الصفحة التالية"
             >
               <ChevronLeft size={16} aria-hidden="true" />

@@ -168,7 +168,7 @@ export default function QualityPage() {
                 </div>
                 <Link
                   href={issue.anchor.replace(/^\/admin/, "")}
-                  className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-xs font-extrabold text-brand-blue hover:bg-brand-sky"
+                  className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-xs font-extrabold text-brand-blue hover:bg-brand-sky"
                 >
                   فتح المنتج <ChevronLeft size={14} />
                 </Link>

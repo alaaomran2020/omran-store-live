@@ -50,7 +50,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
       />
       <header className="border-b border-brand-border bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-          <Link href="/" className="flex items-center gap-2 font-black text-brand-ink">
+          <Link href="/" className="flex min-h-11 items-center gap-2 rounded-xl font-black text-brand-ink focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/25">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-blue text-white"><Store size={18} /></span>
             عمران تويز
           </Link>
@@ -64,7 +64,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
                 await logout();
                 navigate("/");
               }}
-              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-brand-border px-3 text-xs font-extrabold text-red-700 hover:bg-red-50"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-brand-border px-3 text-xs font-extrabold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200"
             >
               <LogOut size={15} /> خروج
             </button>

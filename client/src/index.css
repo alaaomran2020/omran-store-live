@@ -4,23 +4,23 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Omran Trading Company â€” Brand System v2
+ * Omran Trading Company — Brand System v2
  * Modern Playful Retail = 70% clarity/trust + 30% energy/playfulness.
- * Brand equation: Variety Ã— Easy Choice Ã— Trust Ã— Enjoyment.
+ * Brand equation: Variety × Easy Choice × Trust × Enjoyment.
  * WhatsApp green is reserved exclusively for WhatsApp conversion actions.
  * Banner briefs: see brand/omran-banner-brief.md
  */
 @theme {
   /* Core brand
-   * Accessibility note (WCAG 2.2 AA â€” 1.4.3 Contrast Minimum, text < 18.66px bold):
+   * Accessibility note (WCAG 2.2 AA — 1.4.3 Contrast Minimum, text < 18.66px bold):
    * every text token below is verified at >= 4.5:1 against white, brand-cream,
    * brand-sky and its own tinted chip background. See
-   * client/src/accessibility/wcag-aa.test.ts â€” the gate runs in CI.
+   * client/src/accessibility/wcag-aa.test.ts — the gate runs in CI.
    */
   --color-brand-blue: #1769e0;
   --color-brand-blue-hover: #1258bd;
   --color-brand-navy: #123b6d;
-  /* #e53935 measured 4.23:1 on white / 3.86:1 on red-50 â†’ darkened to keep AA. */
+  /* #e53935 measured 4.23:1 on white / 3.86:1 on red-50 → darkened to keep AA. */
   --color-brand-red: #c62828;
   --color-brand-yellow: #ffc83d;
   --color-brand-sky: #eef6ff;
@@ -39,12 +39,12 @@
   --color-brand-error: #d92d20;
   --color-brand-info: #2f80ed;
   /* WhatsApp conversion CTAs carry white text, so the green must clear 4.5:1
-   * with #ffffff. #25d366 measured 1.98:1 â†’ replaced by the lightest
+   * with #ffffff. #25d366 measured 1.98:1 → replaced by the lightest
    * WhatsApp-family green that passes (4.64:1). Resting CTA look is preserved. */
   --color-whatsapp: #087a43;
   --color-whatsapp-hover: #066838;
 
-  /* Ù„ÙˆØ­Ø© Ø§Ù„Ø¥Ø¯Ø§Ø±Ø© â€” preserved operational tokens */
+  /* لوحة الإدارة — preserved operational tokens */
   --color-electric: #2e62ff;
   --color-electric-hover: #1f4fe0;
   --color-electric-soft: #9db4ff;
@@ -210,7 +210,7 @@
 
   :focus-visible {
     /* Solid brand blue = 5.08:1 on white, 4.82:1 on brand-cream, 11.2:1 on navy
-     * (WCAG 2.2 AA â€” 1.4.11 Non-text Contrast). Element-level ring utilities
+     * (WCAG 2.2 AA — 1.4.11 Non-text Contrast). Element-level ring utilities
      * that opt out with `focus-visible:outline-none` must match this strength. */
     outline: 3px solid var(--color-brand-blue);
     outline-offset: 2px;
@@ -279,3 +279,34 @@
   from { transform: translateX(0); }
   to { transform: translateX(50%); }
 }
+
+/* OMRAN DARK MODE OVERRIDES — calm retail palette, no external assets. */
+.font-hand-ar {
+  font-family: "Aref Ruqaa", "Noto Naskh Arabic", "Traditional Arabic", "Segoe UI", Tahoma, serif;
+  letter-spacing: 0;
+}
+
+.dark body {
+  background: #0d141e;
+  color: #edf2f7;
+  color-scheme: dark;
+}
+
+.dark .bg-brand-cream { background-color: #0d141e !important; }
+.dark .bg-brand-surface,
+.dark .bg-white { background-color: #141f2d !important; }
+.dark .bg-brand-sky { background-color: #1d2a3b !important; }
+.dark .text-brand-navy,
+.dark .text-brand-ink { color: #edf2f7 !important; }
+.dark .text-brand-muted { color: #aab5c4 !important; }
+.dark .border-brand-border { border-color: #2b394b !important; }
+.dark input,
+.dark select,
+.dark textarea { background-color: #141f2d; color: #edf2f7; }
+.dark input::placeholder,
+.dark textarea::placeholder { color: #8997aa; }
+.dark [data-testid="product-card"] { background-color: #141f2d; border-color: #2b394b; }
+.dark [data-testid="product-card"] a[href*="wa.me"] { color: #fff !important; }
+.dark header { background-color: rgba(20,31,45,.96) !important; }
+.dark .text-brand-blue { color: #79aef0 !important; }
+.dark .bg-brand-yellow.text-brand-navy { color: #123b6d !important; }
