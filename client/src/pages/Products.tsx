@@ -384,7 +384,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                 />
               </div>
             )}
-            {sourceError && products.length > 0 ? (
+            {(sourceError || productsQuery.isError) && products.length > 0 ? (
               <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite">
                 <span>بنعرض النسخة المحفوظة من المنتجات حاليًا لأن التحديث المباشر متعذر.</span>
                 <button type="button" onClick={() => productsQuery.refetch()} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-amber-300 bg-white px-4 text-xs font-extrabold text-amber-900 hover:bg-amber-100">
