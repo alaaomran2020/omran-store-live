@@ -11,7 +11,7 @@ const POPUP_DESCRIPTION = "هدايا وبالونات ومستلزمات حفل
 
 const POPUP_SOCIALS = [
   {
-    label: "Facebook",
+    label: "فيسبوك",
     account: "بوب أب – الهدايا والبالونات",
     href: SOCIAL_EMBED_CONFIG.popupFacebookPageUrl,
     icon: Facebook,
@@ -19,7 +19,7 @@ const POPUP_SOCIALS = [
     iconClass: "bg-[#1877F2]/18 text-[#8fc0ff]",
   },
   {
-    label: "Instagram",
+    label: "إنستجرام",
     account: "@popup.gifts_balloons",
     href: SOCIAL_EMBED_CONFIG.popupInstagramProfileUrl,
     icon: Instagram,
