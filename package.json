@@ -17,7 +17,9 @@
     "seekai:batch": "node automation/seekai/batch-runner.mjs",
     "seekai:review": "node automation/seekai/review-bundle.mjs",
     "deploy": "pnpm build && wrangler pages deploy dist/public --project-name=omrantoys-live-app --branch=main",
-    "egypt:verify:first-sku": "node scripts/egypt-system/verify-first-sku.mjs"
+    "egypt:verify:first-sku": "node scripts/egypt-system/verify-first-sku.mjs",
+    "egypt:sql:first-sku": "node scripts/egypt-system/verified-payload-to-sql.mjs",
+    "egypt:accept:first-sku": "node scripts/egypt-system/assert-admin-inventory.mjs"
   },
   "dependencies": {},
   "devDependencies": {

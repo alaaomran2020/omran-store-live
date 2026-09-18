@@ -54,3 +54,22 @@ For this reason the bridge remains fail-closed. A row may be marked `VERIFIED` o
 6. a non-zero `qty`.
 
 Until those exact identifiers are obtained from the live Egypt System database/export, the movement must not alter canonical inventory.
+## Final Acceptance Gate — First Real SKU
+
+The first canonical candidate is `POP-PDF-0316098ECE` / `سبورة بروجيكتور`.
+
+Production E2E acceptance requires all three commands to pass on live exports:
+
+1. `pnpm egypt:verify:first-sku -- <export.csv> <verified.json>`
+   - exact business match only,
+   - requires Header_Id, Detail_Id, Item_Id, Item_Package_Id, Store_Id,
+   - produces `lineage_status=VERIFIED` only for `TRANS_DETAILS_QTY`.
+2. `pnpm egypt:sql:first-sku -- <verified.json> <stage.sql>`
+   - generates a single fail-closed staging INSERT,
+   - refuses unverified or non-Trans_Details quantity sources,
+   - never executes SQL itself.
+3. `pnpm egypt:accept:first-sku -- <verified.json> <admin-inventory.json>`
+   - confirms the same canonical product appears in the Admin inventory contract,
+   - refuses missing/invalid/insufficient on-hand quantity.
+
+The system must not be declared 100% End-to-End until these three gates pass against a current Egypt System export and the resulting live Admin inventory response.
