@@ -3,7 +3,6 @@ import { toDisplayableImageUrl, fallbackImageUrl, type Product } from "@shared/p
 import { ImageOff } from "lucide-react";
 
 const RAW_PUBLIC_BASE = "https://raw.githubusercontent.com/alaaomran2020/omran-store-live/main/public";
-
 function repositoryAssetFallback(image: string): string | null {
   return image.startsWith("/") && !image.startsWith("//") ? `${RAW_PUBLIC_BASE}${image}` : null;
 }
