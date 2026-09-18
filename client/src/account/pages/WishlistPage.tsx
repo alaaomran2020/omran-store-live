@@ -17,6 +17,7 @@ export default function WishlistPage() {
   const [ids, setIds] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     const sync = () => setIds(getWishlistIds());
@@ -27,10 +28,14 @@ export default function WishlistPage() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setLoadError(false);
     fetchProducts()
       .then(payload => {
         if (cancelled) return;
         setProducts(payload.products);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError(true);
       })
       .finally(() => !cancelled && setLoading(false));
     return () => {
@@ -46,6 +51,23 @@ export default function WishlistPage() {
       <div dir="rtl">
         <h1 className="mb-4 text-xl font-black text-brand-ink">المفضلة</h1>
         <LoadingState label="جاري تحميل منتجاتك المفضلة…" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div dir="rtl">
+        <h1 className="mb-4 flex items-center gap-2 text-xl font-black text-brand-ink"><Heart size={20} className="text-brand-red" /> المفضلة</h1>
+        <Card className="p-5">
+          <EmptyState
+            icon={<Heart size={22} />}
+            title="حصلت مشكلة أثناء تحميل المفضلة"
+            description="منتجاتك المحفوظة مازالت على الجهاز، لكن تعذر تحميل الكتالوج حاليًا."
+            tone="warning"
+            action={<button type="button" onClick={() => window.location.reload()} className="min-h-11 rounded-xl bg-brand-blue px-4 text-sm font-extrabold text-white">حاول تاني</button>}
+          />
+        </Card>
       </div>
     );
   }
