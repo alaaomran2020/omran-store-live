@@ -57,11 +57,14 @@ describe("ProductCard — روابط crawlable", () => {
     const detailsLink = screen.getByRole("link", { name: "عرض تفاصيل مطبخ ألعاب للأطفال" });
     expect(detailsLink.getAttribute("href")).toBe("/products?product=OMR-CARD-1");
 
+    expect(screen.getByText(/كود المنتج:/)).toBeTruthy();
+    expect(screen.queryByText(/SKU:/)).toBeNull();
+
     const infoLink = screen.getByRole("link", { name: "التفاصيل" });
     expect(infoLink.getAttribute("href")).toBe("/products?product=OMR-CARD-1");
   });
 
-  it("منتج POP UP يشير إلى /popup ولا يتسرب إلى /products", () => {
+  it("منتج بوب أب يشير إلى /popup ولا يتسرب إلى /products", () => {
     const product = makeProduct({ id: "POP-C1", category: "بالونات", name: "بالونات معدنية" });
     render(<ProductCard product={product} onOpenDetails={vi.fn()} />);
 
