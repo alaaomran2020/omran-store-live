@@ -7,7 +7,7 @@ export default function BrandHeader() {
   const isPopup = pathname.startsWith("/popup");
   const number = whatsappNumber();
   const whatsappMessage = isPopup
-    ? "مرحبًا، أريد الاستفسار عن منتجات POP UP للهدايا والبالونات."
+    ? "مرحبًا، أريد الاستفسار عن منتجات بوب أب للهدايا والبالونات."
     : "مرحبًا، أريد الاستفسار عن منتجات عمران تويز.";
   const whatsappUrl = number
     ? `https://wa.me/${number}?text=${encodeURIComponent(whatsappMessage)}`
@@ -65,13 +65,13 @@ export default function BrandHeader() {
             لعب الأطفال
           </a>
           <a href="/#categories" className={`hidden xl:inline-flex ${navClass(false)}`}>الأقسام</a>
-          <a href="/#b2b" className={`hidden xl:inline-flex ${navClass(false)}`}>الجملة B2B</a>
+          <a href="/#b2b" className={`hidden xl:inline-flex ${navClass(false)}`}>الجملة</a>
           <a
             href="/popup"
             className={`inline-flex ${navClass(isPopup, true)} font-black`}
             aria-current={isPopup ? "page" : undefined}
           >
-            POP UP
+            بوب أب
           </a>
           <a href="/#branches" className={`hidden xl:inline-flex ${navClass(false)}`}>الفروع</a>
           {whatsappUrl && (
