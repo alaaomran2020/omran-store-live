@@ -187,7 +187,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
      clean URL = indexable، بحث/فلتر/فرز = noindex,follow،
      ?product= غير موجود أو لكتالوج آخر = noindex,follow (soft-404).
      يُقرأ من URL الحقيقي ليبقى صحيحاً مع back/forward. */
-  const catalogLoaded = productsQuery.isSuccess;
+  const catalogLoaded = productsQuery.isFetched;
   useEffect(() => {
     const urlParams: Record<string, string | null> = Object.fromEntries(
       Array.from(new URLSearchParams(window.location.search).entries()).map(([key, value]) => [key, value] as [string, string | null])

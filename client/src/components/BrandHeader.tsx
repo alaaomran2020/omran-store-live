@@ -26,10 +26,10 @@ export default function BrandHeader() {
         <a href="/" className="group flex min-w-0 items-center gap-3 sm:gap-4" aria-label="عمران تويز - الصفحة الرئيسية">
           <span className="relative flex h-13 w-13 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-brand-border bg-white shadow-md ring-1 ring-black/[0.02] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg sm:h-[68px] sm:w-[68px]">
             <img
-              src="/brand/logo.png"
+              src="/brand/logo-96.webp"
               alt="لوجو عمران"
-              width="512"
-              height="512"
+              width="96"
+              height="96"
               className="h-full w-full object-contain p-1.5"
               loading="eager"
               decoding="async"

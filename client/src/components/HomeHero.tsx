@@ -43,7 +43,9 @@ export default function HomeHero() {
 
         <figure className="overflow-hidden rounded-[2rem] border border-brand-border bg-brand-surface shadow-[0_20px_50px_rgba(18,59,109,.12)]">
           <img
-            src="/categories/category-cars.webp"
+            src="/categories/category-cars-640.webp"
+            srcSet="/categories/category-cars-320.webp 320w, /categories/category-cars-640.webp 640w, /categories/category-cars.webp 720w"
+            sizes="(max-width: 1023px) 100vw, 55vw"
             alt="تشكيلة لعب أطفال من عمران تويز"
             width="900"
             height="650"
