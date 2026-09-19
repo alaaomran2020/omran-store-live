@@ -154,7 +154,6 @@ function FooterCompanyInfo() {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-whatsapp px-4 py-2.5 text-sm font-black text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-whatsapp-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-whatsapp/25"
-            aria-label="تواصل مع شركة عمران التجارية عبر واتساب"
           >
             <MessageCircle size={18} aria-hidden="true" />
             تواصل عبر واتساب
@@ -186,7 +185,6 @@ function FooterSocial({ socialBrand }: { socialBrand: "omran" | "popup" }) {
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`افتح حساب ${label} الرسمي لـ ${brandLabel}`}
             className={`group relative flex min-h-14 items-center justify-between gap-3 overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-l ${accent} px-3.5 py-3 text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-white/30 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20`}
           >
             <span className="absolute inset-0 bg-white/[0.025] opacity-0 transition group-hover:opacity-100" aria-hidden="true" />
@@ -223,7 +221,7 @@ function FooterBottom() {
         </p>
         <a
           href="/"
-          className="inline-flex min-h-10 items-center rounded-lg px-2 text-xs font-bold text-white/45 transition hover:bg-white/[0.05] hover:text-white/75 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/10"
+          className="inline-flex min-h-10 items-center rounded-lg px-2 text-xs font-bold text-white/55 transition hover:bg-white/[0.05] hover:text-white/75 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/10"
         >
           omrantoys.store · شركة عمران التجارية
         </a>

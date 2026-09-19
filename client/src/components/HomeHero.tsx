@@ -13,7 +13,7 @@ export default function HomeHero() {
       <div className="container grid gap-7 py-8 sm:py-12 lg:grid-cols-[.9fr_1.1fr] lg:items-center lg:gap-12 lg:py-16">
         <div className="max-w-2xl">
           <p className="text-sm font-black text-brand-blue">عمران تويز · شركة عمران التجارية</p>
-          <h1 id="home-hero-title" className="font-hand-ar mt-3 text-[2.7rem] font-bold leading-[1.14] text-brand-navy sm:text-5xl lg:text-6xl">
+          <h1 id="home-hero-title" className="mt-3 text-[2.7rem] font-bold leading-[1.14] text-brand-navy sm:text-5xl lg:text-6xl">
             لعب تفرّحهم.
             <span className="block text-brand-blue">واختيار أسهل ليك.</span>
           </h1>
