@@ -13,7 +13,7 @@ describe("store shell responsive smoke", () => {
       render(<BrandHeader />);
 
       expect(screen.getByText("شركة عمران التجارية")).toBeTruthy();
-      expect(screen.getByAltText("لوجو عمران").getAttribute("src")).toBe("/brand/logo.png");
+      expect(screen.getByAltText("لوجو عمران").getAttribute("src")).toBe("/brand/logo-96.webp");
       expect(screen.getByRole("navigation", { name: "أقسام المتجر" })).toBeTruthy();
       expect(screen.queryByText("طلبك")).toBeNull();
       expect(screen.queryByText("مقارنة المنتجات")).toBeNull();
