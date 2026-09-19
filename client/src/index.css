@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -203,13 +204,29 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: Cairo, "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+    font-family: Alexandria, "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
     line-height: 1.72;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.008em;
     text-rendering: optimizeLegibility;
   }
 
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  button,
+  [role="button"] {
+    font-family: Alexandria, "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+    font-weight: 700;
+  }
+
+  [data-brand-wordmark] {
+    font-family: Alexandria, "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+    font-weight: 700;
+  }
   :focus-visible {
     /* Solid brand blue = 5.08:1 on white, 4.82:1 on brand-cream, 11.2:1 on navy
      * (WCAG 2.2 AA — 1.4.11 Non-text Contrast). Element-level ring utilities
@@ -284,7 +301,8 @@
 
 /* OMRAN DARK MODE OVERRIDES — calm retail palette, no external assets. */
 .font-hand-ar {
-  font-family: "Aref Ruqaa", "Noto Naskh Arabic", "Traditional Arabic", "Segoe UI", Tahoma, serif;
+  font-family: Alexandria, "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+  font-weight: 700;
   letter-spacing: 0;
 }
 

@@ -37,7 +37,7 @@ export default function BrandHeader() {
           </span>
 
           <span className="min-w-0">
-            <span className="font-hand-ar block whitespace-nowrap text-2xl font-bold leading-tight text-brand-navy sm:text-4xl">
+            <span data-brand-wordmark className="block whitespace-nowrap text-2xl font-bold leading-tight text-brand-navy sm:text-4xl">
               عمران تويز
             </span>
             <span className="mt-1 block text-[11px] font-bold tracking-wide text-brand-muted sm:text-sm">

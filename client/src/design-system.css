@@ -107,8 +107,8 @@
   --color-border-strong: #cfd6df;
   --color-focus: var(--color-brand-blue);
 
-  /* Typography. Arabic-first, Cairo remains canonical. */
-  --font-family-ui: Cairo, "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+  /* Typography. Alexandria is the canonical Arabic-first storefront face. */
+  --font-family-ui: Alexandria, "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
   --font-size-display: 2.5rem;
   --line-height-display: 3rem;
   --font-size-h1: 2rem;
