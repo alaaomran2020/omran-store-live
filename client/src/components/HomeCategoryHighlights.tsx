@@ -1,13 +1,20 @@
 import { ArrowLeft } from "lucide-react";
 
-const categories = [
+type HomeCategory = {
+  name: string;
+  query: string;
+  image: string;
+  comingSoon?: boolean;
+};
+
+const categories: readonly HomeCategory[] = [
   { name: "عربيات", query: "عربيات", image: "/categories/category-cars-approved.png" },
   { name: "عرايس", query: "عرايس", image: "/categories/category-dolls-approved.png" },
   { name: "أطقم المهن والتركيب", query: "مطبخ دكتور نجار تنظيف", image: "/categories/category-role-play-approved.png" },
   { name: "رفايع لعب أطفال", query: "رفايع", image: "/categories/category-misc-toys-approved.png" },
   { name: "الكور", query: "كور", image: "/categories/category-balls-approved.png" },
   { name: "فوانيس رمضان", query: "فوانيس", image: "/categories/category-ramadan-approved.png", comingSoon: true },
-] as const;
+];
 
 export default function HomeCategoryHighlights() {
   return (
