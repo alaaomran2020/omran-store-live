@@ -90,6 +90,8 @@ export default function BrandHeader() {
               href={whatsappUrl}
               target="_blank"
               rel="noreferrer"
+              aria-label="تواصل مع عمران تويز عبر واتساب"
+              title="واتساب"
               onClick={() =>
                 trackEvent("whatsapp_click", {
                   cta_location: "brand_header",
