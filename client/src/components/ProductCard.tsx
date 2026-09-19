@@ -53,7 +53,7 @@ export function ProductCard({
             event.preventDefault();
             onOpenDetails(product);
           }}
-          className={`relative block w-full overflow-hidden bg-brand-cream text-right focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${isPopup ? "aspect-[4/3]" : "aspect-square"}`}
+          className={`relative block w-full overflow-hidden bg-brand-cream text-right focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue ${isPopup ? "aspect-[4/3]" : "aspect-[4/5]"}`}
           aria-label={`عرض تفاصيل ${product.name}`}
         >
           <ProductImage
@@ -75,9 +75,9 @@ export function ProductCard({
         </a>
       </div>
 
-      <div className={`flex flex-1 flex-col gap-2.5 ${isPopup ? "p-3 sm:p-4" : "p-3 sm:gap-3 sm:p-5"}`}>
-        <h3 className="line-clamp-2 min-h-[2.75rem] text-sm font-extrabold leading-[1.4rem] text-brand-ink sm:min-h-0 sm:text-lg sm:leading-7">{product.name}</h3>
-        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold leading-5 sm:text-xs">
+      <div className={`flex flex-1 flex-col gap-2 ${isPopup ? "p-3 sm:p-4" : "p-2.5 sm:p-4"}`}>
+        <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-extrabold leading-5 text-brand-ink sm:min-h-0 sm:text-base sm:leading-6">{product.name}</h3>
+        <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px] font-bold leading-4 sm:text-[11px]">
           <span className="text-brand-muted">
             <span className="sr-only">كود المنتج: {product.sku || product.id}</span>
             <span dir="ltr" aria-hidden="true">SKU: {product.sku || product.id}</span>
@@ -87,14 +87,14 @@ export function ProductCard({
           </span>
         </div>
 
-        <div className="mt-auto grid grid-cols-1 gap-2 pt-1 sm:pt-2">
+        <div className="mt-auto grid grid-cols-1 gap-1.5 pt-1">
           {waUrl && (
             <a href={waUrl} target="_blank" rel="noreferrer" onClick={handleWhatsAppClick} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-whatsapp px-2.5 py-2.5 text-[12px] font-black leading-4 text-white transition active:scale-[0.98] hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp-hover motion-reduce:transition-none motion-reduce:active:scale-100 max-[359px]:gap-1 max-[359px]:px-1.5 max-[359px]:text-[11px] sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm">
               <MessageCircle size={16} aria-hidden="true" className="shrink-0" />
               <span>للاستفسار والكميات</span>
             </a>
           )}
-          <a href={productHref} onClick={event => { event.preventDefault(); onOpenDetails(product); }} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-navy/20 bg-brand-sky px-2.5 py-2.5 text-[12px] font-black text-brand-navy transition active:scale-[0.98] hover:border-brand-navy/35 hover:bg-brand-blue/10 focus-visible:ring-4 focus-visible:ring-brand-blue motion-reduce:transition-none motion-reduce:active:scale-100 sm:gap-2 sm:px-4 sm:text-sm">
+          <a href={productHref} onClick={event => { event.preventDefault(); onOpenDetails(product); }} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-black text-brand-blue transition active:scale-[0.98] hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue motion-reduce:transition-none motion-reduce:active:scale-100 sm:gap-2 sm:px-4 sm:text-sm">
             التفاصيل <Info size={14} aria-hidden="true" />
           </a>
         </div>
