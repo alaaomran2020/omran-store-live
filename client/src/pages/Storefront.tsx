@@ -5,6 +5,7 @@ import PopUpPromo from "@/components/PopUpPromo";
 import SiteFooter from "@/components/SiteFooter";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import HomeCategoryHighlights from "@/components/HomeCategoryHighlights";
+import HomeAgeBrowse from "@/components/HomeAgeBrowse";
 import StoreTrustFeatures from "@/components/StoreTrustFeatures";
 import HomeSupportSections from "@/components/HomeSupportSections";
 import { MAIN_CONTENT_ID } from "@/lib/a11y";
@@ -16,8 +17,9 @@ export default function Storefront() {
       <BrandHeader />
       <HomeHero />
       <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-        <HomeProductShowcase />
         <HomeCategoryHighlights />
+        <HomeAgeBrowse />
+        <HomeProductShowcase />
         <StoreTrustFeatures />
         <HomeSupportSections />
         <PopUpPromo />

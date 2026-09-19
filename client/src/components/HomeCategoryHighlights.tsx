@@ -31,11 +31,11 @@ export default function HomeCategoryHighlights() {
               key={name}
               href={`/products?search=${encodeURIComponent(query)}#feed`}
               aria-label={`تصفح ${name}`}
-              className="omran-pressable group relative min-h-44 overflow-hidden rounded-[1.6rem] border border-brand-border bg-white shadow-[0_10px_28px_rgba(18,59,109,.07)] transition duration-300 hover:-translate-y-1 hover:border-brand-blue/25 hover:shadow-[0_18px_38px_rgba(18,59,109,.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
+              className="omran-pressable group relative min-h-56 overflow-hidden rounded-[1.6rem] border border-brand-border bg-white shadow-[0_10px_28px_rgba(18,59,109,.07)] transition duration-300 hover:-translate-y-1 hover:border-brand-blue/25 hover:shadow-[0_18px_38px_rgba(18,59,109,.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
             >
               <span className={`absolute inset-0 bg-gradient-to-b ${tone}`} aria-hidden="true" />
-              <img src={image} alt="" width="360" height="300" loading="lazy" decoding="async" className="absolute inset-x-0 top-0 h-28 w-full object-cover opacity-95 transition duration-500 group-hover:scale-105" />
-              <span className="absolute inset-x-0 bottom-0 flex min-h-20 items-center justify-between gap-2 bg-white/92 px-3 py-3 backdrop-blur-sm">
+              <img src={image} alt="" width="360" height="300" loading="lazy" decoding="async" className="absolute inset-x-0 top-0 h-40 w-full object-cover opacity-100 transition duration-500 group-hover:scale-105" />
+              <span className="absolute inset-x-0 bottom-0 flex min-h-16 items-center justify-between gap-2 bg-white/94 px-3 py-3 backdrop-blur-sm">
                 <span className="text-[15px] font-black leading-6 text-brand-navy">{name}</span>
                 <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-sky text-brand-blue transition group-hover:-translate-x-0.5 group-hover:bg-brand-blue group-hover:text-white" aria-hidden="true">
                   <ArrowLeft size={15} />

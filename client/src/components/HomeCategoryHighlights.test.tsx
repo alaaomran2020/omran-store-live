@@ -25,11 +25,11 @@ describe("تصنيفات الصفحة الرئيسية", () => {
     expect(screen.getByText("فوانيس رمضان")).toBeTruthy();
   });
 
-  it("تستخدم صور WebP حيث توجد أصول موثقة وتوفر جرافيك بديل لباقي الأقسام", () => {
+  it("تعرض صورة WebP في كل كارت قسم", () => {
     const { container } = render(<HomeCategoryHighlights />);
     const images = Array.from(container.querySelectorAll("img"));
 
-    expect(images.length).toBeGreaterThanOrEqual(3);
+    expect(images).toHaveLength(8);
     expect(images.every(image => image.getAttribute("src")?.endsWith(".webp"))).toBe(true);
     expect(images.every(image => image.getAttribute("loading") === "lazy")).toBe(true);
     expect(images.every(image => image.getAttribute("decoding") === "async")).toBe(true);
