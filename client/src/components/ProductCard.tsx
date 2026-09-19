@@ -59,7 +59,7 @@ export function ProductCard({
           <ProductImage
             product={product}
             className={`h-full w-full transition duration-300 motion-reduce:transition-none sm:group-hover:scale-[1.02] motion-reduce:sm:group-hover:scale-100 ${isPopup ? "object-contain p-2 sm:p-3" : "object-cover"}`}
-            sizesHint="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
+            sizesHint="(max-width: 639px) calc((100vw - 2.5rem) / 2), (max-width: 1023px) calc((100vw - 3rem) / 2), 25vw"
           />
           {product.category && (
             <span className="absolute end-2 top-2 inline-flex max-w-[70%] truncate rounded-full bg-brand-surface/95 px-2 py-1 text-[10px] font-bold text-brand-navy shadow-sm ring-1 ring-brand-border sm:end-3 sm:top-3 sm:px-3 sm:text-[11px]">
