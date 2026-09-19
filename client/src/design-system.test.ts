@@ -8,8 +8,8 @@ const button = readFileSync(new URL("./components/ui/button.tsx", import.meta.ur
 const input = readFileSync(new URL("./components/ui/input.tsx", import.meta.url), "utf8");
 
 describe("Omran Toys design system 2026.09", () => {
-  it("is loaded by the SPA entrypoint", () => {
-    expect(main).toContain('import "./design-system.css"');
+  it("keeps the legacy design-system layer out of the critical SPA entrypoint", () => {
+    expect(main).not.toContain('import "./design-system.css"');
   });
 
   it("keeps the approved current production anchors", () => {

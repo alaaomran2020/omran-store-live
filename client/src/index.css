@@ -147,6 +147,10 @@
   --radius-card: 16px;
   --radius-pill: 999px;
   --shadow-card: 0 4px 18px rgba(23, 32, 51, 0.08);
+  --radius-lg-system: 16px;
+  --elevation-1: 0 1px 3px rgba(23, 32, 51, 0.06);
+  --elevation-2: 0 4px 18px rgba(23, 32, 51, 0.08);
+  --elevation-3: 0 12px 32px rgba(23, 32, 51, 0.12);
 }
 
 .dark {
@@ -308,3 +312,24 @@
 .dark header { background-color: rgba(20,31,45,.96) !important; }
 .dark .text-brand-blue { color: #79aef0 !important; }
 .dark .bg-brand-yellow.text-brand-navy { color: #123b6d !important; }
+
+/* Storefront visual polish kept in the critical stylesheet. */
+:root { --omran-ink-strong: #0f2f58; }
+body { font-weight: 600; }
+h1, h2, h3, h4, strong, b { font-weight: 900; letter-spacing: -0.018em; }
+button, a[class*="rounded"], input, select, summary { font-weight: 700; }
+[data-omran-hero] { position: relative; isolation: isolate; overflow: hidden; }
+.omran-float { animation: omran-float 4.6s ease-in-out infinite; }
+.omran-float-delayed { animation: omran-float 5.4s ease-in-out .7s infinite; }
+.omran-pressable { transition: transform 180ms cubic-bezier(.2,0,0,1), box-shadow 220ms cubic-bezier(.2,0,0,1), background-color 180ms ease, border-color 180ms ease; }
+.omran-pressable:hover { transform: translateY(-2px); }
+.omran-pressable:active { transform: translateY(0) scale(.985); }
+[data-testid="product-card"] { border-radius: 22px; border-color: rgba(18,59,109,.11); box-shadow: 0 10px 28px rgba(18,59,109,.08); overflow: hidden; }
+[data-testid="product-card"]:hover { border-color: rgba(23,105,224,.26); box-shadow: 0 18px 42px rgba(18,59,109,.14); }
+[data-testid="product-card"] h3 { font-weight: 900; color: var(--omran-ink-strong); }
+[data-testid="product-card"] a[href*="wa.me"] { background: #087a43; color: #fff; box-shadow: 0 8px 18px rgba(8,122,67,.2); }
+[data-testid="product-card"] a[href*="wa.me"]:hover { background: #066838; }
+header nav a { font-weight: 800; }
+header form[role="search"] input { box-shadow: inset 0 0 0 1px rgba(18,59,109,.03); }
+@keyframes omran-float { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-7px) rotate(1deg); } }
+@media (prefers-reduced-motion: reduce) { .omran-float, .omran-float-delayed, .omran-pressable { animation: none !important; transition: none !important; transform: none !important; } }
