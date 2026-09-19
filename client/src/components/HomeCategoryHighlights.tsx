@@ -1,14 +1,14 @@
-import { ArrowLeft, Blocks, CarFront, Gamepad2, Heart, MoonStar, Palette, Sparkles } from "lucide-react";
+import { ArrowLeft, MoonStar } from "lucide-react";
 
 const categories = [
-  { name: "عربيات", query: "عربيات", icon: CarFront, image: "/categories/category-cars.webp", tone: "from-brand-sky to-brand-cream" },
-  { name: "عرايس", query: "عرايس", icon: Heart, image: "/categories/category-dolls.webp", tone: "from-brand-sky to-brand-cream" },
-  { name: "مطابخ", query: "مطابخ", icon: Blocks, image: "/categories/category-building.webp", tone: "from-brand-sky to-brand-cream" },
-  { name: "أدوات دكتور", query: "دكتور", icon: Heart, image: null, tone: "from-brand-sky to-brand-cream" },
-  { name: "أدوات نجار", query: "نجار", icon: Blocks, image: null, tone: "from-brand-sky to-brand-cream" },
-  { name: "أدوات تنظيف", query: "تنظيف", icon: Sparkles, image: null, tone: "from-brand-sky to-brand-cream" },
-  { name: "رفايع لعب أطفال", query: "رفايع", icon: Gamepad2, image: "/categories/category-family-games.webp", tone: "from-brand-sky to-brand-cream" },
-  { name: "كور", query: "كور", icon: Palette, image: null, tone: "from-brand-sky to-brand-cream" },
+  { name: "عربيات", query: "عربيات", image: "/categories/category-cars.webp", tone: "from-brand-sky to-brand-cream" },
+  { name: "عرايس", query: "عرايس", image: "/categories/category-dolls.webp", tone: "from-brand-sky to-brand-cream" },
+  { name: "مطابخ", query: "مطابخ", image: "/categories/category-building.webp", tone: "from-brand-sky to-brand-cream" },
+  { name: "أدوات دكتور", query: "دكتور", image: "/categories/category-educational.webp", tone: "from-brand-sky to-brand-cream" },
+  { name: "أدوات نجار", query: "نجار", image: "/products/processed/generated/product-omr-raw-017-main.webp", tone: "from-brand-sky to-brand-cream" },
+  { name: "أدوات تنظيف", query: "تنظيف", image: "/categories/category-arts.webp", tone: "from-brand-sky to-brand-cream" },
+  { name: "رفايع لعب أطفال", query: "رفايع", image: "/categories/category-family-games.webp", tone: "from-brand-sky to-brand-cream" },
+  { name: "كور", query: "كور", image: "/categories/category-family-games.webp", tone: "from-brand-sky to-brand-cream" },
 ] as const;
 
 export default function HomeCategoryHighlights() {
@@ -26,7 +26,7 @@ export default function HomeCategoryHighlights() {
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
-          {categories.map(({ name, query, icon: Icon, image, tone }) => (
+          {categories.map(({ name, query, image, tone }) => (
             <a
               key={name}
               href={`/products?search=${encodeURIComponent(query)}#feed`}
@@ -34,16 +34,7 @@ export default function HomeCategoryHighlights() {
               className="omran-pressable group relative min-h-44 overflow-hidden rounded-[1.6rem] border border-brand-border bg-white shadow-[0_10px_28px_rgba(18,59,109,.07)] transition duration-300 hover:-translate-y-1 hover:border-brand-blue/25 hover:shadow-[0_18px_38px_rgba(18,59,109,.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
             >
               <span className={`absolute inset-0 bg-gradient-to-b ${tone}`} aria-hidden="true" />
-              {image ? (
-                <img src={image} alt="" width="360" height="300" loading="lazy" decoding="async" className="absolute inset-x-0 top-0 h-28 w-full object-cover opacity-95 transition duration-500 group-hover:scale-105" />
-              ) : (
-                <span className="absolute inset-x-0 top-0 flex h-28 items-center justify-center" aria-hidden="true">
-                  <span className="absolute h-16 w-16 rounded-full bg-white/60" />
-                  <span className="absolute -translate-x-7 translate-y-3 h-9 w-9 rotate-12 rounded-2xl bg-white/45" />
-                  <span className="absolute translate-x-8 -translate-y-2 h-8 w-8 rounded-full border-4 border-white/60" />
-                  <Icon size={42} strokeWidth={1.8} className="relative text-brand-blue" />
-                </span>
-              )}
+              <img src={image} alt="" width="360" height="300" loading="lazy" decoding="async" className="absolute inset-x-0 top-0 h-28 w-full object-cover opacity-95 transition duration-500 group-hover:scale-105" />
               <span className="absolute inset-x-0 bottom-0 flex min-h-20 items-center justify-between gap-2 bg-white/92 px-3 py-3 backdrop-blur-sm">
                 <span className="text-[15px] font-black leading-6 text-brand-navy">{name}</span>
                 <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-sky text-brand-blue transition group-hover:-translate-x-0.5 group-hover:bg-brand-blue group-hover:text-white" aria-hidden="true">
