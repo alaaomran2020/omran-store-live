@@ -197,6 +197,43 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
+      - name: Verify production sitemap is real XML
+        shell: bash
+        run: |
+          set -euo pipefail
+          sitemap_url="https://omrantoys.store/sitemap.xml"
+          body="$(mktemp)"
+          headers="$(mktemp)"
+          cleanup() { rm -f "$body" "$headers"; }
+          trap cleanup EXIT
+
+          status="$(curl -sS -L --max-time 30 -D "$headers" -o "$body" -w '%{http_code}' "$sitemap_url")"
+          test "$status" = "200" || { echo "::error::sitemap.xml returned HTTP $status"; exit 1; }
+
+          content_type="$(awk 'BEGIN{IGNORECASE=1} /^content-type:/ {sub(/\r$/, "", $0); print substr($0, index($0, ":") + 2)}' "$headers" | tail -n 1)"
+          echo "sitemap Content-Type: ${content_type:-missing}"
+
+          grep -Eq '^<\?xml|<urlset([[:space:]>])' "$body" || {
+            echo "::error::sitemap.xml is not XML (likely SPA fallback HTML)."
+            head -c 300 "$body" || true
+            echo
+            exit 1
+          }
+
+          if grep -Eqi '<!doctype html|<html([[:space:]>])' "$body"; then
+            echo "::error::sitemap.xml resolved to HTML instead of the static XML asset."
+            exit 1
+          fi
+
+          case "${content_type,,}" in
+            application/xml*|text/xml*|application/xhtml+xml*) ;;
+            *)
+              echo "::warning::Unexpected sitemap Content-Type: ${content_type:-missing}. Body is valid XML; check Cloudflare asset headers if Search Console still complains."
+              ;;
+          esac
+
+          echo "Production sitemap probe: PASS"
+
       - name: Report storefront deployment
         run: |
           echo "Storefront project: omrantoys-live-app"
