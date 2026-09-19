@@ -2,14 +2,14 @@ import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import SkipLink from "./components/SkipLink";
+import Storefront from "@/pages/Storefront";
+import ProductsPage from "@/pages/ProductsPage";
 
 const AdminAccess = lazy(() => import("@/admin/AdminAccess"));
 const AccountApp = lazy(() => import("@/account/AccountApp"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PopUp = lazy(() => import("@/pages/PopUp"));
 const PopupVideos = lazy(() => import("@/pages/PopupVideos"));
-const ProductsPage = lazy(() => import("@/pages/ProductsPage"));
-const Storefront = lazy(() => import("@/pages/Storefront"));
 const Rewards = lazy(() => import("@/pages/Rewards"));
 const VipProgram = lazy(() => import("@/pages/VipProgram"));
 const VipPrivacy = lazy(() => import("@/pages/VipPrivacy"));
