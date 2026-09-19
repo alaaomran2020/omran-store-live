@@ -121,8 +121,8 @@ export default function VipSignup({ source = "omran" }: VipSignupProps) {
     >
       <div className="container">
         <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-white/80 bg-white p-5 shadow-[0_18px_50px_rgba(23,32,51,.10)] sm:p-7 lg:p-8">
-          <div className={isPopup ? "absolute -start-16 -top-20 h-48 w-48 rounded-full bg-fuchsia-300/25 blur-3xl" : "absolute -start-16 -top-20 h-48 w-48 rounded-full bg-brand-blue/15 blur-3xl"} aria-hidden="true" />
-          <div className="absolute -end-16 -bottom-20 h-48 w-48 rounded-full bg-brand-yellow/25 blur-3xl" aria-hidden="true" />
+          <div className={isPopup ? "absolute -start-16 -top-20 hidden h-48 w-48 rounded-full bg-fuchsia-300/25 blur-3xl sm:block" : "absolute -start-16 -top-20 hidden h-48 w-48 rounded-full bg-brand-blue/15 blur-3xl sm:block"} aria-hidden="true" />
+          <div className="absolute -end-16 -bottom-20 hidden h-48 w-48 sm:block rounded-full bg-brand-yellow/25 blur-3xl" aria-hidden="true" />
 
           <div className="relative grid gap-6 lg:grid-cols-[1fr_1.08fr] lg:items-center">
             <div>

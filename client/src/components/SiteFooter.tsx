@@ -238,8 +238,8 @@ export default function SiteFooter({ socialBrand = "omran" }: SiteFooterProps) {
       <VipSignup source={socialBrand} />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-l from-transparent via-brand-yellow/70 to-transparent" aria-hidden="true" />
-      <div className="pointer-events-none absolute -start-24 top-8 h-48 w-48 rounded-full bg-brand-blue/20 blur-3xl" aria-hidden="true" />
-      <div className="pointer-events-none absolute -end-24 bottom-20 h-56 w-56 rounded-full bg-brand-yellow/10 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -start-24 top-8 hidden h-48 w-48 sm:block rounded-full bg-brand-blue/20 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -end-24 bottom-20 hidden h-56 w-56 sm:block rounded-full bg-brand-yellow/10 blur-3xl" aria-hidden="true" />
 
       <div className="container relative grid gap-9 py-10 sm:grid-cols-2 sm:gap-10 sm:py-12 lg:grid-cols-[1.25fr_.65fr_1.25fr_1fr] lg:gap-10 lg:py-14">
         <FooterBrand />
