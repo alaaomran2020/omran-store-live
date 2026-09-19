@@ -189,9 +189,6 @@
     @apply border-border outline-ring/50;
   }
   html {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
     scroll-behavior: smooth;
   }
 
@@ -202,9 +199,6 @@
   }
   body {
     @apply bg-background text-foreground;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
     font-family: Cairo, "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
     line-height: 1.72;
     font-weight: 600;
@@ -314,9 +308,3 @@
 .dark header { background-color: rgba(20,31,45,.96) !important; }
 .dark .text-brand-blue { color: #79aef0 !important; }
 .dark .bg-brand-yellow.text-brand-navy { color: #123b6d !important; }
-
-#root {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-}

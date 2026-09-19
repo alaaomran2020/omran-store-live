@@ -15,7 +15,7 @@ export default function PopUpPromo() {
           className="group relative isolate mx-auto block max-w-5xl overflow-hidden rounded-[1.35rem] border border-[#eadcf6] bg-[linear-gradient(115deg,#35134f_0%,#5e2181_48%,#84369f_100%)] px-4 py-3.5 text-white shadow-[0_12px_34px_rgba(76,29,103,0.18)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_17px_42px_rgba(76,29,103,0.26)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#c9a0e0] sm:px-5 sm:py-4 lg:px-6"
           aria-label="افتح قسم POP UP للهدايا والبالونات ومستلزمات الحفلات"
         >
-          <span className="pointer-events-none absolute -right-8 -top-12 h-32 w-32 rounded-full bg-[#ffc938]/30 blur-2xl transition duration-700 group-hover:scale-125" />
+          <span className="pointer-events-none absolute -right-8 -top-12 hidden h-32 w-32 sm:block rounded-full bg-[#ffc938]/30 blur-2xl transition duration-700 group-hover:scale-125" />
           <span className="pointer-events-none absolute -bottom-16 left-1/4 h-36 w-36 rounded-full bg-[#f7a6ca]/20 blur-3xl" />
 
           <div className="relative flex items-center justify-between gap-3 sm:gap-5">
