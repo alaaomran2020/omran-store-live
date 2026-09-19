@@ -8,10 +8,7 @@ afterEach(cleanup);
 describe("تصنيفات الصفحة الرئيسية", () => {
   it("تعرض الأقسام التجارية المطلوبة فقط وتوصل مباشرة لنتائج الكتالوج", () => {
     render(<HomeCategoryHighlights />);
-    const links = screen
-      .getAllByRole("link")
-      .filter(link => link.getAttribute("href")?.includes("/products?search="));
-
+    const links = screen.getAllByRole("link").filter(link => link.getAttribute("href")?.includes("/products?search="));
     expect(links).toHaveLength(6);
     expect(links.every(link => link.getAttribute("href")?.endsWith("#feed"))).toBe(true);
     expect(screen.getByText("عربيات")).toBeTruthy();
@@ -20,7 +17,6 @@ describe("تصنيفات الصفحة الرئيسية", () => {
     expect(screen.getByText("رفايع لعب أطفال")).toBeTruthy();
     expect(screen.getByText("الكور")).toBeTruthy();
     expect(screen.getByText("فوانيس رمضان")).toBeTruthy();
-
     expect(screen.queryByText("مطابخ")).toBeNull();
     expect(screen.queryByText("أدوات دكتور")).toBeNull();
     expect(screen.queryByText("أدوات نجار")).toBeNull();
@@ -30,7 +26,6 @@ describe("تصنيفات الصفحة الرئيسية", () => {
   it("تعرض صورة WebP في كل كارت قسم دائم", () => {
     const { container } = render(<HomeCategoryHighlights />);
     const images = Array.from(container.querySelectorAll("img"));
-
     expect(images).toHaveLength(5);
     expect(images.every(image => image.getAttribute("src")?.endsWith(".webp"))).toBe(true);
     expect(images.every(image => image.getAttribute("loading") === "lazy")).toBe(true);
