@@ -13,9 +13,9 @@ export default function HomeHero() {
       <div className="container grid gap-7 py-8 sm:py-12 lg:grid-cols-[.9fr_1.1fr] lg:items-center lg:gap-12 lg:py-16">
         <div className="max-w-2xl">
           <p className="text-sm font-black text-brand-blue">عمران تويز · شركة عمران التجارية</p>
-          <h1 id="home-hero-title" className="mt-3 text-[2.7rem] font-bold leading-[1.14] text-brand-navy sm:text-5xl lg:text-6xl">
-            لعب تفرّحهم.
-            <span className="block text-brand-blue">واختيار أسهل ليك.</span>
+          <h1 id="home-hero-title" className="mt-3 text-[2.7rem] font-bold leading-[1.22] text-brand-navy sm:text-5xl lg:text-[3.35rem]">
+            <span className="block">لعب تفرّحهم.</span>
+            <span className="mt-1 block text-brand-blue">واختيار أسهل ليك.</span>
           </h1>
           <p className="mt-4 max-w-xl text-sm font-bold leading-7 text-brand-muted sm:text-lg sm:leading-8">
             شوف اللعب بوضوح، اختار المناسب، واسأل عن السعر والكميات على واتساب.
