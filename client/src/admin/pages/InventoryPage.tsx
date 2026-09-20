@@ -156,7 +156,7 @@ export default function InventoryPage() {
                 {rows.slice(0, 100).map(product => (
                   <tr key={`${product.sourceBrand}:${product.id}`} className="border-b border-brand-border/70 last:border-0 hover:bg-brand-cream/70">
                     <td className="px-4 py-3">
-                      <Link href={`/products/${encodeURIComponent(product.id)}`} className="font-extrabold text-brand-navy hover:underline">
+                      <Link href={`/products?product=${encodeURIComponent(product.id)}`} className="font-extrabold text-brand-navy hover:underline">
                         {product.name}
                       </Link>
                       <p dir="ltr" className="text-[10px] font-bold text-brand-disabled">{product.id}</p>

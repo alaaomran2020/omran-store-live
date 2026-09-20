@@ -293,6 +293,49 @@ function vitePluginSitemap(): Plugin {
   };
 }
 
+const SPA_ROUTES = [
+  "/products", "/popup", "/popup/videos", "/rewards", "/vip", "/vip/terms",
+  "/vip/privacy", "/vip/staff-register", "/vip/qr-test", "/account", "/account/login",
+  "/account/profile", "/account/addresses", "/account/wishlist", "/account/vip", "/account/settings",
+  "/admin", "/admin/dashboard", "/admin/products", "/admin/categories", "/admin/inventory",
+  "/admin/content", "/admin/whatsapp", "/admin/quality", "/admin/reports", "/admin/customers",
+  "/admin/users", "/admin/audit-log", "/admin/settings", "/admin/product-intake",
+  "/admin/vip-operations", "/admin/reviews", "/admin/search", "/admin/leads", "/admin/vip",
+  "/admin/staff", "/admin/activity", "/admin/diagnostics",
+] as const;
+
+/**
+ * Cloudflare Pages treats a Vite build without a top-level 404.html as an SPA and
+ * returns index.html with HTTP 200 for every unknown path. Emit explicit HTML
+ * shells for every real client route plus a 404 shell, so known deep links stay
+ * 200 while unknown URLs receive a real HTTP 404.
+ */
+function vitePluginSpaRouteShells(): Plugin {
+  return {
+    name: "spa-route-shells",
+    apply: "build",
+    enforce: "post",
+    closeBundle() {
+      const outDir = path.resolve(import.meta.dirname, "dist", "public");
+      const indexPath = path.join(outDir, "index.html");
+      if (!fs.existsSync(indexPath)) return;
+      const shell = fs.readFileSync(indexPath, "utf8");
+      for (const route of SPA_ROUTES) {
+        const target = path.join(outDir, ...route.slice(1).split("/")) + ".html";
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, shell, "utf8");
+      }
+      fs.writeFileSync(path.join(outDir, "404.html"), shell, "utf8");
+      // The only dynamic pathname in the SPA is the admin product editor.
+      fs.writeFileSync(
+        path.join(outDir, "_redirects"),
+        "/admin/products/* /admin/products 200\n",
+        "utf8"
+      );
+    },
+  };
+}
+
 function buildPlugins(): PluginOption[] {
   // Vite's mode only decides which .env.[mode] file wins; the analytics ids are
   // plain VITE_* vars, so merge the env dir over process.env and read them there.
@@ -307,6 +350,7 @@ function buildPlugins(): PluginOption[] {
     vitePluginOptionalAnalytics(env),
     vitePluginEdgeHeaders(),
     vitePluginSitemap(),
+    vitePluginSpaRouteShells(),
   ];
 }
 

@@ -129,7 +129,7 @@ export default function ProductsPage() {
       render: p => (
         <div className="flex items-center gap-1">
           <Link
-            href={`/products/${encodeURIComponent(p.id)}`}
+            href={`/admin/products/${encodeURIComponent(p.id)}`}
             className="grid min-h-11 min-w-11 place-items-center rounded-xl text-brand-navy hover:bg-brand-sky focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/25"
             title="تعديل/عرض"
           >
