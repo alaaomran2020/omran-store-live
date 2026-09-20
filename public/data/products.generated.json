@@ -1,8 +1,19 @@
 {
   "source": "Google Sheets / كتالوج النشر الآلي",
   "publicationGate": "active=TRUE AND workflow_status=PUBLISHED AND qa_status=PASS",
-  "count": 27,
+  "count": 28,
   "products": [
+    {
+      "id": "OMR-SPK-MIC-001",
+      "name": "سماعة محمولة مع مايك لاسلكي",
+      "price": 170,
+      "quantity": null,
+      "category": "رفايع لعب أطفال",
+      "description": "سماعة محمولة بتصميم أنيق وسهل الحمل، تأتي مع مايك لاسلكي وأزرار تحكم سهلة. مناسبة للغناء والحفلات وتجمعات العيلة وأنشطة الأطفال والهدايا. سعر الجملة للتجار 150 جنيه.",
+      "image": "/products/processed/product-speaker-wireless-mic-main.webp",
+      "sku": "OMR-SPK-MIC-001",
+      "active": true
+    },
     {
       "id": "OMR-IG-HC-104",
       "name": "مطبخ Home Chef للأطفال — 104 قطعة",
