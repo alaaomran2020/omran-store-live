@@ -41,6 +41,20 @@ const driveSource = (id: string) =>
 
 export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
   verified({
+    id: "OMR-SPK-MIC-001",
+    name: "سماعة محمولة مع مايك لاسلكي",
+    price: 170,
+    category: "رفايع لعب أطفال",
+    description:
+      "سماعة محمولة بتصميم أنيق وسهل الحمل، تأتي مع مايك لاسلكي وأزرار تحكم سهلة. مناسبة للغناء والحفلات وتجمعات العيلة وأنشطة الأطفال والهدايا. سعر الجملة للتجار 150 جنيه.",
+    image: "/products/processed/product-speaker-wireless-mic-main.webp",
+    imageSource: "/products/processed/product-speaker-wireless-mic-main.webp",
+    sortOrder: 6,
+    sourceDriveId: null,
+    processedImage: "/products/processed/product-speaker-wireless-mic-main.webp",
+    rowIndex: 290,
+  }),
+  verified({
     id: "OMR-IG-KIT-46",
     name: "مطبخ ألعاب للأطفال — 46 قطعة",
     price: 850,
