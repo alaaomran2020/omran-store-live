@@ -1,0 +1,10 @@
+title = "Omran Store Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow public Ahrefs Analytics site key embedded in client HTML"
+regexes = [
+  '''QRI9EkGcjfR6U5tvQzJLeA'''
+]
