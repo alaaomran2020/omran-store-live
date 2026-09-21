@@ -1,8 +1,19 @@
 {
   "source": "Google Sheets / كتالوج النشر الآلي",
   "publicationGate": "active=TRUE AND workflow_status=PUBLISHED AND qa_status=PASS",
-  "count": 28,
+  "count": 29,
   "products": [
+    {
+      "id": "OMR-KIDS-WATCH-001",
+      "name": "ساعة الأطفال الرقمية",
+      "price": 20,
+      "quantity": null,
+      "category": "رفايع لعب أطفال",
+      "description": "ساعة أطفال رقمية خفيفة بألوان متعددة وتصميم بسيط ومريح للاستخدام اليومي. مناسبة كهدية للأطفال. سعر الجملة للتجار 17 جنيه.",
+      "image": "/products/processed/product-kids-digital-watch-main.svg",
+      "sku": "OMR-KIDS-WATCH-001",
+      "active": true
+    },
     {
       "id": "OMR-SPK-MIC-001",
       "name": "سماعة محمولة مع مايك لاسلكي",

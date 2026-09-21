@@ -41,6 +41,20 @@ const driveSource = (id: string) =>
 
 export const PUBLIC_PRODUCTS_SNAPSHOT: Product[] = [
   verified({
+    id: "OMR-KIDS-WATCH-001",
+    name: "ساعة الأطفال الرقمية",
+    price: 20,
+    category: "رفايع لعب أطفال",
+    description:
+      "ساعة أطفال رقمية خفيفة بألوان متعددة وتصميم بسيط ومريح للاستخدام اليومي. مناسبة كهدية للأطفال. سعر الجملة للتجار 17 جنيه.",
+    image: "/products/processed/product-kids-digital-watch-main.svg",
+    imageSource: "/products/processed/product-kids-digital-watch-main.svg",
+    sortOrder: 7,
+    sourceDriveId: null,
+    processedImage: "/products/processed/product-kids-digital-watch-main.svg",
+    rowIndex: 291,
+  }),
+  verified({
     id: "OMR-SPK-MIC-001",
     name: "سماعة محمولة مع مايك لاسلكي",
     price: 170,
