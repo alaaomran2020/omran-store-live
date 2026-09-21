@@ -1,0 +1,25 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc">
+  <title id="title">ساعة الأطفال الرقمية</title>
+  <desc id="desc">تكوين احترافي لست ساعات أطفال رقمية ملونة</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f8fbff"/><stop offset="1" stop-color="#eef5ff"/></linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#202938"/><stop offset="1" stop-color="#05070a"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#16355f" flood-opacity=".14"/></filter>
+  </defs>
+  <rect width="1200" height="1200" rx="44" fill="url(#bg)"/>
+  <circle cx="180" cy="160" r="110" fill="#d9ecff" opacity=".7"/><circle cx="1040" cy="980" r="160" fill="#e8f1ff" opacity=".85"/>
+  <g filter="url(#shadow)">
+    <g transform="translate(140 210) rotate(-11 115 350)"><rect x="60" y="0" width="110" height="700" rx="55" fill="#f2d300"/><rect x="45" y="250" width="140" height="200" rx="64" fill="url(#screen)"/></g>
+    <g transform="translate(300 150) rotate(-5 115 350)"><rect x="60" y="0" width="110" height="700" rx="55" fill="#48bff4"/><rect x="45" y="250" width="140" height="200" rx="64" fill="url(#screen)"/></g>
+    <g transform="translate(460 120) rotate(1 115 350)"><rect x="60" y="0" width="110" height="700" rx="55" fill="#ff6a4e"/><rect x="45" y="250" width="140" height="200" rx="64" fill="url(#screen)"/></g>
+    <g transform="translate(620 135) rotate(6 115 350)"><rect x="60" y="0" width="110" height="700" rx="55" fill="#ff66ad"/><rect x="45" y="250" width="140" height="200" rx="64" fill="url(#screen)"/></g>
+    <g transform="translate(780 175) rotate(10 115 350)"><rect x="60" y="0" width="110" height="700" rx="55" fill="#3f5eea"/><rect x="45" y="250" width="140" height="200" rx="64" fill="url(#screen)"/></g>
+    <g transform="translate(930 235) rotate(14 115 350)"><rect x="60" y="0" width="110" height="700" rx="55" fill="#ff96c8"/><rect x="45" y="250" width="140" height="200" rx="64" fill="url(#screen)"/></g>
+  </g>
+  <g font-family="Arial, Tahoma, sans-serif" text-anchor="middle">
+    <text x="600" y="980" font-size="64" font-weight="800" fill="#173f74">ساعة الأطفال الرقمية</text>
+    <text x="600" y="1045" font-size="34" font-weight="700" fill="#3d5f88">ألوان متعددة • تصميم خفيف للأطفال</text>
+    <g transform="translate(340 1090)"><rect width="220" height="64" rx="32" fill="#173f74"/><text x="110" y="43" font-size="30" font-weight="800" fill="#fff">20 جنيه قطاعي</text></g>
+    <g transform="translate(640 1090)"><rect width="220" height="64" rx="32" fill="#0f8a4b"/><text x="110" y="43" font-size="30" font-weight="800" fill="#fff">17 جنيه جملة</text></g>
+  </g>
+</svg>
