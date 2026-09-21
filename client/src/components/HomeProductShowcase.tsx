@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { ProductDetailsDialog } from "@/components/ProductDetailsDialog";
-import { ProductImage } from "@/components/ProductImage";
 import { filterProductsByCatalog } from "@/lib/productCatalog";
 import { getInitialProductsSnapshot, refreshProductsFromLiveCatalog, type Product } from "@/lib/productsClient";
 import { findSimilarProducts } from "@/lib/similarProducts";
@@ -63,11 +62,16 @@ export default function HomeProductShowcase() {
           >
             <div className="grid items-stretch md:grid-cols-[1.35fr_.65fr]">
               <div className="relative aspect-[16/10] overflow-hidden bg-brand-cream md:aspect-[16/9]">
-                <ProductImage
-                  product={latestProduct}
-                  priority
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.015] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                  sizesHint="(max-width: 767px) 100vw, 68vw"
+                <img
+                  src="/products/processed/product-kids-digital-watch-featured.webp"
+                  alt={latestProduct.name}
+                  width={1600}
+                  height={900}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  draggable={false}
+                  className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.015] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                 />
                 <span className="absolute start-4 top-4 rounded-full bg-brand-navy px-3 py-1.5 text-xs font-black text-white shadow-sm sm:start-5 sm:top-5 sm:text-sm">
                   أحدث منتج
