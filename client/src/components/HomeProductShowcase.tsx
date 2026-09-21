@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { ProductDetailsDialog } from "@/components/ProductDetailsDialog";
+import { ProductImage } from "@/components/ProductImage";
 import { filterProductsByCatalog } from "@/lib/productCatalog";
 import { getInitialProductsSnapshot, refreshProductsFromLiveCatalog, type Product } from "@/lib/productsClient";
 import { findSimilarProducts } from "@/lib/similarProducts";
@@ -19,13 +20,24 @@ export default function HomeProductShowcase() {
     retry: 1,
   });
 
-  const products = useMemo(
-    () => filterProductsByCatalog(productsQuery.data?.products ?? [], "toys").slice(0, 8),
+  const catalogProducts = useMemo(
+    () => filterProductsByCatalog(productsQuery.data?.products ?? [], "toys"),
     [productsQuery.data]
   );
+  const latestProduct = useMemo(
+    () => catalogProducts.reduce<Product | null>((latest, product) => {
+      if (!latest) return product;
+      return product.rowIndex > latest.rowIndex ? product : latest;
+    }, null),
+    [catalogProducts]
+  );
+  const products = useMemo(
+    () => catalogProducts.filter(product => product.id !== latestProduct?.id).slice(0, 8),
+    [catalogProducts, latestProduct]
+  );
   const related = useMemo(
-    () => (openProduct ? findSimilarProducts(filterProductsByCatalog(productsQuery.data?.products ?? [], "toys"), openProduct) : []),
-    [openProduct, productsQuery.data]
+    () => (openProduct ? findSimilarProducts(catalogProducts, openProduct) : []),
+    [openProduct, catalogProducts]
   );
   const isError = productsQuery.isError || productsQuery.data?.status === "error";
 
@@ -34,13 +46,51 @@ export default function HomeProductShowcase() {
       <div className="container">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-black text-brand-blue sm:text-sm">ابدأ من المنتج نفسه</p>
-            <h2 id="featured-products-title" className="font-hand-ar mt-1 text-3xl font-bold text-brand-navy sm:text-4xl">منتجات عمران تويز</h2>
+            <p className="text-xs font-black text-brand-blue sm:text-sm">وصل جديد</p>
+            <h2 id="featured-products-title" className="font-hand-ar mt-1 text-3xl font-bold text-brand-navy sm:text-4xl">أحدث منتجاتنا</h2>
           </div>
           <a href="/products#feed" className="hidden min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-sm font-black text-brand-navy shadow-sm ring-1 ring-brand-border transition hover:bg-brand-sky sm:inline-flex">
             عرض كل المنتجات <ArrowLeft size={16} aria-hidden="true" />
           </a>
         </div>
+
+        {latestProduct && (
+          <button
+            type="button"
+            onClick={() => setOpenProduct(latestProduct)}
+            className="group mt-5 block w-full overflow-hidden rounded-[1.8rem] border border-brand-border bg-white text-right shadow-[0_18px_48px_rgba(18,59,109,.10)] transition duration-300 hover:-translate-y-0.5 hover:border-brand-blue/25 hover:shadow-[0_24px_56px_rgba(18,59,109,.14)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:mt-6"
+            aria-label={`عرض أحدث منتج: ${latestProduct.name}`}
+          >
+            <div className="grid items-stretch md:grid-cols-[1.35fr_.65fr]">
+              <div className="relative aspect-[16/10] overflow-hidden bg-brand-cream md:aspect-[16/9]">
+                <ProductImage
+                  product={latestProduct}
+                  priority
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.015] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                  sizesHint="(max-width: 767px) 100vw, 68vw"
+                />
+                <span className="absolute start-4 top-4 rounded-full bg-brand-navy px-3 py-1.5 text-xs font-black text-white shadow-sm sm:start-5 sm:top-5 sm:text-sm">
+                  أحدث منتج
+                </span>
+              </div>
+              <div className="flex flex-col justify-center gap-3 p-5 sm:p-7 md:p-8">
+                <p className="text-xs font-black text-brand-blue sm:text-sm">وصل حديثًا إلى عمران تويز</p>
+                <h3 className="text-2xl font-black leading-tight text-brand-navy sm:text-3xl">{latestProduct.name}</h3>
+                {latestProduct.description && (
+                  <p className="line-clamp-3 text-sm font-semibold leading-7 text-brand-muted sm:text-base">{latestProduct.description}</p>
+                )}
+                <div className="mt-1 flex flex-wrap items-center gap-3">
+                  {latestProduct.price !== null && (
+                    <span className="text-xl font-black text-brand-navy sm:text-2xl">{latestProduct.price} جنيه</span>
+                  )}
+                  <span className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-blue px-4 py-2 text-sm font-black text-white">
+                    عرض التفاصيل <ArrowLeft size={16} aria-hidden="true" />
+                  </span>
+                </div>
+              </div>
+            </div>
+          </button>
+        )}
 
         {productsQuery.isLoading ? (
           <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
