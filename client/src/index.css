@@ -299,6 +299,11 @@
   to { transform: translateX(50%); }
 }
 
+.announcement-marquee {
+  animation: marquee 16s linear infinite;
+  will-change: transform;
+}
+
 /* OMRAN DARK MODE OVERRIDES — calm retail palette, no external assets. */
 .font-hand-ar {
   font-family: Alexandria, "Noto Kufi Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
