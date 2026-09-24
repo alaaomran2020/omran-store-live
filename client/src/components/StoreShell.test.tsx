@@ -20,10 +20,15 @@ describe("store shell responsive smoke", () => {
     });
   }
 
-  it("keeps the announcement moving without embedded control buttons", () => {
-    render(<AnnouncementBar />);
-    const bar = screen.getByLabelText("مستجدات المتجر");
-    expect(within(bar).queryByRole("button")).toBeNull();
+  it("keeps the announcement moving on mobile and desktop without embedded control buttons", () => {
+    for (const width of [360, 1280]) {
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+      const { unmount } = render(<AnnouncementBar />);
+      const bar = screen.getByLabelText("مستجدات المتجر");
+      expect(within(bar).queryByRole("button")).toBeNull();
+      expect(bar.querySelector(".announcement-marquee")).toBeTruthy();
+      unmount();
+    }
   });
 
   it("marks the current customer section and keeps toys navigation visible", () => {
