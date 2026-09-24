@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source_system": "EGYPT_SYSTEM",
+  "database": "ESStores",
+  "schema": "ESStoreDbo",
+  "backup_file": "ESStores_20260924_15_41_37.bak",
+  "stock_basis": "SUM(Qty) FROM ESStoreDbo.VwTransStockDetails GROUP BY Item_Package_Id, Store_Id",
+  "generated_at": null,
+  "status": "AWAITING_SQL_EXPORT",
+  "rows": [],
+  "mappings": [
+    {
+      "product_id": "OMR-IG-KIT-46",
+      "egypt_item_id": "370",
+      "egypt_item_name_ar": "مطبخ × علبه بني 46 ق",
+      "egypt_item_package_id": null,
+      "store_id": "2",
+      "store_name_ar": "عمران",
+      "match_status": "CANDIDATE",
+      "match_method": "NAME_AND_PIECE_COUNT",
+      "note": "تطابق قوي في هوية مطبخ 46 قطعة، لكنه لا يصبح VERIFIED قبل تأكيد Item_Package_Id أو الباركود من SQL."
+    }
+  ]
+}
