@@ -6,6 +6,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAdminCatalog, type AdminProduct } from "@/lib/admin/adminCatalog";
+import { fetchEgyptSystemInventory } from "@/lib/admin/egyptSystemInventory";
 import {
   readAuditLog,
   readCustomers,
@@ -21,6 +22,15 @@ import {
 import { runCatalogQuality, type QualityRunResult } from "@shared/catalogQuality";
 
 const STALE_MS = 5 * 60 * 1000;
+
+export function useEgyptSystemInventory() {
+  return useQuery({
+    queryKey: ["admin", "egypt-system-inventory"],
+    queryFn: fetchEgyptSystemInventory,
+    staleTime: STALE_MS,
+    retry: 1,
+  });
+}
 
 export function useAdminCatalog() {
   const query = useQuery({
