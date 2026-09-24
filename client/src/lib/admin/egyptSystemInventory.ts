@@ -72,14 +72,14 @@ export async function fetchEgyptSystemInventory(): Promise<EgyptInventorySnapsho
   const response = await fetch("/data/egypt-system-inventory.json", { cache: "no-store" });
   if (!response.ok) throw new Error(`egypt_inventory_http_${response.status}`);
   const body: unknown = await response.json();
-  if (!isRecord(body) || body.source_system !== "EGYPT_SYSTEM" || !Array.isArray(body.rows) || !Array.isArray(body.mappings)) {
+  if (!isRecord(body) || body.source_system !== "EGYPT_SYSTEM" || body.database !== "ESStores" || body.schema !== "ESStoreDbo" || !Array.isArray(body.rows) || !Array.isArray(body.mappings)) {
     throw new Error("egypt_inventory_invalid_contract");
   }
   return {
     version: Number(body.version ?? 1),
     source_system: "EGYPT_SYSTEM",
-    database: String(body.database ?? "ESStores"),
-    schema: String(body.schema ?? "ESStoreDbo"),
+    database: "ESStores",
+    schema: "ESStoreDbo",
     backup_file: String(body.backup_file ?? ""),
     stock_basis: String(body.stock_basis ?? ""),
     generated_at: typeof body.generated_at === "string" ? body.generated_at : null,
