@@ -24,12 +24,13 @@ import {
 } from "@/admin/components/primitives";
 import { AvailabilityBadge } from "@/admin/components/StatusBadges";
 import { useDebouncedProducts } from "@/admin/hooks/useDebouncedProducts";
-import { useAdminCatalog } from "@/admin/dataHooks";
+import { useAdminCatalog, useEgyptSystemInventory } from "@/admin/dataHooks";
 import { useAdminIdentity } from "@/admin/AdminIdentity";
 import { adminActionsConfigured, postAdminAction } from "@/lib/admin/adminGateway";
 import { inventoryChangePacket, downloadPacket } from "@/lib/admin/changePackets";
 import { emitAudit } from "@/lib/admin/auditClient";
 import type { AdminAvailability, AdminProduct } from "@/lib/admin/adminCatalog";
+import { reconcileEgyptProduct } from "@/lib/admin/egyptSystemInventory";
 
 const OPTIONS: { value: AdminAvailability; label: string }[] = [
   { value: "available", label: "متوفر" },
@@ -39,6 +40,7 @@ const OPTIONS: { value: AdminAvailability; label: string }[] = [
 
 export default function InventoryPage() {
   const { products, isLoading } = useAdminCatalog();
+  const egyptInventory = useEgyptSystemInventory();
   const { filtered, search, setSearch, filter, setFilter } = useDebouncedProducts(products);
   const { actor } = useAdminIdentity();
   const [edits, setEdits] = useState<Record<string, AdminAvailability>>({});
@@ -65,6 +67,7 @@ export default function InventoryPage() {
   const rows = filtered.filter(p => (filter === "ALL" ? true : p.availability === filter));
   const effectiveStatus = (product: AdminProduct): AdminAvailability => edits[product.id] ?? product.availability;
   const editedCount = Object.keys(edits).length;
+  const egyptFor = (productId: string) => reconcileEgyptProduct(egyptInventory.data, productId);
 
   async function applyEdits() {
     const changes = Object.entries(edits).map(([id, availability]) => ({ id, availability, availableQty: null, lowStockThreshold: null }));
@@ -103,6 +106,22 @@ export default function InventoryPage() {
       }
     >
       <Toaster position="top-center" dir="rtl" richColors closeButton />
+
+      <Card className="mb-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 text-xs font-bold">
+          <div>
+            <p className="font-extrabold text-brand-navy">مصدر الجرد: Egypt System / ESStores</p>
+            <p className="mt-1 text-brand-muted">
+              {egyptInventory.data?.status === "READY"
+                ? `لقطة موثّقة: ${egyptInventory.data.generated_at ?? "بدون وقت"}`
+                : "عقد الربط جاهز — في انتظار تصدير SQL الموثّق من جهاز العمل"}
+            </p>
+          </div>
+          <Badge tone={egyptInventory.data?.status === "READY" ? "green" : "amber"}>
+            {egyptInventory.data?.status === "READY" ? "متصل بلقطة موثّقة" : "بانتظار التصدير"}
+          </Badge>
+        </div>
+      </Card>
 
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <MetricCard label="متوفر" value={counts.available} icon={<Warehouse size={18} />} tone="green" />
@@ -162,7 +181,26 @@ export default function InventoryPage() {
                       <p dir="ltr" className="text-[10px] font-bold text-brand-disabled">{product.id}</p>
                     </td>
                     <td className="px-4 py-3"><AvailabilityBadge availability={effectiveStatus(product)} /></td>
-                    <td className="px-4 py-3 text-xs font-bold text-brand-disabled">غير موثّقة رقميًا</td>
+                    <td className="px-4 py-3 text-xs font-bold text-brand-disabled">
+                      {(() => {
+                        const egypt = egyptFor(product.id);
+                        if (egypt?.isVerified && egypt.onHandQty !== null) {
+                          return (
+                            <span className="font-extrabold text-brand-navy">
+                              {egypt.onHandQty} <span className="text-[10px] text-brand-muted">— {egypt.mapping.store_name_ar}</span>
+                            </span>
+                          );
+                        }
+                        if (egypt?.mapping.match_status === "CANDIDATE") {
+                          return (
+                            <span title={egypt.mapping.note} className="text-brand-muted">
+                              مطابقة مرشحة مع Egypt System — تحتاج تأكيد العبوة/الباركود
+                            </span>
+                          );
+                        }
+                        return "غير موثّقة رقميًا";
+                      })()}
+                    </td>
                     <PermissionGate permission="inventory:update">
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1.5">
