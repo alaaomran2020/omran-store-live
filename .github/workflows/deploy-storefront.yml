@@ -207,8 +207,29 @@ jobs:
           cleanup() { rm -f "$body" "$headers"; }
           trap cleanup EXIT
 
-          status="$(curl -sS -L --max-time 30 -D "$headers" -o "$body" -w '%{http_code}' "$sitemap_url")"
-          test "$status" = "200" || { echo "::error::sitemap.xml returned HTTP $status"; exit 1; }
+          # Cloudflare can briefly return a 403 immediately after a production
+          # deployment while the edge/configuration change is propagating.
+          # Retry the public production URL before treating it as a real outage.
+          status=""
+          for attempt in 1 2 3 4 5 6; do
+            : > "$body"
+            : > "$headers"
+            status="$(curl -sS -L --max-time 30 \
+              -A 'Mozilla/5.0 (compatible; OmranStorefrontDeployCheck/1.0)' \
+              -H 'Accept: application/xml,text/xml;q=0.9,*/*;q=0.8' \
+              -D "$headers" -o "$body" -w '%{http_code}' "$sitemap_url" || true)"
+
+            if [ "$status" = "200" ]; then
+              break
+            fi
+
+            if [ "$attempt" -lt 6 ]; then
+              echo "::warning::sitemap.xml returned HTTP ${status:-curl-error} (attempt $attempt/6); retrying after 10s"
+              sleep 10
+            fi
+          done
+
+          test "$status" = "200" || { echo "::error::sitemap.xml returned HTTP ${status:-curl-error} after 6 attempts"; exit 1; }
 
           content_type="$(awk 'BEGIN{IGNORECASE=1} /^content-type:/ {sub(/\r$/, "", $0); print substr($0, index($0, ":") + 2)}' "$headers" | tail -n 1)"
           echo "sitemap Content-Type: ${content_type:-missing}"
