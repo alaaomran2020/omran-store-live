@@ -30,8 +30,10 @@ export type StoreBranch = {
 export type StoreContact = {
   /** واتساب/موبايل بصيغة دولية بلا + (مثل 201555570269). */
   whatsapp: string;
-  /** هاتف أرضي للعرض. */
+  whatsappDisplay: string;
+  /** هاتف أرضي بصيغة دولية بلا +، للاستخدام في روابط tel. */
   landline: string | null;
+  landlineDisplay: string;
   officialDomain: string;
 };
 
@@ -42,7 +44,9 @@ export type StoreSocialLinks = {
 
 export const STORE_CONTACT: StoreContact = {
   whatsapp: OPENING_PROFILE.contacts.whatsapp,
-  landline: OPENING_PROFILE.contacts.landlineDisplay,
+  whatsappDisplay: OPENING_PROFILE.contacts.whatsappDisplay,
+  landline: OPENING_PROFILE.contacts.landline,
+  landlineDisplay: OPENING_PROFILE.contacts.landlineDisplay,
   officialDomain: OPENING_PROFILE.officialDomain,
 };
 
