@@ -125,6 +125,42 @@ jobs:
           print(f'Storefront bundle: PASS ({len(product_ids)} verified products, {len(images)} same-origin images)')
           PY
 
+      - name: Record validated catalog provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-inputs
+          cp client/src/lib/publicProductsSnapshot.ts release-inputs/publicProductsSnapshot.ts
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import os
+          import re
+
+          source = Path('release-inputs/publicProductsSnapshot.ts').read_bytes()
+          text = source.decode('utf-8')
+          ids = re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', text, flags=re.MULTILINE)
+          source_url = os.environ.get('PRODUCTS_SHEET_URL', '')
+          selected_source = 'live-feed' if source_url == os.environ.get('LIVE_PRODUCTS_SHEET_URL', '') else 'repository-fallback'
+          provenance = [
+              f'source={selected_source}',
+              f'source_url={source_url}',
+              f'snapshot_sha256={hashlib.sha256(source).hexdigest()}',
+              f'approved_product_count={len(ids)}',
+              f'commit={os.environ.get("GITHUB_SHA", "")}',
+          ]
+          Path('release-inputs/catalog-provenance.txt').write_text('\\n'.join(provenance) + '\\n', encoding='utf-8')
+          print('\\n'.join(provenance))
+          PY
+
+      - name: Upload validated storefront inputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: validated-storefront-inputs
+          path: release-inputs/
+          if-no-files-found: error
+          retention-days: 7
+
   deploy-storefront:
     name: Deploy storefront production
     if: github.event_name != 'pull_request'
@@ -151,33 +187,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Select live catalog source
+      - name: Download validated storefront inputs
+        uses: actions/download-artifact@v4
+        with:
+          name: validated-storefront-inputs
+          path: release-inputs
+
+      - name: Restore validated catalog snapshot
         shell: bash
         run: |
           set -euo pipefail
-          tmp="$(mktemp)"
-          if curl -fsSL --max-time 20 "$LIVE_PRODUCTS_SHEET_URL" -o "$tmp" && head -n 1 "$tmp" | grep -q '^id,name,price,category,'; then
-            echo "PRODUCTS_SHEET_URL=$LIVE_PRODUCTS_SHEET_URL" >> "$GITHUB_ENV"
-            echo "Catalog source: Apps Script live feed"
-          else
-            echo "PRODUCTS_SHEET_URL=$FALLBACK_PRODUCTS_SHEET_URL" >> "$GITHUB_ENV"
-            echo "::warning::Apps Script catalog feed not ready; using repository fallback"
-          fi
-          rm -f "$tmp"
-
-      - name: Generate approved public catalog snapshot
-        run: |
-          pnpm exec esbuild scripts/generate-public-products-snapshot.ts --bundle --platform=node --format=esm --outfile=/tmp/generate-public-products-snapshot.mjs
-          node /tmp/generate-public-products-snapshot.mjs
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          source = Path('client/src/lib/publicProductsSnapshot.ts').read_text(encoding='utf-8')
-          ids = re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', source, flags=re.MULTILINE)
-          assert len(ids) >= 1, 'catalog generation produced no approved public products before deploy'
-          assert len(ids) == len(set(ids)), f'duplicate snapshot product IDs: {ids}'
-          print(f'Pre-deploy catalog guard: PASS ({len(ids)} approved products)')
-          PY
+          test -s release-inputs/publicProductsSnapshot.ts
+          test -s release-inputs/catalog-provenance.txt
+          cp release-inputs/publicProductsSnapshot.ts client/src/lib/publicProductsSnapshot.ts
+          cat release-inputs/catalog-provenance.txt
+          echo "CATALOG_SOURCE=validated-artifact" >> "$GITHUB_ENV"
 
       - name: Build storefront
         run: pnpm build
@@ -257,4 +281,6 @@ jobs:
         run: |
           echo "Storefront project: omrantoys-live-app"
           echo "Commit: ${GITHUB_SHA}"
-          echo "Catalog source: ${PRODUCTS_SHEET_URL}"
+          echo "Catalog source: ${CATALOG_SOURCE:-validated-artifact}"
+          echo "Catalog provenance:"
+          cat release-inputs/catalog-provenance.txt
