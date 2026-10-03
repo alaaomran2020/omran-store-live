@@ -32,7 +32,7 @@ describe("SiteFooter", () => {
     const footerText = screen.getByRole("contentinfo").textContent ?? "";
     expect(footerText.indexOf("فرع السيد البدوي")).toBeLessThan(footerText.indexOf("فرع الاستاد"));
     expect(screen.getByRole("link", { name: /01555570269/ }).getAttribute("href")).toBe("tel:+201555570269");
-    expect(screen.getByRole("link", { name: /040 3411149/ }).getAttribute("href")).toBe("tel:+20403411149");
+    expect(screen.getByRole("link", { name: /0403336336/ }).getAttribute("href")).toBe("tel:+20403336336");
   });
 
   it("لا يضيف روابط قانونية غير موجودة", () => {
