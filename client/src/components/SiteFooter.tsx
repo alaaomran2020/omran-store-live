@@ -1,6 +1,7 @@
 import { Facebook, Instagram, MessageCircle, ShieldCheck, Store, ExternalLink, BadgeCheck, MapPin, Phone } from "lucide-react";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import { whatsappNumber } from "@/lib/productFormat";
+import { STORE_BRANCHES, STORE_CONTACT } from "@shared/storeContent";
 import VipSignup from "@/components/VipSignup";
 
 export const FOOTER_NAVIGATION = [
@@ -129,22 +130,25 @@ function FooterCompanyInfo() {
           <span>المتجر الرسمي: omrantoys.store</span>
         </p>
         <address className="space-y-2 not-italic">
-          <p className="flex items-start gap-2.5 text-sm font-semibold leading-6 text-white/68">
-            <MapPin size={17} className="mt-1 shrink-0 text-brand-yellow" aria-hidden="true" />
-            <span><strong className="text-white/85">فرع السيد البدوي:</strong> ميدان السيد البدوي، شارع درب الأبشيهي، طنطا.</span>
-          </p>
-          <p className="flex items-start gap-2.5 text-sm font-semibold leading-6 text-white/68">
-            <MapPin size={17} className="mt-1 shrink-0 text-brand-yellow" aria-hidden="true" />
-            <span><strong className="text-white/85">فرع الاستاد:</strong> أمام نادي سيتي كلوب ومطعم سي السيد، طنطا.</span>
-          </p>
-          <a href="tel:+201555570269" className="flex min-h-11 items-center gap-2.5 rounded-xl px-1 text-sm font-bold text-white/75 transition hover:text-white focus-visible:ring-4 focus-visible:ring-white/15">
+          {STORE_BRANCHES.map((branch, index) => (
+            <p key={branch.id} className="flex items-start gap-2.5 text-sm font-semibold leading-6 text-white/68">
+              <MapPin size={17} className="mt-1 shrink-0 text-brand-yellow" aria-hidden="true" />
+              <span>
+                <strong className="text-white/85">
+                  {index === 0 ? "الفرع الرئيسي: " : `${branch.name}: `}
+                </strong>
+                {branch.address}
+              </span>
+            </p>
+          ))}
+          <a href={`tel:+${STORE_CONTACT.whatsapp}`} className="flex min-h-11 items-center gap-2.5 rounded-xl px-1 text-sm font-bold text-white/75 transition hover:text-white focus-visible:ring-4 focus-visible:ring-white/15">
             <MessageCircle size={17} className="shrink-0 text-[#62e998]" aria-hidden="true" />
             <span dir="ltr">01555570269</span>
             <span className="text-xs text-white/50">موبايل وواتساب</span>
           </a>
-          <a href="tel:+20403411149" className="flex min-h-11 items-center gap-2.5 rounded-xl px-1 text-sm font-bold text-white/75 transition hover:text-white focus-visible:ring-4 focus-visible:ring-white/15">
+          <a href={`tel:+${STORE_CONTACT.landline}`} className="flex min-h-11 items-center gap-2.5 rounded-xl px-1 text-sm font-bold text-white/75 transition hover:text-white focus-visible:ring-4 focus-visible:ring-white/15">
             <Phone size={17} className="shrink-0 text-brand-yellow" aria-hidden="true" />
-            <span dir="ltr">040 3411149</span>
+            <span dir="ltr">{STORE_CONTACT.landlineDisplay}</span>
             <span className="text-xs text-white/50">أرضي</span>
           </a>
         </address>

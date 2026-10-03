@@ -71,7 +71,7 @@ describe("client/index.html — HTML الثابت (initial shell)", () => {
 
     expect(local.name).toBe("شركة عمران التجارية");
     expect(local.telephone).toContain("+201555570269");
-    expect(local.telephone).toContain("+20403411149");
+    expect(local.telephone).toContain("+20403336336");
     const addresses = local.address as Record<string, unknown>[];
     expect(addresses).toHaveLength(2);
     const joined = JSON.stringify(addresses, null, 0);
