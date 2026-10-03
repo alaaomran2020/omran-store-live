@@ -284,7 +284,10 @@ function vitePluginOpeningDataConsistency(): Plugin {
         `+${OPENING_PROFILE.contacts.landline}`,
         OPENING_PROFILE.companyName,
         OPENING_PROFILE.storeBrand,
-        OPENING_PROFILE.branches[0].address,
+        ...OPENING_PROFILE.branches.flatMap(branch => [
+          branch.address.split("، طنطا.")[0],
+          branch.city,
+        ]),
       ];
       const missing = required.filter(value => !html.includes(value));
       if (missing.length > 0) {
