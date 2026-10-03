@@ -78,6 +78,12 @@ jspm_packages/
 # Output of 'npm pack'
 *.tgz
 
+# Responsive product variants are derived by `images:variants` during each build.
+# Keep the approved source images in Git; do not commit generated derivatives.
+public/products/processed/**/*-320.webp
+public/products/processed/**/*-640.webp
+public/products/processed/**/*-960.webp
+
 # Yarn Integrity file
 .yarn-integrity
 

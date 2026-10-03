@@ -8,13 +8,18 @@ type HomeCategory = {
 };
 
 const categories: readonly HomeCategory[] = [
-  { name: "عربيات", query: "عربيات", image: "/categories/category-cars-approved.png" },
-  { name: "عرايس", query: "عرايس", image: "/categories/category-dolls-approved.png" },
-  { name: "أطقم المهن والتركيب", query: "مطبخ دكتور نجار تنظيف", image: "/categories/category-role-play-approved.png" },
-  { name: "رفايع لعب أطفال", query: "رفايع", image: "/categories/category-misc-toys-approved.png" },
-  { name: "الكور", query: "كور", image: "/categories/category-balls-approved.png" },
-  { name: "فوانيس رمضان", query: "فوانيس", image: "/categories/category-ramadan-approved.png", comingSoon: true },
+  { name: "عربيات", query: "عربيات", image: "/categories/category-cars-approved.webp" },
+  { name: "عرايس", query: "عرايس", image: "/categories/category-dolls-approved.webp" },
+  { name: "أطقم المهن والتركيب", query: "مطبخ دكتور نجار تنظيف", image: "/categories/category-role-play-approved.webp" },
+  { name: "رفايع لعب أطفال", query: "رفايع", image: "/categories/category-misc-toys-approved.webp" },
+  { name: "الكور", query: "كور", image: "/categories/category-balls-approved.webp" },
+  { name: "فوانيس رمضان", query: "فوانيس", image: "/categories/category-ramadan-approved.webp", comingSoon: true },
 ];
+
+function categorySrcSet(image: string): string {
+  const base = image.replace(/\.webp$/i, "");
+  return `${base}-320.webp 320w, ${base}-640.webp 640w, ${image} 1254w`;
+}
 
 export default function HomeCategoryHighlights() {
   return (
@@ -38,7 +43,17 @@ export default function HomeCategoryHighlights() {
               aria-label={comingSoon ? `${name} — قريبًا` : `تصفح ${name}`}
               className="omran-pressable group relative aspect-square overflow-hidden rounded-[1.6rem] border border-brand-border bg-white shadow-[0_10px_28px_rgba(18,59,109,.07)] transition duration-300 hover:-translate-y-1 hover:border-brand-blue/25 hover:shadow-[0_18px_38px_rgba(18,59,109,.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
             >
-              <img src={image} alt="" width="1024" height="1024" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]" />
+              <img
+                src={image}
+                srcSet={categorySrcSet(image)}
+                sizes="(max-width: 639px) calc((100vw - 2.5rem) / 2), (max-width: 1023px) calc((100vw - 3rem) / 3), 16vw"
+                alt=""
+                width="1254"
+                height="1254"
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+              />
               <span className="sr-only">{name}{comingSoon ? " — قريبًا" : ""}</span>
             </a>
           ))}
