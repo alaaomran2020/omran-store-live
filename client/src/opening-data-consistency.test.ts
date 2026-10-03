@@ -9,7 +9,9 @@ const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 describe("Opening data consistency", () => {
   it("uses one canonical contact record", () => {
     expect(STORE_CONTACT.whatsapp).toBe(OPENING_PROFILE.contacts.whatsapp);
-    expect(STORE_CONTACT.landline).toBe(OPENING_PROFILE.contacts.landlineDisplay);
+    expect(STORE_CONTACT.landline).toBe(OPENING_PROFILE.contacts.landline);
+    expect(STORE_CONTACT.landlineDisplay).toBe(OPENING_PROFILE.contacts.landlineDisplay);
+    expect(STORE_CONTACT.whatsappDisplay).toBe(OPENING_PROFILE.contacts.whatsappDisplay);
     expect(SOCIAL_EMBED_CONFIG.whatsappNumber).toBe(OPENING_PROFILE.contacts.whatsapp);
     expect(html).toContain(`+${OPENING_PROFILE.contacts.whatsapp}`);
     expect(html).toContain(`+${OPENING_PROFILE.contacts.landline}`);
