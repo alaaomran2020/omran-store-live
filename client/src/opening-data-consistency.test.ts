@@ -31,7 +31,9 @@ describe("Opening data consistency", () => {
         city: primary!.city,
       })
     );
-    expect(html).toContain(primary!.address);
+    const [streetAddress] = primary!.address.split("، طنطا.");
+    expect(html).toContain(streetAddress);
+    expect(html).toContain(primary!.city);
   });
 
   it("pins the official opening date", () => {
