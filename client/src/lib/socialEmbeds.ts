@@ -1,3 +1,5 @@
+import { OPENING_PROFILE } from "@shared/openingProfile";
+
 export const SOCIAL_EMBED_CONFIG = {
   instagramProfileUrl: "https://www.instagram.com/omrantoys.store/",
   instagramFeaturedPostUrl: "https://www.instagram.com/p/DcTpBu2lOt8/",
@@ -6,12 +8,12 @@ export const SOCIAL_EMBED_CONFIG = {
   popupFacebookPageUrl: "https://www.facebook.com/profile.php?id=61589179737729",
   /**
    * رقم واتساب المتجر بالصيغة الدولية بدون "+" (مثال: "2010XXXXXXXX").
-   * الرقم الإنتاجي الحالي: +201555570269 (WhatsApp). يُستخدم كقيمة احتياطية
+   * الرقم مشتق من Opening Data Source of Truth ويُستخدم كقيمة احتياطية
    * عندما لا يكون `VITE_WHATSAPP_NUMBER` مضبوطًا وقت البناء.
    * اتركه فارغًا فقط لإخفاء زر "اطلب عبر واتساب" تمامًا — لكن في الإنتاج
    * يجب أن يكون مضبوطًا، وإلا لا يُعرض زر واتساب بدل عرض رقم خاطئ.
    */
-  whatsappNumber: "201555570269",
+  whatsappNumber: OPENING_PROFILE.contacts.whatsapp,
 } as const;
 
 export function isOfficialMetaEmbedUrl(value: string): boolean {
