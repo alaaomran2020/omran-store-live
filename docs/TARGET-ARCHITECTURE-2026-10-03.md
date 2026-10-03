@@ -71,12 +71,12 @@ Cloudflare Pages
 - The generated snapshot remains a last-known-good browser fallback.
 - The publication guard remains fail-closed and is applied before public use.
 - Product IDs, commercial values, content, and original approved media are preserved.
-- Future deployment artifacts should include:
+- The validation artifact already includes:
   - code commit SHA;
-  - selected source (`live-feed` or `repo-fallback`);
-  - approved product count;
-  - catalog content hash; and
-  - image bundle validation result.
+  - selected source (`live-feed` or `repository-fallback`);
+  - approved product count; and
+  - catalog snapshot SHA-256.
+- The deploy job restores that validated snapshot, while the build/deploy guards validate same-origin image bundling.
 
 ### 4. Media performance
 
@@ -148,10 +148,10 @@ Cloudflare Pages
 
 ## Incremental implementation plan
 
-1. **Build hygiene:** make nested scripts package-manager agnostic and ignore generated responsive variants.
-2. **Dependency hygiene:** patch `undici` advisories with targeted overrides and rerun all gates.
-3. **Media delivery:** wire product/card `srcSet` and add optimized category derivatives while preserving originals.
-4. **Provenance:** add catalog count/hash reporting to CI without changing catalog content.
+1. **Build hygiene:** completed — nested scripts are package-manager agnostic and generated responsive variants are ignored.
+2. **Dependency hygiene:** completed for the high-severity gate — targeted `undici` overrides are locked; one low advisory remains for review.
+3. **Media delivery:** completed for current local product/category assets — product/card `srcSet` and optimized category derivatives preserve originals.
+4. **Provenance:** completed for source/count/hash capture and validated snapshot handoff; deeper source-to-CSV reconciliation remains.
 5. **Browser QA:** add a small smoke matrix against the built Pages output.
 6. **SEO measurement:** compare indexing/unfurl behavior before considering path-based product shells.
 7. **External operations:** separately verify Cloudflare Access, custom-domain binding, DNS, and retire the stale GitHub Pages claim.

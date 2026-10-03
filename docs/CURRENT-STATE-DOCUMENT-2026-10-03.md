@@ -22,11 +22,12 @@ The live storefront is healthy at the repository/deployment level:
 - `node scripts/integration-audit.mjs`: **PASS**
 - `pnpm lint`: **PASS** — 0 warnings, 0 errors
 - `pnpm check`: **PASS** — TypeScript clean
-- `pnpm test`: **PASS** — 54 files, 361 tests
+- `pnpm test`: **PASS** — 54 files, 362 tests
 - `pnpm build`: **PASS** — Vite production build, generated route shells and 42-URL sitemap
 - Latest observed production workflow `37145353545`: **success** for `main` commit `a0d1fa53c99bffef682b324d4fae520c13f1292b`
+- Controlled branch verification at `1ddebceac11ee824aed307547eb41195b18e14e0`: lint, typecheck, tests, build, integration audit, responsive media bundle checks, and `pnpm audit --audit-level high` all **PASS**.
 
-The release is not yet a clean QA-approved candidate because two non-functional risks remain: high-severity transitive development-tool vulnerabilities reported by `pnpm audit`, and an image pipeline that generates responsive variants but does not yet consume them from product cards. The production domain also has a stale competing GitHub Pages/CNAME claim documented in the Phase 1 report; it is not changed here.
+The controlled branch is a release candidate for the completed code-safety and media changes, not a production deployment. One low-severity development-tool advisory remains in `pnpm audit` and browser/device QA is still outstanding. The production domain also has a stale competing GitHub Pages/CNAME claim documented in the Phase 1 report; it is not changed here.
 
 ## 1. Current architecture
 
@@ -119,8 +120,8 @@ The repository contains a large amount of historical automation and operational 
 | Approved snapshot | `client/src/lib/publicProductsSnapshot.ts` | initial render, live-catalog fallback, sitemap, product JSON-LD | `shared/products.ts`, local image assets | Snapshot is last-known-good, but content changes require a controlled commit/deploy. |
 | POP UP catalog | `client/src/lib/popupProductsSnapshot.ts` | `/popup`, POP UP sitemap entries, popup product dialogs | `shared/productCatalog.ts` | Separate catalog must not be mixed with toys. |
 | CSV catalog | `public/catalog/products.csv` | CI fallback, admin fallback, operational audit | pinned raw GitHub URL in workflow | Can lag the live Sheet; currently protected by commit-pinned fallback. |
-| Product media | `public/products/processed/` and `public/products/popup/` | product cards, gallery, dialogs, bundle guard | local asset paths and generated variants | Some large originals and generated variants; responsive variants are currently not consumed by `<img srcset>`. |
-| Category media | `public/categories/` | homepage category cards and hero | source image files and hard-coded component references | Six approved PNGs are approximately 2 MB each; below-fold lazy loading limits initial cost but scroll cost is high. |
+| Product media | `public/products/processed/` and `public/products/popup/` | product cards, gallery, dialogs, bundle guard | local asset paths and generated variants | Processed WebP sources now expose same-origin 320/640/960 `srcSet` candidates; approved originals and declared fallbacks remain intact. |
+| Category media | `public/categories/` | homepage category cards and hero | approved PNG sources plus derived WebP references | Six approved PNGs remain preserved; homepage cards now use committed full/320/640 WebP derivatives and responsive `srcSet`. |
 | Brand/company content | `shared/openingProfile.ts`, `shared/site.ts`, `shared/storeContent.ts`, `client/index.html` | homepage, header/footer, JSON-LD, opening consistency gate | Vite build consistency plugin | Duplicate content surfaces can drift if changed outside the canonical profile. |
 | WhatsApp conversion | `VITE_WHATSAPP_NUMBER` / production env and `productFormat.ts` | hero, cards, details, footer | `analytics.ts`, Make gateway | External WhatsApp/Make availability is outside the static app. |
 | Conversion analytics | `client/src/lib/analytics.ts` and `MAKE_GATEWAY_URL` | product views, searches, WhatsApp events | public Make hook, Google Sheets scenario | External endpoint failure must never block conversion; observability is external. |
@@ -188,29 +189,30 @@ Observed local production build metrics:
 - `dist/` size after the build: approximately 25 MB including public media.
 - Main application JavaScript: approximately 454 KB raw / 137 KB gzip.
 - Main CSS: approximately 197 KB raw / 30 KB gzip.
-- Product images are lazy-loaded, but `ProductImage` currently sets `sizes` without a matching `srcSet`; generated 320/640/960 variants are therefore not selected by browsers.
-- Six approved homepage category PNGs are approximately 1.9–2.2 MB each. They are lazy-loaded but remain unnecessarily expensive when scrolled into view.
+- Product images are lazy-loaded and processed local WebP candidates now expose generated 320/640/960 `srcSet` variants while retaining the declared source fallback.
+- Six approved homepage category PNGs remain preserved as source assets, while committed full/320/640 WebP derivatives reduce the category-card delivery set from approximately 12 MB of PNG sources to approximately 1.4 MB of WebP derivatives.
 - Hashed JS assets receive immutable caching through the generated `_headers`; HTML remains revalidated by Cloudflare Assets.
 - Vite build has no source maps in shipped output.
 
 ## 8. Current deployment and environment
 
 - GitHub Actions validates PRs and deploys only non-PR `main`/scheduled/manual runs.
-- The workflow chooses the live Apps Script feed when its expected header is present and otherwise uses a commit-pinned raw CSV fallback.
-- The workflow runs the integration audit, lint, typecheck, tests, build, image/catalog bundle guards, Cloudflare credential check, Pages deploy, and sitemap probes.
+- The validation job chooses the live Apps Script feed when its expected header is present and otherwise uses a commit-pinned raw CSV fallback.
+- The validation job records the selected catalog source, approved count, snapshot SHA-256, and commit in a short-lived artifact; the deploy job restores that exact validated snapshot instead of refetching the external feed.
+- The workflow runs the integration audit, lint, typecheck, tests, build, image/catalog bundle guards, provenance capture, Cloudflare credential check, Pages deploy, and sitemap probes.
 - `.env.production` contains only public runtime contact/subscriber values; secrets are expected in GitHub/Cloudflare configuration, not in browser environment files.
 - Static security headers are generated into the Pages output.
 - Cloudflare Access, custom-domain binding, DNS, and external Make/Google configurations cannot be completely verified from this repository alone.
 
 ## 9. Technical debt
 
-1. Responsive image variants are generated during build but not wired into product image markup.
-2. Generated responsive product files appear as untracked files after a local build; build artifacts need an explicit ignore convention.
-3. High-severity `undici` advisories remain in transitive dev tooling (`jsdom` and Wrangler/Miniflare) according to `pnpm audit`.
-4. Six large approved PNG category sources increase scroll-time transfer size.
+1. The remaining image-performance gap is coverage for remote/popup/legacy assets that do not have generated variants; those paths intentionally retain declared fallbacks.
+2. Generated responsive product files are now explicitly ignored; a clean build still owns them as ephemeral output rather than source data.
+3. `pnpm audit --audit-level high` is green after targeted `undici` overrides; one low-severity development-tool advisory remains for later dependency review.
+4. Approved PNG category sources remain large but are preserved; homepage delivery now uses approximately 1.4 MB of derived WebP assets.
 5. Product SEO depends on client-side metadata mutation rather than pre-rendered product documents.
 6. `App.tsx` contains preserved legacy admin aliases and duplicated explicit operational route entries; this is low-risk refactor debt, not a production blocker.
-7. Production deployment can generate a new catalog snapshot from the external feed without a corresponding catalog commit; deployment provenance should eventually record the catalog hash.
+7. Validation and deployment now share a catalog snapshot artifact with source, count, commit, and SHA-256 provenance.
 8. Existing historical documents contain stale deployment dates/commit claims; the new dated reports are the current audit reference.
 9. Browser-level responsive/performance regression tests are missing from CI.
 10. The stale `omran-store` GitHub Pages CNAME/certificate claim remains external infrastructure debt.
@@ -222,11 +224,11 @@ Observed local production build metrics:
 | Live repository/deployment identity | KEEP | P0 | Confirmed in Phase 1; do not switch repositories. |
 | Product publication guard and fallback snapshot | KEEP | P0 | Preserve; no product deletion or replacement. |
 | Cloudflare Pages deployment gate | KEEP | P0 | Preserve required checks and main-only production deployment. |
-| Catalog runtime resilience | IMPROVE | P1 | Keep live feed + snapshot; make failure/age/source visible to operations. |
-| Product responsive media | IMPROVE | P1 | Consume generated same-origin variants and add regression coverage. |
-| Category media transfer size | IMPROVE | P1 | Add derived WebP/responsive assets without deleting approved originals. |
-| Dependency audit | IMPROVE | P1 | Patch transitive `undici` versions, rerun full gates. |
-| Local build reproducibility | IMPROVE | P1 | Avoid nested `pnpm` calls inside scripts so Corepack invocation works. |
+| Catalog runtime resilience | IMPROVE | P1 | Validation/deploy provenance is now captured; expose source/age to operations in a later owner-approved diagnostics change. |
+| Product responsive media | IMPROVED | P1 | Same-origin generated variants are wired into `ProductImage` with tests; continue browser measurement. |
+| Category media transfer size | IMPROVED | P1 | Derived WebP/responsive assets are delivered without deleting approved originals. |
+| Dependency audit | IMPROVED | P1 | High-severity gate is green with targeted overrides; review the remaining low advisory later. |
+| Local build reproducibility | IMPROVED | P1 | Build/dev call the image generator directly and generated product derivatives are ignored. |
 | Product SEO rendering | IMPROVE | P2 | Improve within static architecture; do not rebuild the system as Next.js/SSR. |
 | Admin Access policy | MISSING evidence | P1 external | Verify in Cloudflare dashboard; no code-side password workaround. |
 | Customer auth gateway | MISSING | P2 external | Keep fail-closed until trusted gateway is deployed. |
