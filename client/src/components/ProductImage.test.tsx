@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { ProductImage } from "./ProductImage";
+import { ProductImage, responsiveImageSrcSet } from "./ProductImage";
 
 const baseProduct = {
   id: "OT-IMAGE-1",
@@ -14,6 +14,15 @@ const baseProduct = {
 afterEach(cleanup);
 
 describe("صور المنتجات والدفاع ضد الصور المكسورة", () => {
+  it("يبني srcset فقط للصور المعالجة المحلية", () => {
+    expect(responsiveImageSrcSet("/products/processed/generated/product-main.webp"))
+      .toBe("/products/processed/generated/product-main-320.webp 320w, /products/processed/generated/product-main-640.webp 640w, /products/processed/generated/product-main-960.webp 960w");
+    expect(responsiveImageSrcSet("/products/popup/product-main.webp")).toBeUndefined();
+    expect(responsiveImageSrcSet("https://example.com/product.webp")).toBeUndefined();
+    expect(responsiveImageSrcSet("/products/processed/product-main.svg")).toBeUndefined();
+    expect(responsiveImageSrcSet("/products/processed/product-main-640.webp")).toBeUndefined();
+  });
+
   it("يعرض placeholder مفهومًا عندما لا توجد أي صورة معلنة", () => {
     render(<ProductImage product={baseProduct} />);
 

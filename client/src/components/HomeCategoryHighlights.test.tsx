@@ -29,7 +29,8 @@ describe("تصنيفات الصفحة الرئيسية", () => {
     const images = Array.from(container.querySelectorAll("img"));
 
     expect(images).toHaveLength(6);
-    expect(images.every(image => image.getAttribute("src")?.endsWith("-approved.png"))).toBe(true);
+    expect(images.every(image => image.getAttribute("src")?.endsWith("-approved.webp"))).toBe(true);
+    expect(images.every(image => image.getAttribute("srcset")?.includes("-approved-320.webp 320w"))).toBe(true);
     expect(images.every(image => image.getAttribute("loading") === "lazy")).toBe(true);
     expect(images.every(image => image.getAttribute("decoding") === "async")).toBe(true);
     expect(container.querySelectorAll('a[aria-label^="تصفح "]')).toHaveLength(5);
