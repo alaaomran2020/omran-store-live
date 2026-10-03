@@ -5,7 +5,8 @@
 **Candidate:** `e3fb222`  
 **Date:** 2026-10-03 UTC  
 **Environment:** local clean-build-equivalent checkout; Cloudflare Pages-compatible local preview for HTTP probes  
-**Production changed:** **No**
+**Production changed during this QA run:** **No**<br>
+**Subsequent deployment:** successful workflow 37154608891; see [`FINAL-PRODUCTION-REPORT-2026-10-03.md`](./FINAL-PRODUCTION-REPORT-2026-10-03.md)
 
 ## Automated gates
 

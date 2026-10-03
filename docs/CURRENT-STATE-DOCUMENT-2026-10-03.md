@@ -24,10 +24,11 @@ The live storefront is healthy at the repository/deployment level:
 - `pnpm check`: **PASS** — TypeScript clean
 - `pnpm test`: **PASS** — 54 files, 362 tests
 - `pnpm build`: **PASS** — Vite production build, generated route shells and 42-URL sitemap
-- Latest observed production workflow `37145353545`: **success** for `main` commit `a0d1fa53c99bffef682b324d4fae520c13f1292b`
+- Previous observed production workflow `37145353545`: **success** for `main` commit `a0d1fa53c99bffef682b324d4fae520c13f1292b`
 - Controlled branch verification at `1ddebceac11ee824aed307547eb41195b18e14e0`: lint, typecheck, tests, build, integration audit, responsive media bundle checks, and `pnpm audit --audit-level high` all **PASS**.
+- Production workflow `37154608891`: **success** for merge commit `d7392ab4c21936aaa7367a59cd795b0bf1064803`; Pages deploy and production sitemap gate passed.
 
-The controlled branch is a release candidate for the completed code-safety and media changes, not a production deployment. One low-severity development-tool advisory remains in `pnpm audit` and browser/device QA is still outstanding. The production domain also has a stale competing GitHub Pages/CNAME claim documented in the Phase 1 report; it is not changed here.
+The controlled candidate was merged through PR #141 and deployed by the confirmed `main` workflow. One low-severity development-tool advisory remains in `pnpm audit`, browser/device QA is still outstanding, and the production domain has a stale competing GitHub Pages/CNAME claim documented in the Phase 1 report; it was not changed here.
 
 ## 1. Current architecture
 

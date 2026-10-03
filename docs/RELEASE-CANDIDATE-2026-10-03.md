@@ -6,7 +6,7 @@
 **Candidate head:** `e3fb222` (`1ddebceac11ee824aed307547eb41195b18e14e0` code candidate plus release documentation)  
 **Baseline:** `main` at `a0d1fa53c99bffef682b324d4fae520c13f1292b`  
 **Candidate date:** 2026-10-03 UTC  
-**Production status:** **NOT DEPLOYED**
+**Production status:** **DEPLOYED AND VERIFIED BY WORKFLOW 37154608891**
 
 ## Purpose
 
@@ -38,14 +38,8 @@ This is the Phase 3 controlled-development release candidate for the confirmed e
 
 ## Candidate decision
 
-**Conditional GO for pull-request review and CI validation.**
+**GO for the controlled merge and deployment gate; deployment completed successfully.**
 
-The local engineering gates are green, but this candidate is **not yet approved for Production** until:
+The pull-request workflow validated the exact branch, PR #141 was merged, and Production was deployed only by the confirmed `main` → Cloudflare Pages workflow. The post-deploy workflow verified the Pages sitemap and live endpoint fetches verified the custom domain, product query, safe unknown-product fallback, 404, robots, sitemap, and derived media markers.
 
-- the pull-request workflow validates the exact branch;
-- a repository owner reviews the changes and preservation statement;
-- browser/device QA is completed or explicitly accepted as a residual risk;
-- Production deployment is performed only by the confirmed `main` → Cloudflare Pages workflow; and
-- post-deploy probes verify the Pages hostname, custom domain, sitemap, representative product media, and the unchanged catalog contract.
-
-The stale legacy GitHub Pages/CNAME claim and Cloudflare Access/DNS ownership checks remain separate external operations. They were not changed by this candidate.
+Browser/device QA remains a residual release risk, and the stale legacy GitHub Pages/CNAME claim plus Cloudflare Access/DNS ownership checks remain separate external operations. They were not changed by this candidate.
