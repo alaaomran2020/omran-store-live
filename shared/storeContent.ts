@@ -1,10 +1,11 @@
+import { OPENING_PROFILE } from "./openingProfile";
+
 /**
  * OMRAN TOYS — سجلّ المحتوى التسويقي القابل للإدارة من لوحة الإدارة.
  *
  * هذا هو المصدر المرجعي للمحتوى الذي تعرضه الواجهة: شريط المستجدات،
- * بيانات التواصل، الفروع، الروابط الرسمية. القيم الحالية منقولة حرفيًا من
- * مكوّنات المتجر المعتمدة (AnnouncementBar / SiteFooter / socialEmbeds) حتى
- * لا يتغير سلوك المتجر.
+ * بيانات التواصل، الفروع، الروابط الرسمية. القيم الحالية مشتقة من
+ * Opening Data Source of Truth حتى لا تتكرر بيانات الافتتاح في ملفات متعددة.
  *
  * التعديلات الإنتاجية تمر عبر قناة موثّقة (بوابة إجراءات الإدارة أو حزمة
  * تعديل يدوية للشيت/الكود) — لا تُكتب مباشرة في المتصفح.
@@ -40,25 +41,14 @@ export type StoreSocialLinks = {
 };
 
 export const STORE_CONTACT: StoreContact = {
-  whatsapp: "201555570269",
-  landline: "20403411149",
-  officialDomain: "omrantoys.store",
+  whatsapp: OPENING_PROFILE.contacts.whatsapp,
+  landline: OPENING_PROFILE.contacts.landlineDisplay,
+  officialDomain: OPENING_PROFILE.officialDomain,
 };
 
-export const STORE_BRANCHES: StoreBranch[] = [
-  {
-    id: "sayyid-al-badawi",
-    name: "فرع السيد البدوي",
-    address: "ميدان السيد البدوي، شارع درب الأبشيهي، طنطا.",
-    city: "طنطا",
-  },
-  {
-    id: "al-stad",
-    name: "فرع الاستاد",
-    address: "أمام نادي سيتي كلوب ومطعم سي السيد، طنطا.",
-    city: "طنطا",
-  },
-];
+export const STORE_BRANCHES: StoreBranch[] = OPENING_PROFILE.branches.map(
+  ({ id, name, address, city }) => ({ id, name, address, city })
+);
 
 export const STORE_SOCIAL: StoreSocialLinks = {
   instagram: "https://www.instagram.com/omrantoys.store/",
@@ -73,6 +63,12 @@ export const POPUP_SOCIAL: StoreSocialLinks = {
 };
 
 export const STORE_ANNOUNCEMENTS: StoreAnnouncement[] = [
+  {
+    id: "opening",
+    message: `الافتتاح الرسمي يوم ${OPENING_PROFILE.opening.displayDate} — فرع السيد البدوي، طنطا.`,
+    href: "#branches",
+    active: true,
+  },
   {
     id: "catalog",
     message: "تشكيلات لعب أطفال جديدة بتتضاف للكتالوج باستمرار",
