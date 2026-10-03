@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
 import { writeSitemap } from "./scripts/sitemap-generate-core.mjs";
+import { OPENING_PROFILE } from "./shared/openingProfile";
 import {
   defineConfig,
   loadEnv,
@@ -273,6 +274,29 @@ function vitePluginEdgeHeaders(): Plugin {
  * snapshots الحزمة). يفشل بصمت لصالح النسخة الثابتة `public/sitemap.xml`
  * المنسوخة مسبقًا — sitemap ناقصة أفضل من فشل بناء.
  */
+function vitePluginOpeningDataConsistency(): Plugin {
+  return {
+    name: "opening-data-consistency",
+    apply: "build",
+    transformIndexHtml(html) {
+      const required = [
+        `+${OPENING_PROFILE.contacts.whatsapp}`,
+        `+${OPENING_PROFILE.contacts.landline}`,
+        OPENING_PROFILE.companyName,
+        OPENING_PROFILE.storeBrand,
+        OPENING_PROFILE.branches[0].address,
+      ];
+      const missing = required.filter(value => !html.includes(value));
+      if (missing.length > 0) {
+        throw new Error(
+          `Opening data consistency gate failed. Missing canonical values: ${missing.join(" | ")}`
+        );
+      }
+      return html;
+    },
+  };
+}
+
 function vitePluginSitemap(): Plugin {
   return {
     name: "sitemap-build",
@@ -348,6 +372,7 @@ function buildPlugins(): PluginOption[] {
     tailwindcss(),
     vitePluginManusDebugCollector(),
     vitePluginOptionalAnalytics(env),
+    vitePluginOpeningDataConsistency(),
     vitePluginEdgeHeaders(),
     vitePluginSitemap(),
     vitePluginSpaRouteShells(),
