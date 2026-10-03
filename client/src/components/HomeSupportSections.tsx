@@ -1,5 +1,6 @@
 import { BriefcaseBusiness, ChevronDown, MapPin, MessageCircle, PackageCheck, ShieldCheck, Store } from "lucide-react";
 import { whatsappNumber } from "@/lib/productFormat";
+import { STORE_BRANCHES } from "@shared/storeContent";
 
 const faqs = [
   ["هل الأسعار موجودة على كل المنتجات؟", "بنظهر فقط البيانات المتاحة فعليًا. لو السعر أو الكمية مش منشورين، استفسر عنهم مباشرة على واتساب."],
@@ -86,15 +87,15 @@ export default function HomeSupportSections() {
             <MapPin className="text-brand-blue" aria-hidden="true" />
           </div>
           <div className="mt-5 grid gap-3 md:grid-cols-2">
-            <article className="omran-pressable rounded-[1.6rem] border border-brand-blue/20 bg-white p-5 shadow-[0_10px_26px_rgba(18,59,109,.07)]">
-              <span className="inline-flex rounded-full bg-brand-yellow px-2.5 py-1 text-[11px] font-black text-brand-navy">الفرع الرئيسي</span>
-              <h3 className="mt-3 text-lg font-black text-brand-navy">فرع السيد البدوي</h3>
-              <p className="mt-2 text-sm font-semibold leading-7 text-brand-muted">ميدان السيد البدوي، شارع درب الأبشيهي، طنطا.</p>
-            </article>
-            <article className="omran-pressable rounded-[1.6rem] border border-brand-border bg-white p-5 shadow-[0_10px_26px_rgba(18,59,109,.07)]">
-              <h3 className="text-lg font-black text-brand-navy">فرع الاستاد</h3>
-              <p className="mt-2 text-sm font-semibold leading-7 text-brand-muted">أمام نادي سيتي كلوب ومطعم سي السيد، طنطا.</p>
-            </article>
+            {STORE_BRANCHES.map((branch, index) => (
+              <article key={branch.id} className="omran-pressable rounded-[1.6rem] border border-brand-border bg-white p-5 shadow-[0_10px_26px_rgba(18,59,109,.07)]">
+                {index === 0 && (
+                  <span className="inline-flex rounded-full bg-brand-yellow px-2.5 py-1 text-[11px] font-black text-brand-navy">الفرع الرئيسي</span>
+                )}
+                <h3 className={`text-lg font-black text-brand-navy ${index === 0 ? "mt-3" : ""}`}>{branch.name}</h3>
+                <p className="mt-2 text-sm font-semibold leading-7 text-brand-muted">{branch.address}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
