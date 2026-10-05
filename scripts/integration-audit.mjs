@@ -233,11 +233,95 @@ if (exists("client/src/lib/makeGateway.ts")) {
   const gateway = read("client/src/lib/makeGateway.ts");
   assert(
     gateway.includes("hook.eu1.make.com"),
-    "unified Make gateway URL must be configured"
+    "unified Make operations gateway URL must be configured"
   );
   assert(
-    gateway.includes("catalog"),
-    "unified Make gateway must expose the catalog action URL"
+    !gateway.includes("makeCatalogUrl"),
+    "Make must not expose a catalog action URL: the catalog source of truth is the repository"
+  );
+}
+
+// --- Single catalog source of truth -----------------------------------------
+assert(
+  exists("public/catalog/products.csv"),
+  "missing catalog source of truth: public/catalog/products.csv"
+);
+
+if (exists("client/src/lib/productsClient.ts")) {
+  const client = read("client/src/lib/productsClient.ts");
+  assert(
+    !/\bfetch\s*\(/.test(client),
+    "catalog client must not perform any runtime network request"
+  );
+  for (const forbidden of [
+    "script.google.com",
+    "makeCatalogUrl",
+    "action=catalog",
+    "PRODUCTS_SHEET_URL",
+  ]) {
+    assert(
+      !client.includes(forbidden),
+      `catalog client must not reference a legacy catalog source: ${forbidden}`
+    );
+  }
+  assert(
+    client.includes("PUBLIC_PRODUCTS_SNAPSHOT") &&
+      client.includes("POPUP_PRODUCTS_SNAPSHOT"),
+    "catalog client must read the bundled approved snapshots"
+  );
+}
+
+if (exists("scripts/generate-public-products-snapshot.ts")) {
+  const generator = read("scripts/generate-public-products-snapshot.ts");
+  assert(
+    generator.includes("public/catalog/products.csv"),
+    "snapshot generator must read the repository catalog source of truth"
+  );
+  assert(
+    !generator.includes("PRODUCTS_SHEET_URL"),
+    "snapshot generator must not accept a legacy catalog sheet URL"
+  );
+}
+
+if (exists(".github/workflows/deploy-storefront.yml")) {
+  const workflow = read(".github/workflows/deploy-storefront.yml");
+  assert(
+    !workflow.includes("script.google.com"),
+    "deployment workflow must not depend on an Apps Script catalog feed"
+  );
+  assert(
+    workflow.includes("scripts/catalog-dependency-gate.mjs"),
+    "deployment workflow must run the legacy catalog dependency gate"
+  );
+  // Protect the PR #144 media handoff: staging, restore and the fail-closed gate.
+  for (const guard of [
+    "Stage build-generated media for the deploy job",
+    "Restore build-generated media assets",
+    "Assert deployment media integrity (fail closed)",
+    "generated-media-manifest.txt",
+  ]) {
+    assert(
+      workflow.includes(guard),
+      `deployment workflow must preserve the media integrity handoff: ${guard}`
+    );
+  }
+}
+
+if (exists("client/src/lib/popupProductsSnapshot.ts")) {
+  const popup = read("client/src/lib/popupProductsSnapshot.ts");
+  const popupIds = [...popup.matchAll(/id:\s*"([^"]+)"/g)].map(match => match[1]);
+  assert(
+    popupIds.length === 5,
+    `POP UP catalog must contain exactly 5 approved products, found ${popupIds.length}`
+  );
+  assert(
+    popupIds.every(id => id.startsWith("POP-")),
+    "POP UP catalog must stay isolated from the toys catalog"
+  );
+  const toys = read("client/src/lib/publicProductsSnapshot.ts");
+  assert(
+    popupIds.every(id => !toys.includes(id)),
+    "POP UP products must not leak into the toys snapshot"
   );
 }
 
