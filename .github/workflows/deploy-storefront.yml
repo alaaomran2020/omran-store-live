@@ -153,6 +153,70 @@ jobs:
           print('\\n'.join(provenance))
           PY
 
+      - name: Stage build-generated media for the deploy job
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-inputs
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import shutil
+          import subprocess
+          import sys
+
+          # A validated snapshot may reference a same-origin asset that snapshot
+          # generation downloaded for a remote-only product. Such a file is not
+          # tracked by Git, so the deploy job's fresh checkout cannot contain it:
+          # its bytes must travel inside the validated artifact alongside the
+          # snapshot that references them.
+          snapshot = Path('client/src/lib/publicProductsSnapshot.ts').read_text(encoding='utf-8')
+          pairs = []
+          current_id = None
+          for line in snapshot.splitlines():
+              id_match = re.match(r'^\s*(?:"id"|id):\s*"([^"]+)"', line)
+              if id_match:
+                  current_id = id_match.group(1)
+                  continue
+              image_match = re.match(r'^\s*(?:"image"|image):\s*"([^"]+)"', line)
+              if image_match and current_id:
+                  pairs.append((current_id, image_match.group(1)))
+                  current_id = None
+
+          if not pairs:
+              sys.exit('No approved snapshot images found to stage')
+
+          tracked = set(
+              subprocess.run(
+                  ['git', 'ls-files', '-z'], check=True, capture_output=True, text=True
+              ).stdout.split('\0')
+          )
+
+          manifest_lines = []
+          for product_id, image in pairs:
+              if not image.startswith('/') or image.startswith('//'):
+                  sys.exit(f'Snapshot image is not same-origin for {product_id}: {image}')
+              source = Path('public') / image.lstrip('/')
+              if source.as_posix() in tracked:
+                  continue  # Committed asset: present in every fresh checkout.
+              if not source.is_file() or source.stat().st_size == 0:
+                  sys.exit(
+                      f'Snapshot references a missing/empty build-generated asset for '
+                      f'{product_id}: {image}'
+                  )
+              target = Path('release-inputs/generated-media') / image.lstrip('/')
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(source, target)
+              manifest_lines.append(f'{product_id}\t{image}\t{source.stat().st_size}')
+
+          Path('release-inputs/generated-media-manifest.txt').write_text(
+              ''.join(f'{line}\n' for line in manifest_lines), encoding='utf-8'
+          )
+          print(f'Build-generated media staged for deploy: {len(manifest_lines)} file(s)')
+          for line in manifest_lines:
+              print(f'  {line}')
+          PY
+
       - name: Upload validated storefront inputs
         uses: actions/upload-artifact@v4
         with:
@@ -203,8 +267,140 @@ jobs:
           cat release-inputs/catalog-provenance.txt
           echo "CATALOG_SOURCE=validated-artifact" >> "$GITHUB_ENV"
 
+      - name: Restore build-generated media assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+          import sys
+
+          # Deterministic, manifest-driven restore into the source public tree so
+          # the build's publicDir copy publishes the exact validated bytes.
+          manifest = Path('release-inputs/generated-media-manifest.txt')
+          if not manifest.is_file():
+              print('Build-generated media manifest is absent: nothing to restore')
+              raise SystemExit(0)
+
+          entries = [
+              line.split('\t')
+              for line in manifest.read_text(encoding='utf-8').splitlines()
+              if line.strip()
+          ]
+          if not entries:
+              print('Build-generated media manifest is empty: nothing to restore')
+              raise SystemExit(0)
+
+          media_root = Path('release-inputs/generated-media')
+          restored = 0
+          failures = []
+          for entry in entries:
+              product_id, image = entry[0], entry[1]
+              validated_size = int(entry[2]) if len(entry) > 2 and entry[2].strip() else 0
+              relative = image.lstrip('/')
+              source = media_root / relative
+              if not source.is_file():
+                  failures.append(
+                      f'MISSING product={product_id} reference={image} expected={source}'
+                  )
+                  continue
+              actual_size = source.stat().st_size
+              if actual_size == 0 or (validated_size and actual_size != validated_size):
+                  failures.append(
+                      f'INVALID product={product_id} reference={image} expected={source} '
+                      f'(size {actual_size} != validated {validated_size})'
+                  )
+                  continue
+              target = Path('public') / relative
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(source, target)
+              restored += 1
+
+          if failures:
+              print('::error::Validated build-generated media could not be restored')
+              for failure in failures:
+                  print(f'  {failure}')
+              sys.exit(1)
+
+          print(f'Build-generated media restore: {restored} file(s) restored into public/')
+          PY
+
       - name: Build storefront
         run: pnpm build
+
+      - name: Assert deployment media integrity (fail closed)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          # Fail-closed gate against the ACTUAL deployment output. Every
+          # same-origin image referenced by the bundled catalog must exist inside
+          # dist/public before wrangler uploads that directory.
+          output_root = Path('dist/public').resolve()
+          specs = [
+              ('toys', 'client/src/lib/publicProductsSnapshot.ts', '(?:"image"|image)', '/products/processed/'),
+              ('popup', 'client/src/lib/popupProductsSnapshot.ts', 'localImage', '/products/popup/'),
+          ]
+
+          checked = 0
+          remote = []
+          unsafe = []
+          missing = []
+          empty = []
+          problems = []
+
+          for label, snapshot_path, key, prefix in specs:
+              source = Path(snapshot_path).read_text(encoding='utf-8')
+              found = 0
+              for match in re.finditer(rf'{key}:\s*"([^"]+)"', source):
+                  image = match.group(1)
+                  # Pair each media reference with the nearest preceding product id.
+                  # Position-based pairing stays correct regardless of line layout.
+                  owner = label
+                  for id_match in re.finditer(r'(?:"id"|id):\s*"([^"]+)"', source[: match.start()]):
+                      owner = id_match.group(1)
+                  found += 1
+                  checked += 1
+                  if not image.startswith(prefix):
+                      remote.append((label, owner, image))
+                      continue
+                  resolved = (output_root / image.lstrip('/')).resolve()
+                  if output_root not in resolved.parents:
+                      unsafe.append((label, owner, image, str(resolved)))
+                      continue
+                  if not resolved.is_file():
+                      missing.append((label, owner, image, str(resolved)))
+                      continue
+                  if resolved.stat().st_size < 1024:
+                      empty.append((label, owner, image, resolved.stat().st_size))
+                      continue
+              if found == 0:
+                  problems.append(
+                      f'{label}: no image references parsed from {snapshot_path} '
+                      f'(the gate must not be a silent no-op)'
+                  )
+
+          if remote or unsafe or missing or empty or problems:
+              print('::error::Deployment media integrity gate FAILED - refusing to deploy')
+              for label, owner, image in remote:
+                  print(f'  REMOTE_REFERENCE catalog={label} product={owner} reference={image}')
+              for label, owner, image, path in unsafe:
+                  print(f'  UNSAFE_PATH catalog={label} product={owner} reference={image} expected={path}')
+              for label, owner, image, path in missing:
+                  print(f'  MISSING_ASSET catalog={label} product={owner} reference={image} expected={path}')
+              for label, owner, image, size in empty:
+                  print(f'  EMPTY_ASSET catalog={label} product={owner} reference={image} size={size}')
+              for problem in problems:
+                  print(f'  SNAPSHOT_PARSE {problem}')
+              sys.exit(1)
+
+          print(f'Deployment media integrity gate: PASS ({checked} snapshot images verified in dist/public)')
+          PY
 
       - name: Check Cloudflare credentials
         env:
