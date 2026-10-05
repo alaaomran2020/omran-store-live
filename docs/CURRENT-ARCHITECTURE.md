@@ -73,6 +73,39 @@ Cloudflare Access، وهي غير مفعّلة حتى تُنشر البوابة 
 ## Storefront Integration
 
 - Routes are wired from `client/src/App.tsx`.
+
+### Catalog source of truth (single, repository-controlled)
+
+```
+public/catalog/products.csv                      <- the only catalog source of truth
+  -> scripts/generate-public-products-snapshot.ts   (build time; no network for data)
+    -> client/src/lib/publicProductsSnapshot.ts     (bundled toys catalog)
+       client/src/lib/popupProductsSnapshot.ts      (bundled POP UP catalog, isolated)
+      -> storefront UI + sitemap + structured data  (all from the same bundled data)
+```
+
+- The storefront performs **no catalog network request at runtime**. The
+  bundled snapshot is rendered directly, so the UI, the sitemap and the
+  structured data can never disagree.
+- **Google Apps Script is NOT a production catalog dependency** — not as a
+  source and not as a fallback.
+- **A live Google Sheet is NOT a production catalog dependency** — not as a
+  source and not as a fallback.
+- **Make is NOT a catalog source.** The Make gateway is used only for
+  operations/analytics (WhatsApp conversions, admin actions, audit log).
+- No environment variable can reactivate a legacy catalog source;
+  `VITE_PRODUCTS_SHEET_URL` and the `PRODUCTS_SHEET_URL` chain were removed.
+- `scripts/catalog-dependency-gate.mjs` fails the build if any executable
+  production path reaches for Apps Script, a live Sheet CSV endpoint or a Make
+  catalog action.
+- Production catalog records are protected: product IDs, slugs, URLs, names,
+  prices, availability, descriptions, options and image references must not be
+  altered except through an approved change to `public/catalog/products.csv`.
+- The only network access during a build is downloading an approved product
+  image from its documented provenance so it can be served same-origin. That
+  is a media step, not a catalog data source, and the deploy job verifies every
+  referenced asset exists inside the real `dist/public` output before upload.
+
 - Public catalog snapshot is in `client/src/lib/publicProductsSnapshot.ts`.
 - Shared product publication logic is in `shared/products.ts`.
 - Public product images are same-origin assets under `public/products/processed/`.

@@ -4,14 +4,14 @@ import { ArrowLeft, RefreshCw } from "lucide-react";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
 import { ProductDetailsDialog } from "@/components/ProductDetailsDialog";
 import { filterProductsByCatalog } from "@/lib/productCatalog";
-import { getInitialProductsSnapshot, refreshProductsFromLiveCatalog, type Product } from "@/lib/productsClient";
+import { getInitialProductsSnapshot, loadPublishedCatalog, type Product } from "@/lib/productsClient";
 import { findSimilarProducts } from "@/lib/similarProducts";
 
 export default function HomeProductShowcase() {
   const [openProduct, setOpenProduct] = useState<Product | null>(null);
   const productsQuery = useQuery({
     queryKey: ["products"],
-    queryFn: () => refreshProductsFromLiveCatalog(),
+    queryFn: () => loadPublishedCatalog(),
     initialData: () => getInitialProductsSnapshot(),
     staleTime: Infinity,
     gcTime: Infinity,

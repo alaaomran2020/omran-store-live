@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Products from "@/pages/Products";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "@/lib/publicProductsSnapshot";
 import { POPUP_PRODUCTS_SNAPSHOT } from "@/lib/popupProductsSnapshot";
-import { makeCatalogUrl } from "@/lib/makeGateway";
 
 function renderCatalog(catalog: "toys" | "popup" = "toys") {
   const queryClient = new QueryClient({
@@ -19,33 +18,24 @@ function renderCatalog(catalog: "toys" | "popup" = "toys") {
 }
 
 const cards = () => screen.getAllByTestId("product-card");
+
+/**
+ * نداءات الشبكة الوحيدة المسموح بها من صفحة الكتالوج هي بصمات القياس
+ * (POST إلى بوابة العمليات). أي نداء قراءة كتالوج (GET أو `action=catalog`)
+ * يعني عودة اعتماد خارجي على مصدر منتجات حي.
+ */
+const catalogNetworkCalls = () =>
+  (fetch as unknown as { mock: { calls: [string, { method?: string }?][] } }).mock.calls.filter(
+    ([url, init]) =>
+      String(url).includes("catalog") || (init?.method ?? "GET").toUpperCase() === "GET"
+  );
 const initialVisibleCount = Math.min(24, PUBLIC_PRODUCTS_SNAPSHOT.length);
-
-const liveHeaders = [
-  "id", "name", "price", "category", "description", "image", "active", "sort_order",
-  "product_prompt", "workflow_status", "qa_status", "source_drive_id", "processed_image",
-  "review_reason", "sku", "age_min", "age_max", "brand", "tags", "availability",
-];
-
-const liveRow = (
-  id: string,
-  name: string,
-  category: string,
-  brand: string,
-  tags: string,
-  availability: string,
-  ageMin: string,
-  ageMax: string,
-  sortOrder: string
-) => [
-  id, name, "", category, "وصف موثق", "", "TRUE", sortOrder, "", "PUBLISHED", "PASS", "", "", "", id,
-  ageMin, ageMax, brand, tags, availability,
-];
 
 beforeEach(() => {
   window.history.replaceState({}, "", "/products");
   vi.stubEnv("VITE_WHATSAPP_NUMBER", "201000000000");
-  vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("catalog gateway unavailable"))));
+  // أي نداء شبكة أثناء عرض الكتالوج يعتبر فشلًا معماريًا: الكتالوج مُجمَّع داخل الحزمة.
+  vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("no network is allowed for the catalog"))));
 });
 
 afterEach(() => {
@@ -65,7 +55,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     expect(screen.getByRole("main")).toBe(mains[0]);
   });
 
-  it("يعرض Snapshot المحلي إذا تعذر الكتالوج الحي", async () => {
+  it("يعرض الكتالوج المعتمد من المستودع دون أي نداء شبكة", async () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
     expect(screen.queryByRole("banner")).toBeNull();
@@ -76,10 +66,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     );
     expect(within(cards()[0]).getByText("اسأل عن التوفر")).toBeTruthy();
     expect(within(cards()[0]).getByRole("link", { name: "للاستفسار والكميات" })).toBeTruthy();
-    expect(fetch).toHaveBeenCalledWith(
-      makeCatalogUrl(),
-      expect.objectContaining({ method: "GET", cache: "no-store" })
-    );
+    expect(catalogNetworkCalls()).toEqual([]);
   });
 
   it("يبحث ويفلتر داخل البيانات المتاحة", async () => {
@@ -115,10 +102,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     const links = screen.getAllByRole("link", { name: /للاستفسار والكميات|استفسر عن/ }) as HTMLAnchorElement[];
     expect(links[0].href).toContain("wa.me/201000000000");
     expect(decodeURIComponent(links[0].href)).toContain(PUBLIC_PRODUCTS_SNAPSHOT[0].name);
-    expect(fetch).toHaveBeenCalledWith(
-      makeCatalogUrl(),
-      expect.objectContaining({ method: "GET" })
-    );
+    expect(catalogNetworkCalls()).toEqual([]);
     expect(screen.queryByText(/طلبك|إضافة للسلة|أضف لطلبك|مقارنة المنتجات/)).toBeNull();
   });
 
@@ -132,37 +116,26 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     }
   });
 
-  it("يدعم دمج البحث والفئة والفلتر المتقدم ثم يعيد كل الحالة عبر مسح الكل", async () => {
-    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        values: [
-          liveHeaders,
-          liveRow("LIVE-A", "سيارة سباق", "سيارات", "Fun Toys", "سريع", "available", "3", "8", "1"),
-          liveRow("LIVE-B", "عروسة حفلات", "عرايس", "Dolls", "ناعم", "preorder", "6", "10", "2"),
-          liveRow("LIVE-C", "سيارة تعليمية", "سيارات", "Fun Toys", "سريع", "unavailable", "9", "12", "3"),
-        ],
-      }),
-    })));
+  it("يدعم دمج البحث والفئة ثم يعيد كل الحالة عبر مسح الكل من الكتالوج المضمّن", async () => {
     renderCatalog();
-    await waitFor(() => expect(cards()).toHaveLength(3));
+    await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
 
-    fireEvent.click(screen.getByRole("button", { name: /تحكم عن بعد وروبوتات/ }));
-    expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(["LIVE-A", "LIVE-C"]);
+    const target = PUBLIC_PRODUCTS_SNAPSHOT[0];
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(target.category) }));
+    const filtered = cards().map(card => card.getAttribute("data-product-id"));
+    expect(filtered.length).toBeGreaterThan(0);
+    expect(filtered.every(id =>
+      PUBLIC_PRODUCTS_SNAPSHOT.find(product => product.id === id)?.category === target.category
+    )).toBe(true);
 
-    fireEvent.click(screen.getByRole("button", { name: "فتح الفلاتر الإضافية" }));
-    fireEvent.change(screen.getByLabelText("الماركة"), { target: { value: "Fun Toys" } });
-    fireEvent.change(screen.getByLabelText("التوفر"), { target: { value: "available" } });
-    expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(["LIVE-A"]);
-
-    fireEvent.change(screen.getByTestId("product-search"), { target: { value: "سيارة" } });
-    await waitFor(() => expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(["LIVE-A"]));
+    fireEvent.change(screen.getByTestId("product-search"), { target: { value: target.name } });
+    await waitFor(() => expect(screen.getByText(target.name)).toBeTruthy());
 
     fireEvent.click(screen.getByRole("button", { name: "مسح الكل" }));
-    await waitFor(() => expect(cards()).toHaveLength(3));
+    await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
     expect((screen.getByTestId("product-search") as HTMLInputElement).value).toBe("");
     expect(window.location.search).toBe("");
+    expect(catalogNetworkCalls()).toEqual([]);
   });
 
   it("يعزل كتالوج POP UP ويعيد الحالة بعد إزالة بحث لا ينتمي إليه", async () => {

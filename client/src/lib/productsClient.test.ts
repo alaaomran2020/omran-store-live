@@ -1,12 +1,11 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { access } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import sharp from "sharp";
-import { fetchProducts } from "./productsClient";
+import { fetchProducts, getInitialProductsSnapshot, loadPublishedCatalog } from "./productsClient";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "./publicProductsSnapshot";
 import { POPUP_PRODUCTS_SNAPSHOT } from "./popupProductsSnapshot";
-import { makeCatalogUrl } from "./makeGateway";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -36,8 +35,8 @@ describe("products client", () => {
     }
   });
 
-  it("يحاول الكتالوج الحي ثم يعود للـSnapshot مع منتجات POP UP عند تعذر الشبكة", async () => {
-    const fetchMock = vi.fn(() => Promise.reject(new Error("gateway unavailable")));
+  it("يبني الكتالوج من اللقطة المعتمدة داخل المستودع دون أي نداء شبكة", async () => {
+    const fetchMock = vi.fn(() => Promise.reject(new Error("no network is allowed for the catalog")));
     vi.stubGlobal("fetch", fetchMock);
 
     const payload = await fetchProducts();
@@ -47,159 +46,54 @@ describe("products client", () => {
       ...PUBLIC_PRODUCTS_SNAPSHOT.map(product => product.id),
       ...POPUP_PRODUCTS_SNAPSHOT.map(product => product.id),
     ]);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith(
-      makeCatalogUrl(),
-      expect.objectContaining({ method: "GET", cache: "no-store" })
-    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("يستخدم الكتالوج الحي ويضيف منتجات POP UP إذا لم تكن وصلت للمصدر الحي بعد", async () => {
-    const liveRow = [
-      "LIVE-001",
-      "منتج حي",
-      "",
-      "ألعاب",
-      "وصف",
-      "/products/processed/product-kitchen-46pcs-main.webp",
-      "TRUE",
-      "1",
-      "",
-      "PUBLISHED",
-      "PASS",
-      "",
-      "/products/processed/product-kitchen-46pcs-main.webp",
-      "",
-      "SKU-LIVE-001",
-    ];
-    const fetchMock = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          values: [
-            [
-              "id",
-              "name",
-              "price",
-              "category",
-              "description",
-              "image",
-              "active",
-              "sort_order",
-              "product_prompt",
-              "workflow_status",
-              "qa_status",
-              "source_drive_id",
-              "processed_image",
-              "review_reason",
-              "sku",
-            ],
-            liveRow,
-          ],
-        }),
-      })
-    );
-    vi.stubGlobal("fetch", fetchMock);
+  it("يعيد نفس الكتالوج حرفيًا عند كل استدعاء (حتمي ومستقل عن الشبكة)", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("no network is allowed for the catalog"))));
 
-    const { products } = await fetchProducts();
+    const first = await fetchProducts();
+    const second = await loadPublishedCatalog();
+    const third = getInitialProductsSnapshot();
 
-    expect(products).toHaveLength(1 + POPUP_PRODUCTS_SNAPSHOT.length);
-    expect(products[0]).toMatchObject({
-      id: "LIVE-001",
-      sku: "SKU-LIVE-001",
-      active: true,
-      workflowStatus: "PUBLISHED",
-      qaStatus: "PASS",
-    });
-    expect(products.slice(1).map(product => product.id)).toEqual(
-      POPUP_PRODUCTS_SNAPSHOT.map(product => product.id)
+    const ids = (payload: { products: { id: string }[] }) => payload.products.map(product => product.id);
+    expect(ids(second)).toEqual(ids(first));
+    expect(ids(third)).toEqual(ids(first));
+    expect(first.products).toHaveLength(
+      PUBLIC_PRODUCTS_SNAPSHOT.length + POPUP_PRODUCTS_SNAPSHOT.length
     );
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("يربط معرض الصور والفيديو والمواصفات الموسعة بسجل المنتج", async () => {
-    const headers = [
-      "id", "name", "price", "category", "description", "image", "active",
-      "sort_order", "product_prompt", "workflow_status", "qa_status",
-      "source_drive_id", "processed_image", "review_reason", "sku",
-      "gallery_images", "video_url", "video_poster", "video_duration",
-      "product_length_cm", "product_width_cm", "product_height_cm",
-      "package_length_cm", "package_width_cm", "package_height_cm", "weight_kg",
-      "material", "pieces_count", "power_source", "assembly_required",
-      "box_contents", "play_instructions",
-    ];
-    const row = [
-      "LIVE-MEDIA-001", "لعبة موثقة", "", "ألعاب", "وصف", "/main.webp", "TRUE",
-      "1", "", "PUBLISHED", "PASS", "", "/main.webp", "", "SKU-MEDIA-001",
-      "/side.webp, /box.webp", "https://cdn.example.com/video.mp4", "/poster.webp", "00:45",
-      "40", "20", "35", "45", "25", "40", "1.5", "بلاستيك", "46", "بطاريات",
-      "TRUE", "46 قطعة", "تركيب بإشراف شخص بالغ",
-    ];
-    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve({
-      ok: true,
-      status: 200,
-      json: async () => ({ values: [headers, row] }),
-    })));
-
+  it("يحافظ على صور POP UP المحلية ومصادر درايف كمرجع توثيقي فقط", async () => {
     const { products } = await fetchProducts();
-    expect(products[0]).toMatchObject({
-      id: "LIVE-MEDIA-001",
-      galleryImages: ["/side.webp", "/box.webp"],
-      videoUrl: "https://cdn.example.com/video.mp4",
-      videoPoster: "/poster.webp",
-      videoDuration: "00:45",
-      specifications: {
-        productLengthCm: 40,
-        productWidthCm: 20,
-        productHeightCm: 35,
-        packageLengthCm: 45,
-        packageWidthCm: 25,
-        packageHeightCm: 40,
-        weightKg: 1.5,
-        material: "بلاستيك",
-        piecesCount: 46,
-        powerSource: "بطاريات",
-        assemblyRequired: true,
-        boxContents: "46 قطعة",
-        playInstructions: "تركيب بإشراف شخص بالغ",
-      },
-    });
+
+    for (const expected of POPUP_PRODUCTS_SNAPSHOT) {
+      const hydrated = products.find(item => item.id === expected.id);
+      expect(hydrated).toMatchObject({
+        image: expected.image,
+        processedImage: expected.processedImage,
+        sourceDriveId: expected.sourceDriveId,
+      });
+      expect(hydrated!.image!.startsWith("/products/popup/")).toBe(true);
+    }
   });
 
-  it("يحافظ على صور POP UP المحلية عند ترطيب الكتالوج من المصدر الحي", async () => {
-    const product = POPUP_PRODUCTS_SNAPSHOT[0];
-    const fetchMock = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          values: [
-            [
-              "id", "name", "price", "category", "description", "image", "active",
-              "sort_order", "product_prompt", "workflow_status", "qa_status",
-              "source_drive_id", "processed_image", "review_reason", "sku",
-            ],
-            [
-              product.id, product.name, product.price, product.category, product.description,
-              "https://drive.google.com/inaccessible.png", "TRUE", product.sortOrder, "",
-              "PUBLISHED", "PASS", product.sourceDriveId,
-              "https://drive.google.com/inaccessible-processed.png", "", "",
-            ],
-          ],
-        }),
-      })
+  it("لا يحتفظ بأي نقطة نهاية كتالوج خارجية داخل وحدة العميل", async () => {
+    const source = await readFile(
+      resolve("client/src/lib/productsClient.ts"),
+      "utf8"
     );
-    vi.stubGlobal("fetch", fetchMock);
-
-    const { products } = await fetchProducts();
-    const hydrated = products.find(item => item.id === product.id);
-
-    expect(hydrated).toMatchObject({
-      image: product.image,
-      processedImage: product.processedImage,
-      imageSource: "https://drive.google.com/inaccessible.png",
-      sourceDriveId: product.sourceDriveId,
-    });
+    for (const forbidden of [
+      "script.google.com",
+      "docs.google.com",
+      "hook.eu1.make.com",
+      "makeCatalogUrl",
+      "action=catalog",
+      "PRODUCTS_SHEET_URL",
+    ]) {
+      expect(source).not.toContain(forbidden);
+    }
+    expect(source).not.toMatch(/\bfetch\s*\(/);
   });
 });

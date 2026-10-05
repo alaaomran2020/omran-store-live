@@ -117,7 +117,6 @@ export const PRODUCT_COLUMNS = [
 ] as const;
 
 /** مهلة طلب الشيت — يجب ألا يُعلَّق تحميل الصفحة أبدًا. */
-export const SHEET_TIMEOUT_MS = 8_000;
 
 /** عمر الكاش على الخادم/الحافة: منتج جديد يظهر خلال هذه المدة بلا أي Deploy. */
 export const PRODUCTS_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -738,108 +737,15 @@ export function searchProducts(products: Product[], query: string): Product[] {
 // 5) الجلب + الكاش
 // ---------------------------------------------------------------------------
 
-export type FetchLike = (
-  url: string,
-  init?: { signal?: AbortSignal; headers?: Record<string, string> }
-) => Promise<{ ok: boolean; status: number; text(): Promise<string> }>;
-
 /**
- * يقبل رابط "Publish to web" (`/pub?output=csv`) كما هو، ويصلح لصقًا خاطئًا
- * شائعًا: رابط تحرير الشيت العادي (`/edit#gid=0`) يُحوَّل إلى `/export?format=csv`.
- * أي رابط https آخر (استضافة CSV بديلة) يُمرَّر كما هو؛ ما ليس http(s) يُرفض،
- * و http يُقبل فقط على العنوان المحلي (اختبار/تطوير).
+ * ⚠️ أُزيلت هنا دوال جلب الكتالوج من Google Sheet (`normalizeSheetUrl`،
+ * `fetchProductsPayload`) وكذلك نوع `FetchLike`.
+ *
+ * مصدر الحقيقة الوحيد للكتالوج صار ملف المستودع `public/catalog/products.csv`
+ * الذي يُحوَّل وقت البناء إلى اللقطة المضمّنة عبر
+ * `scripts/generate-public-products-snapshot.ts` باستخدام `parseProductsCsv`.
+ * لا تُعِد إضافة أي دالة تجلب كتالوجًا من Apps Script أو Google Sheet أو Make.
  */
-export function normalizeSheetUrl(
-  raw: string | undefined | null
-): string | null {
-  const url = clean(raw ?? "");
-  if (url === "") return null;
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return null;
-  }
-  const isLoopback = ["localhost", "127.0.0.1", "[::1]", "::1"].includes(
-    parsed.hostname
-  );
-  if (
-    parsed.protocol !== "https:" &&
-    !(parsed.protocol === "http:" && isLoopback)
-  )
-    return null;
-  if (parsed.hostname !== "docs.google.com") return parsed.toString();
-
-  // رابط منشور بالفعل كـCSV
-  if (parsed.searchParams.get("output") === "csv") return parsed.toString();
-  if (parsed.pathname.endsWith("/export")) {
-    parsed.searchParams.set("format", "csv");
-    return parsed.toString();
-  }
-  // .../pub  أو  .../pubhtml → أضف output=csv
-  if (/\/pub(html)?$/.test(parsed.pathname)) {
-    parsed.pathname = parsed.pathname.replace(/\/pub(html)?$/, "/pub");
-    parsed.searchParams.set("output", "csv");
-    return parsed.toString();
-  }
-  // .../edit#gid=123 → /export?format=csv&gid=123
-  const editMatch = parsed.pathname.match(
-    /^\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/
-  );
-  if (editMatch) {
-    const gid =
-      parsed.searchParams.get("gid") ??
-      parsed.hash.match(/gid=(\d+)/)?.[1] ??
-      null;
-    const out = new URL(
-      `https://docs.google.com/spreadsheets/d/${editMatch[1]}/export`
-    );
-    out.searchParams.set("format", "csv");
-    if (gid) out.searchParams.set("gid", gid);
-    return out.toString();
-  }
-  return parsed.toString();
-}
-
-/** يجلب الـCSV ويحوّله لحمولة جاهزة. يرمي عند فشل الشبكة/HTTP ليتكفل الكاش بالبديل. */
-export async function fetchProductsPayload(
-  sheetUrl: string | undefined | null,
-  fetchImpl: FetchLike,
-  options: { timeoutMs?: number; includeInactive?: boolean } = {}
-): Promise<ProductsPayload> {
-  const url = normalizeSheetUrl(sheetUrl);
-  if (!url) {
-    return {
-      products: [],
-      status: "not_configured",
-      fetchedAt: new Date().toISOString(),
-    };
-  }
-
-  const controller = new AbortController();
-  const timer = setTimeout(
-    () => controller.abort(),
-    options.timeoutMs ?? SHEET_TIMEOUT_MS
-  );
-  try {
-    const response = await fetchImpl(url, {
-      signal: controller.signal,
-      headers: { accept: "text/csv,text/plain;q=0.9,*/*;q=0.8" },
-    });
-    if (!response.ok) throw new Error(`sheet_http_${response.status}`);
-    const csv = await response.text();
-    // شيت غير منشور يرد بصفحة HTML بحالة 200 — لا نعتبرها كتالوجًا فارغًا.
-    if (/^\s*<(!doctype|html)/i.test(csv))
-      throw new Error("sheet_not_published");
-    return {
-      products: parseProductsCsv(csv, options),
-      status: "ok",
-      fetchedAt: new Date().toISOString(),
-    };
-  } finally {
-    clearTimeout(timer);
-  }
-}
 
 // ---------------------------------------------------------------------------
 // 6) تجاوزات المدراء (Admin Overrides)

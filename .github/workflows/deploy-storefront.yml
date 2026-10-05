@@ -28,8 +28,10 @@ permissions:
 
 env:
   NODE_OPTIONS: --max-old-space-size=4096
-  LIVE_PRODUCTS_SHEET_URL: https://script.google.com/macros/s/AKfycbxRXUDx4gJh-RyLB19D3y6-6lnaoNBndypji02qXk1tkDyHleufdz-WUpKlymkcPYxOwQ/exec?action=catalog
-  FALLBACK_PRODUCTS_SHEET_URL: https://raw.githubusercontent.com/alaaomran2020/omran-store-live/${{ github.sha }}/public/catalog/products.csv
+  # Single catalog source of truth: the repository file in this very checkout.
+  # No Apps Script, no live Google Sheet, no Make gateway, no network fetch for
+  # catalog DATA. The build is therefore deterministic for a given commit.
+  CATALOG_SOURCE_FILE: public/catalog/products.csv
 
 jobs:
   validate-storefront:
@@ -56,19 +58,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Select live catalog source
+      - name: Verify repository catalog source of truth
         shell: bash
         run: |
           set -euo pipefail
-          tmp="$(mktemp)"
-          if curl -fsSL --max-time 20 "$LIVE_PRODUCTS_SHEET_URL" -o "$tmp" && head -n 1 "$tmp" | grep -q '^id,name,price,category,'; then
-            echo "PRODUCTS_SHEET_URL=$LIVE_PRODUCTS_SHEET_URL" >> "$GITHUB_ENV"
-            echo "Catalog source: Apps Script live feed"
-          else
-            echo "PRODUCTS_SHEET_URL=$FALLBACK_PRODUCTS_SHEET_URL" >> "$GITHUB_ENV"
-            echo "::warning::Apps Script catalog feed not ready; using repository fallback"
-          fi
-          rm -f "$tmp"
+          test -f "$CATALOG_SOURCE_FILE" || {
+            echo "::error::Catalog source of truth is missing: $CATALOG_SOURCE_FILE"; exit 1; }
+          head -n 1 "$CATALOG_SOURCE_FILE" | grep -q '^id,name,price,category,' || {
+            echo "::error::Catalog source of truth has an unexpected header"; exit 1; }
+          echo "Catalog source: repository file $CATALOG_SOURCE_FILE"
+          echo "CATALOG_SOURCE_SHA256=$(sha256sum "$CATALOG_SOURCE_FILE" | cut -d" " -f1)" >> "$GITHUB_ENV"
+
+      - name: Legacy catalog dependency gate
+        run: node scripts/catalog-dependency-gate.mjs
 
       - name: Generate approved public catalog snapshot
         run: |
@@ -140,11 +142,11 @@ jobs:
           source = Path('release-inputs/publicProductsSnapshot.ts').read_bytes()
           text = source.decode('utf-8')
           ids = re.findall(r'^\s*(?:"id"|id):\s*"([^"]+)"', text, flags=re.MULTILINE)
-          source_url = os.environ.get('PRODUCTS_SHEET_URL', '')
-          selected_source = 'live-feed' if source_url == os.environ.get('LIVE_PRODUCTS_SHEET_URL', '') else 'repository-fallback'
+          source_file = os.environ.get('CATALOG_SOURCE_FILE', '')
           provenance = [
-              f'source={selected_source}',
-              f'source_url={source_url}',
+              'source=repository-catalog-csv',
+              f'source_file={source_file}',
+              f'source_sha256={os.environ.get("CATALOG_SOURCE_SHA256", "")}',
               f'snapshot_sha256={hashlib.sha256(source).hexdigest()}',
               f'approved_product_count={len(ids)}',
               f'commit={os.environ.get("GITHUB_SHA", "")}',

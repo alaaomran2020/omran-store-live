@@ -4,17 +4,16 @@
  *
  * هذا السكربت لا يكتب إلى Google Sheets ولا يستخدم Service Account أو أي API key.
  * وظيفته فقط:
- * 1) قراءة الكتالوج الحالي من CSV المنشور أو snapshot محلي.
+ * 1) قراءة الكتالوج الحالي من ملف المستودع `public/catalog/products.csv`
+ *    (مصدر الحقيقة الوحيد) أو snapshot محلي للمراجعة.
  * 2) مقارنة automation/product-metadata.json بالبيانات الحالية.
  * 3) إنشاء خطة INSERT / UPDATE / HOLD محلية للمراجعة البشرية.
  */
 import fs from "node:fs";
 import path from "node:path";
 
-const PRODUCTS_SHEET_URL =
-  process.env.PRODUCTS_SHEET_URL ||
-  process.env.VITE_PRODUCTS_SHEET_URL ||
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLph4MyfmoeWcjJ3cMi-iDaM3dgt4_S57SvKr6wpQu8IbDKliduguIcvtp7E5o0ZoxN3ouNQoZo7dn/pub?gid=57015348&single=true&output=csv";
+// مصدر الحقيقة الوحيد للكتالوج: ملف المستودع. لا Apps Script ولا Sheet حي.
+const CATALOG_CSV_FILE = "public/catalog/products.csv";
 
 const PLAN_JSON = "automation/sheet-upsert-plan.json";
 const PLAN_CSV = "automation/sheet-upsert-plan.csv";
@@ -71,23 +70,19 @@ function normalizeArabic(value) {
     .replace(/\s+/g, " ");
 }
 
-async function fetchExistingSheet() {
+async function readExistingCatalog() {
   const local = process.env.SHEET_CSV_FILE;
   if (local && fs.existsSync(local)) {
     return { rows: parseCsv(fs.readFileSync(local, "utf-8")), source: `local_file:${local}` };
   }
 
-  try {
-    const response = await fetch(PRODUCTS_SHEET_URL, {
-      headers: { accept: "text/csv,text/plain;q=0.9,*/*;q=0.8" },
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const csv = await response.text();
-    if (/^\s*<(?:!doctype|html)/i.test(csv)) throw new Error("sheet_not_published");
-    return { rows: parseCsv(csv), source: "published_csv" };
-  } catch (error) {
-    console.warn(`Published CSV unavailable (${error.message}); trying local snapshot.`);
+  if (fs.existsSync(CATALOG_CSV_FILE)) {
+    return {
+      rows: parseCsv(fs.readFileSync(CATALOG_CSV_FILE, "utf-8")),
+      source: `repository_catalog:${CATALOG_CSV_FILE}`,
+    };
   }
+  console.warn(`Repository catalog missing (${CATALOG_CSV_FILE}); trying local snapshot.`);
 
   const snapshots = fs.existsSync("automation")
     ? fs.readdirSync("automation").filter(file => /^sheet-snapshot-.*\.csv$/.test(file)).sort()
@@ -178,7 +173,7 @@ async function main() {
   }
 
   const metadata = JSON.parse(fs.readFileSync("automation/product-metadata.json", "utf-8"));
-  const { rows, source } = await fetchExistingSheet();
+  const { rows, source } = await readExistingCatalog();
   const hasHeader = (rows[0] ?? []).some(cell => /id|name/i.test(cell));
   const dataRows = hasHeader ? rows.slice(1) : rows;
   const actions = makePlan(dataRows, metadata.products ?? []);

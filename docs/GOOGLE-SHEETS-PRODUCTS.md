@@ -1,4 +1,12 @@
-# OMRAN TOYS — إدارة المنتجات من Google Sheets
+# OMRAN TOYS — إدارة المنتجات من Google Sheets (تاريخي / غير مُشغَّل)
+
+> ⚠️ **وثيقة تاريخية.** هذا المسار لم يعد معماريّة الإنتاج.
+>
+> مصدر الحقيقة الوحيد للكتالوج الآن هو ملف المستودع
+> `public/catalog/products.csv`، ويحوّله البناء إلى
+> `client/src/lib/publicProductsSnapshot.ts`. لا Google Sheet حي ولا Apps
+> Script ولا Make يغذّي كتالوج الإنتاج، ولم يعد `VITE_PRODUCTS_SHEET_URL`
+> موجودًا. راجع `docs/CURRENT-ARCHITECTURE.md` و`README.md`.
 
 > منتج جديد على الموقع في أقل من دقيقتين، من الهاتف، بلا GitHub ولا Deploy ولا
 > مفاتيح API ولا قاعدة بيانات ولا لوحة تحكم.
