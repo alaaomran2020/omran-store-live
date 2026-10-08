@@ -79,7 +79,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     staleTime: Infinity,
     gcTime: Infinity,
     refetchOnWindowFocus: false,
-    retry: 1,
+    retry: false,
   });
 
   useEffect(() => {
