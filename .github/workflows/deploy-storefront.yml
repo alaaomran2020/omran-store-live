@@ -2,8 +2,6 @@ name: Deploy Storefront to Cloudflare Pages
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "*/15 * * * *"
   pull_request:
     branches: [main]
   push:
@@ -229,7 +227,7 @@ jobs:
 
   deploy-storefront:
     name: Deploy storefront production
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'workflow_dispatch'
     needs: validate-storefront
     runs-on: ubuntu-latest
     timeout-minutes: 15
