@@ -229,6 +229,7 @@ jobs:
     name: Deploy storefront production
     if: github.event_name == 'workflow_dispatch'
     needs: validate-storefront
+    environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
