@@ -71,7 +71,8 @@ export const STORE_ANNOUNCEMENTS: StoreAnnouncement[] = [
     id: "opening",
     message: `الافتتاح الرسمي يوم ${OPENING_PROFILE.opening.displayDate} — فرع السيد البدوي، طنطا.`,
     href: "#branches",
-    active: true,
+    // مؤقتًا: لا نعلن عن تاريخ افتتاح قبل تأكيده من الإدارة.
+    active: false,
   },
   {
     id: "catalog",
