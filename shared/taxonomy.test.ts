@@ -34,6 +34,9 @@ describe("canonicalCategory", () => {
   it("يعرف التصنيف بالـslug أو بالاسم العربي", () => {
     expect(canonicalCategory("arts-crafts")?.id).toBe("arts-crafts");
     expect(canonicalCategory("فوانيس رمضان")?.id).toBe("ramadan-lanterns");
+    expect(canonicalCategory("مفارش رمضان")?.id).toBe("ramadan-lanterns");
+    expect(canonicalCategory("رمضان")?.visibility).toBe("visible");
+    expect(displayCategoryName("فوانيس رمضان")).toBe("رمضان");
     expect(canonicalCategory("اسكوشي")?.id).toBe("arts-crafts");
   });
 
