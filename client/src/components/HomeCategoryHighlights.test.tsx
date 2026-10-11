@@ -8,7 +8,7 @@ afterEach(cleanup);
 describe("تصنيفات الصفحة الرئيسية", () => {
   it("تعرض الأقسام التجارية المطلوبة فقط وتوصل مباشرة لنتائج الكتالوج", () => {
     render(<HomeCategoryHighlights />);
-    const links = screen.getAllByRole("link").filter(link => link.getAttribute("href")?.includes("/products?search="));
+    const links = screen.getAllByRole("link").filter(link => link.getAttribute("href")?.includes("/products?"));
 
     expect(links).toHaveLength(6);
     expect(links.every(link => link.getAttribute("href")?.endsWith("#feed"))).toBe(true);
@@ -17,7 +17,8 @@ describe("تصنيفات الصفحة الرئيسية", () => {
     expect(screen.getByText("أطقم المهن والتركيب")).toBeTruthy();
     expect(screen.getByText("رفايع لعب أطفال")).toBeTruthy();
     expect(screen.getByText("الكور")).toBeTruthy();
-    expect(screen.getByText("فوانيس رمضان — قريبًا")).toBeTruthy();
+    expect(screen.getByText("رمضان")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "تصفح رمضان" }).getAttribute("href")).toBe("/products?category=ramadan-lanterns#feed");
     expect(screen.queryByText("مطابخ")).toBeNull();
     expect(screen.queryByText("أدوات دكتور")).toBeNull();
     expect(screen.queryByText("أدوات نجار")).toBeNull();
@@ -33,7 +34,7 @@ describe("تصنيفات الصفحة الرئيسية", () => {
     expect(images.every(image => image.getAttribute("srcset")?.includes("-approved-320.webp 320w"))).toBe(true);
     expect(images.every(image => image.getAttribute("loading") === "lazy")).toBe(true);
     expect(images.every(image => image.getAttribute("decoding") === "async")).toBe(true);
-    expect(container.querySelectorAll('a[aria-label^="تصفح "]')).toHaveLength(5);
-    expect(screen.getByRole("link", { name: "فوانيس رمضان — قريبًا" })).toBeTruthy();
+    expect(container.querySelectorAll('a[aria-label^="تصفح "]')).toHaveLength(6);
+    expect(screen.getByRole("link", { name: "تصفح رمضان" })).toBeTruthy();
   });
 });

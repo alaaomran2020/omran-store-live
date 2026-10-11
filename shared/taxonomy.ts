@@ -126,14 +126,15 @@ export const CATEGORIES: readonly Category[] = [
   },
   {
     id: "ramadan-lanterns",
-    name: "فوانيس رمضان",
-    nameEn: "Ramadan Lanterns",
+    // Stable ID/slug kept for compatibility with existing catalog references.
+    name: "رمضان",
+    nameEn: "Ramadan Collection",
     slug: "ramadan-lanterns",
-    visibility: "coming_soon",
+    visibility: "visible",
     sortOrder: 9,
     description:
-      "فوانيس رمضان بأشكال وأحجام متنوعة، إضاءة وأنغام، وزينة كاملة للشهر الكريم",
-    aliases: ["فوانيس", "رمضان", "زينة رمضان"],
+      "فوانيس وزينة ومفارش وهدايا رمضان. تظهر المنتجات بعد مراجعة صورها وبياناتها واعتمادها.",
+    aliases: ["فوانيس رمضان", "فوانيس", "زينة رمضان", "مفارش رمضان", "مفرش رمضان", "هدايا رمضان"],
   },
   {
     id: "seasonal",

@@ -400,8 +400,8 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
               <>
                 {visibleProducts.length === 0 ? (
                   <div className={`rounded-2xl border p-6 text-center sm:rounded-[2rem] sm:p-10 ${isPopup ? "border-[#e4d3ee] bg-white" : "border-brand-border bg-brand-cream"}`}>
-                    <p className={`text-base font-extrabold sm:text-lg ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>لا توجد نتائج مطابقة لبحثك أو الفلاتر</p>
-                    <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-brand-muted">غيّر البحث أو أحد الفلاتر، أو امسح الكل وحاول تاني.</p>
+                    <p className={`text-base font-extrabold sm:text-lg ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>{!isPopup && category === "رمضان" && !search ? "قسم رمضان جاهز — المنتجات قيد التجهيز" : "لا توجد نتائج مطابقة لبحثك أو الفلاتر"}</p>
+                    <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-brand-muted">{!isPopup && category === "رمضان" && !search ? "بنراجع صور وتفاصيل منتجات رمضان قبل عرضها هنا. مفيش منتجات معتمدة للنشر في القسم حاليًا." : "غيّر البحث أو أحد الفلاتر، أو امسح الكل وحاول تاني."}</p>
                     <button type="button" onClick={clearAllFilters} className={`mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border px-5 py-2 text-sm font-bold transition sm:w-auto sm:rounded-full ${isPopup ? "border-[#e4d3ee] text-[#6b278f] hover:border-[#8a3aaa] hover:bg-[#f7effb]" : "border-brand-border text-brand-blue hover:border-brand-blue hover:bg-brand-blue/5"}`}>مسح البحث والفلاتر</button>
                   </div>
                 ) : (

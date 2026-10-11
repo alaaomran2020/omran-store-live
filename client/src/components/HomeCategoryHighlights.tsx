@@ -5,6 +5,7 @@ type HomeCategory = {
   query: string;
   image: string;
   comingSoon?: boolean;
+  href?: string;
 };
 
 const categories: readonly HomeCategory[] = [
@@ -13,7 +14,7 @@ const categories: readonly HomeCategory[] = [
   { name: "أطقم المهن والتركيب", query: "مطبخ دكتور نجار تنظيف", image: "/categories/category-role-play-approved.webp" },
   { name: "رفايع لعب أطفال", query: "رفايع", image: "/categories/category-misc-toys-approved.webp" },
   { name: "الكور", query: "كور", image: "/categories/category-balls-approved.webp" },
-  { name: "فوانيس رمضان", query: "فوانيس", image: "/categories/category-ramadan-approved.webp", comingSoon: true },
+  { name: "رمضان", query: "رمضان", href: "/products?category=ramadan-lanterns#feed", image: "/categories/category-ramadan-approved.webp" },
 ];
 
 function categorySrcSet(image: string): string {
@@ -36,10 +37,10 @@ export default function HomeCategoryHighlights() {
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-          {categories.map(({ name, query, image, comingSoon }) => (
+          {categories.map(({ name, query, image, comingSoon, href }) => (
             <a
               key={name}
-              href={`/products?search=${encodeURIComponent(query)}#feed`}
+              href={href ?? `/products?search=${encodeURIComponent(query)}#feed`}
               aria-label={comingSoon ? `${name} — قريبًا` : `تصفح ${name}`}
               className="omran-pressable group relative aspect-square overflow-hidden rounded-[1.6rem] border border-brand-border bg-white shadow-[0_10px_28px_rgba(18,59,109,.07)] transition duration-300 hover:-translate-y-1 hover:border-brand-blue/25 hover:shadow-[0_18px_38px_rgba(18,59,109,.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
             >
