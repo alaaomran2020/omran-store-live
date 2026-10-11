@@ -54,7 +54,7 @@ function Section({ id, icon, title, subtitle, children }: { id: string; icon: Re
 
 export default function ContentPage() {
   const { actor, can } = useAdminIdentity();
-  const [announcement, setAnnouncement] = useState(STORE_ANNOUNCEMENTS.map(a => a.message).join("\n"));
+  const [announcement, setAnnouncement] = useState(STORE_ANNOUNCEMENTS.filter(a => a.active).map(a => a.message).join("\n"));
   const [whatsapp, setWhatsapp] = useState(STORE_CONTACT.whatsapp);
   const [landline, setLandline] = useState(STORE_CONTACT.landline ?? "");
   const [instagram, setInstagram] = useState(STORE_SOCIAL.instagram);
