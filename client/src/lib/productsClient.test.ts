@@ -79,6 +79,25 @@ describe("products client", () => {
     }
   });
 
+  it("يعرض 32 منتج رمضان بدون سعر، ويستخدم صور WebP محلية ومعرض صور معتمد", async () => {
+    const { products } = await fetchProducts();
+    const ramadan = products.filter(p => p.category === "ramadan-lanterns");
+    expect(ramadan).toHaveLength(32);
+    expect(ramadan.every(p => p.price === null && p.availability === "unknown")).toBe(true);
+    expect(ramadan.every(p => p.workflowStatus === "PUBLISHED" && p.qaStatus === "PASS")).toBe(true);
+    expect(ramadan.reduce((sum, p) => sum + 1 + p.galleryImages.length, 0)).toBe(36);
+    expect(ramadan.filter(p => p.galleryImages.length === 1)).toHaveLength(4);
+
+    for (const product of ramadan) {
+      expect(product.image?.startsWith("/products/processed/ramadan/")).toBe(true);
+      for (const path of [product.image!, ...product.galleryImages]) {
+        const assetPath = resolve("public", path.replace(/^\//, ""));
+        await expect(access(assetPath)).resolves.toBeUndefined();
+        await expect(sharp(assetPath).metadata()).resolves.toMatchObject({ format: "webp" });
+      }
+    }
+  });
+
   it("لا يحتفظ بأي نقطة نهاية كتالوج خارجية داخل وحدة العميل", async () => {
     const source = await readFile(
       resolve("client/src/lib/productsClient.ts"),

@@ -69,6 +69,21 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     expect(catalogNetworkCalls()).toEqual([]);
   });
 
+  it("يعرض قسم رمضان بصوره وأجوائه مع زر السؤال عن السعر دون فلتر سن أو شراء مباشر", async () => {
+    window.history.replaceState({}, "", "/products?category=ramadan-lanterns");
+    renderCatalog();
+    await waitFor(() => expect(cards()).toHaveLength(24));
+    expect(cards().every(card => card.getAttribute("data-product-id")?.startsWith("OMR-RAM-"))).toBe(true);
+    expect(screen.getByRole("heading", { name: "زينة رمضان وتفاصيل تفرّح البيت" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "منتجات رمضان" })).toBeTruthy();
+    expect(screen.queryByText("اختار حسب السن")).toBeNull();
+    expect(screen.queryByText("قسم رمضان جاهز — المنتجات قيد التجهيز")).toBeNull();
+    const link = within(cards()[0]).getByRole("link", { name: "اسأل عن السعر" }) as HTMLAnchorElement;
+    expect(decodeURIComponent(link.href)).toContain("السعر والمقاس المتاح والتوفر");
+    expect(screen.queryByRole("button", { name: /أضف للسلة|شراء الآن/ })).toBeNull();
+    expect(catalogNetworkCalls()).toEqual([]);
+  });
+
   it("يبحث ويفلتر داخل البيانات المتاحة", async () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
@@ -111,7 +126,11 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
 
     if (PUBLIC_PRODUCTS_SNAPSHOT.length > initialVisibleCount) {
-      fireEvent.click(screen.getByRole("button", { name: "عرض منتجات أكتر" }));
+      while (cards().length < PUBLIC_PRODUCTS_SNAPSHOT.length) {
+        const previous = cards().length;
+        fireEvent.click(screen.getByRole("button", { name: "عرض منتجات أكتر" }));
+        await waitFor(() => expect(cards().length).toBeGreaterThan(previous));
+      }
       expect(cards()).toHaveLength(PUBLIC_PRODUCTS_SNAPSHOT.length);
     }
   });

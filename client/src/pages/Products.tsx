@@ -7,6 +7,7 @@ import { ProductFacetControls, type ActiveProductFilter, type ProductSortMode } 
 import { SmartProductSearch } from "@/components/SmartProductSearch";
 import { CatalogBreadcrumbs } from "@/components/CatalogBreadcrumbs";
 import AnnouncementBar from "@/components/AnnouncementBar";
+import { RamadanSeasonBanner } from "@/components/RamadanSeasonBanner";
 import { searchCatalog } from "@/lib/catalogSearch";
 import { resolveCatalogIndexing } from "@/lib/catalogIndexing";
 import { setRobotsMeta } from "@/components/SeoMetadata";
@@ -62,6 +63,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   const [shareOutcome, setShareOutcome] = useState<ProductShareOutcome | null>(null);
   const [search, setSearch] = useState(initial.search);
   const [category, setCategory] = useState<string>(initial.category);
+  const isRamadanCategory = !isPopup && category === displayCategoryName("ramadan-lanterns");
   const [age, setAge] = useState<string>(isPopup ? ALL : initial.age);
   const [brand, setBrand] = useState<string>(initial.brand);
   const [tag, setTag] = useState<string>(initial.tag);
@@ -109,12 +111,12 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
 
   const filteredProducts = useMemo(() => {
     let result = category === ALL ? products : products.filter(product => displayCategoryName(product.category) === category);
-    if (!isPopup && age !== ALL) result = filterProductsByAge(result, age);
+    if (!isPopup && !isRamadanCategory && age !== ALL) result = filterProductsByAge(result, age);
     if (brand !== ALL) result = result.filter(product => product.brand === brand);
     if (tag !== ALL) result = result.filter(product => product.tags.includes(tag));
     if (availability !== ALL) result = result.filter(product => product.availability === availability);
     return result;
-  }, [products, category, age, isPopup, brand, tag, availability]);
+  }, [products, category, age, isPopup, isRamadanCategory, brand, tag, availability]);
 
   const searchResult = useMemo(() => searchCatalog(filteredProducts, search), [filteredProducts, search]);
   const visibleProducts = useMemo(() => {
@@ -229,7 +231,8 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   }, [catalog, pushProductUrl]);
   const handleCategoryFilter = (value: string) => {
     setCategory(value);
-    updateUrl({ category: value });
+    if (value === displayCategoryName("ramadan-lanterns")) setAge(ALL);
+    updateUrl({ category: value, ...(value === displayCategoryName("ramadan-lanterns") ? { age: null } : {}) });
     trackEvent("product_filter", { category: value === ALL ? "الكل" : value, catalog });
   };
   const handleAgeFilter = (value: string) => {
@@ -273,13 +276,13 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     const filters: ActiveProductFilter[] = [];
     if (search.trim()) filters.push({ key: "search", label: `بحث: ${search.trim()}`, onClear: () => handleSearchChange("") });
     if (category !== ALL) filters.push({ key: "category", label: `التصنيف: ${category}`, onClear: () => handleCategoryFilter(ALL) });
-    if (!isPopup && age !== ALL) filters.push({ key: "age", label: `العمر: ${age}`, onClear: () => handleAgeFilter(ALL) });
+    if (!isPopup && !isRamadanCategory && age !== ALL) filters.push({ key: "age", label: `العمر: ${age}`, onClear: () => handleAgeFilter(ALL) });
     if (brand !== ALL) filters.push({ key: "brand", label: `الماركة: ${brand}`, onClear: () => handleBrandFilter(ALL) });
     if (tag !== ALL) filters.push({ key: "tag", label: `الوسم: ${tag}`, onClear: () => handleTagFilter(ALL) });
     if (availability !== ALL) filters.push({ key: "availability", label: `التوفر: ${AVAILABILITY_LABELS[availability as ProductAvailability] ?? availability}`, onClear: () => handleAvailabilityFilter(ALL) });
     if (sort !== "catalog") filters.push({ key: "sort", label: sort === "name-asc" ? "الترتيب: أ ← ي" : "الترتيب: ي ← أ", onClear: () => handleSort("catalog") });
     return filters;
-  }, [search, category, age, isPopup, brand, tag, availability, sort]);
+  }, [search, category, age, isPopup, isRamadanCategory, brand, tag, availability, sort]);
 
   const handleShare = async () => {
     const nativeShare = typeof navigator !== "undefined" && navigator.share ? navigator.share.bind(navigator) : undefined;
@@ -312,30 +315,38 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
       {showAnnouncement && <AnnouncementBar />}
       <main id={MAIN_CONTENT_ID} tabIndex={-1}>
+        {isRamadanCategory && (
+          <div className="container pt-5">
+            <CatalogBreadcrumbs catalog="toys" category={category} />
+          </div>
+        )}
+        {isRamadanCategory && <RamadanSeasonBanner compact />}
+        {!isRamadanCategory && (
         <section className={`container grid gap-5 py-8 sm:gap-8 sm:py-12 lg:grid-cols-[1.1fr_.9fr] lg:items-end lg:py-20 ${isPopup ? "relative" : ""}`}>
           <CatalogBreadcrumbs catalog={catalog} category={category === ALL ? undefined : category} className="lg:col-span-2" />
           <div>
-            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${isPopup ? "bg-[#f6e8fb] text-[#6b278f]" : "bg-brand-yellow/25 text-brand-navy"}`}><Sparkles size={15} /> {isPopup ? "POP UP – Gifts & Balloons" : "كتالوج لعب الأطفال"}</span>
+            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${isPopup ? "bg-[#f6e8fb] text-[#6b278f]" : "bg-brand-yellow/25 text-brand-navy"}`}><Sparkles size={15} /> {isPopup ? "POP UP – Gifts & Balloons" : isRamadanCategory ? "مجموعة رمضان" : "كتالوج لعب الأطفال"}</span>
             <h1 className={`mt-4 max-w-3xl text-[2rem] font-extrabold leading-[1.16] sm:mt-5 sm:text-5xl lg:text-6xl ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>
-              {isPopup ? <>هدايا، بالونات ومستلزمات حفلات <span className="text-[#8a3aaa]">POP UP</span></> : <>اكتشف لعب الأطفال من <span className="text-brand-blue">شركة عمران التجارية</span></>}
+              {isPopup ? <>هدايا، بالونات ومستلزمات حفلات <span className="text-[#8a3aaa]">POP UP</span></> : isRamadanCategory ? <>مفارش وزينة رمضان من <span className="text-brand-blue">شركة عمران التجارية</span></> : <>اكتشف لعب الأطفال من <span className="text-brand-blue">شركة عمران التجارية</span></>}
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-brand-muted sm:mt-5 sm:text-lg sm:leading-8">{isPopup ? "اكتشف هدايا وبالونات ومستلزمات حفلات POP UP، وللسعر والتوفر تواصل معنا عبر واتساب." : "اكتشف لعب الأطفال وصورها وتفاصيلها، واختار بسهولة حسب السن، وللسعر والتوفر تواصل معنا عبر واتساب."}</p>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-brand-muted sm:mt-5 sm:text-lg sm:leading-8">{isPopup ? "اكتشف هدايا وبالونات ومستلزمات حفلات POP UP، وللسعر والتوفر تواصل معنا عبر واتساب." : isRamadanCategory ? "شوف صور مفارش السفرة والخداديات والزينة الرمضانية، واسأل عن السعر والمقاس والتوفر عبر واتساب." : "اكتشف لعب الأطفال وصورها وتفاصيلها، واختار بسهولة حسب السن، وللسعر والتوفر تواصل معنا عبر واتساب."}</p>
             <div className="mt-5 sm:mt-6">
               <button type="button" onClick={handleShare} className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white shadow-md transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 sm:w-auto sm:rounded-full sm:shadow-lg ${isPopup ? "bg-[#6b278f] hover:bg-[#572073] focus-visible:ring-[#6b278f]" : "bg-brand-blue hover:bg-brand-blue-hover focus-visible:ring-brand-blue"}`}><Share2 size={18} aria-hidden="true" /> مشاركة المنتجات</button>
               <p aria-live="polite" className={`mt-2 min-h-5 text-xs font-semibold sm:mt-3 sm:text-sm ${isPopup ? "text-[#6b278f]" : "text-brand-blue"}`}>{shareOutcome ? shareMessage[shareOutcome] : ""}</p>
             </div>
           </div>
           <div className={`rounded-2xl p-5 text-white shadow-lg sm:rounded-[2rem] sm:p-7 sm:shadow-xl ${isPopup ? "bg-[linear-gradient(135deg,#35134f,#6b278f_58%,#9c4caa)]" : "bg-brand-navy"}`}>
-            <p className={`text-xs font-bold sm:text-sm ${isPopup ? "text-[#ffd85d]" : "text-brand-yellow"}`}>{isPopup ? "اختيارات POP UP" : "اختار بسهولة"}</p>
-            <p className="mt-2 text-base font-bold leading-7 sm:mt-3 sm:text-xl sm:leading-8">{isPopup ? "هنا هتلاقي بالونات، هدايا ومستلزمات حفلات من POP UP." : "استخدم فلتر السن والتصنيفات عشان توصل للعبة المناسبة بسرعة."}</p>
+            <p className={`text-xs font-bold sm:text-sm ${isPopup ? "text-[#ffd85d]" : "text-brand-yellow"}`}>{isPopup ? "اختيارات POP UP" : isRamadanCategory ? "تفاصيل رمضان" : "اختار بسهولة"}</p>
+            <p className="mt-2 text-base font-bold leading-7 sm:mt-3 sm:text-xl sm:leading-8">{isPopup ? "هنا هتلاقي بالونات، هدايا ومستلزمات حفلات من POP UP." : isRamadanCategory ? "اختار التصميم المناسب ليك، وابعت كود المنتج على واتساب عشان تعرف السعر والمقاس المتوفر." : "استخدم فلتر السن والتصنيفات عشان توصل للعبة المناسبة بسرعة."}</p>
           </div>
         </section>
+        )}
         <section id="feed" className={`scroll-mt-16 border-t py-8 sm:scroll-mt-20 sm:py-14 ${isPopup ? "border-[#eadcf2] bg-[#fcf8ff]" : "border-brand-border bg-brand-surface"}`}>
           <div className="container">
             <div className="mb-5 flex items-center justify-between gap-3 sm:mb-8 sm:flex-wrap sm:items-end sm:gap-4">
               <div className="min-w-0">
                 <p className={`text-xs font-bold sm:text-sm ${isPopup ? "text-[#a13b87]" : "text-brand-red"}`}>{isPopup ? "Gifts & Balloons & Party Supplies" : "اكتشف الاختيار المناسب"}</p>
-                <h2 className={`mt-1 text-2xl font-extrabold sm:text-3xl ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>{isPopup ? "كتالوج POP UP" : "كتالوج لعب الأطفال"}</h2>
+                <h2 className={`mt-1 text-2xl font-extrabold sm:text-3xl ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>{isPopup ? "كتالوج POP UP" : isRamadanCategory ? "منتجات رمضان" : "كتالوج لعب الأطفال"}</h2>
               </div>
               <button type="button" onClick={() => productsQuery.refetch()} aria-label="تحديث الكتالوج" className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-4 sm:rounded-full sm:px-4 ${isPopup ? "border-[#e4d3ee] text-[#6b278f] hover:border-[#8a3aaa] hover:bg-white focus-visible:ring-[#8a3aaa]" : "border-brand-border text-brand-blue hover:border-brand-blue hover:bg-brand-blue/5 focus-visible:ring-brand-blue"}`}><RefreshCw size={16} className={productsQuery.isFetching ? "animate-spin motion-reduce:animate-none" : ""} /><span className="hidden sm:inline">تحديث</span></button>
             </div>
@@ -351,7 +362,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                     </div>
                   </div>
                 )}
-                {!isPopup && (
+                {!isPopup && !isRamadanCategory && (
                   <div className="rounded-2xl border border-brand-border bg-brand-cream p-3.5 sm:p-4">
                     <div className="mb-2.5 flex items-center justify-between gap-3 sm:mb-3">
                       <p id={ageGroupLabelId} className="text-sm font-extrabold text-brand-navy">اختار حسب السن</p>
@@ -400,8 +411,8 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
               <>
                 {visibleProducts.length === 0 ? (
                   <div className={`rounded-2xl border p-6 text-center sm:rounded-[2rem] sm:p-10 ${isPopup ? "border-[#e4d3ee] bg-white" : "border-brand-border bg-brand-cream"}`}>
-                    <p className={`text-base font-extrabold sm:text-lg ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>{!isPopup && category === "رمضان" && !search ? "قسم رمضان جاهز — المنتجات قيد التجهيز" : "لا توجد نتائج مطابقة لبحثك أو الفلاتر"}</p>
-                    <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-brand-muted">{!isPopup && category === "رمضان" && !search ? "بنراجع صور وتفاصيل منتجات رمضان قبل عرضها هنا. مفيش منتجات معتمدة للنشر في القسم حاليًا." : "غيّر البحث أو أحد الفلاتر، أو امسح الكل وحاول تاني."}</p>
+                    <p className={`text-base font-extrabold sm:text-lg ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>لا توجد نتائج مطابقة لبحثك أو الفلاتر</p>
+                    <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-brand-muted">غيّر البحث أو أحد الفلاتر، أو امسح الكل وحاول تاني.</p>
                     <button type="button" onClick={clearAllFilters} className={`mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border px-5 py-2 text-sm font-bold transition sm:w-auto sm:rounded-full ${isPopup ? "border-[#e4d3ee] text-[#6b278f] hover:border-[#8a3aaa] hover:bg-[#f7effb]" : "border-brand-border text-brand-blue hover:border-brand-blue hover:bg-brand-blue/5"}`}>مسح البحث والفلاتر</button>
                   </div>
                 ) : (

@@ -1,5 +1,5 @@
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import {
   isPubliclyVisible,
   parseProductsCsv,
@@ -112,7 +112,12 @@ function publicPathToFile(publicPath: string): string {
     throw new Error(`Expected a root-relative public asset path, got: ${publicPath}`);
   }
   const filePath = resolve(PUBLIC_DIR, `.${publicPath}`);
-  if (filePath !== PUBLIC_DIR && !filePath.startsWith(`${PUBLIC_DIR}/`)) {
+  const localRelativePath = relative(PUBLIC_DIR, filePath);
+  if (
+    localRelativePath === ".." ||
+    localRelativePath.startsWith(`..${sep}`) ||
+    isAbsolute(localRelativePath)
+  ) {
     throw new Error(`Unsafe public asset path: ${publicPath}`);
   }
   return filePath;

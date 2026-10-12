@@ -60,12 +60,21 @@ export type StorefrontProductsPayload = Omit<ProductsPayload, "products"> & {
 
 const CATALOG_PRODUCTS = [...PUBLIC_PRODUCTS_SNAPSHOT, ...POPUP_PRODUCTS_SNAPSHOT];
 
+/** Additional images from the same approved photo set; never guessed from SKU. */
+const RAMADAN_GALLERY: Readonly<Record<string, string[]>> = {
+  "OMR-RAM-0037": ["/products/processed/ramadan/ramadan-0037-alt-1.webp"],
+  "OMR-RAM-0047": ["/products/processed/ramadan/ramadan-0047-alt-1.webp"],
+  "OMR-RAM-0053": ["/products/processed/ramadan/ramadan-0053-alt-1.webp"],
+  "OMR-RAM-0065": ["/products/processed/ramadan/ramadan-0065-alt-1.webp"],
+};
+
 function toStorefrontProduct(product: BaseProduct): Product {
   return {
     ...product,
     ageMin: null,
     ageMax: null,
-    galleryImages: [], videoUrl: null, videoPoster: null, videoDuration: null,
+    galleryImages: product.category === "ramadan-lanterns" ? RAMADAN_GALLERY[product.id] ?? [] : [],
+    videoUrl: null, videoPoster: null, videoDuration: null,
     options: [], brand: null, tags: [], availability: "unknown",
     specifications: EMPTY_SPECIFICATIONS,
   };

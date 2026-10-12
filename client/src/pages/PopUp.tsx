@@ -5,6 +5,7 @@ import { SeoMetadata } from "@/components/SeoMetadata";
 import Products from "@/pages/Products";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import AnnouncementBar from "@/components/AnnouncementBar";
+import { RamadanSeasonRibbon } from "@/components/RamadanSeasonBanner";
 
 const POPUP_TITLE = "POP UP – Gifts & Balloons | شركة عمران التجارية";
 const POPUP_DESCRIPTION = "هدايا وبالونات ومستلزمات حفلات من POP UP ضمن شركة عمران التجارية.";
@@ -169,6 +170,7 @@ export default function PopUp() {
     <div dir="rtl">
       <SeoMetadata path="/popup" title={POPUP_TITLE} description={POPUP_DESCRIPTION} />
       <AnnouncementBar />
+      <RamadanSeasonRibbon />
       <BrandHeader />
       <Products catalog="popup" showAnnouncement={false} />
       <PopUpVideosCta />
