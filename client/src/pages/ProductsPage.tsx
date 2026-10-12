@@ -3,6 +3,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import SiteFooter from "@/components/SiteFooter";
 import { SeoMetadata } from "@/components/SeoMetadata";
 import Products from "@/pages/Products";
+import { RamadanSeasonRibbon } from "@/components/RamadanSeasonBanner";
 
 const PRODUCTS_TITLE = "لعب أطفال | شركة عمران التجارية";
 const PRODUCTS_DESCRIPTION =
@@ -13,6 +14,7 @@ export default function ProductsPage() {
     <div>
       <SeoMetadata path="/products" title={PRODUCTS_TITLE} description={PRODUCTS_DESCRIPTION} />
       <AnnouncementBar />
+      <RamadanSeasonRibbon />
       <BrandHeader />
       <Products showAnnouncement={false} />
       <SiteFooter />
