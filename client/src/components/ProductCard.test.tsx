@@ -85,7 +85,7 @@ describe("ProductCard — روابط crawlable", () => {
     window.history.replaceState({}, "", "/"); // حتى من الرئيسية: الرابط ثابت
     render(<ProductCard product={makeProduct()} onOpenDetails={vi.fn()} />);
 
-    const waLink = screen.getByRole("link", { name: "للاستفسار والكميات" });
+    const waLink = screen.getByRole("link", { name: "اسأل عن السعر" });
     const href = waLink.getAttribute("href") ?? "";
     expect(href).toContain("wa.me/201000000000");
     expect(decodeURIComponent(href)).toContain("/products?product=OMR-CARD-1");
