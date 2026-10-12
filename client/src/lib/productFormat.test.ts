@@ -36,7 +36,7 @@ describe("buildWhatsAppUrl", () => {
     expect(text).toContain("السلام عليكم، عاوز أستفسر عن:\nسيارة أطفال سباق");
     expect(text).toContain("الكود: OT-0001");
     expect(text).toContain("التصنيف: سيارات");
-    expect(text).toContain("التوفر والكميات");
+    expect(text).toContain("السعر والتوفر والكميات");
     expect(text).not.toContain("250 ج.م");
   });
 
@@ -44,6 +44,23 @@ describe("buildWhatsAppUrl", () => {
     expect(
       buildWhatsAppUrl({ name: "لعبة", price: 10 }, { number: "" })
     ).toBeNull();
+  });
+
+  it("يسأل عن سعر ومقاس منتج رمضان بدون اختراع أي أرقام", () => {
+    const url = buildWhatsAppUrl(
+      {
+        id: "OMR-RAM-0037",
+        name: "رانر سفرة رمضاني",
+        category: "ramadan-lanterns",
+        price: null,
+      },
+      { number: "201555570269", pageUrl: "https://omrantoys.store/products?product=OMR-RAM-0037" }
+    );
+    const message = new URL(url!).searchParams.get("text") ?? "";
+    expect(message).toContain("رانر سفرة رمضاني");
+    expect(message).toContain("الكود: OMR-RAM-0037");
+    expect(message).toContain("السعر والمقاس المتاح والتوفر");
+    expect(message).not.toMatch(/(ج\.م|السعر:\\s*\\d+)/);
   });
 
   it("يتعامل مع sku", () => {

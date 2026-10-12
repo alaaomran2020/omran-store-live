@@ -313,8 +313,8 @@ export function ProductDetailsDialog({
 
               <div className="rounded-2xl bg-brand-sky p-3.5 text-sm leading-7 text-brand-navy sm:p-4">
                 {selectionSummary.length > 0
-                  ? <>اختياراتك: <strong>{selectionSummary.join(" · ")}</strong>. ابعتها مباشرة على واتساب للاستفسار عن التوفر والكميات.</>
-                  : "ابعت استفسار مباشر على واتساب لمعرفة التوفر والكميات."}
+                  ? <>اختياراتك: <strong>{selectionSummary.join(" · ")}</strong>. ابعتها مباشرة على واتساب لمعرفة السعر والتوفر والتفاصيل.</>
+                  : "ابعت استفسار مباشر على واتساب لمعرفة السعر والتوفر والتفاصيل."}
               </div>
 
               <div className="mt-auto hidden flex-col gap-2 pt-2 sm:flex">
@@ -328,7 +328,7 @@ export function ProductDetailsDialog({
                       className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-bold text-white transition hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp-hover"
                     >
                       <MessageCircle size={18} aria-hidden="true" />
-                      للاستفسار والكميات
+                      اسأل عن السعر والتوفر
                     </a>
                     <WishlistButton productId={product.id} productName={product.name} />
                   </div>
@@ -363,7 +363,7 @@ export function ProductDetailsDialog({
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-3 py-3 text-xs font-extrabold text-white shadow-lg transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-whatsapp-hover"
             >
               <MessageCircle size={17} aria-hidden="true" />
-              للاستفسار والكميات
+              اسأل عن السعر والتوفر
             </a>
             <WishlistButton productId={product.id} productName={product.name} className="min-h-12 px-3 py-3" />
             </>

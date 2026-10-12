@@ -65,7 +65,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
       PUBLIC_PRODUCTS_SNAPSHOT.slice(0, initialVisibleCount).map(product => product.id)
     );
     expect(within(cards()[0]).getByText("اسأل عن التوفر")).toBeTruthy();
-    expect(within(cards()[0]).getByRole("link", { name: "للاستفسار والكميات" })).toBeTruthy();
+    expect(within(cards()[0]).getByRole("link", { name: "اسأل عن السعر" })).toBeTruthy();
     expect(catalogNetworkCalls()).toEqual([]);
   });
 
@@ -99,7 +99,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
 
-    const links = screen.getAllByRole("link", { name: /للاستفسار والكميات|استفسر عن/ }) as HTMLAnchorElement[];
+    const links = screen.getAllByRole("link", { name: /اسأل عن السعر|استفسر عن/ }) as HTMLAnchorElement[];
     expect(links[0].href).toContain("wa.me/201000000000");
     expect(decodeURIComponent(links[0].href)).toContain(PUBLIC_PRODUCTS_SNAPSHOT[0].name);
     expect(catalogNetworkCalls()).toEqual([]);

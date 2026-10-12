@@ -72,7 +72,7 @@ describe("تفاصيل المنتج", () => {
     expect(within(dialog).getByText("حفلات")).toBeTruthy();
     expect(within(dialog).getByText("بلاستيك")).toBeTruthy();
 
-    const ctas = within(dialog).getAllByRole("link", { name: "للاستفسار والكميات" }) as HTMLAnchorElement[];
+    const ctas = within(dialog).getAllByRole("link", { name: "اسأل عن السعر والتوفر" }) as HTMLAnchorElement[];
     expect(ctas.length).toBeGreaterThan(0);
     expect(decodeURIComponent(ctas[0].href)).toContain("الكود: OT-TEST-1");
     expect(decodeURIComponent(ctas[0].href)).toContain("التصنيف: ألعاب تنكرية");

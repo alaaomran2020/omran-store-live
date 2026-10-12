@@ -91,7 +91,7 @@ export function ProductCard({
           {waUrl && (
             <a href={waUrl} target="_blank" rel="noreferrer" onClick={handleWhatsAppClick} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-whatsapp px-2.5 py-2.5 text-[12px] font-black leading-4 text-white transition active:scale-[0.98] hover:bg-whatsapp-hover focus-visible:ring-4 focus-visible:ring-whatsapp-hover motion-reduce:transition-none motion-reduce:active:scale-100 max-[359px]:gap-1 max-[359px]:px-1.5 max-[359px]:text-[11px] sm:min-h-12 sm:gap-2 sm:px-4 sm:text-sm">
               <MessageCircle size={16} aria-hidden="true" className="shrink-0" />
-              <span>للاستفسار والكميات</span>
+              <span>اسأل عن السعر</span>
             </a>
           )}
           <a href={productHref} onClick={event => { event.preventDefault(); onOpenDetails(product); }} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-black text-brand-blue transition active:scale-[0.98] hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue motion-reduce:transition-none motion-reduce:active:scale-100 sm:gap-2 sm:px-4 sm:text-sm">

@@ -7,11 +7,11 @@ import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
  */
 
 /**
- * الوضع التجاري الحالي: الأسعار والكميات غير جاهزة بعد.
- * عند تحويله إلى true لاحقًا تعود الأسعار المؤكدة للعرض بدون تغيير بيانات المنتجات.
+ * وضع المبيعات الحالي: عرض المنتجات للاستفسار والرد على الأسعار عبر واتساب.
+ * لا تُعرض الأسعار الرقمية على صفحات المتجر حتى لو كان السعر محفوظًا في المصدر.
  */
 export const SHOW_CATALOG_PRICES = false;
-export const PRICE_ENQUIRY_LABEL = "للاستفسار والكميات";
+export const PRICE_ENQUIRY_LABEL = "السعر عبر واتساب";
 
 const numberFormatter = new Intl.NumberFormat("ar-EG-u-nu-latn", {
   maximumFractionDigits: 2,
@@ -61,6 +61,7 @@ export function buildWhatsAppUrl(
   const productId = (product as { id?: string }).id?.trim() || "";
   const sku = (product as { sku?: string | null }).sku?.trim() || "";
   const category = (product as { category?: string }).category?.trim() || "";
+  const isRamadan = category === "ramadan-lanterns" || category === "رمضان";
   const selectedColor = options.selectedColor?.trim() || "";
   const structuredSelections = Object.entries(options.selectedOptions ?? {})
     .map(([name, value]) => [name.trim(), value?.trim() ?? ""] as const)
@@ -100,7 +101,9 @@ export function buildWhatsAppUrl(
     `الكود: ${sku || productId}`,
     category ? `التصنيف: ${category}` : null,
     pageUrl ? `الرابط: ${pageUrl}` : null,
-    "وأعرف التوفر والكميات.",
+    isRamadan
+      ? "ممكن أعرف السعر والمقاس المتاح والتوفر والكميات؟"
+      : "ممكن أعرف السعر والتوفر والكميات؟",
   ].filter(Boolean);
 
   return `https://wa.me/${number}?text=${encodeURIComponent(lines.join("\n"))}`;
