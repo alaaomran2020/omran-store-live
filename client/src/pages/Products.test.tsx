@@ -74,7 +74,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(24));
     expect(cards().every(card => card.getAttribute("data-product-id")?.startsWith("OMR-RAM-"))).toBe(true);
-    expect(screen.getByRole("heading", { name: "زينة رمضان وتفاصيل تفرّح البيت" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "مجموعة رمضان" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "منتجات رمضان" })).toBeTruthy();
     expect(screen.queryByText("اختار حسب السن")).toBeNull();
     expect(screen.queryByText("قسم رمضان جاهز — المنتجات قيد التجهيز")).toBeNull();

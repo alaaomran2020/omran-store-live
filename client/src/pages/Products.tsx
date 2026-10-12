@@ -341,11 +341,11 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
           </div>
         </section>
         )}
-        <section id="feed" className={`scroll-mt-16 border-t py-8 sm:scroll-mt-20 sm:py-14 ${isPopup ? "border-[#eadcf2] bg-[#fcf8ff]" : "border-brand-border bg-brand-surface"}`}>
+        <section id="feed" data-ramadan-catalog={isRamadanCategory ? "true" : undefined} className={`scroll-mt-16 border-t py-8 sm:scroll-mt-20 sm:py-14 ${isPopup ? "border-[#eadcf2] bg-[#fcf8ff]" : isRamadanCategory ? "ramadan-catalog-feed border-[#d8c5a4]" : "border-brand-border bg-brand-surface"}`}>
           <div className="container">
             <div className="mb-5 flex items-center justify-between gap-3 sm:mb-8 sm:flex-wrap sm:items-end sm:gap-4">
               <div className="min-w-0">
-                <p className={`text-xs font-bold sm:text-sm ${isPopup ? "text-[#a13b87]" : "text-brand-red"}`}>{isPopup ? "Gifts & Balloons & Party Supplies" : "اكتشف الاختيار المناسب"}</p>
+                <p className={`text-xs font-bold sm:text-sm ${isPopup ? "text-[#a13b87]" : isRamadanCategory ? "text-[#85612d] dark:text-[#e4c68b]" : "text-brand-red"}`}>{isPopup ? "Gifts & Balloons & Party Supplies" : isRamadanCategory ? "مختارات الموسم" : "اكتشف الاختيار المناسب"}</p>
                 <h2 className={`mt-1 text-2xl font-extrabold sm:text-3xl ${isPopup ? "text-[#4f1b68]" : "text-brand-navy"}`}>{isPopup ? "كتالوج POP UP" : isRamadanCategory ? "منتجات رمضان" : "كتالوج لعب الأطفال"}</h2>
               </div>
               <button type="button" onClick={() => productsQuery.refetch()} aria-label="تحديث الكتالوج" className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold transition active:scale-95 focus-visible:outline-none focus-visible:ring-4 sm:rounded-full sm:px-4 ${isPopup ? "border-[#e4d3ee] text-[#6b278f] hover:border-[#8a3aaa] hover:bg-white focus-visible:ring-[#8a3aaa]" : "border-brand-border text-brand-blue hover:border-brand-blue hover:bg-brand-blue/5 focus-visible:ring-brand-blue"}`}><RefreshCw size={16} className={productsQuery.isFetching ? "animate-spin motion-reduce:animate-none" : ""} /><span className="hidden sm:inline">تحديث</span></button>
@@ -420,7 +420,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                     <p className="mb-4 text-xs font-bold text-brand-muted" aria-live="polite">
                       عرض {renderedProducts.length} من {visibleProducts.length} منتج
                     </p>
-                    <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className={`grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4 ${isRamadanCategory ? "ramadan-catalog-grid" : ""}`}>
                       {renderedProducts.map(product => <ProductCard key={product.id} product={product} onOpenDetails={handleOpenDetails} />)}
                     </div>
                     {hasMoreProducts && (

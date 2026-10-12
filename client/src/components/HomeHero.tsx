@@ -9,8 +9,9 @@ export default function HomeHero() {
     : null;
 
   return (
-    <section data-omran-hero className="border-b border-brand-border bg-brand-cream" aria-labelledby="home-hero-title">
-      <div className="container grid gap-7 py-8 sm:py-12 lg:grid-cols-[.9fr_1.1fr] lg:items-center lg:gap-12 lg:py-16">
+    <section data-omran-hero className="ramadan-home-hero relative isolate overflow-hidden border-b border-[#e0d0b5]" aria-labelledby="home-hero-title">
+      <div aria-hidden="true" className="ramadan-home-hero-ornament pointer-events-none absolute inset-0" />
+      <div className="container relative grid gap-7 py-8 sm:py-12 lg:grid-cols-[.9fr_1.1fr] lg:items-center lg:gap-12 lg:py-16">
         <div className="max-w-2xl">
           <p className="text-sm font-black text-brand-blue">عمران تويز · شركة عمران التجارية</p>
           <h1 id="home-hero-title" className="mt-3 text-[2.7rem] font-bold leading-[1.22] text-brand-navy sm:text-5xl lg:text-[3.35rem]">
@@ -41,7 +42,7 @@ export default function HomeHero() {
           </div>
         </div>
 
-        <figure className="overflow-hidden rounded-[2rem] border border-brand-border bg-brand-surface shadow-[0_20px_50px_rgba(18,59,109,.12)]">
+        <figure className="overflow-hidden rounded-[2rem] border border-[#d7bd8e]/65 bg-brand-surface shadow-[0_20px_50px_rgba(18,59,109,.12)]">
           <img
             src="/categories/category-cars-640.webp"
             srcSet="/categories/category-cars-320.webp 320w, /categories/category-cars-640.webp 640w, /categories/category-cars.webp 720w"

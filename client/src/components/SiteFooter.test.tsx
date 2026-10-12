@@ -41,4 +41,9 @@ describe("SiteFooter", () => {
     expect(screen.queryByText("الشروط والأحكام")).toBeNull();
     expect(screen.queryByText("الاستبدال والاسترجاع")).toBeNull();
   });
+
+  it("يبقي زخرفة الفوتر موسمية وغير تفاعلية", () => {
+    render(<SiteFooter />);
+    expect(document.querySelector(".ramadan-footer-pattern")?.getAttribute("aria-hidden")).toBe("true");
+  });
 });

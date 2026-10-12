@@ -299,6 +299,97 @@
   to { transform: translateX(50%); }
 }
 
+/* Ramadan seasonal treatment: scoped to storefront surfaces, not admin tooling.
+ * Ornament is CSS-only, subtle, and stays behind legible copy and real photos. */
+.ramadan-season-section {
+  background-color: #faf6ed;
+  background-image:
+    radial-gradient(circle at 8% 18%, rgb(201 163 91 / 10%), transparent 27%),
+    radial-gradient(circle at 90% 85%, rgb(79 108 96 / 6%), transparent 31%);
+}
+
+.ramadan-home-hero {
+  background: linear-gradient(132deg, #fbf7f2 14%, #fbf2e3 64%, #f6f4ef);
+}
+
+.ramadan-home-hero-ornament {
+  opacity: .55;
+  background-image:
+    radial-gradient(circle at 6% 22%, rgb(197 149 66 / 18%) 1px, transparent 2px),
+    repeating-linear-gradient(45deg, transparent 0 75px, rgb(209 178 123 / 9%) 76px, transparent 77px);
+  background-size: 140px 140px, 210px 210px;
+  mask-image: linear-gradient(to right, #000, transparent 65%);
+}
+
+.ramadan-season-panel::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 10px;
+  border: 1px solid rgb(231 197 133 / 22%);
+  border-radius: 1.3rem;
+  pointer-events: none;
+}
+
+.ramadan-season-panel-pattern {
+  opacity: .45;
+  background-image:
+    radial-gradient(circle at 8% 16%, rgb(243 211 146 / 23%) 1px, transparent 2px),
+    radial-gradient(circle at 82% 67%, rgb(243 211 146 / 18%) 1px, transparent 2px),
+    repeating-linear-gradient(45deg, transparent 0 61px, rgb(228 191 120 / 7%) 62px, transparent 63px),
+    repeating-linear-gradient(-45deg, transparent 0 61px, rgb(228 191 120 / 7%) 62px, transparent 63px);
+  background-size: 110px 96px, 153px 131px, 190px 190px, 190px 190px;
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+
+.ramadan-season-photo {
+  box-shadow: 0 10px 22px rgb(4 21 33 / 17%), inset 0 0 0 1px rgb(231 197 133 / 23%);
+}
+
+.ramadan-catalog-feed {
+  background-color: #fcf9f2;
+  background-image:
+    radial-gradient(circle at 5% 0%, rgb(202 157 78 / 8%), transparent 30%),
+    linear-gradient(0deg, transparent 95%, rgb(198 171 122 / 8%) 100%);
+}
+
+.ramadan-product-card {
+  box-shadow: 0 6px 22px rgb(61 45 25 / 8%);
+}
+
+.ramadan-product-card:hover {
+  border-color: #b79050;
+  box-shadow: 0 14px 34px rgb(61 45 25 / 15%);
+}
+
+.ramadan-product-card > div:first-child {
+  background: #f5eee2;
+}
+
+.ramadan-footer-pattern {
+  opacity: .3;
+  background-image: repeating-linear-gradient(45deg, transparent 0 40px, rgb(240 208 147 / 13%) 41px, transparent 42px);
+  mask-image: linear-gradient(to bottom, #000, transparent);
+}
+
+.dark .ramadan-season-section,
+.dark .ramadan-catalog-feed {
+  background-color: #1d2631;
+  background-image: radial-gradient(circle at 12% 20%, rgb(218 177 101 / 12%), transparent 36%);
+}
+
+.dark .ramadan-home-hero {
+  background: linear-gradient(132deg, #1c2331, #272c33 68%, #1c2331);
+}
+
+.dark .ramadan-product-card {
+  border-color: #716046;
+}
+
+.dark .ramadan-product-card > div:first-child {
+  background: #292c32;
+}
+
 .announcement-marquee {
   animation: marquee 16s linear infinite;
   will-change: transform;

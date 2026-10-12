@@ -90,4 +90,14 @@ describe("ProductCard — روابط crawlable", () => {
     expect(href).toContain("wa.me/201000000000");
     expect(decodeURIComponent(href)).toContain("/products?product=OMR-CARD-1");
   });
+
+  it("بطاقة رمضان تحمل شارة الموسم وتحافظ على الاستفسار بلا سعر معلن أو شراء مباشر", () => {
+    const ramadanProduct = makeProduct({ id: "OMR-RAM-0039", name: "رانر رمضان", category: "ramadan-lanterns" });
+    render(<ProductCard product={ramadanProduct} onOpenDetails={vi.fn()} />);
+    expect(document.querySelector('[data-ramadan-card="true"]')).toBeTruthy();
+    expect(screen.getByText("مختارات الموسم")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "اسأل عن السعر" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /شراء|السلة/ })).toBeNull();
+    expect(screen.queryByText(/\d+ ج\.م/)).toBeNull();
+  });
 });
