@@ -1,0 +1,46 @@
+[
+  {
+    "width": 320,
+    "homeCards": 8,
+    "detailsOnDemand": true,
+    "whatsapp": true,
+    "search": true,
+    "ramadan": true,
+    "noOverflow": true,
+    "changedSectionsAxeViolations": 0,
+    "pageErrors": []
+  },
+  {
+    "width": 390,
+    "homeCards": 8,
+    "detailsOnDemand": true,
+    "whatsapp": true,
+    "search": true,
+    "ramadan": true,
+    "noOverflow": true,
+    "changedSectionsAxeViolations": 0,
+    "pageErrors": []
+  },
+  {
+    "width": 768,
+    "homeCards": 8,
+    "detailsOnDemand": true,
+    "whatsapp": true,
+    "search": true,
+    "ramadan": true,
+    "noOverflow": true,
+    "changedSectionsAxeViolations": 0,
+    "pageErrors": []
+  },
+  {
+    "width": 1440,
+    "homeCards": 8,
+    "detailsOnDemand": true,
+    "whatsapp": true,
+    "search": true,
+    "ramadan": true,
+    "noOverflow": true,
+    "changedSectionsAxeViolations": 0,
+    "pageErrors": []
+  }
+]

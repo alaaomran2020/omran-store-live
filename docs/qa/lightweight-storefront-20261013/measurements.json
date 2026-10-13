@@ -1,0 +1,46 @@
+[
+  {
+    "width": 320,
+    "baseline_initial_resource_bytes": 2665759,
+    "updated_initial_resource_bytes": 446413,
+    "baseline_featured_section_top_px": 2847.03125,
+    "updated_featured_section_top_px": 1211.5,
+    "baseline_initial_script_encoded_bytes": 139083,
+    "updated_initial_script_encoded_bytes": 120376,
+    "horizontal_overflow": false,
+    "page_errors": []
+  },
+  {
+    "width": 390,
+    "baseline_initial_resource_bytes": 2696871,
+    "updated_initial_resource_bytes": 446413,
+    "baseline_featured_section_top_px": 2979.75,
+    "updated_featured_section_top_px": 1115,
+    "baseline_initial_script_encoded_bytes": 139083,
+    "updated_initial_script_encoded_bytes": 120376,
+    "horizontal_overflow": false,
+    "page_errors": []
+  },
+  {
+    "width": 768,
+    "baseline_initial_resource_bytes": 2676563,
+    "updated_initial_resource_bytes": 729875,
+    "baseline_featured_section_top_px": 2909.4375,
+    "updated_featured_section_top_px": 892.90625,
+    "baseline_initial_script_encoded_bytes": 139083,
+    "updated_initial_script_encoded_bytes": 120376,
+    "horizontal_overflow": false,
+    "page_errors": []
+  },
+  {
+    "width": 1440,
+    "baseline_initial_resource_bytes": 2761847,
+    "updated_initial_resource_bytes": 729875,
+    "baseline_featured_section_top_px": 1888.078125,
+    "updated_featured_section_top_px": 762.90625,
+    "baseline_initial_script_encoded_bytes": 139083,
+    "updated_initial_script_encoded_bytes": 120376,
+    "horizontal_overflow": false,
+    "page_errors": []
+  }
+]
