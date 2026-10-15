@@ -183,6 +183,7 @@ export function ProductDetailsDialog({
                   </div>
                 )}
               </dl>
+              {!isPopUpProduct(product) && <p className="text-xs font-bold leading-6 text-brand-muted">الاستفسار متاح جملة وقطاعي · أقل كمية لطلب الجملة حسب الصنف، اسألنا على واتساب.</p>}
 
               {colors.length > 0 && (
                 <div role="group" aria-labelledby={colorGroupId} className="rounded-2xl border border-brand-border bg-white p-3.5 sm:p-4">

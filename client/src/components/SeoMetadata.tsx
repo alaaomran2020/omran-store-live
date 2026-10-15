@@ -336,7 +336,9 @@ export function ProductStructuredData({
       name: product.name,
       url: productUrl,
     };
-    if (product.sku?.trim()) productSchema.sku = product.sku.trim();
+    // Most verified catalog records use id as their public SKU. Do not leave the
+    // machine-readable identifier empty when the optional sku column is blank.
+    productSchema.sku = product.sku?.trim() || id;
     if (rawDescription) productSchema.description = cleanDescriptionText(rawDescription, 3000);
     if (categoryDisplay) productSchema.category = categoryDisplay;
     if (product.brand?.trim()) {
