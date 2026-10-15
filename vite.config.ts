@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
 import { writeSitemap } from "./scripts/sitemap-generate-core.mjs";
+import { renderStaticSeoShell } from "./scripts/static-seo-shell.mjs";
 import { OPENING_PROFILE } from "./shared/openingProfile";
 import {
   defineConfig,
@@ -350,9 +351,9 @@ function vitePluginSpaRouteShells(): Plugin {
       for (const route of SPA_ROUTES) {
         const target = path.join(outDir, ...route.slice(1).split("/")) + ".html";
         fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.writeFileSync(target, shell, "utf8");
+        fs.writeFileSync(target, renderStaticSeoShell(shell, route), "utf8");
       }
-      fs.writeFileSync(path.join(outDir, "404.html"), shell, "utf8");
+      fs.writeFileSync(path.join(outDir, "404.html"), renderStaticSeoShell(shell, "/404"), "utf8");
       // The only dynamic pathname in the SPA is the admin product editor.
       fs.writeFileSync(
         path.join(outDir, "_redirects"),
