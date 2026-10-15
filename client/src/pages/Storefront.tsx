@@ -8,9 +8,7 @@ import HomeCategoryHighlights from "@/components/HomeCategoryHighlights";
 import HomeAgeBrowse from "@/components/HomeAgeBrowse";
 import { RamadanSeasonBanner, RamadanSeasonRibbon } from "@/components/RamadanSeasonBanner";
 
-// Seasonal promotion remains available in the catalog but is hidden on the homepage
-// outside explicitly approved campaign periods (no automatic activation).
-const SHOW_RAMADAN_PROMO = import.meta.env.VITE_SHOW_RAMADAN_PROMO === "true";
+import { SHOW_RAMADAN_PROMO } from "@/lib/seasonalCampaign";
 import StoreTrustFeatures from "@/components/StoreTrustFeatures";
 import HomeSupportSections from "@/components/HomeSupportSections";
 import { MAIN_CONTENT_ID } from "@/lib/a11y";
