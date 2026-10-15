@@ -88,7 +88,7 @@ export function buildBulkInquiryUrl(
   const cleanNumber = number.replace(/\D/g, "");
   if (!cleanNumber || selected.length === 0) return null;
   const lines = [
-    "السلام عليكم، أريد الاستفسار عن أسعار وتوفر الأصناف التالية (جملة أو قطاعي):",
+    "السلام عليكم، هذا استفسار من كتالوج عمران تويز (omrantoys.store) عن أسعار وتوفر الأصناف التالية (جملة أو قطاعي):",
     ...selected.slice(0, MAX_INQUIRY_ITEMS).map((item, index) =>
       `${index + 1}. ${item.name.slice(0, 60)} — كود: ${item.id}`
     ),
