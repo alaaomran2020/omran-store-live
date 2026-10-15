@@ -4,7 +4,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import SkipLink from "./components/SkipLink";
 import InquiryBasket from "./components/InquiryBasket";
 import Storefront from "@/pages/Storefront";
-import ProductsPage from "@/pages/ProductsPage";
+const ProductsPage = lazy(() => import("@/pages/ProductsPage"));
 
 const AdminAccess = lazy(() => import("@/admin/AdminAccess"));
 const AccountApp = lazy(() => import("@/account/AccountApp"));

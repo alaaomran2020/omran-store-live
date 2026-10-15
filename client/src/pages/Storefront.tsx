@@ -21,10 +21,10 @@ export default function Storefront() {
       <BrandHeader />
       <HomeHero />
       <main id={MAIN_CONTENT_ID} tabIndex={-1}>
-        {SHOW_RAMADAN_PROMO && <RamadanSeasonBanner />}
-        <HomeCategoryHighlights />
-        <HomeAgeBrowse />
+        <HomeCategoryHighlights compact />
         <HomeProductShowcase />
+        {SHOW_RAMADAN_PROMO && <RamadanSeasonBanner />}
+        <HomeAgeBrowse />
         <StoreTrustFeatures />
         <HomeSupportSections />
         <PopUpPromo />

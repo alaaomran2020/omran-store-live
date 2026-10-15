@@ -1,10 +1,18 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
-import { ProductDetailsDialog } from "@/components/ProductDetailsDialog";
+const ProductDetailsDialog = lazy(() =>
+  import("@/components/ProductDetailsDialog").then(module => ({
+    default: module.ProductDetailsDialog,
+  }))
+);
 import { filterProductsByCatalog } from "@/lib/productCatalog";
-import { getInitialProductsSnapshot, loadPublishedCatalog, type Product } from "@/lib/productsClient";
+import {
+  getInitialProductsSnapshot,
+  loadPublishedCatalog,
+  type Product,
+} from "@/lib/productsClient";
 import { findSimilarProducts } from "@/lib/similarProducts";
 import { canonicalCategory } from "@shared/taxonomy";
 
@@ -25,109 +33,121 @@ export default function HomeProductShowcase() {
       .filter(product => canonicalCategory(product.category)?.id !== "ramadan-lanterns"),
     [productsQuery.data]
   );
-  const latestProduct = useMemo(
-    () => catalogProducts.reduce<Product | null>((latest, product) => {
-      if (!latest) return product;
-      return product.rowIndex > latest.rowIndex ? product : latest;
-    }, null),
+  // Latest-first regular cards avoid a large duplicate promotional image and
+  // always render the media declared by the actual catalog product.
+  const products = useMemo(
+    () =>
+      [...catalogProducts].sort((a, b) => b.rowIndex - a.rowIndex).slice(0, 8),
     [catalogProducts]
   );
-  const products = useMemo(
-    () => catalogProducts.filter(product => product.id !== latestProduct?.id).slice(0, 8),
-    [catalogProducts, latestProduct]
-  );
   const related = useMemo(
-    () => (openProduct ? findSimilarProducts(catalogProducts, openProduct) : []),
+    () =>
+      openProduct ? findSimilarProducts(catalogProducts, openProduct) : [],
     [openProduct, catalogProducts]
   );
-  const isError = productsQuery.isError || productsQuery.data?.status === "error";
+  const isError =
+    productsQuery.isError || productsQuery.data?.status === "error";
 
   return (
-    <section id="featured-products" className="scroll-mt-28 border-b border-brand-border bg-brand-cream py-8 sm:py-11" aria-labelledby="featured-products-title">
+    <section
+      id="featured-products"
+      className="scroll-mt-28 border-b border-brand-border bg-brand-cream py-8 sm:py-11"
+      aria-labelledby="featured-products-title"
+    >
       <div className="container">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-black text-brand-blue sm:text-sm">وصل جديد</p>
-            <h2 id="featured-products-title" className="font-hand-ar mt-1 text-3xl font-bold text-brand-navy sm:text-4xl">أحدث منتجاتنا</h2>
+            <p className="text-xs font-black text-brand-blue sm:text-sm">
+              وصل جديد
+            </p>
+            <h2
+              id="featured-products-title"
+              className="font-hand-ar mt-1 text-3xl font-bold text-brand-navy sm:text-4xl"
+            >
+              أحدث منتجاتنا
+            </h2>
           </div>
-          <a href="/products#feed" className="hidden min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-sm font-black text-brand-navy shadow-sm ring-1 ring-brand-border transition hover:bg-brand-sky sm:inline-flex">
+          <a
+            href="/products#feed"
+            className="hidden min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-sm font-black text-brand-navy shadow-sm ring-1 ring-brand-border transition hover:bg-brand-sky sm:inline-flex"
+          >
             عرض كل المنتجات <ArrowLeft size={16} aria-hidden="true" />
           </a>
         </div>
 
-        {latestProduct && (
-          <button
-            type="button"
-            onClick={() => setOpenProduct(latestProduct)}
-            className="group mt-5 block w-full overflow-hidden rounded-[1.8rem] border border-brand-border bg-white text-right shadow-[0_18px_48px_rgba(18,59,109,.10)] transition duration-300 hover:-translate-y-0.5 hover:border-brand-blue/25 hover:shadow-[0_24px_56px_rgba(18,59,109,.14)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:mt-6"
-            aria-label={`عرض أحدث منتج: ${latestProduct.name}`}
-          >
-            <div className="grid items-stretch md:grid-cols-[1.35fr_.65fr]">
-              <div className="relative aspect-[16/10] overflow-hidden bg-brand-cream md:aspect-[16/9]">
-                <img
-                  src={latestProduct.processedImage || latestProduct.image || "/brand/logo.png"}
-                  alt={latestProduct.name}
-                  width={1600}
-                  height={900}
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-                  draggable={false}
-                  className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.015] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                />
-                <span className="absolute start-4 top-4 rounded-full bg-brand-navy px-3 py-1.5 text-xs font-black text-white shadow-sm sm:start-5 sm:top-5 sm:text-sm">
-                  أحدث منتج
-                </span>
-              </div>
-              <div className="flex flex-col justify-center gap-3 p-5 sm:p-7 md:p-8">
-                <p className="text-xs font-black text-brand-blue sm:text-sm">وصل حديثًا إلى عمران تويز</p>
-                <h3 className="text-2xl font-black leading-tight text-brand-navy sm:text-3xl">{latestProduct.name}</h3>
-                {latestProduct.description && (
-                  <p className="line-clamp-3 text-sm font-semibold leading-7 text-brand-muted sm:text-base">{latestProduct.description}</p>
-                )}
-                <div className="mt-1 flex flex-wrap items-center gap-3">
-                  <span className="text-xs font-bold text-brand-muted">السعر والتوفر عبر واتساب · جملة وقطاعي</span>
-                  <span className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-blue px-4 py-2 text-sm font-black text-white">
-                    عرض التفاصيل <ArrowLeft size={16} aria-hidden="true" />
-                  </span>
-                </div>
-              </div>
-            </div>
-          </button>
-        )}
-
         {productsQuery.isLoading ? (
           <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, index) => <ProductCardSkeleton key={index} />)}
+            {Array.from({ length: 8 }).map((_, index) => (
+              <ProductCardSkeleton key={index} />
+            ))}
           </div>
         ) : products.length > 0 ? (
           <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
-            {products.map(product => <ProductCard key={product.id} product={product} onOpenDetails={setOpenProduct} />)}
+            {products.map(product => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onOpenDetails={setOpenProduct}
+              />
+            ))}
           </div>
         ) : (
           <div className="mt-6 rounded-[1.6rem] border border-brand-border bg-white p-6 text-center sm:p-8">
-            <p className="text-lg font-black text-brand-navy">{isError ? "حصلت مشكلة أثناء تحميل المنتجات." : "مفيش منتجات متاحة للعرض حاليًا."}</p>
-            <p className="mx-auto mt-2 max-w-lg text-sm font-semibold leading-7 text-brand-muted">
-              {isError ? "جرّب التحديث، ولو المشكلة مستمرة تقدر تتواصل معانا على واتساب." : "ادخل على صفحة المنتجات أو ارجع تاني بعد تحديث الكتالوج."}
+            <p className="text-lg font-black text-brand-navy">
+              {isError
+                ? "حصلت مشكلة أثناء تحميل المنتجات."
+                : "مفيش منتجات متاحة للعرض حاليًا."}
             </p>
-            <button type="button" onClick={() => productsQuery.refetch()} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-brand-border bg-white px-4 py-2 text-sm font-black text-brand-blue hover:border-brand-blue hover:bg-brand-sky focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/25">
+            <p className="mx-auto mt-2 max-w-lg text-sm font-semibold leading-7 text-brand-muted">
+              {isError
+                ? "جرّب التحديث، ولو المشكلة مستمرة تقدر تتواصل معانا على واتساب."
+                : "ادخل على صفحة المنتجات أو ارجع تاني بعد تحديث الكتالوج."}
+            </p>
+            <button
+              type="button"
+              onClick={() => productsQuery.refetch()}
+              className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-brand-border bg-white px-4 py-2 text-sm font-black text-brand-blue hover:border-brand-blue hover:bg-brand-sky focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/25"
+            >
               <RefreshCw size={16} aria-hidden="true" />
               حاول تاني
             </button>
           </div>
         )}
 
-        <a href="/products#feed" className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand-blue/20 bg-white px-4 py-2 text-sm font-black text-brand-blue focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/25 sm:hidden">
+        <a
+          href="/products#feed"
+          className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand-blue/20 bg-white px-4 py-2 text-sm font-black text-brand-blue focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/25 sm:hidden"
+        >
           عرض كل المنتجات <ArrowLeft size={16} aria-hidden="true" />
         </a>
       </div>
 
-      <ProductDetailsDialog
-        product={openProduct}
-        relatedProducts={related}
-        onSelectProduct={setOpenProduct}
-        onClose={() => setOpenProduct(null)}
-      />
+      {openProduct && (
+        <Suspense
+          fallback={
+            <div
+              role="status"
+              className="fixed inset-x-4 bottom-4 z-50 flex items-center justify-between gap-3 rounded-xl border border-brand-border bg-white p-4 text-brand-navy shadow-lg"
+            >
+              جاري تحميل تفاصيل المنتج…
+              <button
+                type="button"
+                onClick={() => setOpenProduct(null)}
+                className="min-h-11 rounded-lg border border-brand-border px-4"
+              >
+                إلغاء
+              </button>
+            </div>
+          }
+        >
+          <ProductDetailsDialog
+            product={openProduct}
+            relatedProducts={related}
+            onSelectProduct={setOpenProduct}
+            onClose={() => setOpenProduct(null)}
+          />
+        </Suspense>
+      )}
     </section>
   );
 }
