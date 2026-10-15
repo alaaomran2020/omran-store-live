@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import SkipLink from "./components/SkipLink";
+import InquiryBasket from "./components/InquiryBasket";
 import Storefront from "@/pages/Storefront";
 import ProductsPage from "@/pages/ProductsPage";
 
@@ -107,6 +108,7 @@ function App() {
         }
       >
         <Router />
+        <InquiryBasket />
       </Suspense>
     </ErrorBoundary>
   );
