@@ -22,6 +22,7 @@ export function ProductCard({
   onOpenDetails: (product: Product) => void;
 }) {
   const isPopup = isPopUpProduct(product);
+  const isRamadan = product.category === "ramadan-lanterns";
   const productHref = `${isPopup ? "/popup" : "/products"}?product=${encodeURIComponent(product.id)}`;
 
   const waUrl = buildWhatsAppUrl(product, {
@@ -44,7 +45,8 @@ export function ProductCard({
       data-testid="product-card"
       data-product-id={product.id}
       data-catalog={isPopup ? "popup" : "toys"}
-      className="group flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-lg-system)] border border-brand-border bg-brand-surface shadow-[var(--elevation-2)] transition duration-200 sm:hover:-translate-y-0.5 sm:hover:shadow-[var(--elevation-3)] motion-reduce:transition-none motion-reduce:sm:hover:translate-y-0"
+      data-ramadan-card={isRamadan ? "true" : undefined}
+      className={`group flex min-w-0 flex-col overflow-hidden rounded-[var(--radius-lg-system)] border bg-brand-surface shadow-[var(--elevation-2)] transition duration-200 sm:hover:-translate-y-0.5 sm:hover:shadow-[var(--elevation-3)] motion-reduce:transition-none motion-reduce:sm:hover:translate-y-0 ${isRamadan ? "ramadan-product-card border-[#d9c59e]" : "border-brand-border"}`}
     >
       <div className="relative">
         <a
@@ -62,8 +64,8 @@ export function ProductCard({
             sizesHint="(max-width: 639px) calc((100vw - 2.5rem) / 2), (max-width: 1023px) calc((100vw - 3rem) / 2), 25vw"
           />
           {product.category && (
-            <span className="absolute end-2 top-2 inline-flex max-w-[70%] truncate rounded-full bg-brand-surface/95 px-2 py-1 text-[10px] font-bold text-brand-navy shadow-sm ring-1 ring-brand-border sm:end-3 sm:top-3 sm:px-3 sm:text-[11px]">
-              {displayCategoryName(product.category)}
+            <span className={`absolute end-2 top-2 inline-flex max-w-[85%] truncate rounded-full px-2 py-1 text-[10px] font-bold shadow-sm sm:end-3 sm:top-3 sm:px-3 sm:text-[11px] ${isRamadan ? "border border-[#d7bc81] bg-[#fcf2dd] text-[#654720]" : "bg-brand-surface/95 text-brand-navy ring-1 ring-brand-border"}`}>
+              {isRamadan ? "مختارات الموسم" : displayCategoryName(product.category)}
             </span>
           )}
           {(product.galleryImages.length > 0 || product.videoUrl) && (

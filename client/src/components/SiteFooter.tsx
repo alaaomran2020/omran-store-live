@@ -1,4 +1,4 @@
-import { Facebook, Instagram, MessageCircle, ShieldCheck, Store, ExternalLink, BadgeCheck, MapPin, Phone } from "lucide-react";
+import { Facebook, Instagram, MessageCircle, ShieldCheck, Store, ExternalLink, BadgeCheck, MapPin, MoonStar, Phone } from "lucide-react";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import { whatsappNumber } from "@/lib/productFormat";
 import { STORE_BRANCHES, STORE_CONTACT } from "@shared/storeContent";
@@ -240,6 +240,12 @@ export default function SiteFooter({ socialBrand = "omran" }: SiteFooterProps) {
       <VipSignup source={socialBrand} />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-l from-transparent via-brand-yellow/70 to-transparent" aria-hidden="true" />
+      <div aria-hidden="true" className="ramadan-footer-pattern pointer-events-none absolute inset-x-0 top-0 h-20" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-center" aria-hidden="true">
+        <span className="flex h-7 w-16 items-center justify-center rounded-b-xl border-x border-b border-[#d7b979]/25 bg-brand-navy text-[#e8c87e]">
+          <MoonStar size={16} strokeWidth={1.35} />
+        </span>
+      </div>
       <div className="pointer-events-none absolute -start-24 top-8 hidden h-48 w-48 sm:block rounded-full bg-brand-blue/20 blur-3xl" aria-hidden="true" />
       <div className="pointer-events-none absolute -end-24 bottom-20 hidden h-56 w-56 sm:block rounded-full bg-brand-yellow/10 blur-3xl" aria-hidden="true" />
 

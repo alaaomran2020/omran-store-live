@@ -1,4 +1,4 @@
-import { MessageCircle, Moon, Search, Sun } from "lucide-react";
+import { MessageCircle, Moon, MoonStar, Search, Sun } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
 import { whatsappNumber } from "@/lib/productFormat";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -7,6 +7,7 @@ export default function BrandHeader() {
   const { theme, toggleTheme } = useTheme();
   const pathname = typeof window === "undefined" ? "/" : window.location.pathname;
   const isPopup = pathname.startsWith("/popup");
+  const isRamadanPage = pathname === "/products" && new URLSearchParams(typeof window === "undefined" ? "" : window.location.search).get("category") === "ramadan-lanterns";
   const number = whatsappNumber();
   const whatsappMessage = isPopup
     ? "مرحبًا، أريد الاستفسار عن منتجات POP UP للهدايا والبالونات."
@@ -21,7 +22,8 @@ export default function BrandHeader() {
   }`;
 
   return (
-    <header className="relative z-40 border-b border-brand-border/80 bg-brand-surface/95 pt-[env(safe-area-inset-top)] shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+    <header className="ramadan-season-header relative z-40 border-b border-brand-border/80 bg-brand-surface/95 pt-[env(safe-area-inset-top)] shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-l from-transparent via-[#d5af66] to-transparent" aria-hidden="true" />
       <div className="container flex flex-col items-stretch gap-2 py-2.5 lg:min-h-[92px] lg:flex-row lg:items-center lg:justify-between lg:gap-5">
         <a href="/" className="group flex min-w-0 items-center gap-3 sm:gap-4" aria-label="عمران تويز - الصفحة الرئيسية">
           <span className="relative flex h-13 w-13 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-brand-border bg-white shadow-md ring-1 ring-black/[0.02] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg sm:h-[68px] sm:w-[68px]">
@@ -74,6 +76,14 @@ export default function BrandHeader() {
             aria-current={isPopup ? "page" : undefined}
           >
             POP UP
+          </a>
+          <a
+            href="/products?category=ramadan-lanterns#feed"
+            className={`hidden sm:inline-flex ${isRamadanPage ? "border border-[#a97937] bg-[#f8efdc] text-[#5b421d]" : "border border-[#d7bf93] bg-[#fdf8ee] text-[#6a4c24] hover:bg-[#f9ecd3]"} min-h-11 items-center gap-1.5 rounded-xl px-3 font-extrabold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#c8a265]/40 dark:border-[#bea066]/45 dark:bg-[#312d26] dark:text-[#f1d79e]`}
+            aria-current={isRamadanPage ? "page" : undefined}
+          >
+            <MoonStar size={15} aria-hidden="true" />
+            رمضان
           </a>
           <a href="/#branches" className={`hidden xl:inline-flex ${navClass(false)}`}>الفروع</a>
           <button
