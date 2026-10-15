@@ -87,7 +87,7 @@ export default function HomeProductShowcase() {
               <ProductCard
                 key={product.id}
                 product={product}
-                priority={index < 2}
+                priority={index === 0}
                 onOpenDetails={setOpenProduct}
               />
             ))}
