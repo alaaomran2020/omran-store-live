@@ -5,7 +5,7 @@
  *   1. روابط حقيقية فقط: المسارات الثابتة العامة + روابط المنتجات المنشورة
  *      (عبر نفس قاعدة النشر active + PUBLISHED + PASS المعتمدة في `shared/products`).
  *   2. لا search/filter URLs: حالة الفلتر والفرز والبحث مؤقتة في الواجهة،
- *      ولا تدخل sitemap إطلاقًا — رابط المنتج الوحيد هو `?product=<id>`.
+ *      ولا تدخل sitemap إطلاقًا — رابط المنتج الوحيد هو `/products/p/<id>` or `/popup/p/<id>`.
  *   3. لا admin ولا مسارات داخلية/تجريبية.
  *   4. لا `lastmod` مطلقًا: لا يوجد timestamp موثوق للتعديل في الكتالوج
  *      (تاريخ البناء ليس تاريخ تعديل)، فالأمانة توجب حذفه بدل اختلاقه.
@@ -14,6 +14,7 @@
 import { isPubliclyVisible, type Product } from "./products";
 import { SITE_ORIGIN } from "./site";
 import { isPopUpProduct, type ProductCatalog } from "./productCatalog";
+import { productPagePath } from "./productPaths";
 
 export type SitemapEntry = {
   loc: string;
@@ -43,8 +44,7 @@ export function escapeXml(value: string): string {
 
 /** رابط ثابت للمنتج داخل كتالوج معين — التمثيل canonical الوحيد لرابط منتج. */
 export function productSitemapPath(productId: string, catalog: ProductCatalog): string {
-  const path = catalog === "popup" ? "/popup" : "/products";
-  return `${path}?product=${encodeURIComponent(productId)}`;
+  return productPagePath(productId, catalog);
 }
 
 /**
@@ -69,7 +69,7 @@ export function buildSitemapEntries(
 
   for (const product of products) {
     if (!isPubliclyVisible(product)) continue;
-    if (!product.id.trim() || !product.name.trim()) continue;
+    if (!/^[A-Za-z0-9_-]+$/.test(product.id.trim()) || !product.name.trim()) continue;
     const catalog: ProductCatalog = isPopUpProduct(product) ? "popup" : "toys";
     add(productSitemapPath(product.id.trim(), catalog), 0.6);
   }

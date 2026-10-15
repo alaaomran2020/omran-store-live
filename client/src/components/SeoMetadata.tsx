@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import type { Product } from "@/lib/productsClient";
 import { displayCategoryName } from "@shared/taxonomy";
 import { isPubliclyVisible } from "@shared/products";
+import { productPagePath } from "@shared/productPaths";
 import {
   BRAND_NAME,
   DESCRIPTION_MAX_LENGTH,
@@ -294,7 +295,7 @@ export function ProductStructuredData({
     if (!id) return;
 
     const catalogLabel = productCatalogLabel(catalogPath);
-    const productUrl = `${SITE_ORIGIN}${catalogPath}?product=${encodeURIComponent(id)}`;
+    const productUrl = `${SITE_ORIGIN}${productPagePath(id, catalogPath === "/popup" ? "popup" : "toys")}`;
     const categoryDisplay = product.category ? displayCategoryName(product.category) : "";
 
     const images = Array.from(

@@ -10,6 +10,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import { RamadanSeasonBanner } from "@/components/RamadanSeasonBanner";
 import { searchCatalog } from "@/lib/catalogSearch";
 import { resolveCatalogIndexing } from "@/lib/catalogIndexing";
+import { productIdFromPath, productPagePath } from "@shared/productPaths";
 import { setRobotsMeta } from "@/components/SeoMetadata";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import { getInitialProductsSnapshot, loadPublishedCatalog, type Product, type ProductAvailability } from "@/lib/productsClient";
@@ -51,7 +52,7 @@ function readInitialParams() {
     tag: params.get("tag") ?? ALL,
     availability: ["available", "unavailable", "preorder", "unknown"].includes(availability ?? "") ? availability! : ALL,
     sort,
-    product: params.get("product"),
+    product: params.get("product") || productIdFromPath(window.location.pathname, window.location.pathname.startsWith("/popup") ? "popup" : "toys"),
   };
 }
 
@@ -161,18 +162,18 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
 
   const pushProductUrl = useCallback((productId: string) => {
     const url = new URL(window.location.href);
-    if (url.searchParams.get("product") === productId) return;
-    url.searchParams.set("product", productId);
-    window.history.pushState({}, "", url.toString());
-  }, []);
+    const href = productPagePath(productId, catalog);
+    if (window.location.pathname === href) return;
+    window.history.pushState({}, "", href);
+  }, [catalog]);
 
   useEffect(() => {
     const syncProductFromUrl = () => {
-      setOpenProductId(new URL(window.location.href).searchParams.get("product"));
+      setOpenProductId(new URL(window.location.href).searchParams.get("product") || productIdFromPath(window.location.pathname, catalog));
     };
     window.addEventListener("popstate", syncProductFromUrl);
     return () => window.removeEventListener("popstate", syncProductFromUrl);
-  }, []);
+  }, [catalog]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
@@ -195,7 +196,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
       Array.from(new URLSearchParams(window.location.search).entries()).map(([key, value]) => [key, value] as [string, string | null])
     );
     const state = resolveCatalogIndexing({
-      urlParams,
+      urlParams: { ...urlParams, product: urlParams.product || productIdFromPath(window.location.pathname, catalog) },
       productOpen: Boolean(openProduct),
       catalogLoaded,
       productFoundInCatalog: Boolean(openProduct),
@@ -215,8 +216,12 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   }, [catalog, pushProductUrl]);
   const handleCloseDetails = useCallback(() => {
     setOpenProductId(null);
-    updateUrl({ product: null });
-  }, [updateUrl]);
+    if (productIdFromPath(window.location.pathname, catalog)) {
+      window.history.replaceState({}, "", catalog === "popup" ? "/popup" : "/products");
+    } else {
+      updateUrl({ product: null });
+    }
+  }, [catalog, updateUrl]);
   const handleSelectRelatedProduct = useCallback((product: Product) => {
     setOpenProductId(product.id);
     trackEvent("product_view", {

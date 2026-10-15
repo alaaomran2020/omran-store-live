@@ -91,7 +91,7 @@ describe("حالة فهرسة روابط الكتالوج", () => {
     await waitFor(() => expect(screen.getByTestId("product-details")).toBeTruthy(), { timeout: 4000 });
     expect(meta("robots")).toBe("index,follow");
     const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    expect(canonical?.href).toBe(`https://omrantoys.store/products?product=${encodeURIComponent(first.id)}`);
+    expect(canonical?.href).toBe(`https://omrantoys.store/products/p/${encodeURIComponent(first.id)}`);
 
     const script = document.getElementById("omran-product-jsonld");
     expect(script).toBeTruthy();
@@ -116,7 +116,7 @@ describe("حالة فهرسة روابط الكتالوج", () => {
 
     const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     const firstCanonical = `https://omrantoys.store/products?product=${encodeURIComponent(first.id)}`;
-    const secondCanonical = `https://omrantoys.store/products?product=${encodeURIComponent(second.id)}`;
+    const secondCanonical = `https://omrantoys.store/products/p/${encodeURIComponent(second.id)}`;
     expect([firstCanonical, secondCanonical]).toContain(canonical?.href);
 
     const selected = canonical?.href === firstCanonical ? first : second;

@@ -56,8 +56,8 @@ describe("buildSitemapEntries", () => {
   it("only lists products that pass the publication gate", () => {
     const entries = buildSitemapEntries(PRODUCTS);
     const locs = entries.map(e => e.loc);
-    expect(locs).toContain(`${SITE_ORIGIN}/products?product=OMR-A-1`);
-    expect(locs).toContain(`${SITE_ORIGIN}/popup?product=POP-B-1`);
+    expect(locs).toContain(`${SITE_ORIGIN}/products/p/OMR-A-1`);
+    expect(locs).toContain(`${SITE_ORIGIN}/popup/p/POP-B-1`);
     for (const excluded of ["OMR-C-REJECTED", "OMR-D-QA", "OMR-E-OFF"]) {
       expect(locs.some(loc => loc.includes(excluded))).toBe(false);
     }
@@ -81,8 +81,8 @@ describe("buildSitemapEntries", () => {
     const entries = buildSitemapEntries(PRODUCTS);
     const locs = entries.map(e => e.loc);
     expect(new Set(locs).size).toBe(locs.length);
-    expect(productSitemapPath("POP-X", "popup")).toBe("/popup?product=POP-X");
-    expect(productSitemapPath("TOY X", "toys")).toBe("/products?product=TOY%20X");
+    expect(productSitemapPath("POP-X", "popup")).toBe("/popup/p/POP-X");
+    expect(productSitemapPath("TOY X", "toys")).toBe("/products/p/TOY%20X");
   });
 
   it("uses only the production origin", () => {
