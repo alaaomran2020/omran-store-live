@@ -109,7 +109,7 @@ describe("buildWhatsAppUrl", () => {
 describe("productPermalink", () => {
   it("ينتج رابطًا قابلًا للمشاركة لكل منتج", () => {
     expect(productPermalink("003", "https://omrantoys.store/")).toBe(
-      "https://omrantoys.store/?product=003"
+      "https://omrantoys.store/products/p/003"
     );
   });
 });

@@ -66,6 +66,8 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Storefront} />
       <Route path={"/products"} component={ProductsPage} />
+      <Route path={"/products/p/:productId"} component={ProductsPage} />
+      <Route path={"/popup/p/:productId"} component={PopUp} />
       <Route path={"/popup/videos"} component={PopupVideos} />
       <Route path={"/popup"} component={PopUp} />
       <Route path={"/rewards"} component={Rewards} />

@@ -2,6 +2,7 @@ import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl } from "@/lib/productFormat";
 import { isPopUpProduct } from "@/lib/productCatalog";
+import { productPagePath } from "@shared/productPaths";
 import { displayCategoryName } from "@shared/taxonomy";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
 import { Info, Images, MessageCircle, Play, Copy } from "lucide-react";
@@ -25,7 +26,7 @@ export function ProductCard({
   const isPopup = isPopUpProduct(product);
   const inquiryItems = useInquiryItems();
   const selectedForInquiry = inquiryItems.some(item => item.id === product.id);
-  const productHref = `${isPopup ? "/popup" : "/products"}?product=${encodeURIComponent(product.id)}`;
+  const productHref = productPagePath(product.id, isPopup ? "popup" : "toys");
 
   const waUrl = buildWhatsAppUrl(product, {
     pageUrl:

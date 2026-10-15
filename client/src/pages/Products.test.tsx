@@ -195,10 +195,10 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
 
     const detailsLink = within(cards()[0]).getByRole("link", { name: "التفاصيل" });
-    expect(detailsLink.getAttribute("href")).toBe(`/products?product=${encodeURIComponent(target.id)}`);
+    expect(detailsLink.getAttribute("href")).toBe(`/products/p/${encodeURIComponent(target.id)}`);
     fireEvent.click(detailsLink);
     await waitFor(() => expect(screen.getByTestId("product-details")).toBeTruthy());
-    expect(window.location.search).toContain(`product=${encodeURIComponent(target.id)}`);
+    expect(window.location.pathname).toBe(`/products/p/${encodeURIComponent(target.id)}`);
 
     window.history.replaceState({}, "", "/products");
     fireEvent.popState(window);

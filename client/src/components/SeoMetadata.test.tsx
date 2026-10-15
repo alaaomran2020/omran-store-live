@@ -73,8 +73,8 @@ function productJsonLd(): Record<string, unknown> {
   expect(script, "product JSON-LD script missing").toBeTruthy();
   const parsed = JSON.parse((script as HTMLScriptElement).textContent ?? "{}") as Record<string, unknown>;
   const graph = parsed["@graph"] as Record<string, unknown>[];
-  expect(graph.find(node => (node["@type"] as string) === "Product")).toBeTruthy();
-  return graph.find(node => (node["@type"] as string) === "Product")!;
+  expect(graph.find(node => (node["@type"] as string) === "WebPage")).toBeTruthy();
+  return graph.find(node => (node["@type"] as string) === "WebPage")!;
 }
 
 function breadcrumbJsonLd(): Record<string, unknown> {
@@ -151,10 +151,10 @@ describe("ProductStructuredData — منتج", () => {
     render(<ProductStructuredData product={product} catalogPath="/products" />);
 
     expect(document.title).toBe(`${product.name} | عمران تويز`);
-    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products?product=${product.id}`);
+    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products/p/${product.id}`);
     expect(metaContent("robots", "name")).toBe("index,follow");
     expect(metaContent("og:type")).toBe("product");
-    expect(metaContent("og:url")).toBe(`${SITE_ORIGIN}/products?product=${product.id}`);
+    expect(metaContent("og:url")).toBe(`${SITE_ORIGIN}/products/p/${product.id}`);
     expect(metaContent("og:image")).toBe(`${SITE_ORIGIN}/products/processed/test-main.webp`);
     expect(metaContent("twitter:image", "name")).toBe(`${SITE_ORIGIN}/products/processed/test-main.webp`);
   });
@@ -165,16 +165,11 @@ describe("ProductStructuredData — منتج", () => {
 
     const schema = productJsonLd();
     expect(schema.name).toBe(product.name);
-    expect(schema.url).toBe(`${SITE_ORIGIN}/products?product=${product.id}`);
-    expect(schema.sku).toBe("SKU-100");
-    expect(schema.category).toBe("أطقم المهن والتركيب");
-    expect(schema.brand).toEqual({ "@type": "Brand", name: "Home Chef" });
-    const images = schema.image as string[];
-    expect(images).toEqual([
-      `${SITE_ORIGIN}/products/processed/test-main.webp`,
-      `${SITE_ORIGIN}/products/processed/test-2.webp`,
-    ]);
-    expect(images).toHaveLength(new Set(images).size);
+    expect(schema.url).toBe(`${SITE_ORIGIN}/products/p/${product.id}`);
+    expect(schema).not.toHaveProperty("sku");
+    expect(schema.description).toContain(product.description);
+    expect(schema).not.toHaveProperty("brand");
+    expect(schema.primaryImageOfPage).toEqual({ "@type": "ImageObject", contentUrl: `${SITE_ORIGIN}/products/processed/test-main.webp` });
   });
 
   it("لا ينشئ price/offer/availability/rating مطلقًا (سياسة بدون سعر)", () => {
@@ -207,7 +202,7 @@ describe("ProductStructuredData — منتج", () => {
     expect(items[1].name).toBe("لعب الأطفال");
     expect(items[1].item).toBe(`${SITE_ORIGIN}/products`);
     expect(items[2].name).toBe(product.name);
-    expect(items[2].item).toBe(`${SITE_ORIGIN}/products?product=${product.id}`);
+    expect(items[2].item).toBe(`${SITE_ORIGIN}/products/p/${product.id}`);
   });
 });
 
@@ -217,12 +212,12 @@ describe("ProductStructuredData — دورة الحياة (stale state)", () => 
     const productB = makeProduct({ id: "OMR-B", name: "منتج ثانٍ", processedImage: "/b.webp", image: "/b.webp", galleryImages: [] });
 
     const { rerender } = render(<ProductStructuredData product={productA} catalogPath="/products" />);
-    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products?product=OMR-A`);
+    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products/p/OMR-A`);
 
     rerender(<ProductStructuredData product={productB} catalogPath="/products" />);
 
     expect(document.title).toBe(`${productB.name} | عمران تويز`);
-    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products?product=OMR-B`);
+    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products/p/OMR-B`);
     expect(metaContent("og:image")).toBe(`${SITE_ORIGIN}/b.webp`);
     expect(metaContent("og:title")).toBe(`${productB.name} | عمران تويز`);
 
@@ -238,7 +233,7 @@ describe("ProductStructuredData — دورة الحياة (stale state)", () => 
     const product = makeProduct();
     const dialog = render(<ProductStructuredData product={product} catalogPath="/products" />);
 
-    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products?product=${product.id}`);
+    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products/p/${product.id}`);
 
     dialog.unmount();
 
@@ -259,10 +254,10 @@ describe("ProductStructuredData — دورة الحياة (stale state)", () => 
 
     const pageProducts = render(<SeoMetadata path="/products" title="لعب أطفال | شركة عمران التجارية" description="d" />);
     const a = render(<ProductStructuredData product={productA} catalogPath="/products" />);
-    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products?product=OMR-A`);
+    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products/p/OMR-A`);
 
     a.rerender(<ProductStructuredData product={productB} catalogPath="/products" />);
-    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products?product=OMR-B`);
+    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/products/p/OMR-B`);
 
     // بحث/فلتر → noindex (كما تفعل صفحة الكتالوج).
     a.unmount();
@@ -275,7 +270,7 @@ describe("ProductStructuredData — دورة الحياة (stale state)", () => 
     const popup = render(<SeoMetadata path="/popup" title="POP UP – Gifts & Balloons | شركة عمران التجارية" description="p" />);
     const popupProduct = makeProduct({ id: "POP-X", name: "بالونات معدنية", category: "بالونات", brand: null, sku: null });
     const popupDialog = render(<ProductStructuredData product={popupProduct} catalogPath="/popup" />);
-    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/popup?product=POP-X`);
+    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/popup/p/POP-X`);
     expect(metaContent("robots", "name")).toBe("index,follow");
     expect(document.title).toBe(`${popupProduct.name} | POP UP`);
 
@@ -298,7 +293,7 @@ describe("POP UP isolation", () => {
     const product = makeProduct({ id: "POP-X", name: "بالونات معدنية", category: "بالونات" });
     const { unmount } = render(<ProductStructuredData product={product} catalogPath="/popup" />);
 
-    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/popup?product=POP-X`);
+    expect(currentCanonical()).toBe(`${SITE_ORIGIN}/popup/p/POP-X`);
     expect(document.title).toBe(`${product.name} | POP UP`);
     const items = breadcrumbJsonLd().itemListElement as Record<string, unknown>[];
     expect(items[1].name).toBe("POP UP");
@@ -345,7 +340,7 @@ describe("publication gate وfallbacks", () => {
       expect(description).not.toContain(claim);
     }
     const schema = productJsonLd();
-    expect(schema).not.toHaveProperty("description");
+    expect(schema.description).toContain(product.name);
   });
 
   it("بدون صورة: og:image يسقط على brand image الحقيقية", () => {
@@ -354,14 +349,14 @@ describe("publication gate وfallbacks", () => {
 
     expect(metaContent("og:image")).toBe(`${SITE_ORIGIN}/brand/logo.png`);
     expect(metaContent("twitter:image", "name")).toBe(`${SITE_ORIGIN}/brand/logo.png`);
-    expect(productJsonLd()).not.toHaveProperty("image");
+    expect(productJsonLd()).not.toHaveProperty("primaryImageOfPage");
   });
 
   it("بدون SKU/brand: لا حقول فارغة في JSON-LD", () => {
     const product = makeProduct({ sku: null, brand: null });
     render(<ProductStructuredData product={product} catalogPath="/products" />);
     const schema = productJsonLd();
-    expect(schema.sku).toBe(product.id);
+    expect(schema).not.toHaveProperty("sku");
     expect(schema).not.toHaveProperty("brand");
     const text = document.getElementById("omran-product-jsonld")!.textContent ?? "";
     expect(text).not.toContain("null");
@@ -384,7 +379,7 @@ describe("أمان الـURLs والـserialization", () => {
         <ProductStructuredData product={makeProduct({ processedImage: bad, image: bad, galleryImages: [] })} catalogPath="/products" />
       );
       expect(metaContent("og:image"), bad).toBe(`${SITE_ORIGIN}/brand/logo.png`);
-      expect(productJsonLd()).not.toHaveProperty("image");
+      expect(productJsonLd()).not.toHaveProperty("primaryImageOfPage");
       unmount();
     }
   });
@@ -398,7 +393,7 @@ describe("أمان الـURLs والـserialization", () => {
     expect(raw).not.toContain("</script>");
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     const productNode = (parsed["@graph"] as Record<string, unknown>[]).find(
-      node => (node["@type"] as string) === "Product"
+      node => (node["@type"] as string) === "WebPage"
     )!;
     expect(productNode.name).toBe(evilName);
     expect(raw.length).toBeGreaterThan(0);
@@ -410,7 +405,7 @@ describe("أمان الـURLs والـserialization", () => {
     expect(document.getElementById("omran-product-jsonld")).toBeNull();
     unmount();
     expect(() =>
-      render(<SeoMetadata path="/products?product=bad&x" title="t" description="d" />)
+      render(<SeoMetadata path="/products/p/bad&x" title="t" description="d" />)
     ).not.toThrow();
   });
 });

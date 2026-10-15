@@ -1,11 +1,20 @@
 // @vitest-environment node
 import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
-import { PUBLIC_PAGE_SEO, renderStaticSeoShell } from "../../scripts/static-seo-shell.mjs";
+import { PUBLIC_PAGE_SEO, renderStaticSeoShell, renderProductSeoShell } from "../../scripts/static-seo-shell.mjs";
 
 const shell = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
 describe("Cloudflare Pages static SEO shells", () => {
+  it("emits canonical, real image and safe informational schema in initial HTML for a published product", () => {
+    const html = renderProductSeoShell(shell, { id: "OMR-RAW-001", name: "محلول فقاعات صابون", description: "", category: "ألعاب خارجية", processedImage: "/products/processed/generated/product-omr-raw-001-main.webp" }, "toys");
+    expect(html).toContain('href="https://omrantoys.store/products/p/OMR-RAW-001"');
+    expect(html).toContain('<title>محلول فقاعات صابون | عمران تويز</title>');
+    expect(html).toContain('"@type":"WebPage"');
+    expect(html).not.toContain('"@type":"Product"');
+    expect(html).not.toContain('"offers":');
+    expect(html).toContain('https://omrantoys.store/products/processed/generated/product-omr-raw-001-main.webp');
+  });
   it("gives every public route its own first-response canonical/title/description", () => {
     for (const [route, metadata] of Object.entries(PUBLIC_PAGE_SEO)) {
       const html = renderStaticSeoShell(shell, route);

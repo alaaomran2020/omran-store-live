@@ -106,3 +106,43 @@ export function renderStaticSeoShell(baseHtml, route) {
   }
   return html;
 }
+
+/**
+ * Static product detail head. With WhatsApp-only prices, Product/Offer markup
+ * is deliberately not claimed: these are informative WebPage results.
+ */
+export function renderProductSeoShell(baseHtml, product, catalog) {
+  if (!product?.id || !/^[A-Za-z0-9_-]+$/.test(product.id) || !product.name?.trim()) throw new Error("Invalid approved product");
+  if (!["toys", "popup"].includes(catalog)) throw new Error("Invalid catalog");
+  const section = catalog === "popup" ? "/popup" : "/products";
+  const url = ORIGIN + section + "/p/" + encodeURIComponent(product.id);
+  const name = product.name.trim();
+  const title = [name, catalog === "popup" ? "POP UP" : "عمران تويز"].join(" | ").slice(0, 90);
+  const description = (product.description?.trim() || [name, product.category, "للسعر والتوفر تواصل معنا عبر واتساب"].filter(Boolean).join(" — ")).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").slice(0, 160);
+  const candidate = product.processedImage || product.image;
+  const image = typeof candidate === "string" && candidate.startsWith("/products/") && !candidate.includes("..") ? ORIGIN + candidate : ORIGIN + "/brand/logo.png";
+  let html = renderStaticSeoShell(baseHtml, section);
+  html = replaceRequired(html, /<title>[\s\S]*?<\/title>/i, "<title>" + htmlEscape(title) + "</title>", "product title");
+  html = replaceRequired(html, /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i, '<link rel="canonical" href="' + htmlEscape(url) + '" />', "product canonical");
+  html = replaceMeta(html, "name", "description", description);
+  html = replaceMeta(html, "property", "og:title", title);
+  html = replaceMeta(html, "property", "og:description", description);
+  html = replaceMeta(html, "property", "og:url", url);
+  html = replaceMeta(html, "property", "og:image", image);
+  html = replaceMeta(html, "name", "twitter:title", title);
+  html = replaceMeta(html, "name", "twitter:description", description);
+  html = replaceMeta(html, "name", "twitter:image", image);
+  const structured = {
+    "@context": "https://schema.org", "@graph": [
+      { "@type": "WebPage", "@id": url + "#webpage", url, name, description,
+        inLanguage: "ar-EG", primaryImageOfPage: { "@type": "ImageObject", contentUrl: image } },
+      { "@type": "BreadcrumbList", "@id": url + "#breadcrumbs", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "الرئيسية", item: ORIGIN + "/" },
+        { "@type": "ListItem", position: 2, name: catalog === "popup" ? "POP UP" : "لعب الأطفال", item: ORIGIN + section },
+        { "@type": "ListItem", position: 3, name, item: url }
+      ] }
+    ]
+  };
+  html = replaceRequired(html, /<\/head>/i, '  <script id="omran-product-jsonld" type="application/ld+json">' + JSON.stringify(structured).replace(/</g, "\\u003c") + '</script>\n  </head>', "product head");
+  return replaceRequired(html, /<\/body>/i, '<noscript><main dir="rtl"><h1>' + htmlEscape(name) + '</h1><p>' + htmlEscape(description) + '</p><p>السعر والتوفر عبر واتساب</p></main></noscript>\n  </body>', "product body");
+}
