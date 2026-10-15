@@ -114,5 +114,5 @@ export function buildWhatsAppUrl(
 
 /** رابط مباشر لبطاقة منتج (يفتح نافذة التفاصيل عند الزيارة). */
 export function productPermalink(productId: string, origin: string = SITE_ORIGIN, catalog: ProductCatalog = "toys"): string {
-  return origin.replace(/\\/+$/, "") + productPagePath(productId, catalog);
+  return origin.replace(new RegExp("/+$"), "") + productPagePath(productId, catalog);
 }
