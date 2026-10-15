@@ -19,9 +19,11 @@ const AVAILABILITY_LABELS: Record<Product["availability"], string> = {
 export function ProductCard({
   product,
   onOpenDetails,
+  priority = false,
 }: {
   product: Product;
   onOpenDetails: (product: Product) => void;
+  priority?: boolean;
 }) {
   const isPopup = isPopUpProduct(product);
   const inquiryItems = useInquiryItems();
@@ -62,6 +64,7 @@ export function ProductCard({
         >
           <ProductImage
             product={product}
+            priority={priority}
             className={`h-full w-full transition duration-300 motion-reduce:transition-none sm:group-hover:scale-[1.02] motion-reduce:sm:group-hover:scale-100 ${isPopup ? "object-contain p-2 sm:p-3" : "object-cover"}`}
             sizesHint="(max-width: 639px) calc((100vw - 2.5rem) / 2), (max-width: 1023px) calc((100vw - 3rem) / 2), 25vw"
           />
