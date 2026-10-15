@@ -167,7 +167,7 @@ describe("ProductStructuredData — منتج", () => {
     expect(schema.name).toBe(product.name);
     expect(schema.url).toBe(`${SITE_ORIGIN}/products/p/${product.id}`);
     expect(schema).not.toHaveProperty("sku");
-    expect(schema.description).toContain(product.name);
+    expect(schema.description).toContain(product.description);
     expect(schema).not.toHaveProperty("brand");
     expect(schema.primaryImageOfPage).toEqual({ "@type": "ImageObject", contentUrl: `${SITE_ORIGIN}/products/processed/test-main.webp` });
   });

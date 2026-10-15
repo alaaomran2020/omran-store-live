@@ -96,6 +96,6 @@ describe("ProductCard — روابط crawlable", () => {
     const waLink = screen.getByRole("link", { name: "اسأل عن السعر" });
     const href = waLink.getAttribute("href") ?? "";
     expect(href).toContain("wa.me/201000000000");
-    expect(decodeURIComponent(href)).toContain("/products?product=OMR-CARD-1");
+    expect(decodeURIComponent(href)).toContain("/products/p/OMR-CARD-1");
   });
 });

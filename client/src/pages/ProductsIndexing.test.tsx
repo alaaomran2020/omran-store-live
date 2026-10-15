@@ -107,7 +107,7 @@ describe("حالة فهرسة روابط الكتالوج", () => {
     window.history.replaceState(
       {},
       "",
-      `/products/p/${encodeURIComponent(first.id)}&product=${encodeURIComponent(second.id)}`
+      `/products?product=${encodeURIComponent(first.id)}&product=${encodeURIComponent(second.id)}`
     );
     renderCatalog();
 
