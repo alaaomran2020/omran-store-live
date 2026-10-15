@@ -24,6 +24,14 @@ describe("صور المنتجات والدفاع ضد الصور المكسور�
     expect(image.className).not.toContain("opacity-0");
   });
 
+  it("gives a single above-the-fold product image eager/high loading without making other images eager", () => {
+    render(<ProductImage product={{ ...baseProduct, image: "/products/processed/example.webp" }} priority />);
+    const image = screen.getByRole("img", { name: "لعبة اختبار الصورة" }) as HTMLImageElement;
+    expect(image.getAttribute("loading")).toBe("eager");
+    expect(image.getAttribute("fetchpriority")).toBe("high");
+    expect(image.getAttribute("srcset")).toContain("example-320.webp");
+  });
+
   it("عند فشل نسخة الصورة الصغيرة يجرب الملف الأصلي أولًا قبل المصدر الاحتياطي", () => {
     render(<ProductImage product={{
       ...baseProduct,
