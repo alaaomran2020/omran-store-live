@@ -79,8 +79,7 @@ export function ProductCard({
         <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-extrabold leading-5 text-brand-ink sm:min-h-0 sm:text-base sm:leading-6">{product.name}</h3>
         <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px] font-bold leading-4 sm:text-[11px]">
           <span className="text-brand-muted">
-            <span className="sr-only">كود المنتج: {product.sku || product.id}</span>
-            <span dir="ltr" aria-hidden="true">SKU: {product.sku || product.id}</span>
+            <span>كود الصنف: </span><b dir="ltr" className="ms-1 inline-block select-all">{product.sku || product.id}</b>
           </span>
           <span className={`rounded-full px-2.5 py-1 ${product.availability === "unavailable" ? "bg-red-50 text-brand-red" : "bg-brand-sky text-brand-navy"}`}>
             {AVAILABILITY_LABELS[product.availability]}

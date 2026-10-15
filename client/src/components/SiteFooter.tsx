@@ -143,12 +143,14 @@ function FooterCompanyInfo() {
           ))}
           <a href={`tel:+${STORE_CONTACT.whatsapp}`} className="flex min-h-11 items-center gap-2.5 rounded-xl px-1 text-sm font-bold text-white/75 transition hover:text-white focus-visible:ring-4 focus-visible:ring-white/15">
             <MessageCircle size={17} className="shrink-0 text-[#62e998]" aria-hidden="true" />
-            <span dir="ltr">01555570269</span>
+            <span dir="ltr">{STORE_CONTACT.whatsappDisplay}</span>
+            <span aria-hidden="true"> — </span>
             <span className="text-xs text-white/50">موبايل وواتساب</span>
           </a>
           <a href={`tel:+${STORE_CONTACT.landline}`} className="flex min-h-11 items-center gap-2.5 rounded-xl px-1 text-sm font-bold text-white/75 transition hover:text-white focus-visible:ring-4 focus-visible:ring-white/15">
             <Phone size={17} className="shrink-0 text-brand-yellow" aria-hidden="true" />
             <span dir="ltr">{STORE_CONTACT.landlineDisplay}</span>
+            <span aria-hidden="true"> — </span>
             <span className="text-xs text-white/50">أرضي</span>
           </a>
         </address>

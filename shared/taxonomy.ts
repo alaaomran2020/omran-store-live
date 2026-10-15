@@ -82,7 +82,17 @@ export const CATEGORIES: readonly Category[] = [
     visibility: "visible",
     sortOrder: 4,
     description: "شخصيات أبطال، عرايس، وبيوت عرايس للعب التخيلي",
-    aliases: ["دمى", "عرائس", "عروسة", "شخصيات", "مطبخ ألعاب", "ألعاب تقليدية"],
+    aliases: ["دمى", "عرائس", "عروسة", "شخصيات", "ألعاب تقليدية"],
+  },
+  {
+    id: "role-play",
+    name: "أطقم المهن والتركيب",
+    nameEn: "Role Play & Professions",
+    slug: "role-play",
+    visibility: "visible",
+    sortOrder: 4.5,
+    description: "مطابخ أطفال وأطقم دكتور ونجار وتنظيف وألعاب محاكاة المهن",
+    aliases: ["ألعاب مطبخ", "مطبخ ألعاب", "ألعاب مطبخ وتمثيل أدوار", "ألعاب تمثيل أدوار", "أطقم المهن", "أطقم المهن والتركيب"],
   },
   {
     id: "board-games",
