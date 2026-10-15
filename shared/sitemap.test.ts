@@ -85,6 +85,12 @@ describe("buildSitemapEntries", () => {
     expect(productSitemapPath("TOY X", "toys")).toBe("/products/p/TOY%20X");
   });
 
+  it("never lists legacy query-string product URLs", () => {
+    const { entries } = buildSitemap(PRODUCTS);
+    expect(entries.filter(e => e.loc.includes("/p/"))).toHaveLength(2);
+    expect(entries.some(e => e.loc.includes("?product="))).toBe(false);
+  });
+
   it("uses only the production origin", () => {
     const entries = buildSitemapEntries(PRODUCTS);
     for (const entry of entries) {

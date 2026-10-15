@@ -1,5 +1,8 @@
 import type { Product } from "@shared/products";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
+import { SITE_ORIGIN } from "@shared/site";
+import { isPopUpProduct, type ProductCatalog } from "@shared/productCatalog";
+import { productPagePath } from "@shared/productPaths";
 
 /**
  * Omran Trading Company — product display + WhatsApp assisted-selling helpers.
@@ -72,7 +75,7 @@ export function buildWhatsAppUrl(
     const pid = (product as { id?: string }).id;
     if (pid) {
       try {
-        pageUrl = productPermalink(pid);
+        pageUrl = productPermalink(pid, undefined, isPopUpProduct({ category }) ? "popup" : "toys");
         if (
           pageUrl.startsWith("?") &&
           typeof window !== "undefined" &&
@@ -110,11 +113,6 @@ export function buildWhatsAppUrl(
 }
 
 /** رابط مباشر لبطاقة منتج (يفتح نافذة التفاصيل عند الزيارة). */
-export function productPermalink(productId: string, origin?: string): string {
-  const base =
-    origin ??
-    (typeof window === "undefined"
-      ? ""
-      : window.location.origin + window.location.pathname);
-  return `${base}?product=${encodeURIComponent(productId)}`;
+export function productPermalink(productId: string, origin: string = SITE_ORIGIN, catalog: ProductCatalog = "toys"): string {
+  return origin.replace(/\\/+$/, "") + productPagePath(productId, catalog);
 }
