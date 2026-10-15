@@ -6,6 +6,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
+    <!-- Fetch the brand font CSS alongside the app CSS, instead of a nested CSS @import. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&amp;display=swap" />
     <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
     <link rel="icon" type="image/png" href="/brand/favicon.png" />
     <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
@@ -35,11 +39,21 @@
     />
     <meta name="twitter:image" content="https://omrantoys.store/brand/logo.png" />
     <script>
-      var ahrefs_analytics_script = document.createElement('script');
-      ahrefs_analytics_script.async = true;
-      ahrefs_analytics_script.src = 'https://analytics.ahrefs.com/analytics.js';
-      ahrefs_analytics_script.setAttribute('data-key', 'QRI9EkGcjfR6U5tvQzJLeA');
-      document.getElementsByTagName('head')[0].appendChild(ahrefs_analytics_script);
+      // Third-party analytics must not compete with the initial mobile render.
+      window.addEventListener("load", function () {
+        function startAhrefsAnalytics() {
+          var script = document.createElement("script");
+          script.async = true;
+          script.src = "https://analytics.ahrefs.com/analytics.js";
+          script.setAttribute("data-key", "QRI9EkGcjfR6U5tvQzJLeA");
+          document.head.appendChild(script);
+        }
+        if ("requestIdleCallback" in window) {
+          window.requestIdleCallback(startAhrefsAnalytics, { timeout: 4000 });
+        } else {
+          window.setTimeout(startAhrefsAnalytics, 1200);
+        }
+      }, { once: true });
     </script>
     <script type="application/ld+json">
       {
