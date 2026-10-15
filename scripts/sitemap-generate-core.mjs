@@ -20,7 +20,9 @@ export async function generateSitemapData(root) {
     `import { buildSitemap } from ${JSON.stringify(path.join(root, "shared", "sitemap.ts"))};`,
     `import { PUBLIC_PRODUCTS_SNAPSHOT } from ${JSON.stringify(path.join(root, "client", "src", "lib", "publicProductsSnapshot.ts"))};`,
     `import { POPUP_PRODUCTS_SNAPSHOT } from ${JSON.stringify(path.join(root, "client", "src", "lib", "popupProductsSnapshot.ts"))};`,
-    "export default buildSitemap([...PUBLIC_PRODUCTS_SNAPSHOT, ...POPUP_PRODUCTS_SNAPSHOT]);",
+     `import { isPubliclyVisible } from ${JSON.stringify(path.join(root, "shared", "products.ts"))};`,
+    "const approved = [...PUBLIC_PRODUCTS_SNAPSHOT, ...POPUP_PRODUCTS_SNAPSHOT].filter(p => isPubliclyVisible(p) && /^[A-Za-z0-9_-]+$/.test(p.id.trim()) && p.name.trim());",
+    "export default { ...buildSitemap(approved), products: approved };",
   ].join("\n");
 
   const result = await esbuild.build({
