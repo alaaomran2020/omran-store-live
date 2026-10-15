@@ -48,14 +48,19 @@ for (const raw of urls) {
   try { url = new URL(raw); } catch { fail("Invalid sitemap URL: " + raw); }
   if (url.origin !== origin) fail("Foreign sitemap host: " + raw);
   if (/^\/(admin|account|404)(\/|$)/.test(url.pathname)) fail("Private sitemap URL: " + raw);
-  if ([...url.searchParams.keys()].some(key => key !== "product")) fail("Filtered URL in sitemap: " + raw);
-  if (url.searchParams.has("product") && !url.searchParams.get("product")) fail("Empty product in sitemap: " + raw);
+  if (url.search) fail("Query-string URL in sitemap: " + raw);
+  if (/^\/(products|popup)\/p\//.test(url.pathname)) {
+    if (!/^\/(products|popup)\/p\/[A-Za-z0-9_-]+$/.test(url.pathname)) fail("Unsafe product path: " + raw);
+  }
   const staticPath = url.pathname === "/" ? "index.html" : url.pathname.slice(1) + ".html";
   checkFile(path.join(root, staticPath));
   const html = fs.readFileSync(path.join(root, staticPath), "utf8");
-  if (!url.search) {
-    const canonical = html.match(/<link\s+rel="canonical"\s+href="([^"]+)"/i)?.[1];
-    if (canonical !== raw) fail("Noncanonical sitemap entry " + raw + " (shell: " + canonical + ")");
+  const canonicals = [...html.matchAll(/<link\s+rel="canonical"\s+href="([^"]+)"/gi)];
+  if (canonicals.length !== 1 || canonicals[0][1] !== raw) fail("Noncanonical sitemap entry " + raw);
+  if (/^\/(products|popup)\/p\//.test(url.pathname)) {
+    if (!html.includes("id=\"omran-product-jsonld\"")) fail("Product detail lacks first-response WebPage markup: " + raw);
+    if (!html.includes(url.pathname.slice(url.pathname.lastIndexOf("/") + 1))) fail("Product details are missing in initial HTML: " + raw);
+    if (/"@type":"Product"|"@type":"Offer"/.test(html)) fail("Unsupported Merchant Product/Offer markup in price-enquiry shell: " + raw);
   }
 }
 console.log(`[static-assets] PASS: ${pages.length} HTML shells, ${generatedAssets.size} hashed assets, ${urls.length} sitemap URLs`);

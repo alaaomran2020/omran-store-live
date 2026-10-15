@@ -11,7 +11,7 @@ import { RamadanSeasonBanner } from "@/components/RamadanSeasonBanner";
 import { searchCatalog } from "@/lib/catalogSearch";
 import { resolveCatalogIndexing } from "@/lib/catalogIndexing";
 import { productIdFromPath, productPagePath } from "@shared/productPaths";
-import { setRobotsMeta } from "@/components/SeoMetadata";
+import { ProductStructuredData, setRobotsMeta } from "@/components/SeoMetadata";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import { getInitialProductsSnapshot, loadPublishedCatalog, type Product, type ProductAvailability } from "@/lib/productsClient";
 import { AGE_FILTER_OPTIONS, filterProductsByAge, parseAgeRange } from "@/lib/productAge";
@@ -455,6 +455,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
           </div>
         </section>
       </main>
+      <ProductStructuredData product={openProduct} catalogPath={isPopup ? "/popup" : "/products"} />
       <ProductDetailsDialog
         product={openProduct}
         relatedProducts={relatedProducts}
