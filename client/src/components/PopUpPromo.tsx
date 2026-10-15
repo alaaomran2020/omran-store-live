@@ -56,8 +56,7 @@ export default function PopUpPromo() {
               </div>
 
               <span className="inline-flex min-h-10 items-center gap-1 rounded-xl bg-white px-3 py-2 text-xs font-black text-[#542170] shadow-md transition duration-300 group-hover:gap-2 group-hover:bg-[#fff8da] sm:px-4 sm:text-sm">
-                <span className="hidden sm:inline">اكتشف القسم</span>
-                <span className="sm:hidden">اكتشف</span>
+                <span>اكتشف القسم</span>
                 <ChevronLeft size={16} aria-hidden="true" />
               </span>
             </div>

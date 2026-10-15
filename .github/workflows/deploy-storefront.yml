@@ -96,6 +96,9 @@ jobs:
       - name: Build storefront
         run: pnpm build
 
+      - name: Verify generated JS/CSS, sitemap and canonicals
+        run: node scripts/verify-static-assets.mjs
+
       - name: Assert verified catalog and images are bundled
         shell: bash
         run: |
@@ -329,6 +332,9 @@ jobs:
 
       - name: Build storefront
         run: pnpm build
+
+      - name: Verify deployment JS/CSS, sitemap and canonicals
+        run: node scripts/verify-static-assets.mjs
 
       - name: Assert deployment media integrity (fail closed)
         shell: bash

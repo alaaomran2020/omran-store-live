@@ -313,9 +313,7 @@ function vitePluginSitemap(): Plugin {
         const { count } = await writeSitemap(path.resolve(import.meta.dirname), outDir);
         console.log(`[sitemap] dist/public/sitemap.xml → ${count} URLs`);
       } catch (error) {
-        console.warn(
-          `[sitemap] generation failed, keeping the static sitemap: ${String(error)}`
-        );
+        throw new Error(`[sitemap] generation failed: ${String(error)}`);
       }
     },
   };

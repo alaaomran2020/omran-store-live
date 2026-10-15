@@ -167,7 +167,7 @@ describe("ProductStructuredData — منتج", () => {
     expect(schema.name).toBe(product.name);
     expect(schema.url).toBe(`${SITE_ORIGIN}/products?product=${product.id}`);
     expect(schema.sku).toBe("SKU-100");
-    expect(schema.category).toBe("ألعاب تمثيل أدوار");
+    expect(schema.category).toBe("أطقم المهن والتركيب");
     expect(schema.brand).toEqual({ "@type": "Brand", name: "Home Chef" });
     const images = schema.image as string[];
     expect(images).toEqual([
@@ -339,7 +339,7 @@ describe("publication gate وfallbacks", () => {
 
     const description = metaContent("description", "name") ?? "";
     expect(description).toContain(product.name);
-    expect(description).toContain("ألعاب تمثيل أدوار");
+    expect(description).toContain("أطقم المهن والتركيب");
     expect(description).toContain("عمران تويز");
     for (const claim of ["متوفر الآن", "أفضل", "أرخص", "رقم 1", "جنيه"]) {
       expect(description).not.toContain(claim);
@@ -361,7 +361,7 @@ describe("publication gate وfallbacks", () => {
     const product = makeProduct({ sku: null, brand: null });
     render(<ProductStructuredData product={product} catalogPath="/products" />);
     const schema = productJsonLd();
-    expect(schema).not.toHaveProperty("sku");
+    expect(schema.sku).toBe(product.id);
     expect(schema).not.toHaveProperty("brand");
     const text = document.getElementById("omran-product-jsonld")!.textContent ?? "";
     expect(text).not.toContain("null");

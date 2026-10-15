@@ -6,6 +6,7 @@ import { ProductDetailsDialog } from "@/components/ProductDetailsDialog";
 import { filterProductsByCatalog } from "@/lib/productCatalog";
 import { getInitialProductsSnapshot, loadPublishedCatalog, type Product } from "@/lib/productsClient";
 import { findSimilarProducts } from "@/lib/similarProducts";
+import { canonicalCategory } from "@shared/taxonomy";
 
 export default function HomeProductShowcase() {
   const [openProduct, setOpenProduct] = useState<Product | null>(null);
@@ -20,7 +21,8 @@ export default function HomeProductShowcase() {
   });
 
   const catalogProducts = useMemo(
-    () => filterProductsByCatalog(productsQuery.data?.products ?? [], "toys"),
+    () => filterProductsByCatalog(productsQuery.data?.products ?? [], "toys")
+      .filter(product => canonicalCategory(product.category)?.id !== "ramadan-lanterns"),
     [productsQuery.data]
   );
   const latestProduct = useMemo(
@@ -63,7 +65,7 @@ export default function HomeProductShowcase() {
             <div className="grid items-stretch md:grid-cols-[1.35fr_.65fr]">
               <div className="relative aspect-[16/10] overflow-hidden bg-brand-cream md:aspect-[16/9]">
                 <img
-                  src="/products/processed/product-kids-digital-watch-featured.webp"
+                  src={latestProduct.processedImage || latestProduct.image || "/brand/logo.png"}
                   alt={latestProduct.name}
                   width={1600}
                   height={900}
@@ -84,9 +86,7 @@ export default function HomeProductShowcase() {
                   <p className="line-clamp-3 text-sm font-semibold leading-7 text-brand-muted sm:text-base">{latestProduct.description}</p>
                 )}
                 <div className="mt-1 flex flex-wrap items-center gap-3">
-                  {latestProduct.price !== null && (
-                    <span className="text-xl font-black text-brand-navy sm:text-2xl">{latestProduct.price} جنيه</span>
-                  )}
+                  <span className="text-xs font-bold text-brand-muted">السعر والتوفر عبر واتساب · جملة وقطاعي</span>
                   <span className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-blue px-4 py-2 text-sm font-black text-white">
                     عرض التفاصيل <ArrowLeft size={16} aria-hidden="true" />
                   </span>

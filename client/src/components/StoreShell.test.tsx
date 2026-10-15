@@ -20,13 +20,15 @@ describe("store shell responsive smoke", () => {
     });
   }
 
-  it("keeps the announcement moving on mobile and desktop without embedded control buttons", () => {
+  it("shows each announcement once on mobile and desktop without embedded control buttons", () => {
     for (const width of [360, 1280]) {
       Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
       const { unmount } = render(<AnnouncementBar />);
       const bar = screen.getByLabelText("مستجدات المتجر");
       expect(within(bar).queryByRole("button")).toBeNull();
-      expect(bar.querySelector(".announcement-marquee")).toBeTruthy();
+      expect(bar.querySelector(".announcement-marquee")).toBeNull();
+      expect(bar.textContent).toContain("تشكيلات لعب أطفال جديدة");
+      expect(bar.textContent?.match(/تشكيلات لعب أطفال جديدة/g)).toHaveLength(1);
       unmount();
     }
   });
