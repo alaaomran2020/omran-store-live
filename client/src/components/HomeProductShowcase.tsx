@@ -83,10 +83,11 @@ export default function HomeProductShowcase() {
           </div>
         ) : products.length > 0 ? (
           <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
-            {products.map(product => (
+            {products.map((product, index) => (
               <ProductCard
                 key={product.id}
                 product={product}
+                priority={index < 2}
                 onOpenDetails={setOpenProduct}
               />
             ))}

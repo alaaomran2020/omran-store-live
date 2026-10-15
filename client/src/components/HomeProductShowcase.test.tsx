@@ -56,7 +56,10 @@ describe("lightweight home catalog", () => {
     expect(image.getAttribute("src")).toBe(
       productImageCandidates(expected[0])[0]
     );
-    expect(image.getAttribute("loading")).toBe("lazy");
+    // Above-the-fold photos should start downloading immediately on mobile.
+    expect(image.getAttribute("loading")).toBe("eager");
+    const thirdImage = within(cards[2]).getByRole("img", { name: expected[2].name });
+    expect(thirdImage.getAttribute("loading")).toBe("lazy");
     expect(
       document.querySelector(
         'img[src="/products/processed/product-kids-digital-watch-featured.webp"]'

@@ -65,7 +65,8 @@ export function ProductImage({
   priority?: boolean;
 }) {
   const [attempt, setAttempt] = useState(0);
-  const [loaded, setLoaded] = useState(false);
+  // A missing load event (cached/native-lazy images) must never leave media invisible.
+  const [withoutSrcSet, setWithoutSrcSet] = useState(false);
   const candidates = useMemo(
     () => productImageCandidates(product),
     [product.image, product.imageSource, product.processedImage]
@@ -74,11 +75,11 @@ export function ProductImage({
 
   useEffect(() => {
     setAttempt(0);
-    setLoaded(false);
+    setWithoutSrcSet(false);
   }, [product.id, mediaKey]);
 
   const src = candidates[attempt] ?? null;
-  const srcSet = src ? responsiveImageSrcSet(src) : undefined;
+  const srcSet = src && !withoutSrcSet ? responsiveImageSrcSet(src) : undefined;
   if (!src) {
     return (
       <div
@@ -93,7 +94,7 @@ export function ProductImage({
 
   return (
     <img
-      key={`${product.id}:${src}`}
+      key={`${product.id}:${src}:${withoutSrcSet ? "original" : "responsive"}`}
       src={src}
       alt={product.name}
       width={1200}
@@ -106,12 +107,17 @@ export function ProductImage({
       referrerPolicy="no-referrer"
       draggable={false}
       data-image-attempt={attempt + 1}
-      onLoad={() => setLoaded(true)}
       onError={() => {
-        setLoaded(false);
+        // A derivative can fail even though its original WebP exists.
+        // Try the original on the same host before external fallbacks.
+        if (srcSet) {
+          setWithoutSrcSet(true);
+          return;
+        }
+        setWithoutSrcSet(false);
         setAttempt(current => current + 1);
       }}
-      className={`${className} transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+      className={className}
     />
   );
 }
