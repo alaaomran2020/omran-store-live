@@ -14,6 +14,7 @@ import {
   type Product,
 } from "@/lib/productsClient";
 import { findSimilarProducts } from "@/lib/similarProducts";
+import { canonicalCategory } from "@shared/taxonomy";
 
 export default function HomeProductShowcase() {
   const [openProduct, setOpenProduct] = useState<Product | null>(null);
@@ -28,7 +29,8 @@ export default function HomeProductShowcase() {
   });
 
   const catalogProducts = useMemo(
-    () => filterProductsByCatalog(productsQuery.data?.products ?? [], "toys"),
+    () => filterProductsByCatalog(productsQuery.data?.products ?? [], "toys")
+      .filter(product => canonicalCategory(product.category)?.id !== "ramadan-lanterns"),
     [productsQuery.data]
   );
   // Latest-first regular cards avoid a large duplicate promotional image and

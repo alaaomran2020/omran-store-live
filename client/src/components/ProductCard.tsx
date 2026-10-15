@@ -2,9 +2,11 @@ import type { Product } from "@/lib/productsClient";
 import { ProductImage } from "@/components/ProductImage";
 import { buildWhatsAppUrl } from "@/lib/productFormat";
 import { isPopUpProduct } from "@/lib/productCatalog";
+import { productPagePath } from "@shared/productPaths";
 import { displayCategoryName } from "@shared/taxonomy";
 import { trackWhatsAppInquiry } from "@/lib/analytics";
-import { Info, Images, MessageCircle, Play } from "lucide-react";
+import { Info, Images, MessageCircle, Play, Copy } from "lucide-react";
+import { addInquiryProduct, removeInquiryProduct, useInquiryItems, MAX_INQUIRY_ITEMS } from "@/lib/inquiryCart";
 
 const AVAILABILITY_LABELS: Record<Product["availability"], string> = {
   available: "متاح للاستفسار",
@@ -22,7 +24,9 @@ export function ProductCard({
   onOpenDetails: (product: Product) => void;
 }) {
   const isPopup = isPopUpProduct(product);
-  const productHref = `${isPopup ? "/popup" : "/products"}?product=${encodeURIComponent(product.id)}`;
+  const inquiryItems = useInquiryItems();
+  const selectedForInquiry = inquiryItems.some(item => item.id === product.id);
+  const productHref = productPagePath(product.id, isPopup ? "popup" : "toys");
 
   const waUrl = buildWhatsAppUrl(product, {
     pageUrl:
@@ -79,8 +83,8 @@ export function ProductCard({
         <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-extrabold leading-5 text-brand-ink sm:min-h-0 sm:text-base sm:leading-6">{product.name}</h3>
         <div className="flex flex-wrap items-center justify-between gap-1.5 text-[10px] font-bold leading-4 sm:text-[11px]">
           <span className="text-brand-muted">
-            <span className="sr-only">كود المنتج: {product.sku || product.id}</span>
-            <span dir="ltr" aria-hidden="true">SKU: {product.sku || product.id}</span>
+            <span>كود الصنف: </span><b dir="ltr" className="ms-1 inline-block select-all">{product.sku || product.id}</b>
+            <button type="button" className="ms-1 rounded-md p-1 text-brand-blue hover:bg-brand-sky" aria-label={`نسخ كود الصنف ${product.sku || product.id}`} title="نسخ الكود" onClick={() => { if (navigator.clipboard) void navigator.clipboard.writeText(product.sku || product.id).catch(() => {}); }}><Copy size={13} aria-hidden="true" /></button>
           </span>
           <span className={`rounded-full px-2.5 py-1 ${product.availability === "unavailable" ? "bg-red-50 text-brand-red" : "bg-brand-sky text-brand-navy"}`}>
             {AVAILABILITY_LABELS[product.availability]}
@@ -94,9 +98,16 @@ export function ProductCard({
               <span>اسأل عن السعر</span>
             </a>
           )}
-          <a href={productHref} onClick={event => { event.preventDefault(); onOpenDetails(product); }} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-black text-brand-blue transition active:scale-[0.98] hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue motion-reduce:transition-none motion-reduce:active:scale-100 sm:gap-2 sm:px-4 sm:text-sm">
-            التفاصيل <Info size={14} aria-hidden="true" />
-          </a>
+          <div className={isPopup ? "" : "grid grid-cols-2 gap-1.5"}>
+            {!isPopup && (
+              <button type="button" disabled={!selectedForInquiry && inquiryItems.length >= MAX_INQUIRY_ITEMS} onClick={() => selectedForInquiry ? removeInquiryProduct(product.id) : addInquiryProduct(product)} aria-pressed={selectedForInquiry} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-blue/25 px-1.5 py-2 text-[11px] font-black text-brand-blue hover:bg-brand-sky disabled:cursor-not-allowed disabled:opacity-40 sm:text-xs">
+                {selectedForInquiry ? "إزالة من القائمة" : "أضف للاستفسار"}
+              </button>
+            )}
+            <a href={productHref} onClick={event => { event.preventDefault(); onOpenDetails(product); }} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-black text-brand-blue transition active:scale-[0.98] hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue motion-reduce:transition-none motion-reduce:active:scale-100 sm:gap-2 sm:px-4 sm:text-sm">
+              التفاصيل <Info size={14} aria-hidden="true" />
+            </a>
+          </div>
         </div>
       </div>
     </article>

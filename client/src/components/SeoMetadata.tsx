@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import type { Product } from "@/lib/productsClient";
 import { displayCategoryName } from "@shared/taxonomy";
 import { isPubliclyVisible } from "@shared/products";
+import { productPagePath } from "@shared/productPaths";
 import {
   BRAND_NAME,
   DESCRIPTION_MAX_LENGTH,
@@ -294,7 +295,7 @@ export function ProductStructuredData({
     if (!id) return;
 
     const catalogLabel = productCatalogLabel(catalogPath);
-    const productUrl = `${SITE_ORIGIN}${catalogPath}?product=${encodeURIComponent(id)}`;
+    const productUrl = `${SITE_ORIGIN}${productPagePath(id, catalogPath === "/popup" ? "popup" : "toys")}`;
     const categoryDisplay = product.category ? displayCategoryName(product.category) : "";
 
     const images = Array.from(
@@ -330,24 +331,22 @@ export function ProductStructuredData({
     setCanonical(productUrl);
     ensureMeta("og:url", productUrl);
 
-    const productSchema: Record<string, unknown> = {
-      "@type": "Product",
-      "@id": `${productUrl}#product`,
+    // Price enquiry only: mark up a descriptive WebPage, not an ineligible
+    // Merchant Product/Offer or unverifiable review/rating.
+    const pageSchema: Record<string, unknown> = {
+      "@type": "WebPage",
+      "@id": `${productUrl}#webpage`,
       name: product.name,
       url: productUrl,
+      description,
+      inLanguage: "ar-EG",
     };
-    if (product.sku?.trim()) productSchema.sku = product.sku.trim();
-    if (rawDescription) productSchema.description = cleanDescriptionText(rawDescription, 3000);
-    if (categoryDisplay) productSchema.category = categoryDisplay;
-    if (product.brand?.trim()) {
-      productSchema.brand = { "@type": "Brand", name: product.brand.trim() };
-    }
-    if (images.length) productSchema.image = images;
+    if (images.length) pageSchema.primaryImageOfPage = { "@type": "ImageObject", contentUrl: images[0] };
 
     const schema = {
       "@context": "https://schema.org",
       "@graph": [
-        productSchema,
+        pageSchema,
         {
           "@type": "BreadcrumbList",
           "@id": `${productUrl}#breadcrumbs`,

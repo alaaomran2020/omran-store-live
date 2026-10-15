@@ -2,7 +2,8 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
-import { writeSitemap } from "./scripts/sitemap-generate-core.mjs";
+import { writeSitemap, generateSitemapData } from "./scripts/sitemap-generate-core.mjs";
+import { renderStaticSeoShell, renderProductSeoShell } from "./scripts/static-seo-shell.mjs";
 import { OPENING_PROFILE } from "./shared/openingProfile";
 import {
   defineConfig,
@@ -312,9 +313,7 @@ function vitePluginSitemap(): Plugin {
         const { count } = await writeSitemap(path.resolve(import.meta.dirname), outDir);
         console.log(`[sitemap] dist/public/sitemap.xml → ${count} URLs`);
       } catch (error) {
-        console.warn(
-          `[sitemap] generation failed, keeping the static sitemap: ${String(error)}`
-        );
+        throw new Error(`[sitemap] generation failed: ${String(error)}`);
       }
     },
   };
@@ -342,7 +341,7 @@ function vitePluginSpaRouteShells(): Plugin {
     name: "spa-route-shells",
     apply: "build",
     enforce: "post",
-    closeBundle() {
+    async closeBundle() {
       const outDir = path.resolve(import.meta.dirname, "dist", "public");
       const indexPath = path.join(outDir, "index.html");
       if (!fs.existsSync(indexPath)) return;
@@ -350,9 +349,19 @@ function vitePluginSpaRouteShells(): Plugin {
       for (const route of SPA_ROUTES) {
         const target = path.join(outDir, ...route.slice(1).split("/")) + ".html";
         fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.writeFileSync(target, shell, "utf8");
+        fs.writeFileSync(target, renderStaticSeoShell(shell, route), "utf8");
       }
-      fs.writeFileSync(path.join(outDir, "404.html"), shell, "utf8");
+      // Same vetted snapshot and publication gate used by sitemap and storefront.
+      const { products } = await generateSitemapData(path.resolve(import.meta.dirname));
+      for (const product of products) {
+        const category = String(product.category || "").toLowerCase();
+        const isPopup = ["بالونات", "هدايا", "مستلزمات حفلات", "مستلزمات الحفلات", "حفلات ومناسبات", "ديكور حفلات", "ديكورات حفلات", "birthday", "party", "gift", "pop up", "popup"].some(marker => category.includes(marker));
+        const target = path.join(outDir, isPopup ? "popup" : "products", "p", product.id + ".html");
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, renderProductSeoShell(shell, product, isPopup ? "popup" : "toys"), "utf8");
+      }
+      console.log(`[product-shells] ${products.length} approved products`);
+      fs.writeFileSync(path.join(outDir, "404.html"), renderStaticSeoShell(shell, "/404"), "utf8");
       // The only dynamic pathname in the SPA is the admin product editor.
       fs.writeFileSync(
         path.join(outDir, "_redirects"),

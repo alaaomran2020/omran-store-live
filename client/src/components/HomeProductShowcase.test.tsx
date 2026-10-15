@@ -12,6 +12,7 @@ import HomeProductShowcase from "./HomeProductShowcase";
 import { getInitialProductsSnapshot } from "@/lib/productsClient";
 import { filterProductsByCatalog } from "@/lib/productCatalog";
 import { productImageCandidates } from "./ProductImage";
+import { canonicalCategory } from "@shared/taxonomy";
 
 function renderShowcase() {
   const client = new QueryClient({
@@ -42,7 +43,8 @@ describe("lightweight home catalog", () => {
   it("shows current catalog images latest first without a mismatched fixed promotional image", () => {
     renderShowcase();
     const expected = [
-      ...filterProductsByCatalog(getInitialProductsSnapshot().products, "toys"),
+      ...filterProductsByCatalog(getInitialProductsSnapshot().products, "toys")
+        .filter(product => canonicalCategory(product.category)?.id !== "ramadan-lanterns"),
     ]
       .sort((a, b) => b.rowIndex - a.rowIndex)
       .slice(0, 8);

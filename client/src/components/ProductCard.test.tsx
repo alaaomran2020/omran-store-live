@@ -55,10 +55,10 @@ describe("ProductCard — روابط crawlable", () => {
     render(<ProductCard product={makeProduct()} onOpenDetails={vi.fn()} />);
 
     const detailsLink = screen.getByRole("link", { name: "عرض تفاصيل مطبخ ألعاب للأطفال" });
-    expect(detailsLink.getAttribute("href")).toBe("/products?product=OMR-CARD-1");
+    expect(detailsLink.getAttribute("href")).toBe("/products/p/OMR-CARD-1");
 
     const infoLink = screen.getByRole("link", { name: "التفاصيل" });
-    expect(infoLink.getAttribute("href")).toBe("/products?product=OMR-CARD-1");
+    expect(infoLink.getAttribute("href")).toBe("/products/p/OMR-CARD-1");
   });
 
   it("منتج POP UP يشير إلى /popup ولا يتسرب إلى /products", () => {
@@ -66,7 +66,7 @@ describe("ProductCard — روابط crawlable", () => {
     render(<ProductCard product={product} onOpenDetails={vi.fn()} />);
 
     const detailsLink = screen.getByRole("link", { name: "عرض تفاصيل بالونات معدنية" });
-    expect(detailsLink.getAttribute("href")).toBe("/popup?product=POP-C1");
+    expect(detailsLink.getAttribute("href")).toBe("/popup/p/POP-C1");
   });
 
   it("الضغط يفتح التفاصيل برمجياً بدون تنقل كامل (يحافظ على سلوك الـSPA)", () => {
@@ -80,6 +80,14 @@ describe("ProductCard — روابط crawlable", () => {
     expect(window.location.href).toBe(before);
   });
 
+  it("يعرض كود الصنف مرة واحدة وزر إضافة لقائمة الاستفسار", () => {
+    render(<ProductCard product={makeProduct()} onOpenDetails={vi.fn()} />);
+    expect(screen.getByText("كود الصنف:")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "أضف للاستفسار" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /نسخ كود الصنف/ })).toBeTruthy();
+    expect(screen.queryByText("SKU: SKU-C1")).toBeNull();
+  });
+
   it("رابط واتساب يظل يعمل ويشير للرابط الثابت للمنتج", () => {
     vi.stubEnv("VITE_WHATSAPP_NUMBER", "201000000000");
     window.history.replaceState({}, "", "/"); // حتى من الرئيسية: الرابط ثابت
@@ -88,6 +96,6 @@ describe("ProductCard — روابط crawlable", () => {
     const waLink = screen.getByRole("link", { name: "اسأل عن السعر" });
     const href = waLink.getAttribute("href") ?? "";
     expect(href).toContain("wa.me/201000000000");
-    expect(decodeURIComponent(href)).toContain("/products?product=OMR-CARD-1");
+    expect(decodeURIComponent(href)).toContain("/products/p/OMR-CARD-1");
   });
 });

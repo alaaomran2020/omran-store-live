@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import SkipLink from "./components/SkipLink";
+import InquiryBasket from "./components/InquiryBasket";
 import Storefront from "@/pages/Storefront";
 const ProductsPage = lazy(() => import("@/pages/ProductsPage"));
 
@@ -65,6 +66,8 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Storefront} />
       <Route path={"/products"} component={ProductsPage} />
+      <Route path={"/products/p/:productId"} component={ProductsPage} />
+      <Route path={"/popup/p/:productId"} component={PopUp} />
       <Route path={"/popup/videos"} component={PopupVideos} />
       <Route path={"/popup"} component={PopUp} />
       <Route path={"/rewards"} component={Rewards} />
@@ -107,6 +110,7 @@ function App() {
         }
       >
         <Router />
+        <InquiryBasket />
       </Suspense>
     </ErrorBoundary>
   );

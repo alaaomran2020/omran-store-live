@@ -4,6 +4,7 @@ import SiteFooter from "@/components/SiteFooter";
 import { SeoMetadata } from "@/components/SeoMetadata";
 import Products from "@/pages/Products";
 import { RamadanSeasonRibbon } from "@/components/RamadanSeasonBanner";
+import { SHOW_RAMADAN_PROMO } from "@/lib/seasonalCampaign";
 
 const PRODUCTS_TITLE = "لعب أطفال | شركة عمران التجارية";
 const PRODUCTS_DESCRIPTION =
@@ -14,7 +15,7 @@ export default function ProductsPage() {
     <div>
       <SeoMetadata path="/products" title={PRODUCTS_TITLE} description={PRODUCTS_DESCRIPTION} />
       <AnnouncementBar />
-      <RamadanSeasonRibbon />
+      {SHOW_RAMADAN_PROMO && <RamadanSeasonRibbon />}
       <BrandHeader />
       <Products showAnnouncement={false} />
       <SiteFooter />

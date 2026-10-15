@@ -40,6 +40,13 @@ describe("canonicalCategory", () => {
     expect(canonicalCategory("اسكوشي")?.id).toBe("arts-crafts");
   });
 
+  it("يصنف جميع مطابخ الأطفال ضمن أطقم المهن والتركيب", () => {
+    for (const input of ["ألعاب مطبخ", "مطبخ ألعاب", "ألعاب مطبخ وتمثيل أدوار", "role-play"]) {
+      expect(canonicalCategory(input)?.id).toBe("role-play");
+      expect(displayCategoryName(input)).toBe("أطقم المهن والتركيب");
+    }
+  });
+
   it("يرد null للاسم غير المعروف (لا اختراع)", () => {
     expect(canonicalCategory("")).toBeNull();
     expect(canonicalCategory("تصنيف غير موجود إطلاقًا")).toBeNull();

@@ -22,6 +22,7 @@ const categories: readonly HomeCategory[] = [
   {
     name: "أطقم المهن والتركيب",
     query: "مطبخ دكتور نجار تنظيف",
+    href: "/products?category=role-play#feed",
     image: "/categories/category-role-play-approved.webp",
   },
   {
