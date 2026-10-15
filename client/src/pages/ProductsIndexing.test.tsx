@@ -73,7 +73,7 @@ describe("حالة فهرسة روابط الكتالوج", () => {
   });
 
   it("منتج غير موجود (?product=...) = noindex,follow ولا يفتح dialog (soft-404 آمن)", async () => {
-    window.history.replaceState({}, "", "/products?product=DOES-NOT-EXIST");
+    window.history.replaceState({}, "", "/products/p/DOES-NOT-EXIST");
     renderCatalog();
     await waitFor(() => expect(screen.getAllByTestId("product-card").length).toBeGreaterThan(0));
 
@@ -85,7 +85,7 @@ describe("حالة فهرسة روابط الكتالوج", () => {
 
   it("رابط منتج حقيقي يفتح الـdialog ويطبّق metadata وJSON-LD قابل للفهرسة", async () => {
     const first = PUBLIC_PRODUCTS_SNAPSHOT[0];
-    window.history.replaceState({}, "", `/products?product=${encodeURIComponent(first.id)}`);
+    window.history.replaceState({}, "", `/products/p/${encodeURIComponent(first.id)}`);
     renderCatalog();
 
     await waitFor(() => expect(screen.getByTestId("product-details")).toBeTruthy(), { timeout: 4000 });
@@ -97,8 +97,8 @@ describe("حالة فهرسة روابط الكتالوج", () => {
     expect(script).toBeTruthy();
     const parsed = JSON.parse((script as HTMLScriptElement).textContent ?? "{}") as Record<string, unknown>;
     const graph = parsed["@graph"] as Record<string, unknown>[];
-    expect(graph.find(node => (node["@type"] as string) === "Product")?.name).toBe(first.name);
-    expect(graph.some(node => (node["@type"] as string) === "Product" && "offers" in node)).toBe(false);
+    expect(graph.find(node => (node["@type"] as string) === "WebPage")?.name).toBe(first.name);
+    expect(graph.some(node => (node["@type"] as string) === "WebPage" && "offers" in node)).toBe(false);
   });
 
   it("تكرار ?product= يظل متسقًا بين dialog وcanonical وJSON-LD بدون stale state", async () => {
@@ -107,7 +107,7 @@ describe("حالة فهرسة روابط الكتالوج", () => {
     window.history.replaceState(
       {},
       "",
-      `/products?product=${encodeURIComponent(first.id)}&product=${encodeURIComponent(second.id)}`
+      `/products/p/${encodeURIComponent(first.id)}&product=${encodeURIComponent(second.id)}`
     );
     renderCatalog();
 
@@ -115,7 +115,7 @@ describe("حالة فهرسة روابط الكتالوج", () => {
     expect(meta("robots")).toBe("index,follow");
 
     const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    const firstCanonical = `https://omrantoys.store/products?product=${encodeURIComponent(first.id)}`;
+    const firstCanonical = `https://omrantoys.store/products/p/${encodeURIComponent(first.id)}`;
     const secondCanonical = `https://omrantoys.store/products/p/${encodeURIComponent(second.id)}`;
     expect([firstCanonical, secondCanonical]).toContain(canonical?.href);
 
@@ -124,12 +124,12 @@ describe("حالة فهرسة روابط الكتالوج", () => {
     expect(script).toBeTruthy();
     const parsed = JSON.parse((script as HTMLScriptElement).textContent ?? "{}") as Record<string, unknown>;
     const graph = parsed["@graph"] as Record<string, unknown>[];
-    expect(graph.find(node => (node["@type"] as string) === "Product")?.name).toBe(selected.name);
+    expect(graph.find(node => (node["@type"] as string) === "WebPage")?.name).toBe(selected.name);
   });
 
   it("POP UP: رابط منتج popup على /products لا يُفهرس (alias) ولا يفتح في كتالوج toys", async () => {
     // منتج POP-BAL-US-100 موجود في كتالوج popup فقط.
-    window.history.replaceState({}, "", "/products?product=POP-BAL-US-100");
+    window.history.replaceState({}, "", "/products/p/POP-BAL-US-100");
     renderCatalog();
     await waitFor(() => expect(screen.getAllByTestId("product-card").length).toBeGreaterThan(0));
 

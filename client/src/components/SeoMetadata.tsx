@@ -331,26 +331,22 @@ export function ProductStructuredData({
     setCanonical(productUrl);
     ensureMeta("og:url", productUrl);
 
-    const productSchema: Record<string, unknown> = {
-      "@type": "Product",
-      "@id": `${productUrl}#product`,
+    // Price enquiry only: mark up a descriptive WebPage, not an ineligible
+    // Merchant Product/Offer or unverifiable review/rating.
+    const pageSchema: Record<string, unknown> = {
+      "@type": "WebPage",
+      "@id": `${productUrl}#webpage`,
       name: product.name,
       url: productUrl,
+      description,
+      inLanguage: "ar-EG",
     };
-    // Most verified catalog records use id as their public SKU. Do not leave the
-    // machine-readable identifier empty when the optional sku column is blank.
-    productSchema.sku = product.sku?.trim() || id;
-    if (rawDescription) productSchema.description = cleanDescriptionText(rawDescription, 3000);
-    if (categoryDisplay) productSchema.category = categoryDisplay;
-    if (product.brand?.trim()) {
-      productSchema.brand = { "@type": "Brand", name: product.brand.trim() };
-    }
-    if (images.length) productSchema.image = images;
+    if (images.length) pageSchema.primaryImageOfPage = { "@type": "ImageObject", contentUrl: images[0] };
 
     const schema = {
       "@context": "https://schema.org",
       "@graph": [
-        productSchema,
+        pageSchema,
         {
           "@type": "BreadcrumbList",
           "@id": `${productUrl}#breadcrumbs`,
