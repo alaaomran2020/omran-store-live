@@ -87,7 +87,7 @@ export default function HomeCategoryHighlights({
               : "mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6"
           }
         >
-          {categories.map(({ name, query, image, comingSoon, href }) => (
+          {categories.map(({ name, query, image, comingSoon, href }, index) => (
             <a
               key={name}
               href={
@@ -111,7 +111,8 @@ export default function HomeCategoryHighlights({
                 alt=""
                 width="1254"
                 height="1254"
-                loading="lazy"
+                loading={compact && index < 3 ? "eager" : "lazy"}
+                fetchPriority={compact && index === 0 ? "high" : "auto"}
                 decoding="async"
                 className={
                   compact
