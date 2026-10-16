@@ -22,6 +22,15 @@ function checkFile(filename) {
 checkFile(path.join(root, "index.html"));
 checkFile(path.join(root, "_headers"));
 checkFile(path.join(root, "sitemap.xml"));
+for (const name of ["cars", "dolls", "role-play", "misc-toys", "balls", "ramadan"]) {
+  const dir = path.join(root, "categories", "category-" + name + "-approved");
+  checkFile(dir + "-192.webp");
+  checkFile(dir + "-320.webp");
+  if (fs.statSync(dir + "-192.webp").size >= fs.statSync(dir + "-320.webp").size) {
+    fail("Category thumbnail did not reduce bytes: " + name);
+  }
+}
+
 const pages = walk(root).filter(p => p.endsWith(".html"));
 const generatedAssets = new Set();
 for (const page of pages) {
