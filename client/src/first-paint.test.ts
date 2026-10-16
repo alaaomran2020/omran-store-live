@@ -17,7 +17,11 @@ describe("mobile first-paint safeguards", () => {
     expect(html).toContain('Alexandria:wght@400;500;600;700;800&amp;display=swap');
     expect(html).toContain('media="print" onload="this.media=\'all\'"');
     expect(html).toContain('<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/');
-    expect(html).not.toMatch(/<link[^>]+href="https:\/\/fonts\.googleapis\.com[^>]+"\s*\/>/);
+    const activeHead = html.replace(/<noscript>[\s\S]*?<\/noscript>/gi, "");
+    const fontLinks = [...activeHead.matchAll(/<link[^>]*rel="stylesheet"[^>]*fonts\.googleapis\.com[^>]*>/gi)];
+    expect(fontLinks).toHaveLength(1);
+    expect(fontLinks[0][0]).toContain('media="print"');
+    expect(fontLinks[0][0]).toContain('onload="this.media=\'all\'"');
 
   });
 
