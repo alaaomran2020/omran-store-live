@@ -31,7 +31,7 @@ async function writeWebp(source, target, width) {
 }
 
 function publishedImages(text) {
-  const match = text.match(/export const PUBLIC_PRODUCTS_SNAPSHOT: Product\[\] = (\[[\s\S]*?\]);/);
+  const match = text.match(/export const PUBLIC_PRODUCTS_SNAPSHOT: Product\[\] = (\[[\s\S]*?\])\s*(?:as Product\[\])?\s*;/);
   if (!match) throw new Error("Approved public product snapshot was not found");
   const products = JSON.parse(match[1]);
   const paths = new Set();
