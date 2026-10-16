@@ -15,6 +15,10 @@ describe("mobile first-paint safeguards", () => {
     expect(html).toContain('<link rel="preconnect" href="https://fonts.googleapis.com" />');
     expect(html).toContain('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />');
     expect(html).toContain('Alexandria:wght@400;500;600;700;800&amp;display=swap');
+    expect(html).toContain('media="print" onload="this.media=\'all\'"');
+    expect(html).toContain('<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/');
+    expect(html).not.toMatch(/<link[^>]+href="https:\/\/fonts\.googleapis\.com[^>]+"\s*\/>/);
+
   });
 
   it("defers the existing Ahrefs script until load plus idle without dropping analytics", () => {
