@@ -45,7 +45,7 @@ const categories: readonly HomeCategory[] = [
 
 function categorySrcSet(image: string): string {
   const base = image.replace(/\.webp$/i, "");
-  return `${base}-320.webp 320w, ${base}-640.webp 640w, ${image} 1254w`;
+  return `${base}-192.webp 192w, ${base}-320.webp 320w, ${base}-640.webp 640w, ${image} 1254w`;
 }
 
 export default function HomeCategoryHighlights({
