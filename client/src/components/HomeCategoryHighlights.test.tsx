@@ -25,6 +25,18 @@ describe("تصنيفات الصفحة الرئيسية", () => {
     expect(screen.queryByText("أدوات تنظيف")).toBeNull();
   });
 
+  it("تعطي صف صور الأقسام الأول أولوية مناسبة على الموبايل فقط", () => {
+    const { container } = render(<HomeCategoryHighlights compact />);
+    const images = Array.from(container.querySelectorAll("img"));
+    expect(images).toHaveLength(6);
+    expect(images.slice(0, 3).map(image => image.getAttribute("loading"))).toEqual(["eager", "eager", "eager"]);
+    expect(images.slice(3).every(image => image.getAttribute("loading") === "lazy")).toBe(true);
+    expect(images.map(image => image.getAttribute("fetchpriority"))).toEqual([
+      "high", "auto", "auto", "auto", "auto", "auto",
+    ]);
+    expect(images.every(image => image.getAttribute("srcset")?.includes("-approved-320.webp 320w"))).toBe(true);
+  });
+
   it("تعرض الصورة المعتمدة في كل كارت قسم", () => {
     const { container } = render(<HomeCategoryHighlights />);
     const images = Array.from(container.querySelectorAll("img"));
@@ -33,6 +45,7 @@ describe("تصنيفات الصفحة الرئيسية", () => {
     expect(images.every(image => image.getAttribute("src")?.endsWith("-approved.webp"))).toBe(true);
     expect(images.every(image => image.getAttribute("srcset")?.includes("-approved-320.webp 320w"))).toBe(true);
     expect(images.every(image => image.getAttribute("loading") === "lazy")).toBe(true);
+    expect(images.every(image => image.getAttribute("fetchpriority") !== "high")).toBe(true);
     expect(images.every(image => image.getAttribute("decoding") === "async")).toBe(true);
     expect(container.querySelectorAll('a[aria-label^="تصفح "]')).toHaveLength(6);
     expect(screen.getByRole("link", { name: "تصفح رمضان" })).toBeTruthy();
