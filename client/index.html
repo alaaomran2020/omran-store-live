@@ -9,7 +9,9 @@
     <!-- Fetch the brand font CSS alongside the app CSS, instead of a nested CSS @import. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&amp;display=swap" />
+    <!-- Keep the brand font but do not block the first paint on external CSS. -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&amp;display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&amp;display=swap" /></noscript>
     <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
     <link rel="icon" type="image/png" href="/brand/favicon.png" />
     <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
