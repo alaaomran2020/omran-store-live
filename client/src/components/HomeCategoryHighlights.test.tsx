@@ -35,6 +35,7 @@ describe("تصنيفات الصفحة الرئيسية", () => {
       "high", "auto", "auto", "auto", "auto", "auto",
     ]);
     expect(images.every(image => image.getAttribute("srcset")?.includes("-approved-320.webp 320w"))).toBe(true);
+    expect(images.every(image => image.getAttribute("srcset")?.includes("-approved-192.webp 192w"))).toBe(true);
   });
 
   it("تعرض الصورة المعتمدة في كل كارت قسم", () => {
@@ -44,6 +45,7 @@ describe("تصنيفات الصفحة الرئيسية", () => {
     expect(images).toHaveLength(6);
     expect(images.every(image => image.getAttribute("src")?.endsWith("-approved.webp"))).toBe(true);
     expect(images.every(image => image.getAttribute("srcset")?.includes("-approved-320.webp 320w"))).toBe(true);
+    expect(images.every(image => image.getAttribute("srcset")?.includes("-approved-192.webp 192w"))).toBe(true);
     expect(images.every(image => image.getAttribute("loading") === "lazy")).toBe(true);
     expect(images.every(image => image.getAttribute("fetchpriority") !== "high")).toBe(true);
     expect(images.every(image => image.getAttribute("decoding") === "async")).toBe(true);
