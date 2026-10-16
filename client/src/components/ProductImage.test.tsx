@@ -51,7 +51,8 @@ describe("صور المنتجات والدفاع ضد الصور المكسور�
 
   it("يبني srcset فقط للصور المعالجة المحلية", () => {
     expect(responsiveImageSrcSet("/products/processed/generated/product-main.webp"))
-      .toBe("/products/processed/generated/product-main-320.webp 320w, /products/processed/generated/product-main-640.webp 640w, /products/processed/generated/product-main-960.webp 960w");
+      .toBe("/products/processed/generated/product-main-320.webp 320w, /products/processed/generated/product-main-480.webp 480w, /products/processed/generated/product-main-640.webp 640w, /products/processed/generated/product-main-960.webp 960w");
+    expect(responsiveImageSrcSet("/products/processed/generated/product-main.jpg")).toContain("product-main-480.webp 480w");
     expect(responsiveImageSrcSet("/products/popup/product-main.webp")).toBeUndefined();
     expect(responsiveImageSrcSet("https://example.com/product.webp")).toBeUndefined();
     expect(responsiveImageSrcSet("/products/processed/product-main.svg")).toBeUndefined();
