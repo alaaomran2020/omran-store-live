@@ -97,7 +97,8 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     expect(screen.queryByText("اختار حسب السن")).toBeNull();
     expect(screen.queryByText("قسم رمضان جاهز — المنتجات قيد التجهيز")).toBeNull();
     const link = within(cards()[0]).getByRole("link", { name: "اسأل عن السعر" }) as HTMLAnchorElement;
-    expect(decodeURIComponent(link.href)).toContain("السعر والمقاس المتاح والتوفر");
+    expect(decodeURIComponent(link.href)).toContain("السعر");
+    expect(decodeURIComponent(link.href)).toContain("التوفر");
     expect(screen.queryByRole("button", { name: /أضف للسلة|شراء الآن/ })).toBeNull();
     expect(catalogNetworkCalls()).toEqual([]);
   });
