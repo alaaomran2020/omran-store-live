@@ -231,13 +231,7 @@ function vitePluginOptionalAnalytics(
  * these — they must travel with the deployed assets. Mirrors the policy in
  * `server/_core/app.ts` so both deploy targets behave identically.
  */
-const EDGE_HEADERS = [
-  "/*",
-  "  X-Content-Type-Options: nosniff",
-  "  X-Frame-Options: DENY",
-  "  Referrer-Policy: strict-origin-when-cross-origin",
-  "  Permissions-Policy: geolocation=(), microphone=()",
-  "",
+const EDGE_ASSET_CACHE_HEADERS = [
   "# Content-hashed chunks are safe to pin for a year (browser + edge).",
   "/assets/*",
   "  Cache-Control: public, max-age=31536000, immutable",
@@ -262,10 +256,25 @@ function vitePluginEdgeHeaders(): Plugin {
     name: "edge-headers",
     apply: "build",
     enforce: "post",
+    // CSP hashes are based on LF: normalize HTML on every OS before Vite emits
+    // it, avoiding different inline-script hashes on Windows and Linux CI.
+    transformIndexHtml(html) {
+      return html.replace(/\r\n/g, "\n");
+    },
     closeBundle() {
       const outDir = path.resolve(import.meta.dirname, "dist", "public");
       if (!fs.existsSync(outDir)) return;
-      fs.writeFileSync(path.join(outDir, "_headers"), EDGE_HEADERS, "utf8");
+      // Keep a single security policy source of truth. Generating a separate
+      // _headers literal here previously discarded public/_headers on every build.
+      const securityHeaders = fs.readFileSync(
+        path.resolve(import.meta.dirname, "public", "_headers"),
+        "utf8"
+      );
+      fs.writeFileSync(
+        path.join(outDir, "_headers"),
+        `${securityHeaders.trimEnd()}\n\n${EDGE_ASSET_CACHE_HEADERS}`,
+        "utf8"
+      );
     },
   };
 }

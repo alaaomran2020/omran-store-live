@@ -1,3 +1,9 @@
+/*
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://analytics.ahrefs.com 'sha256-/72rNGNtdI4aYl3DbVdyfqfjFlbq7tNr7Lzj2yeMwYQ=' 'sha256-ZdnUxpGNLSJW0bMU8tpqmzRTZVDW7OHG3/ooxQnG/ck=' 'sha256-FLfLzZ+0laUsh1EmSinUjguzVpOFLNMlvllRl0s7Tok=' 'sha256-0M31spKRGCQEs+dlf+F7WXqekApHySl5iu8VAMIGY7M='; script-src-attr 'unsafe-hashes' 'sha256-MhtPZXr7+LpJUY5qtMutB+qWfQtMaPccfe7QXtCcEYc='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://analytics.ahrefs.com https://hook.eu1.make.com; frame-src 'self' https://drive.google.com; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=31536000
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
 /admin
   X-Robots-Tag: noindex, nofollow
   Cache-Control: private, no-store, max-age=0
@@ -7,3 +13,4 @@
   X-Robots-Tag: noindex, nofollow
   Cache-Control: private, no-store, max-age=0
   Referrer-Policy: no-referrer
+
