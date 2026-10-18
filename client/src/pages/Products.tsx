@@ -32,18 +32,20 @@ const AVAILABILITY_LABELS: Record<ProductAvailability, string> = {
   unknown: "غير محدد",
 };
 
-function readInitialParams() {
+function readInitialParams(catalog: ProductCatalog) {
+  const defaultSort: ProductSortMode = catalog === "popup" ? "catalog" : "newest";
   if (typeof window === "undefined") {
     return {
       search: "", category: ALL, age: ALL, brand: ALL, tag: ALL, availability: ALL,
-      sort: "catalog" as ProductSortMode, product: null as string | null,
+      sort: defaultSort, product: null as string | null,
     };
   }
   const params = new URLSearchParams(window.location.search);
   const age = params.get("age");
   const availability = params.get("availability");
   const sortParam = params.get("sort");
-  const sort: ProductSortMode = sortParam === "name-asc" || sortParam === "name-desc" ? sortParam : "catalog";
+  const sort: ProductSortMode = sortParam === "name-asc" || sortParam === "name-desc" || sortParam === "catalog" || sortParam === "newest"
+    ? sortParam : defaultSort;
   return {
     search: params.get("search") ?? "",
     category: params.get("category") ? displayCategoryName(params.get("category")!) : ALL,
@@ -60,7 +62,8 @@ type ProductsProps = { catalog?: ProductCatalog; showAnnouncement?: boolean };
 
 export default function Products({ catalog = "toys", showAnnouncement = true }: ProductsProps) {
   const isPopup = catalog === "popup";
-  const initial = useMemo(readInitialParams, []);
+  const initial = useMemo(() => readInitialParams(catalog), [catalog]);
+  const defaultSort: ProductSortMode = isPopup ? "catalog" : "newest";
   const [shareOutcome, setShareOutcome] = useState<ProductShareOutcome | null>(null);
   const [search, setSearch] = useState(initial.search);
   const [category, setCategory] = useState<string>(initial.category);
@@ -122,6 +125,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   const searchResult = useMemo(() => searchCatalog(filteredProducts, search), [filteredProducts, search]);
   const visibleProducts = useMemo(() => {
     if (sort === "catalog") return searchResult.products;
+    if (sort === "newest") return [...searchResult.products].sort((a, b) => b.rowIndex - a.rowIndex);
     return [...searchResult.products].sort((a, b) => {
       const comparison = a.name.localeCompare(b.name, "ar", { sensitivity: "base" });
       return sort === "name-asc" ? comparison : -comparison;
@@ -262,7 +266,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   };
   const handleSort = (value: ProductSortMode) => {
     setSort(value);
-    updateUrl({ sort: value === "catalog" ? null : value });
+    updateUrl({ sort: value === defaultSort ? null : value });
     trackEvent("product_filter", { sort: value, catalog });
   };
   const clearAllFilters = useCallback(() => {
@@ -272,7 +276,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     setBrand(ALL);
     setTag(ALL);
     setAvailability(ALL);
-    setSort("catalog");
+    setSort(defaultSort);
     updateUrl({ search: null, category: null, age: null, brand: null, tag: null, availability: null, sort: null });
     trackEvent("product_filter", { action: "clear_all", catalog });
   }, [catalog, updateUrl]);
@@ -285,7 +289,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     if (brand !== ALL) filters.push({ key: "brand", label: `الماركة: ${brand}`, onClear: () => handleBrandFilter(ALL) });
     if (tag !== ALL) filters.push({ key: "tag", label: `الوسم: ${tag}`, onClear: () => handleTagFilter(ALL) });
     if (availability !== ALL) filters.push({ key: "availability", label: `التوفر: ${AVAILABILITY_LABELS[availability as ProductAvailability] ?? availability}`, onClear: () => handleAvailabilityFilter(ALL) });
-    if (sort !== "catalog") filters.push({ key: "sort", label: sort === "name-asc" ? "الترتيب: أ ← ي" : "الترتيب: ي ← أ", onClear: () => handleSort("catalog") });
+    if (sort !== defaultSort) filters.push({ key: "sort", label: sort === "catalog" ? "الترتيب: الكتالوج" : sort === "newest" ? "الترتيب: الأحدث" : sort === "name-asc" ? "الترتيب: أ ← ي" : "الترتيب: ي ← أ", onClear: () => handleSort(defaultSort) });
     return filters;
   }, [search, category, age, isPopup, isRamadanCategory, brand, tag, availability, sort]);
 
