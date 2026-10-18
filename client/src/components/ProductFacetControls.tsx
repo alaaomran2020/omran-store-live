@@ -3,7 +3,7 @@ import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { ProductAvailability } from "@/lib/productsClient";
 import { SlidersHorizontal, X } from "lucide-react";
 
-export type ProductSortMode = "catalog" | "name-asc" | "name-desc";
+export type ProductSortMode = "newest" | "catalog" | "name-asc" | "name-desc";
 
 export type ActiveProductFilter = {
   key: string;
@@ -164,6 +164,7 @@ export function ProductFacetControls({
             <label className="text-xs font-extrabold text-brand-muted">
               الترتيب
               <select value={sort} onChange={event => onSortChange(event.target.value as ProductSortMode)} className={`mt-1 min-h-11 w-full rounded-xl border border-brand-border bg-brand-surface px-3 text-sm font-bold outline-none ring-4 ring-transparent transition ${accent}`}>
+                <option value="newest">الأحدث أولًا</option>
                 <option value="catalog">ترتيب الكتالوج</option>
                 <option value="name-asc">الاسم: أ ← ي</option>
                 <option value="name-desc">الاسم: ي ← أ</option>
