@@ -30,6 +30,7 @@ const catalogNetworkCalls = () =>
       String(url).includes("catalog") || (init?.method ?? "GET").toUpperCase() === "GET"
   );
 const initialVisibleCount = Math.min(24, PUBLIC_PRODUCTS_SNAPSHOT.length);
+const newestProducts = [...PUBLIC_PRODUCTS_SNAPSHOT].sort((a, b) => b.rowIndex - a.rowIndex);
 
 beforeEach(() => {
   window.history.replaceState({}, "", "/products");
@@ -62,11 +63,28 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     expect(screen.queryByRole("contentinfo")).toBeNull();
     expect(screen.queryByRole("heading", { name: "شوف اللعبة وهي بتشتغل قبل الاستفسار" })).toBeNull();
     expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(
-      PUBLIC_PRODUCTS_SNAPSHOT.slice(0, initialVisibleCount).map(product => product.id)
+      newestProducts.slice(0, initialVisibleCount).map(product => product.id)
     );
     expect(within(cards()[0]).getByText("اسأل عن التوفر")).toBeTruthy();
     expect(within(cards()[0]).getByRole("link", { name: "اسأل عن السعر" })).toBeTruthy();
     expect(catalogNetworkCalls()).toEqual([]);
+  });
+
+  it("يعرض المنتجات المضافة حديثًا أولًا ويمكن الرجوع لترتيب الكتالوج", async () => {
+    renderCatalog();
+    await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
+    expect(cards()[0].getAttribute("data-product-id")).toBe("OMR-RAM-2026-035");
+    expect(cards().slice(0, 3).map(card => card.getAttribute("data-product-id"))).toEqual(
+      newestProducts.slice(0, 3).map(product => product.id)
+    );
+
+    cleanup();
+    window.history.replaceState({}, "", "/products?sort=catalog");
+    renderCatalog();
+    await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
+    expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(
+      PUBLIC_PRODUCTS_SNAPSHOT.slice(0, initialVisibleCount).map(product => product.id)
+    );
   });
 
   it("يعرض قسم رمضان بصوره وأجوائه مع زر السؤال عن السعر دون فلتر سن أو شراء مباشر", async () => {
@@ -116,7 +134,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
 
     const links = screen.getAllByRole("link", { name: /اسأل عن السعر|استفسر عن/ }) as HTMLAnchorElement[];
     expect(links[0].href).toContain("wa.me/201000000000");
-    expect(decodeURIComponent(links[0].href)).toContain(PUBLIC_PRODUCTS_SNAPSHOT[0].name);
+    expect(decodeURIComponent(links[0].href)).toContain(newestProducts[0].name);
     expect(catalogNetworkCalls()).toEqual([]);
     expect(screen.queryByText(/طلبك|إضافة للسلة|أضف لطلبك|مقارنة المنتجات/)).toBeNull();
   });
@@ -195,10 +213,10 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
 
     const detailsLink = within(cards()[0]).getByRole("link", { name: "التفاصيل" });
-    expect(detailsLink.getAttribute("href")).toBe(`/products/p/${encodeURIComponent(target.id)}`);
+    expect(detailsLink.getAttribute("href")).toBe(`/products/p/${encodeURIComponent(newestProducts[0].id)}`);
     fireEvent.click(detailsLink);
     await waitFor(() => expect(screen.getByTestId("product-details")).toBeTruthy());
-    expect(window.location.pathname).toBe(`/products/p/${encodeURIComponent(target.id)}`);
+    expect(window.location.pathname).toBe(`/products/p/${encodeURIComponent(newestProducts[0].id)}`);
 
     window.history.replaceState({}, "", "/products");
     fireEvent.popState(window);
