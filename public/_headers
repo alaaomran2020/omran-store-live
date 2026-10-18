@@ -1,3 +1,9 @@
+/*
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://analytics.ahrefs.com 'sha256-3JRWhzFsdByajovnhjgaXbZWIp5lzXxJ/23FAF1gRHU=' 'sha256-TVZh/nGKoCq8i/z96+NRVuYcfAFu1ZumNlRbp5HHVO8=' 'sha256-I1ToBAbikFR1G6hrnsm71rLBI335ENvXwzsX8ikwvww=' 'sha256-4UjR1Tk82iFNWr09JGShDAkPaeoHYAnqiP7X5Gyqjtk='; script-src-attr 'unsafe-hashes' 'sha256-MhtPZXr7+LpJUY5qtMutB+qWfQtMaPccfe7QXtCcEYc='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://analytics.ahrefs.com https://hook.eu1.make.com; frame-src 'self' https://drive.google.com; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=31536000
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
 /admin
   X-Robots-Tag: noindex, nofollow
   Cache-Control: private, no-store, max-age=0

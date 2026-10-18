@@ -1,12 +1,7 @@
-# Omran Toys — omrantoys.store
-# الأساس فقط: لا فهرسة للوحة الإدارة أو المسارات الداخلية/الخاصة،
-# وصفحات المنتجات/التصنيفات الحالية والمستقبلة قابلة للفهرسة.
-
+# Omran Toys: only public routes are intended for indexing.
+# Private routes must be protected by Cloudflare Access and noindex,
+# not by advertising their names in robots.txt.
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /settings/
-Disallow: /api/
-Disallow: /manus-storage/
 
 Sitemap: https://omrantoys.store/sitemap.xml

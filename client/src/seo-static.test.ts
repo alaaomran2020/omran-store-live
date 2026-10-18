@@ -97,7 +97,8 @@ describe("public/robots.txt", () => {
     const disallowed = lines
       .filter(line => line.startsWith("Disallow:"))
       .map(line => line.slice("Disallow:".length).trim());
-    expect(disallowed).toContain("/admin");
+    // Private paths are protected by Access/noindex, not exposed in robots.txt.
+    expect(disallowed).not.toContain("/admin");
     expect(disallowed).not.toContain("/products");
     expect(disallowed).not.toContain("/popup");
     expect(disallowed).not.toContain("/brand");
