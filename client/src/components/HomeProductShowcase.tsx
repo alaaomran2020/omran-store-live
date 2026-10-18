@@ -14,7 +14,6 @@ import {
   type Product,
 } from "@/lib/productsClient";
 import { findSimilarProducts } from "@/lib/similarProducts";
-import { canonicalCategory } from "@shared/taxonomy";
 
 export default function HomeProductShowcase() {
   const [openProduct, setOpenProduct] = useState<Product | null>(null);
@@ -29,12 +28,11 @@ export default function HomeProductShowcase() {
   });
 
   const catalogProducts = useMemo(
-    () => filterProductsByCatalog(productsQuery.data?.products ?? [], "toys")
-      .filter(product => canonicalCategory(product.category)?.id !== "ramadan-lanterns"),
+    () => filterProductsByCatalog(productsQuery.data?.products ?? [], "toys"),
     [productsQuery.data]
   );
-  // Latest-first regular cards avoid a large duplicate promotional image and
-  // always render the media declared by the actual catalog product.
+  // Recently appended approved toys (including Ramadan lanterns) appear first.
+  // Use the media declared by each catalog product; do not invent promo images.
   const products = useMemo(
     () =>
       [...catalogProducts].sort((a, b) => b.rowIndex - a.rowIndex).slice(0, 8),
