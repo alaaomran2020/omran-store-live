@@ -256,6 +256,11 @@ function vitePluginEdgeHeaders(): Plugin {
     name: "edge-headers",
     apply: "build",
     enforce: "post",
+    // CSP hashes are based on LF: normalize HTML on every OS before Vite emits
+    // it, avoiding different inline-script hashes on Windows and Linux CI.
+    transformIndexHtml(html) {
+      return html.replace(/\r\n/g, "\n");
+    },
     closeBundle() {
       const outDir = path.resolve(import.meta.dirname, "dist", "public");
       if (!fs.existsSync(outDir)) return;

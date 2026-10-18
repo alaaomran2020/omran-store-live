@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../index.html", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const headers = readFileSync(new URL("../../public/_headers", import.meta.url), "utf8");
 const robots = readFileSync(new URL("../../public/robots.txt", import.meta.url), "utf8");
 const viteConfig = readFileSync(new URL("../../vite.config.ts", import.meta.url), "utf8");
@@ -45,6 +45,7 @@ describe("public surface security policy", () => {
     expect(viteConfig).toContain('path.resolve(import.meta.dirname, "public", "_headers")');
     expect(viteConfig).toContain('path.join(outDir, "_headers")');
     expect(viteConfig).toContain("EDGE_ASSET_CACHE_HEADERS");
+    expect(viteConfig).toContain('return html.replace(/\\r\\n/g, "\\n")');
   });
 
   it("does not advertise admin and API paths in robots.txt", () => {
