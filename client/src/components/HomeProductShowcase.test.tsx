@@ -12,7 +12,6 @@ import HomeProductShowcase from "./HomeProductShowcase";
 import { getInitialProductsSnapshot } from "@/lib/productsClient";
 import { filterProductsByCatalog } from "@/lib/productCatalog";
 import { productImageCandidates } from "./ProductImage";
-import { canonicalCategory } from "@shared/taxonomy";
 
 function renderShowcase() {
   const client = new QueryClient({
@@ -43,12 +42,12 @@ describe("lightweight home catalog", () => {
   it("shows current catalog images latest first without a mismatched fixed promotional image", () => {
     renderShowcase();
     const expected = [
-      ...filterProductsByCatalog(getInitialProductsSnapshot().products, "toys")
-        .filter(product => canonicalCategory(product.category)?.id !== "ramadan-lanterns"),
+      ...filterProductsByCatalog(getInitialProductsSnapshot().products, "toys"),
     ]
       .sort((a, b) => b.rowIndex - a.rowIndex)
       .slice(0, 8);
     const cards = screen.getAllByTestId("product-card");
+    expect(cards[0].dataset.productId).toBe("OMR-RAM-2026-035");
     expect(cards.map(card => card.dataset.productId)).toEqual(
       expected.map(product => product.id)
     );
