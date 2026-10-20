@@ -214,6 +214,10 @@ export async function logoutSessionCore(input: {
   if (!parsed) return;
   const session = await input.repository.getSession(parsed.sessionId);
   if (!session || session.domain !== input.domain) return;
+  // Session IDs are locators, not credentials. Revocation requires the
+  // matching HttpOnly cookie token, just like session validation.
+  const candidateHash = await hashSessionToken(parsed.token, session.sessionId);
+  if (!timingSafeEqualHex(candidateHash, session.tokenHash)) return;
   await input.repository.revokeSession(session.sessionId, input.now ?? Date.now());
 }
 

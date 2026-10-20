@@ -1,18 +1,19 @@
 /**
  * بوابة بيانات الإدارة (قراءات + إجراءات كتابية موثّقة).
  *
- * فلسفة صادقة: المتجر ثابت بلا خادم. القراءات التشغيلية (ضغطات واتساب،
- * الموظفون، العملاء، سجل التدقيق) تتطلب سيناريوهات/قراءات على بوابة Make أو
- * Apps Script تُنشر بشكل منفصل. كل قراءة هنا تُرجع حالة واضحة:
+ * فلسفة صادقة: المتجر ثابت بلا خادم. القياسات العامة وحدها تصل لبوابة Make؛
+ * سجلات الموظفين والعملاء والمخزون والتدقيق تحتاج بوابة same-origin موثوقة
+ * تحمي بيانات كل مستخدم. كل قراءة هنا تُرجع حالة واضحة:
  *   - "live": البيانات وصلت فعلاً وتطابق العقد.
  *   - "not_configured": البوابة لم ترد بالشكل المتوقع → الواجهة تُظهر حالة
  *     فارغة صادقة بلا أي أرقام مختلقة.
  *
- * الكتابة تُرسل عبر VITE_ADMIN_ACTIONS_WEBHOOK_URL اختياريًا؛ عند غيابه/فشله
+ * الكتابة تُرسل عبر /api/admin/actions اختياريًا؛ عند غيابه/فشله
  * تُنتِج الصفحات "حزمة تعديل" يدوية موثّقة (CSV/TSV) تُلصق في الشيت الرئيسي
  * — وهو نمط التشغيل المعتمد حاليًا في المشروع (راجع VipOperations).
  */
 import { MAKE_GATEWAY_URL } from "@/lib/makeGateway";
+import { trustedSameOriginApiBase } from "@/lib/trustedApi";
 import {
   mapSqlCustomerRow,
   mapSqlEmployeeRow,
@@ -42,21 +43,26 @@ async function gatewayGet<T>(
   params: Record<string, string>,
   accept: (body: unknown) => T | null
 ): Promise<ReadResult<T>> {
+  // Only anonymous aggregate WhatsApp metrics may use the public Make hook.
+  // Employee/customer/inventory/audit records must go through a same-origin
+  // authenticated API. On this static site, an undeployed API fails closed.
+  const publicMetrics = action === "whatsapp_metrics";
+  const endpoint = publicMetrics ? MAKE_GATEWAY_URL : "/api/admin/read";
+  const baseOrigin = typeof window === "undefined" ? "https://omrantoys.store" : window.location.origin;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), GET_TIMEOUT_MS);
   try {
-    const url = new URL(MAKE_GATEWAY_URL);
+    const url = new URL(endpoint, baseOrigin);
     url.searchParams.set("action", action);
     for (const [key, value] of Object.entries(params)) {
       url.searchParams.set(key, value);
     }
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), GET_TIMEOUT_MS);
     const response = await fetch(url.toString(), {
       headers: { Accept: "application/json" },
-      credentials: "include",
+      credentials: publicMetrics ? "omit" : "same-origin",
       cache: "no-store",
       signal: controller.signal,
     });
-    clearTimeout(timer);
     if (response.status === 404 || response.status === 501) {
       return { status: "not_configured" };
     }
@@ -70,6 +76,8 @@ async function gatewayGet<T>(
       return { status: "error", message: "timeout" };
     }
     return { status: "not_configured" };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -235,7 +243,8 @@ export const readAuditLog = () =>
 
 function actionsWebhookUrl(): string | null {
   const configured = (import.meta.env.VITE_ADMIN_ACTIONS_WEBHOOK_URL ?? "").trim();
-  return configured || null;
+  const base = trustedSameOriginApiBase(configured, "/api/admin");
+  return base ? `${base}/actions` : null;
 }
 
 export type AdminWriteResult =
@@ -243,9 +252,8 @@ export type AdminWriteResult =
   | { ok: false; code: "NOT_CONFIGURED" | "REJECTED" | "ERROR"; message: string };
 
 /**
- * يرسل إجراء إداريًا موقّعًا بهوية جلسة Cloudflare Access (كوكيز تُرسل تلقائيًا
- * credentials: include). البوابة هي المسؤولة عن التحقق النهائي من الصلاحيات —
- * فحوصات الواجهة للعرض فقط.
+ * يرسل إجراء إداريًا عبر بوابة نفس الدومين باستخدام جلسة المتصفح. لا يجوز
+ * وضع رابط webhook خارجي في VITE_*، والبوابة مسؤولة عن فحص الهوية والصلاحيات.
  */
 export async function postAdminAction(
   action: string,
@@ -259,14 +267,15 @@ export async function postAdminAction(
     const body = new URLSearchParams({ action, payload_json: JSON.stringify(payload) });
     const response = await fetch(endpoint, {
       method: "POST",
-      credentials: "include",
+      credentials: "same-origin",
+      cache: "no-store",
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8", Accept: "application/json" },
       body,
     });
     if (!response.ok) return { ok: false, code: "REJECTED", message: `HTTP ${response.status}` };
-    const result = await response.json().catch(() => ({}));
-    if (result && typeof result === "object" && (result as { ok?: boolean }).ok === false) {
-      return { ok: false, code: "REJECTED", message: String((result as { error?: string }).error ?? "رفضت البوابة") };
+    const result = await response.json().catch(() => null);
+    if (!isRecord(result) || result.ok !== true) {
+      return { ok: false, code: "REJECTED", message: isRecord(result) && typeof result.error === "string" ? result.error : "لم تؤكد البوابة تنفيذ الإجراء" };
     }
     return { ok: true, acceptedAt: new Date().toISOString() };
   } catch (error) {

@@ -85,10 +85,13 @@ export function AdminIdentityProvider({
   children: ReactNode;
 }) {
   const employeesQuery = useQuery({
-    queryKey: ["admin", "employees-directory"],
+    // Avoid sharing a previously authenticated employee directory between
+    // Access identities when the browser session changes.
+    queryKey: ["admin", "employees-directory", identity.email?.trim().toLowerCase() ?? identity.id ?? "unknown"],
     queryFn: readEmployees,
-    staleTime: 5 * 60 * 1000,
-    retry: 1,
+    staleTime: 0,
+    gcTime: 0,
+    retry: 0,
   });
 
   const value = useMemo<AdminIdentityContextValue>(() => {

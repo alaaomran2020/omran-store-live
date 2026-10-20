@@ -23,8 +23,9 @@
  */
 import type { SessionIdentity } from "@shared/identity";
 import type { CustomerSessionResult } from "@shared/identity";
+import { trustedSameOriginApiBase } from "@/lib/trustedApi";
 
-const AUTH_BASE = (import.meta.env.VITE_AUTH_API_BASE ?? "/api/auth").replace(/\/$/, "");
+const AUTH_BASE = trustedSameOriginApiBase(import.meta.env.VITE_AUTH_API_BASE ?? "/api/auth", "/api/auth");
 
 export type AuthDomain = "CUSTOMER" | "EMPLOYEE";
 
@@ -57,9 +58,11 @@ export class AuthClientError extends Error {
 }
 
 async function postJson(path: string, body: Record<string, unknown>): Promise<Response> {
+  if (!AUTH_BASE) throw new AuthClientError("PROVIDER_NOT_CONFIGURED");
   return fetch(`${AUTH_BASE}${path}`, {
     method: "POST",
-    credentials: "include",
+    credentials: "same-origin",
+    cache: "no-store",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(body),
   });
@@ -140,14 +143,25 @@ export async function verifyOtp(
 
 /** جلسة العميل الحالية (للنطاق customer) — قراءة آمنة بلا توكن في JS. */
 export async function fetchCustomerSession(signal?: AbortSignal): Promise<CustomerSessionResult | null> {
+  if (!AUTH_BASE) return null;
   try {
     const response = await fetch(`${AUTH_BASE}/session?domain=CUSTOMER`, {
-      credentials: "include",
+      credentials: "same-origin",
+      cache: "no-store",
       headers: { Accept: "application/json" },
       signal,
     });
     if (!response.ok) return null;
-    return (await response.json()) as CustomerSessionResult;
+    const result: unknown = await response.json();
+    if (!result || typeof result !== "object" || !("authenticated" in result)) return null;
+    const data = result as Record<string, unknown>;
+    if (data.authenticated === false && data.customer === null) {
+      return { authenticated: false, customer: null };
+    }
+    if (data.authenticated !== true || !data.customer || typeof data.customer !== "object" || !Array.isArray(data.addresses)) return null;
+    const customer = data.customer as Record<string, unknown>;
+    if (typeof customer.customerId !== "string" || !customer.customerId || !["ACTIVE", "PENDING_PROFILE", "SUSPENDED"].includes(String(customer.status))) return null;
+    return result as CustomerSessionResult;
   } catch {
     return null;
   }
@@ -190,17 +204,19 @@ export async function postCustomerAction(
     return { ok: false, code: "REJECTED", message: `HTTP ${response.status}` };
   }
   const result = (await response.json().catch(() => null)) as { ok?: boolean; error?: unknown } | null;
-  if (result && result.ok === false) {
-    return { ok: false, code: "REJECTED", message: typeof result.error === "string" ? result.error : "رفضت البوابة الإجراء" };
+  if (!result || result.ok !== true) {
+    return { ok: false, code: "REJECTED", message: typeof result?.error === "string" ? result.error : "لم تؤكد البوابة تنفيذ الإجراء" };
   }
   return { ok: true, acceptedAt: new Date().toISOString() };
 }
 
 /** فحص أمين لتفعيل المزوّد (لا يكشف أي سر). */
 export async function isAuthProviderConfigured(): Promise<boolean> {
+  if (!AUTH_BASE) return false;
   try {
     const response = await fetch(`${AUTH_BASE}/health`, {
-      credentials: "include",
+      credentials: "same-origin",
+      cache: "no-store",
       headers: { Accept: "application/json" },
     });
     if (!response.ok) return false;

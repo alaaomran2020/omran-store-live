@@ -152,7 +152,8 @@ export default function ProductIntake() {
         />
         <Notice kind="warn" className="mb-5">
           كل إدخال جديد يُسجل تلقائيًا NEEDS_REVIEW. الصورة والسعر والهوية وحالة
-          النشر لا تُعتمد تلقائيًا.
+          النشر لا تُعتمد تلقائيًا. الإرسال الإلكتروني يتطلب بوابة آمنة على نفس
+          الدومين؛ لو غير مفعلة استخدم رابط قاعدة التشغيل الرئيسية.
         </Notice>
 
         <div className="mb-5 grid gap-3 sm:grid-cols-2">
