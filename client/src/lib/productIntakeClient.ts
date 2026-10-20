@@ -1,4 +1,7 @@
-const PRODUCT_INTAKE_WEBHOOK = "https://hook.eu1.make.com/s93aopio705d3jqgc4agzkxgdh4r9tdd";
+// Sensitive supplier/pricing records and photos must not be sent to a public
+// webhook embedded in the JS bundle. Until a trusted same-origin gateway is
+// deployed, users can add intake records manually in the restricted Sheet.
+const PRODUCT_INTAKE_ENDPOINT = "/api/admin/product-intake";
 
 export type ProductIntakeSubmission = {
   employeeName: string;
@@ -31,6 +34,9 @@ function append(form: FormData, key: string, value: string) {
 }
 
 export async function submitProductIntake(input: ProductIntakeSubmission): Promise<ProductIntakeReceipt> {
+  if (!input.photo.type.startsWith("image/") || input.photo.type === "image/svg+xml" || input.photo.size > 10 * 1024 * 1024) {
+    throw new Error("اختر صورة صالحة بحجم لا يزيد عن 10MB");
+  }
   const intakeId = `INT-${new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14)}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
   const receivedAt = new Date().toISOString();
   const form = new FormData();
@@ -53,14 +59,19 @@ export async function submitProductIntake(input: ProductIntakeSubmission): Promi
   append(form, "intake_notes", input.intakeNotes);
   form.append("photo", input.photo, input.photo.name || `${intakeId}.jpg`);
 
-  const response = await fetch(PRODUCT_INTAKE_WEBHOOK, {
+  const response = await fetch(PRODUCT_INTAKE_ENDPOINT, {
     method: "POST",
+    credentials: "same-origin",
+    cache: "no-store",
     body: form,
     headers: {
       Accept: "application/json",
     },
   });
 
+  if (response.status === 404 || response.status === 501) {
+    throw new Error("بوابة الاستلام الآمنة غير مفعلة؛ أضف المنتج يدويًا من رابط قاعدة التشغيل الرئيسية");
+  }
   if (!response.ok) {
     throw new Error(`تعذر إرسال المنتج إلى قاعدة التشغيل (${response.status})`);
   }

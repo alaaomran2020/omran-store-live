@@ -74,6 +74,30 @@ describe("mobile OTP auth core", () => {
     expect(JSON.stringify(stored)).not.toContain(delivered);
   });
 
+  it("limits a burst of OTP requests before sending, including employee bypass attempts", async () => {
+    const fixture = repositoryFixture();
+    let sends = 0;
+    const options = {
+      repository: fixture.repository,
+      delivery: { async send() { sends += 1; } },
+      crypto: cryptoFixture(),
+      domain: "CUSTOMER" as const,
+      mobile: "+201012345678",
+      ip: "203.0.113.55",
+      now: 1_500_000,
+    };
+    const attempts = [];
+    for (let i = 0; i < 100; i += 1) {
+      attempts.push(await requestOtpCore(options));
+    }
+    expect(attempts.filter(attempt => attempt.ok)).toHaveLength(5);
+    expect(attempts[5]).toMatchObject({ ok: false, code: "RATE_LIMITED" });
+    expect(sends).toBe(5);
+    expect(await requestOtpCore({ ...options, domain: "EMPLOYEE" })).toMatchObject({
+      ok: false, code: "RATE_LIMITED",
+    });
+  });
+
   it("fails closed for an unknown employee mobile", async () => {
     const fixture = repositoryFixture();
     const result = await requestOtpCore({
@@ -161,6 +185,11 @@ describe("mobile OTP auth core", () => {
     if (!verified.ok) throw new Error(verified.code);
     const cookieValue = `${verified.session.sessionId}.${verified.sessionToken}`;
     expect(await validateSessionCore({ repository: fixture.repository, domain: "CUSTOMER", cookieValue, now: 4_002_000 })).toMatchObject({ domain: "CUSTOMER", subject: "CUS-1" });
+    const forgedCookie = `${verified.session.sessionId}.${"f".repeat(64)}`;
+    await logoutSessionCore({ repository: fixture.repository, domain: "CUSTOMER", cookieValue: forgedCookie, now: 4_002_500 });
+    expect(fixture.sessions.get(verified.session.sessionId)?.revokedAt).toBeNull();
+    await logoutSessionCore({ repository: fixture.repository, domain: "EMPLOYEE", cookieValue, now: 4_002_600 });
+    expect(fixture.sessions.get(verified.session.sessionId)?.revokedAt).toBeNull();
     await logoutSessionCore({ repository: fixture.repository, domain: "CUSTOMER", cookieValue, now: 4_003_000 });
     expect(await validateSessionCore({ repository: fixture.repository, domain: "CUSTOMER", cookieValue, now: 4_004_000 })).toBeNull();
   });
