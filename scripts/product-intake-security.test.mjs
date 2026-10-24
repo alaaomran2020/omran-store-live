@@ -37,10 +37,15 @@ function db(){
     }
   }}};
 }
-const staff=(role='INVENTORY_STAFF',status='ACTIVE')=>JSON.stringify([{email:mail,role,status,name:'موظف معتمد'}]);
+const staffDb=(role='INVENTORY_STAFF',status='ACTIVE')=>({
+  prepare(sql){assert.match(sql,/staff_accounts/);return {
+    bind(email){assert.equal(email,mail);return this},
+    async first(){return {full_name:'موظف معتمد',role,status}}
+  }}
+});
 const env=(database=db(),role='INVENTORY_STAFF',status='ACTIVE')=>({
-  INTAKE_DB:database,ACCESS_TEAM_DOMAIN:issuer,ACCESS_AUD:aud,
-  PRODUCT_INTAKE_STAFF_JSON:staff(role,status),
+  INTAKE_DB:database,STAFF_DB:staffDb(role,status),
+  ACCESS_TEAM_DOMAIN:issuer,ACCESS_AUD:aud,
   PRODUCT_INTAKE_WEBHOOK_URL:'https://hook.eu1.make.com/test-server-only'
 });
 const fakeImage=(ok=true)=>new File([new Uint8Array(ok?[137,80,78,71,13,10,26,10,0]:[1,2,3])],
@@ -115,4 +120,11 @@ test('D1 failure returns 503 before external delivery',async()=>{
   const e=env(),net=network();e.INTAKE_DB.prepare=()=>{throw Error('offline')};
   assert.equal((await handleProductIntake(req(await jwt()),e,net.send)).status,503);
   assert.equal(net.calls,0);
+});
+
+test('staff directory outage fails closed',async()=>{
+  const e=env(),net=network();
+  e.STAFF_DB.prepare=()=>{throw Error('unavailable')};
+  const result=await handleProductIntake(req(await jwt()),e,net.send);
+  assert.equal(result.status,503);assert.equal(net.calls,0);
 });
