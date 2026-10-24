@@ -4,6 +4,15 @@
 
 ## Architecture
 
+### Product intake security migration (review only)
+
+An owner-requested, isolated Cloudflare Pages Function for `/admin/api/product-intake`
+is prepared separately from the static catalog. It is **not yet deployed**.
+It requires verified Access JWT, server-side RBAC, an isolated D1 binding and encrypted
+Make webhook; missing settings fail closed. No product, price, SEO or catalog source
+is moved to runtime APIs. See [migration/rollback checklist](docs/PRODUCT-INTAKE-SECURITY-MIGRATION.md).
+
+
 - Static Vite storefront على Cloudflare Pages فقط.
 - لا Backend ولا API ولا VPS ولا MySQL ولا Docker ولا Cloudflare Tunnel ولا Worker runtime.
 - **مصدر الحقيقة الوحيد للكتالوج هو ملف المستودع `public/catalog/products.csv`.**
