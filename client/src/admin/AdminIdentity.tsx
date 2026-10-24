@@ -56,6 +56,9 @@ const AdminIdentityContext = createContext<AdminIdentityContextValue | null>(nul
 const ROLE_ORDER: EmployeeRole[] = [
   "OWNER",
   "ADMIN",
+  "SALES_WAREHOUSE_MANAGER",
+  "SALES_MANAGER",
+  "CASHIER",
   "CATALOG_MANAGER",
   "INVENTORY_STAFF",
   "CONTENT_EDITOR",
