@@ -109,7 +109,6 @@ const VIEW_PERMISSIONS: Permission[] = [
   "analytics:view",
   "whatsapp:view",
   "customer:view",
-  "user:view",
   "audit:view",
   "settings:view",
 ];
