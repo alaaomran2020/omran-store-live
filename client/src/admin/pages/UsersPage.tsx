@@ -127,7 +127,7 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
         toast.info("بوابة الإدارة قبلت طلب الدعوة، لكن OTP لم يُرسل. أكمل التفعيل في الدليل وAccess.");
       }
       onClose();
-    } catch (error) {
+    } catch {
       toast.error("تعذّر تجهيز دعوة الموظف، حاول مرة تانية.");
     } finally {
       setBusy(false);
