@@ -5,7 +5,7 @@
  *   - التفويض (Authorization) يُشتق مركزيًا هنا عبر shared/rbac.ts:
  *       1. دليل الموظفين من بوابة التشغيل (إن وُجد) — مصدر الأدوار/الحالات.
  *       2. قائمة الملاك وقت البناء VITE_OWNER_EMAILS (غير سرية) كبذرة تشغيل.
- *       3. أي هوية Access معتمدة غير معروفة في الدليل = VIEWER (أقل امتياز).
+ *       3. أي هوية Access غير موجودة في الدليل أو قائمة الملاك = INVITED بلا صلاحيات.
  *   - موظف عليه DISABLED/SUSPENDED في الدليل يُمنع من اللوحة بالكامل
  *     (دفاع متعدد الطبقات فوق إزالته من سياسة Access نفسها).
  */
@@ -110,7 +110,7 @@ export function AdminIdentityProvider({
       : undefined;
 
     let role: EmployeeRole = "VIEWER";
-    let status: EmployeeStatus = "ACTIVE";
+    let status: EmployeeStatus = "INVITED";
     let employeeId = email ? `cf:${email}` : (identity.id ?? "cf:unknown");
     let roleSource: ResolvedEmployee["roleSource"] = "default_viewer";
 
