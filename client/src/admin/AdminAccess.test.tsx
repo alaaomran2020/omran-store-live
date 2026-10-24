@@ -4,8 +4,8 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AdminAccess from "./AdminAccess";
 
-vi.mock("./pages/DashboardPage", () => ({
-  default: () => <h2>نظرة عامة</h2>,
+vi.mock("./pages/MyWorkspacePage", () => ({
+  default: () => <h2>مساحتي التجريبية</h2>,
 }));
 
 function mount(path: string) {
@@ -34,7 +34,7 @@ describe("AdminAccess", () => {
     expect(
       screen.getByText("جاري التحقق من جلسة Cloudflare Access...")
     ).toBeTruthy();
-    expect(screen.queryByText("نظرة عامة")).toBeNull();
+    expect(screen.queryByText("مساحتي التجريبية")).toBeNull();
   });
 
   it("يرفض الوصول المباشر عند غياب جلسة Access", async () => {
@@ -46,7 +46,7 @@ describe("AdminAccess", () => {
     expect(screen.queryByText("كل المنتجات")).toBeNull();
   });
 
-  it("يحوّل /admin إلى Dashboard بعد إثبات الهوية", async () => {
+  it("يفتح المساحة الشخصية لهوية موظف معتمدة بعد التحقق", async () => {
     vi.spyOn(globalThis, "fetch").mockImplementation(async input => {
       const url =
         typeof input === "string"
@@ -60,12 +60,19 @@ describe("AdminAccess", () => {
           headers: { "content-type": "application/json" },
         });
       }
+      if (url === "/api/admin/me") {
+        return new Response(JSON.stringify({ employee: {
+          employee_id: "test-owner", full_name: "Test Owner",
+          access_email: "admin@example.com", role: "OWNER", status: "ACTIVE",
+          created_at: "2026-10-24T00:00:00Z",
+        } }), { status: 200, headers: { "content-type": "application/json" } });
+      }
       throw new Error(`Unexpected fetch in AdminAccess test: ${url}`);
     });
     mount("/admin");
-    expect(await screen.findByText("نظرة عامة")).toBeTruthy();
+    expect(await screen.findByText("مساحتي التجريبية")).toBeTruthy();
     await waitFor(() =>
-      expect(window.location.pathname).toBe("/admin/dashboard")
+      expect(window.location.pathname).toBe("/admin/me")
     );
     expect(
       document.querySelector('meta[name="robots"]')?.getAttribute("content")
