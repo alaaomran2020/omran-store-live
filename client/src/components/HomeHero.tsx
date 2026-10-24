@@ -1,8 +1,25 @@
+import { useQuery } from "@tanstack/react-query";
+import { ProductImage } from "@/components/ProductImage";
+import { getInitialProductsSnapshot, loadPublishedCatalog } from "@/lib/productsClient";
+import { filterProductsByCatalog } from "@/lib/productCatalog";
+import { productPagePath } from "@shared/productPaths";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
 import { whatsappNumber } from "@/lib/productFormat";
 
 export default function HomeHero() {
+  const { data } = useQuery({
+    queryKey: ["products"],
+    queryFn: () => loadPublishedCatalog(),
+    initialData: () => getInitialProductsSnapshot(),
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+  const featured = filterProductsByCatalog(data?.products ?? [], "toys")
+    .filter(product => product.availability !== "unavailable")
+    .sort((a, b) => b.rowIndex - a.rowIndex).slice(0, 3);
   const number = whatsappNumber();
   const whatsappUrl = number
     ? `https://wa.me/${number}?text=${encodeURIComponent("مرحبًا، أريد الاستفسار عن منتجات عمران تويز.")}`
@@ -11,11 +28,11 @@ export default function HomeHero() {
   return (
     <section
       data-omran-hero
-      className="border-b border-brand-border bg-brand-cream"
+      className="premium-home-hero border-b border-brand-border bg-brand-cream"
       aria-labelledby="home-hero-title"
     >
-      <div className="container py-6 sm:py-9">
-        <div className="max-w-3xl">
+      <div className="container premium-hero-layout">
+        <div className="premium-hero-copy">
           <p className="text-sm font-black text-brand-blue">
             عمران تويز · شركة عمران التجارية
           </p>
@@ -23,9 +40,9 @@ export default function HomeHero() {
             id="home-hero-title"
             className="mt-3 text-3xl font-bold leading-[1.22] text-brand-navy sm:text-4xl"
           >
-            <span className="inline">لعب تفرّحهم.</span>
-            <span className="ms-2 inline text-brand-blue">
-              واختيار أسهل ليك.
+            <span className="inline">لحظات صغيرة.</span>
+            <span className="block text-brand-blue">
+              فرحة كبيرة.
             </span>
           </h1>
           <p className="mt-4 max-w-xl text-sm font-bold leading-7 text-brand-muted sm:text-lg sm:leading-8">
@@ -59,6 +76,20 @@ export default function HomeHero() {
             )}
           </div>
         </div>
+        {featured.length > 0 && (
+          <div className="premium-hero-showcase" aria-label="من منتجات عمران">
+            <div className="premium-showcase-label"><span>من عالم اللعب</span><span lang="en" dir="ltr">OMRAN / PLAY & DISCOVER</span></div>
+            <div className="premium-showcase-grid">
+              {featured.map((product, index) => (
+                <a key={product.id} href={productPagePath(product.id, "toys")} className={`premium-hero-product ${index === 0 ? "premium-hero-product-main" : ""}`}>
+                  <div className="premium-hero-media"><ProductImage product={product} priority={index === 0} className="h-full w-full object-contain" sizesHint={index === 0 ? "(max-width: 767px) 90vw, 40vw" : "(max-width: 767px) 42vw, 20vw"} /></div>
+                  <div className="premium-hero-caption"><h2>{product.name}</h2><ArrowLeft size={18} aria-hidden="true" /></div>
+                </a>
+              ))}
+            </div>
+            <p className="premium-showcase-footnote">مساحة للخيال. وقت للمرح.</p>
+          </div>
+        )}
       </div>
     </section>
   );
