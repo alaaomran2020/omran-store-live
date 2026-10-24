@@ -29,7 +29,6 @@ const MASTER_DATABASE_URL =
   "https://docs.google.com/spreadsheets/d/1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc/edit";
 
 export default function ProductIntake() {
-  const [employeeName, setEmployeeName] = useState("");
   const [productName, setProductName] = useState("");
   const [sku, setSku] = useState("");
   const [barcode, setBarcode] = useState("");
@@ -51,7 +50,6 @@ export default function ProductIntake() {
   const [attempted, setAttempted] = useState(false);
 
   const validation = {
-    employeeName: employeeName.trim() ? "" : "اسم الموظف مطلوب",
     productName: productName.trim() ? "" : "اسم المنتج مطلوب",
     category: category.trim() ? "" : "التصنيف مطلوب",
     photo: photo ? "" : "صورة المنتج مطلوبة",
@@ -111,7 +109,6 @@ export default function ProductIntake() {
     setError("");
     try {
       const result = await submitProductIntake({
-        employeeName,
         productNameAr: productName,
         sku,
         barcode,
@@ -151,8 +148,8 @@ export default function ProductIntake() {
           subtitle="إدخال مباشر إلى قاعدة التشغيل المركزية، بدون LocalStorage أو CSV"
         />
         <Notice kind="warn" className="mb-5">
-          كل إدخال جديد يُسجل تلقائيًا NEEDS_REVIEW. الصورة والسعر والهوية وحالة
-          النشر لا تُعتمد تلقائيًا.
+          كل إدخال جديد يُسجل تلقائيًا NEEDS_REVIEW. اسم الموظف يُستمد من حسابه المعتمد؛
+          الصورة والسعر وحالة النشر لا تُعتمد تلقائيًا.
         </Notice>
 
         <div className="mb-5 grid gap-3 sm:grid-cols-2">
@@ -182,17 +179,6 @@ export default function ProductIntake() {
         >
           <BrutalCard className="p-5">
             <div className="grid gap-4 md:grid-cols-2">
-              <Field
-                label="اسم الموظف"
-                error={attempted ? validation.employeeName : ""}
-              >
-                <TextInput
-                  aria-invalid={attempted && Boolean(validation.employeeName)}
-                  value={employeeName}
-                  onChange={e => setEmployeeName(e.target.value)}
-                  placeholder="اسم الموظف المسؤول"
-                />
-              </Field>
               <Field
                 label="اسم المنتج بالعربي"
                 error={attempted ? validation.productName : ""}
