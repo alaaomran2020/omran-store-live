@@ -21,7 +21,7 @@ export default function BrandHeader() {
   }`;
 
   return (
-    <header className="relative z-40 border-b border-brand-border/80 bg-brand-surface/95 pt-[env(safe-area-inset-top)] shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+    <header className="premium-brand-header sticky top-0 z-40 border-b border-brand-border/80 bg-brand-surface/95 pt-[env(safe-area-inset-top)] shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
       <div className="container flex flex-col items-stretch gap-2 py-2.5 lg:min-h-[92px] lg:flex-row lg:items-center lg:justify-between lg:gap-5">
         <a href="/" className="group flex min-w-0 items-center gap-3 sm:gap-4" aria-label="عمران تويز - الصفحة الرئيسية">
           <span className="relative flex h-13 w-13 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-brand-border bg-white shadow-md ring-1 ring-black/[0.02] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg sm:h-[68px] sm:w-[68px]">
@@ -76,6 +76,14 @@ export default function BrandHeader() {
             POP UP
           </a>
           <a href="/#branches" className={`hidden xl:inline-flex ${navClass(false)}`}>الفروع</a>
+          <details className="premium-mobile-nav xl:hidden">
+            <summary className="inline-flex min-h-11 cursor-pointer items-center rounded-xl px-3 text-brand-navy">المزيد</summary>
+            <div className="premium-mobile-nav-links">
+              <a href="/#categories">الأقسام</a>
+              <a href="/#b2b">الجملة B2B</a>
+              <a href="/#branches">الفروع</a>
+            </div>
+          </details>
           <button
             type="button"
             onClick={toggleTheme}
