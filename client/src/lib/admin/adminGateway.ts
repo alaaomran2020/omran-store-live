@@ -268,6 +268,11 @@ export async function postAdminAction(
     if (result && typeof result === "object" && (result as { ok?: boolean }).ok === false) {
       return { ok: false, code: "REJECTED", message: String((result as { error?: string }).error ?? "رفضت البوابة") };
     }
+    // طلبات إدارة الحسابات لا تُعد ناجحة باستجابة HTTP 200 وحدها.
+    // يلزم إقرار JSON صريح من بوابة موثوقة بعد فحص دور المالك خادميًا.
+    if (action.startsWith("user_") && (!result || typeof result !== "object" || (result as { ok?: boolean }).ok !== true)) {
+      return { ok: false, code: "REJECTED", message: "بوابة الموظفين لم تؤكد اعتماد الإجراء" };
+    }
     return { ok: true, acceptedAt: new Date().toISOString() };
   } catch (error) {
     return { ok: false, code: "ERROR", message: error instanceof Error ? error.message : "network_error" };
