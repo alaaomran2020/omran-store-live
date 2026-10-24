@@ -57,6 +57,27 @@ describe("RBAC role matrix", () => {
     expect(canAssignRole(admin, "OWNER")).toBe(false);
   });
 
+  it("keeps cashier, sales manager and dual sales/warehouse manager inside their duties", () => {
+    const cashier: Principal = { domain: "EMPLOYEE", role: "CASHIER", status: "ACTIVE" };
+    const sales: Principal = { domain: "EMPLOYEE", role: "SALES_MANAGER", status: "ACTIVE" };
+    const dual: Principal = { domain: "EMPLOYEE", role: "SALES_WAREHOUSE_MANAGER", status: "ACTIVE" };
+
+    expect(permissionsOf(cashier)).toEqual(["product:view", "inventory:view"]);
+    expect(can(cashier, "inventory:update")).toBe(false);
+    expect(can(cashier, "customer:view")).toBe(false);
+    expect(can(cashier, "user:create")).toBe(false);
+    expect(can(sales, "analytics:view")).toBe(true);
+    expect(can(sales, "customer:view")).toBe(true);
+    expect(can(sales, "inventory:update")).toBe(false);
+    expect(can(dual, "inventory:update")).toBe(true);
+    for (const employee of [cashier, sales, dual]) {
+      expect(can(employee, "user:create")).toBe(false);
+      expect(can(employee, "user:update")).toBe(false);
+      expect(can(employee, "user:role:update")).toBe(false);
+      expect(can(employee, "settings:update")).toBe(false);
+    }
+  });
+
   it("gives owner every permission", () => {
     for (const permission of rolePermissions("OWNER")) {
       expect(can(owner, permission)).toBe(true);
