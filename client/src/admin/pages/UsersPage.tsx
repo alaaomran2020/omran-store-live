@@ -123,7 +123,7 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
       }
       onClose();
     } catch (error) {
-      toast.error(error instanceof AuthClientError ? `تعذّر إرسال الدعوة (${error.code})` : "تعذّر إتمام الدعوة");
+      toast.error("تعذّر تجهيز دعوة الموظف، حاول مرة تانية.");
     } finally {
       setBusy(false);
     }
