@@ -45,7 +45,7 @@ import {
 } from "@shared/rbac";
 import { normalizeEgyptianMobile, maskMobile, isEgyptianE164 } from "@shared/mobile";
 import { formatDateTime } from "@/admin/adminFormat";
-import { requestOtp, AuthClientError } from "@/lib/auth/authClient";
+import { requestOtp } from "@/lib/auth/authClient";
 
 const STATUS_TONE: Record<EmployeeStatus, "green" | "amber" | "red" | "slate"> = {
   ACTIVE: "green",
@@ -65,12 +65,12 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
   const { actor, principal } = useAdminIdentity();
   const [fullName, setFullName] = useState("");
   const [mobileInput, setMobileInput] = useState("");
-  const [role, setRole] = useState<EmployeeRole>("CATALOG_MANAGER");
+  const [role, setRole] = useState<EmployeeRole>("VIEWER");
   const [busy, setBusy] = useState(false);
   const directWrite = adminActionsConfigured();
 
   const mobile = normalizeEgyptianMobile(mobileInput);
-  const valid = fullName.trim().length >= 3 && isEgyptianE164(mobile ?? "") && canAssignRole(principal, role);
+  const valid = fullName.trim().length >= 3 && isEgyptianE164(mobile ?? "") && canPrincipal(principal, "user:create") && canAssignRole(principal, role);
 
   async function submit() {
     if (!valid || !mobile) {
@@ -79,47 +79,47 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
     }
     setBusy(true);
     try {
-      // 1) محاولة دعوة OTP عبر المزوّد الخادمي (لا رمز يُولّد في الواجهة).
-      let otpInvited = false;
-      try {
-        await requestOtp("EMPLOYEE", mobile);
-        otpInvited = true;
-      } catch (error) {
-        if (!(error instanceof AuthClientError) || error.code !== "PROVIDER_NOT_CONFIGURED") {
-          throw error;
-        }
-      }
-
+      // نطلب إضافة الموظف أولًا؛ OTP لا يعمل لموبايل لم يُدعَ بعد في الدليل.
       const record = {
         full_name: fullName.trim(),
         mobile,
         role,
         status: "INVITED",
         invited_by: actor.id,
-        otp_invited: otpInvited ? "TRUE" : "FALSE",
+        otp_invited: "FALSE",
       };
 
-      if (directWrite) {
-        const result = await postAdminAction("user_create", record);
-        if (!result.ok) {
-          downloadRows("employee-invite.tsv", ["full_name", "mobile", "role", "status", "invited_by", "otp_invited"], [[record.full_name, record.mobile, record.role, record.status, record.invited_by, record.otp_invited]]);
-        }
-      } else {
+      const result = directWrite ? await postAdminAction("user_create", record) : null;
+      const gatewayAccepted = result?.ok === true;
+      if (!gatewayAccepted) {
+        // ليس حسابًا حقيقيًا ولا دعوة فعالة حتى يعتمد المالك الحزمة ويضيفه لـ Access.
         downloadRows("employee-invite.tsv", ["full_name", "mobile", "role", "status", "invited_by", "otp_invited"], [[record.full_name, record.mobile, record.role, record.status, record.invited_by, record.otp_invited]]);
       }
 
+      let otpInvited = false;
+      if (gatewayAccepted) {
+        try {
+          await requestOtp("EMPLOYEE", mobile);
+          otpInvited = true;
+        } catch {
+          // فشل OTP لا يلغي طلب الإنشاء المقبول ولا يسمح بدخول دون تفعيل.
+        }
+      }
+
       emitAudit(actor, {
-        action: "USER_CREATED",
+        action: gatewayAccepted ? "USER_CREATE_REQUEST_ACCEPTED" : "USER_INVITE_PACKET_PREPARED",
         targetType: "EMPLOYEE",
         targetId: mobile,
         targetName: fullName.trim(),
-        metadata: { role, status: "INVITED", otpInvited: otpInvited ? "true" : "false", channel: directWrite ? "gateway" : "manual_packet" },
+        metadata: { role, status: "INVITED", otpInvited: otpInvited ? "true" : "false", channel: gatewayAccepted ? "gateway" : "manual_packet" },
       });
 
-      if (otpInvited) {
-        toast.success("أُرسل رمز التحقق للموظف، وسيُفعَّل حسابه بعد تأكيد موبايله.");
+      if (!gatewayAccepted) {
+        toast.info("تم تجهيز ملف اعتماد الموظف فقط. لا دخول قبل اعتماده في الدليل وCloudflare Access.");
+      } else if (otpInvited) {
+        toast.success("بوابة الإدارة قبلت طلب الدعوة وأُرسل رمز الموبايل؛ لا دخول حتى اكتمال التفعيل وAccess.");
       } else {
-        toast.success("أُنشئت دعوة الموظف. الخطوات اليدوية موضّحة بالأسفل (Access + واتساب).");
+        toast.info("بوابة الإدارة قبلت طلب الدعوة، لكن OTP لم يُرسل. أكمل التفعيل في الدليل وAccess.");
       }
       onClose();
     } catch (error) {
@@ -136,7 +136,7 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
           <UserPlus size={19} className="text-brand-blue" /> دعوة موظف جديد
         </h2>
         <p className="mt-1 text-xs leading-6 text-brand-muted">
-          لا تسجيل ذاتي للموظفين. تبدأ الحالة INVITED ويتفعّل الحساب بعد تحقق OTP على موبايل الموظف.
+          المالك فقط ينشئ دعوة للوحة التحكم. تبدأ الحالة INVITED، ولا يُسمح بالدخول حتى تسجيل الموظف في الدليل واعتماده في Cloudflare Access والتحقق المطلوب.
         </p>
         <div className="mt-4 space-y-3">
           <TextInput label="الاسم الكامل" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="مثال: محمد أحمد" />
@@ -289,7 +289,7 @@ export default function UsersPage() {
   return (
     <AdminPageShell
       title="الموظفون"
-      subtitle="أدوار العاملين وحالاتهم — الدعوة إدارية فقط"
+      subtitle="المالك فقط يضيف حسابات لوحة التحكم ويغيّر صلاحياتها"
       actions={
         <>
           <AdminButton variant="ghost" size="sm" onClick={() => query.refetch()} loading={query.isFetching}>
