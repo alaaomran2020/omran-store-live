@@ -10,6 +10,7 @@ import {
   Database,
   KeyRound,
   ShieldCheck,
+  UserPlus,
   XCircle,
 } from "lucide-react";
 import { AdminPageShell } from "@/admin/shell/AdminPageShell";
@@ -149,6 +150,24 @@ export default function SettingsPage() {
           </div>
         </Card>
       </div>
+
+      {resolved.role === "OWNER" && resolved.status === "ACTIVE" ? (
+        <Card className="mt-4">
+          <CardHeader title="إضافة موظف للوحة التحكم" icon={<UserPlus size={18} />} subtitle="متاح للمالك فقط — أنت تختار الموظف ودوره قبل منحه الوصول" />
+          <div className="space-y-3 p-5 text-sm">
+            <p className="leading-7 text-brand-muted">
+              من إدارة الموظفين تقدر تضيف اسم الموظف ورقم موبايله وتحدد صلاحياته، أو توقف وصوله بعد كده.
+              الموظف ما يقدرش يسجّل نفسه ولا يضيف زميل أو يغيّر أدوار الحسابات.
+            </p>
+            <a href="/admin/users" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-blue px-4 py-2.5 font-extrabold text-white hover:opacity-90">
+              <UserPlus size={17} /> إدارة الموظفين وإضافة موظف
+            </a>
+            <p className="text-xs leading-6 text-brand-muted">
+              لو بوابة إدارة الموظفين غير مفعّلة، هيتجهّز ملف اعتماد يدوي فقط؛ لن يتم تفعيل الدخول قبل تسجيل الموظف في الدليل والسماح له عبر Cloudflare Access.
+            </p>
+          </div>
+        </Card>
+      ) : null}
 
       <Card className="mt-4">
         <CardHeader title="مصفوفة الأدوار والصلاحيات" subtitle="مرجع واحد من shared/rbac.ts — القائمة الفعلية التي تفرضها البوابة أيضًا" />
