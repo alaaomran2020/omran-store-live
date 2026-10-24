@@ -8,7 +8,7 @@ const active = (role: Extract<Principal, {domain:"EMPLOYEE"}>["role"]): Principa
 describe("private employee workspaces", () => {
   it("includes a personal workspace description for every role", () => {
     expect(WORKSPACE_INTRO.OWNER).toContain("إدارة");
-    expect(WORKSPACE_INTRO.CASHIER).toContain("الكاشير");
+    expect(WORKSPACE_INTRO.CASHIER).toContain("كاشير");
   });
 
   it("keeps cashier inside products and inventory, never team or reports", () => {
