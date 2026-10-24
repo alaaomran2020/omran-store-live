@@ -3,9 +3,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AdminAccess from "./AdminAccess";
+import { SeoMetadata } from "@/components/SeoMetadata";
 
 vi.mock("./pages/MyWorkspacePage", () => ({
-  default: () => <h2>مساحتي التجريبية</h2>,
+  default: () => <><SeoMetadata path="/admin/me" title="مساحتي" description="مساحة الموظف" robots="noindex,nofollow" /><h2>مساحتي التجريبية</h2></>,
 }));
 
 function mount(path: string) {
@@ -74,8 +75,8 @@ describe("AdminAccess", () => {
     await waitFor(() =>
       expect(window.location.pathname).toBe("/admin/me")
     );
-    expect(
+    await waitFor(() => expect(
       document.querySelector('meta[name="robots"]')?.getAttribute("content")
-    ).toBe("noindex,nofollow");
+    ).toBe("noindex,nofollow"));
   });
 });
