@@ -15,11 +15,7 @@
 1. **تم** إنشاء قاعدة D1 الخاصة بعمليات الإدخال `omran-product-intake-security` وتشغيل SQL الموجود في `scripts/product-intake-security.sql` بنجاح بتاريخ 24 أكتوبر 2026؛ لا تكرر الإنشاء أو تغيّر جداول العملاء.
 2. Cloudflare > Workers & Pages > `omrantoys-live-app` > Settings > Bindings: اربط D1 باسم **`INTAKE_DB`** في بيئة الإنتاج والمراجعة حسب نطاق النشر المختار. لا تضف قيمًا سرية إلى GitHub.
 3. تحت Settings > Variables and Secrets أضف `ACCESS_TEAM_DOMAIN` بصيغة `https://YOUR-TEAM.cloudflareaccess.com`، و`ACCESS_AUD` بقيمة Audience لـCloudflare Access App التي تحمي `omrantoys.store/admin*`. خذ القيم من لوحة Cloudflare، ولا تخمّنها.
-4. أضف **Encrypted Secret** باسم `PRODUCT_INTAKE_STAFF_JSON`: مصفوفة JSON لحسابات وافق عليها المالك فقط. مثال بقيم وهمية:
-   ```json
-   [{"email":"staff@example.com","name":"موظف معتمد","role":"INVENTORY_STAFF","status":"ACTIVE"}]
-   ```
-   الحسابات INVITED/SUSPENDED/DISABLED لا تُقبل. لا تستخدم أسماء أو بيانات حقيقية في الكود أو ملفات التوثيق.
+4. **تم الاستغناء عن القائمة اليدوية المنفصلة**: صلاحيات المستخدم تأتي من قاعدة `omran-staff-private` عن طريق binding باسم `STAFF_DB` وجدول `staff_accounts`، بعد التحقق من JWT. لا تُضاف حسابات تلقائيًا ولا تُفتح الدعوات غير النشطة.
 5. فحص Make المرتبط بالحساب أظهر أن سيناريو `Omran Ops — Product Intake Gateway` غير نشط؛ يلزم تأكيد سيناريو الاستقبال المعتمد قبل التشغيل. من Make جهز Webhook **جديد** للسيناريو نفسه بعد التأكد من تطابق حقول الرفع والاستجابة `{ok:true,intake_id:...}`. خزّن الرابط الجديد في **Encrypted Secret** باسم `PRODUCT_INTAKE_WEBHOOK_URL` على Pages، ولا تضعه في متغير `VITE_*` أو في GitHub.
 6. احمِ /admin* في نطاق الإنتاج ونطاق preview المقصود بتطبيق Cloudflare Access مطابق، واعتمد سياسة المالك والموظفين المعتمدين فقط. وجود Pages Function منفردة دون Access لا يكفي لتسهيل الدخول حتى مع التحقق من JWT.
 7. شغّل `node --test scripts/product-intake-security.test.mjs` واختبارات المستودع؛ انشر أولًا في Preview مع binding وأسرار خاصة بالاختبار، وجرب صورة تجريبية واحدة بدون تعديل منتجات العملاء.
@@ -33,3 +29,11 @@
 - Cloudflare Pages Functions عبر `wrangler pages deploy` يضم مجلد `functions/` عندما يُشغّل الأمر من جذر المستودع. النشر الحالي مشروط بالموافقة اليدوية أصلًا.
 
 مراجع: https://developers.cloudflare.com/pages/get-started/direct-upload/ و https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/
+
+## حالة الربط في 25 أكتوبر 2026
+
+- Cloudflare Pages production: ربط `INTAKE_DB` بقاعدة إدخال المنتجات المنفصلة، و`STAFF_DB` بقاعدة الموظفين الحقيقية، وضبط `ACCESS_TEAM_DOMAIN` و`ACCESS_AUD`. احتُفظ بربط `DB` الأصلي.
+- تم تعديل التحقق من الصلاحيات ليقرأ `staff_accounts` من قاعدة الموظفين: فقط الحساب النشط وبالدور المسموح، وأي غياب/انقطاع يؤدي للرفض.
+- أُنشئ Make Scenario جديد مستقل باسم `Omran Ops — Secure Product Intake 2026`، لكنه **غير نشط**؛ رفض Make تفعيله برسالة `Maximum number of active scenarios has been exceeded`. لا يتم تعطيل أي سيناريو قائم بدون موافقة واضحة.
+- رابط Make الجديد **لم يُحفظ كسر على Cloudflare** لأن السيناريو لا يمكن تفعيله حاليًا. لا تستخدم الرابط القديم المعروف علنًا.
+- الإنتاج يبقى بلا إرسال جديد (503) إلى حين حل حد Make وتسجيل سر `PRODUCT_INTAKE_WEBHOOK_URL`. الدمج في main لا يساوي النشر: Git auto production deployments معطلة في إعدادات Pages، وتوجد بوابة نشر يدوية.
