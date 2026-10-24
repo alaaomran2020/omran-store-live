@@ -65,16 +65,19 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
   const { actor, principal } = useAdminIdentity();
   const [fullName, setFullName] = useState("");
   const [mobileInput, setMobileInput] = useState("");
+  const [accessEmail, setAccessEmail] = useState("");
   const [role, setRole] = useState<EmployeeRole>("VIEWER");
   const [busy, setBusy] = useState(false);
   const directWrite = adminActionsConfigured();
 
   const mobile = normalizeEgyptianMobile(mobileInput);
-  const valid = fullName.trim().length >= 3 && isEgyptianE164(mobile ?? "") && canPrincipal(principal, "user:create") && canAssignRole(principal, role);
+  const email = accessEmail.trim().toLowerCase();
+  const emailValid = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
+  const valid = fullName.trim().length >= 3 && isEgyptianE164(mobile ?? "") && emailValid && canPrincipal(principal, "user:create") && canAssignRole(principal, role);
 
   async function submit() {
     if (!valid || !mobile) {
-      toast.error("راجع الاسم ورقم الموبايل (أرقام مصرية فقط 01X) والدور.");
+      toast.error("راجع الاسم والبريد الإلكتروني ورقم الموبايل والدور.");
       return;
     }
     setBusy(true);
@@ -83,6 +86,7 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
       const record = {
         full_name: fullName.trim(),
         mobile,
+        access_email: email,
         role,
         status: "INVITED",
         invited_by: actor.id,
@@ -93,7 +97,7 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
       const gatewayAccepted = result?.ok === true;
       if (!gatewayAccepted) {
         // ليس حسابًا حقيقيًا ولا دعوة فعالة حتى يعتمد المالك الحزمة ويضيفه لـ Access.
-        downloadRows("employee-invite.tsv", ["full_name", "mobile", "role", "status", "invited_by", "otp_invited"], [[record.full_name, record.mobile, record.role, record.status, record.invited_by, record.otp_invited]]);
+        downloadRows("employee-invite.tsv", ["full_name", "mobile", "access_email", "role", "status", "invited_by", "otp_invited"], [[record.full_name, record.mobile, record.access_email, record.role, record.status, record.invited_by, record.otp_invited]]);
       }
 
       let otpInvited = false;
@@ -139,7 +143,8 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
           المالك فقط ينشئ دعوة للوحة التحكم. تبدأ الحالة INVITED، ولا يُسمح بالدخول حتى تسجيل الموظف في الدليل واعتماده في Cloudflare Access والتحقق المطلوب.
         </p>
         <div className="mt-4 space-y-3">
-          <TextInput label="الاسم الكامل" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="مثال: محمد أحمد" />
+          <TextInput label="الاسم الكامل" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="اسم الموظف" />
+          <TextInput label="البريد المخصص لدخول Cloudflare Access" type="email" dir="ltr" value={accessEmail} onChange={e => setAccessEmail(e.target.value)} placeholder="employee@example.com" hint={accessEmail && !emailValid ? "اكتب بريد إلكتروني صحيح؛ لن يتم منحه الوصول تلقائيًا." : "لازم يكون البريد ده ضمن الأسماء المسموحة في سياسة Cloudflare Access بعد اعتماد الحساب."} />
           <TextInput
             label="رقم الموبايل (01X… أو +201X…)"
             inputMode="tel"
