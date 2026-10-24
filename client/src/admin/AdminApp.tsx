@@ -133,7 +133,7 @@ function lazyPage(Component: ComponentType) {
 }
 
 function AdminRoutes() {
-  const { resolved } = useAdminIdentity();
+  const { resolved, can } = useAdminIdentity();
 
   if (resolved.status !== "ACTIVE") {
     return <AccessBlocked reason={resolved.status === "SUSPENDED" ? "SUSPENDED" : resolved.status === "DISABLED" ? "DISABLED" : "INVITED"} />;
@@ -154,9 +154,7 @@ function AdminRoutes() {
       </Route>
 
       <Route path="/">
-        <RoutePermissionGuard permission="dashboard:view" path="/">
-          {lazyPage(DashboardPage)}
-        </RoutePermissionGuard>
+        {can("dashboard:view") ? lazyPage(DashboardPage) : <Redirect to="/products" />}
       </Route>
       <Route path="/dashboard">
         <RoutePermissionGuard permission="dashboard:view" path="/dashboard">
@@ -246,7 +244,7 @@ function AdminRoutes() {
         <Redirect to="/vip-operations" />
       </Route>
       <Route>
-        <Redirect to="/dashboard" />
+        <Redirect to={can("dashboard:view") ? "/dashboard" : "/products"} />
       </Route>
     </Switch>
   );
