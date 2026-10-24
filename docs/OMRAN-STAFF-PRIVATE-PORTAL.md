@@ -1,6 +1,6 @@
 # Private staff portal for Omran operations under Digital Execution domain
 
-Status: implementation prepared in review PR only. **The hostname has not been attached or published.**
+Status (2026-10-24): separate Cloudflare Worker published on this hostname behind full-host Access. The public Omran and Digital Execution storefronts were not changed. Source remains in draft PR #168; signed owner login still needs interactive device verification.
 Requested hostname: `staff.digital-execution.cc`.
 
 ## Product and hosting boundaries
@@ -32,7 +32,7 @@ Requested hostname: `staff.digital-execution.cc`.
 
 ## Release prerequisites
 
-- Do not attach the new DNS record or deploy this UI publicly before whole-host Access protection and preview protection are ready and tested.
+- Access app and owner-only allow policy were created **before** attaching the hostname. Cloudflare API confirms DNS/proxied routing, the Worker D1 binding, and workers.dev/preview disabled; authenticated real-device login remains to be confirmed.
 - Do not automatically merge this PR into `main` or deploy `omrantoys-live-app`; Omran's published storefront and Cloudflare state should remain unchanged through review.
 - Collect staff Access email addresses securely during owner-driven onboarding; never embed them in git.
 - The Digital Execution subdomain is an operational hostname only. The two stores' catalogs, billing, customer data and visual navigation remain isolated.
