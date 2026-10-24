@@ -46,7 +46,7 @@ export const ROLE_LABELS_AR: Record<EmployeeRole, string> = {
 
 export const ROLE_DESCRIPTIONS_AR: Record<EmployeeRole, string> = {
   OWNER: "وصول كامل لكل شيء، بما في ذلك تعيين الملاك وإدارة المديرين.",
-  ADMIN: "إدارة المنتجات والمحتوى والمخزون والموظفين، دون تعيين دور المالك.",
+  ADMIN: "إدارة المنتجات والمحتوى والمخزون وإعدادات التشغيل؛ إضافة الموظفين ومنح الصلاحيات للمالك فقط.",
   CATALOG_MANAGER: "المنتجات والأقسام وحالات النشر ومراجعة الجودة فقط.",
   INVENTORY_STAFF: "عرض الكتالوج وتحديث حالة/كميات المخزون فقط.",
   CONTENT_EDITOR: "عرض الكتالوج وتحرير المحتوى التسويقي فقط.",
@@ -127,10 +127,6 @@ const ROLE_PERMISSIONS: Record<EmployeeRole, readonly Permission[]> = {
       ...CATALOG_PERMISSIONS,
       "content:update",
       "inventory:update",
-      "user:create",
-      "user:update",
-      "user:disable",
-      "user:role:update",
       "settings:update",
     ]),
   ],
@@ -186,16 +182,13 @@ export type RoleAssignmentContext = {
   activeOwnerCount: number;
 };
 
-/** هل يسمح لـ actor بتعيين دور newRole لموظف؟ فقط المالك يُعيّن مالكًا. */
+/** تعيين أي دور لموظف جديد أو قائم حق حصري للمالك النشط. */
 export function canAssignRole(
   actor: Principal | null | undefined,
   newRole: EmployeeRole
 ): boolean {
   if (!can(actor, "user:role:update")) return false;
-  if (newRole === "OWNER" && actor?.domain === "EMPLOYEE" && actor.role !== "OWNER") {
-    return false;
-  }
-  return true;
+  return actor?.domain === "EMPLOYEE" && actor.role === "OWNER";
 }
 
 /** هل يمكن تغيير دور هدف؟ المالك لا يُنزَّل إلا بقرار مالك، والمالك الأخير محمي. */
