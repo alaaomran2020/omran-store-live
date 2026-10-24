@@ -20,6 +20,16 @@ vi.mock("@/lib/admin/adminGateway", async importOriginal => {
   const actual = await importOriginal<typeof import("@/lib/admin/adminGateway")>();
   return {
     ...actual,
+    readOwnEmployee: vi.fn(async () => ({
+      status: "live" as const,
+      data: {
+        employeeId: "owner-1",
+        fullName: "Owner User",
+        accessEmail: "owner@example.com",
+        role: "OWNER",
+        status: "ACTIVE",
+      },
+    })),
     readEmployees: vi.fn(async () => ({
       status: "live" as const,
       data: [
