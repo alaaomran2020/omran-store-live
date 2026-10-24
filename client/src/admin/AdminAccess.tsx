@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
 import { LogOut, ShieldCheck } from "lucide-react";
 import { SeoMetadata } from "@/components/SeoMetadata";
 import { BrutalCard, Notice, PageTitle } from "@/admin/ui";
@@ -35,7 +34,6 @@ export async function readAccessIdentity(): Promise<CloudflareIdentity | null> {
 export default function AdminAccess() {
   const [accessState, setAccessState] = useState<AccessState>("checking");
   const [identity, setIdentity] = useState<CloudflareIdentity | null>(null);
-  const [, navigate] = useLocation();
 
   useEffect(() => {
     let cancelled = false;
@@ -44,19 +42,12 @@ export default function AdminAccess() {
       if (cancelled) return;
       setIdentity(result);
       setAccessState(result ? "allowed" : "denied");
-      if (
-        result &&
-        (window.location.pathname === "/admin" ||
-          window.location.pathname === "/admin/")
-      ) {
-        navigate("/admin/dashboard", { replace: true });
-      }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+  }, []);
 
   if (accessState === "allowed" && identity) {
     return (
