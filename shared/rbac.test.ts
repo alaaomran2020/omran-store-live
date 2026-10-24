@@ -26,6 +26,9 @@ describe("RBAC role matrix", () => {
     expect(can(viewer, "product:update")).toBe(false);
     expect(can(viewer, "inventory:update")).toBe(false);
     expect(can(viewer, "user:create")).toBe(false);
+    expect(can(viewer, "user:view")).toBe(false);
+    expect(can(admin, "user:view")).toBe(false);
+    expect(can(owner, "user:view")).toBe(true);
   });
 
   it("limits content editor to content updates", () => {
