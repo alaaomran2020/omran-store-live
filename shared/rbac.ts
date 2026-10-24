@@ -18,6 +18,9 @@
 export const EMPLOYEE_ROLES = [
   "OWNER",
   "ADMIN",
+  "SALES_WAREHOUSE_MANAGER",
+  "SALES_MANAGER",
+  "CASHIER",
   "CATALOG_MANAGER",
   "INVENTORY_STAFF",
   "CONTENT_EDITOR",
@@ -37,7 +40,10 @@ export type EmployeeStatus = (typeof EMPLOYEE_STATUSES)[number];
 
 export const ROLE_LABELS_AR: Record<EmployeeRole, string> = {
   OWNER: "مالك",
-  ADMIN: "مدير",
+  ADMIN: "مدير تشغيل",
+  SALES_WAREHOUSE_MANAGER: "مدير المبيعات والمخزن",
+  SALES_MANAGER: "مدير المبيعات",
+  CASHIER: "كاشير",
   CATALOG_MANAGER: "مسؤول الكتالوج",
   INVENTORY_STAFF: "موظف مخزون",
   CONTENT_EDITOR: "محرر محتوى",
@@ -47,6 +53,9 @@ export const ROLE_LABELS_AR: Record<EmployeeRole, string> = {
 export const ROLE_DESCRIPTIONS_AR: Record<EmployeeRole, string> = {
   OWNER: "وصول كامل لكل شيء، بما في ذلك تعيين الملاك وإدارة المديرين.",
   ADMIN: "إدارة المنتجات والمحتوى والمخزون وإعدادات التشغيل؛ إضافة الموظفين ومنح الصلاحيات للمالك فقط.",
+  SALES_WAREHOUSE_MANAGER: "عرض المنتجات والعملاء وتقارير المبيعات وواتساب، وإدارة المخزون؛ بدون صلاحية إدارة الموظفين.",
+  SALES_MANAGER: "عرض المنتجات والعملاء والمخزون وتقارير المبيعات وواتساب؛ بدون إدارة الموظفين أو تغيير المخزون.",
+  CASHIER: "عرض المنتجات وحالة المخزون فقط؛ وظائف البيع والتحصيل تحتاج نظام كاشير موصولًا وآمنًا.",
   CATALOG_MANAGER: "المنتجات والأقسام وحالات النشر ومراجعة الجودة فقط.",
   INVENTORY_STAFF: "عرض الكتالوج وتحديث حالة/كميات المخزون فقط.",
   CONTENT_EDITOR: "عرض الكتالوج وتحرير المحتوى التسويقي فقط.",
@@ -119,6 +128,25 @@ const CATALOG_PERMISSIONS: Permission[] = [
 
 const ROLE_PERMISSIONS: Record<EmployeeRole, readonly Permission[]> = {
   VIEWER: VIEW_PERMISSIONS,
+  // إدارة المبيعات لا تعني الوصول لإعدادات أو إدارة حسابات المتجر.
+  SALES_MANAGER: [
+    "dashboard:view",
+    "product:view",
+    "inventory:view",
+    "analytics:view",
+    "whatsapp:view",
+    "customer:view",
+  ],
+  SALES_WAREHOUSE_MANAGER: [
+    "dashboard:view",
+    "product:view",
+    "inventory:view",
+    "inventory:update",
+    "analytics:view",
+    "whatsapp:view",
+    "customer:view",
+  ],
+  CASHIER: ["product:view", "inventory:view"],
   CONTENT_EDITOR: [...VIEW_PERMISSIONS, "content:update"],
   INVENTORY_STAFF: [...VIEW_PERMISSIONS, "inventory:update"],
   CATALOG_MANAGER: CATALOG_PERMISSIONS,
