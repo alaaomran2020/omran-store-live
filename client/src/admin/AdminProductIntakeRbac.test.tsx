@@ -8,10 +8,22 @@ vi.mock("@/pages/ProductIntake", () => ({
   default: () => <h1>Product Intake Test Page</h1>,
 }));
 
+const employeeState = vi.hoisted(() => ({ email: "viewer@example.com" }));
+
 vi.mock("@/lib/admin/adminGateway", async importOriginal => {
   const actual = await importOriginal<typeof import("@/lib/admin/adminGateway")>();
   return {
     ...actual,
+    readOwnEmployee: vi.fn(async () => ({
+      status: "live" as const,
+      data: {
+        employeeId: employeeState.email.startsWith("catalog") ? "catalog-1" : "viewer-1",
+        fullName: "Test Employee",
+        accessEmail: employeeState.email,
+        role: employeeState.email.startsWith("catalog") ? "CATALOG_MANAGER" : "VIEWER",
+        status: "ACTIVE",
+      },
+    })),
     readEmployees: vi.fn(async () => ({
       status: "live" as const,
       data: [
@@ -35,6 +47,7 @@ vi.mock("@/lib/admin/adminGateway", async importOriginal => {
 });
 
 function mount(email: string) {
+  employeeState.email = email;
   window.history.replaceState({}, "", "/admin/product-intake");
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },

@@ -3,9 +3,10 @@
  *   - المصادقة (Authentication) تُحسم على الحافة عبر Cloudflare Access، ولا
  *     يمكن تزويرها في المتصفح (الهوية تأتي من /cdn-cgi/access/get-identity).
  *   - التفويض (Authorization) يُشتق مركزيًا هنا عبر shared/rbac.ts:
- *       1. دليل الموظفين من بوابة التشغيل (إن وُجد) — مصدر الأدوار/الحالات.
- *       2. قائمة الملاك وقت البناء VITE_OWNER_EMAILS (غير سرية) كبذرة تشغيل.
- *       3. أي هوية Access معتمدة غير معروفة في الدليل = VIEWER (أقل امتياز).
+ *       1. /api/admin/me من الخادم: لا يعيد إلا هوية صاحب الجلسة (الموظفون).
+ *       2. دليل الموظفين الكامل يقرأه المالك فقط.
+ *       3. قائمة الملاك VITE_OWNER_EMAILS بذرة تشغيل (غير سرية).
+ *       4. أي هوية غير مؤكدة = INVITED بلا صلاحيات.
  *   - موظف عليه DISABLED/SUSPENDED في الدليل يُمنع من اللوحة بالكامل
  *     (دفاع متعدد الطبقات فوق إزالته من سياسة Access نفسها).
  */
@@ -19,7 +20,7 @@ import {
   type Permission,
   type Principal,
 } from "@shared/rbac";
-import { readEmployees, type EmployeeRecord } from "@/lib/admin/adminGateway";
+import { readEmployees, readOwnEmployee, type EmployeeRecord } from "@/lib/admin/adminGateway";
 
 export type CloudflareIdentity = {
   email?: string;
@@ -56,6 +57,9 @@ const AdminIdentityContext = createContext<AdminIdentityContextValue | null>(nul
 const ROLE_ORDER: EmployeeRole[] = [
   "OWNER",
   "ADMIN",
+  "SALES_WAREHOUSE_MANAGER",
+  "SALES_MANAGER",
+  "CASHIER",
   "CATALOG_MANAGER",
   "INVENTORY_STAFF",
   "CONTENT_EDITOR",
@@ -84,9 +88,28 @@ export function AdminIdentityProvider({
   identity: CloudflareIdentity;
   children: ReactNode;
 }) {
+  const accessEmail = (identity.email ?? "").trim().toLowerCase();
+  const bootOwner = Boolean(accessEmail && ownerAllowlist().includes(accessEmail));
+  // الموظف العادي لا يُحمِّل دليل الزملاء مطلقًا إلى المتصفح.
+  // /api/admin/me يجب أن يتحقق من Access JWT ويرجع صف صاحب الجلسة فقط.
+  const ownQuery = useQuery({
+    queryKey: ["admin", "current-employee", accessEmail],
+    queryFn: readOwnEmployee,
+    enabled: Boolean(accessEmail) && !bootOwner,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+  const ownRecord = ownQuery.data?.status === "live" ? ownQuery.data.data : null;
+  const isVerifiedOwner = Boolean(
+    ownRecord &&
+    ownRecord.accessEmail?.trim().toLowerCase() === accessEmail &&
+    ownRecord.role === "OWNER" &&
+    ownRecord.status === "ACTIVE"
+  );
   const employeesQuery = useQuery({
     queryKey: ["admin", "employees-directory"],
     queryFn: readEmployees,
+    enabled: bootOwner || isVerifiedOwner,
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
@@ -102,12 +125,16 @@ export function AdminIdentityProvider({
           : "not_configured";
 
     const email = (identity.email ?? "").trim().toLowerCase() || null;
+    const ownMatch = ownQuery.data?.status === "live" &&
+      ownQuery.data.data.accessEmail?.trim().toLowerCase() === email
+      ? ownQuery.data.data
+      : undefined;
     const match = email
-      ? directory.find(record => (record.accessEmail ?? "").trim().toLowerCase() === email)
+      ? directory.find(record => (record.accessEmail ?? "").trim().toLowerCase() === email) ?? ownMatch
       : undefined;
 
     let role: EmployeeRole = "VIEWER";
-    let status: EmployeeStatus = "ACTIVE";
+    let status: EmployeeStatus = "INVITED";
     let employeeId = email ? `cf:${email}` : (identity.id ?? "cf:unknown");
     let roleSource: ResolvedEmployee["roleSource"] = "default_viewer";
 
@@ -163,7 +190,7 @@ export function AdminIdentityProvider({
         name: resolved.fullName,
       },
     };
-  }, [employeesQuery.data, identity]);
+  }, [employeesQuery.data, ownQuery.data, identity]);
 
   return (
     <AdminIdentityContext.Provider value={value}>{children}</AdminIdentityContext.Provider>

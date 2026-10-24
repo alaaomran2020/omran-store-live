@@ -36,6 +36,8 @@ const CustomersPage = lazy(() => import("./pages/CustomersPage"));
 const UsersPage = lazy(() => import("./pages/UsersPage"));
 const AuditLogPage = lazy(() => import("./pages/AuditLogPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const MyWorkspacePage = lazy(() => import("./pages/MyWorkspacePage"));
+const EmployeeProfilePage = lazy(() => import("./pages/EmployeeProfilePage"));
 
 const LOGOUT_URL = "/cdn-cgi/access/logout";
 
@@ -154,8 +156,11 @@ function AdminRoutes() {
       </Route>
 
       <Route path="/">
-        <RoutePermissionGuard permission="dashboard:view" path="/">
-          {lazyPage(DashboardPage)}
+        <Redirect to="/me" />
+      </Route>
+      <Route path="/me">
+        <RoutePermissionGuard permission="product:view" path="/me">
+          {lazyPage(MyWorkspacePage)}
         </RoutePermissionGuard>
       </Route>
       <Route path="/dashboard">
@@ -208,6 +213,11 @@ function AdminRoutes() {
           {lazyPage(CustomersPage)}
         </RoutePermissionGuard>
       </Route>
+      <Route path="/users/:id">
+        <RoutePermissionGuard permission="user:create" path="/users/:id">
+          {lazyPage(EmployeeProfilePage)}
+        </RoutePermissionGuard>
+      </Route>
       <Route path="/users">
         <RoutePermissionGuard permission="user:view" path="/users">
           {lazyPage(UsersPage)}
@@ -246,7 +256,7 @@ function AdminRoutes() {
         <Redirect to="/vip-operations" />
       </Route>
       <Route>
-        <Redirect to="/dashboard" />
+        <Redirect to="/me" />
       </Route>
     </Switch>
   );

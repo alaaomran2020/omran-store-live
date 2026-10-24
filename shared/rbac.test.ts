@@ -26,6 +26,9 @@ describe("RBAC role matrix", () => {
     expect(can(viewer, "product:update")).toBe(false);
     expect(can(viewer, "inventory:update")).toBe(false);
     expect(can(viewer, "user:create")).toBe(false);
+    expect(can(viewer, "user:view")).toBe(false);
+    expect(can(admin, "user:view")).toBe(false);
+    expect(can(owner, "user:view")).toBe(true);
   });
 
   it("limits content editor to content updates", () => {
@@ -47,11 +50,35 @@ describe("RBAC role matrix", () => {
     expect(can(inventory, "content:update")).toBe(false);
   });
 
-  it("gives admin broad but not owner-assigning power", () => {
-    expect(can(admin, "user:create")).toBe(true);
+  it("keeps all employee-access management exclusive to the owner", () => {
+    for (const permission of ["user:create", "user:update", "user:disable", "user:role:update"] as const) {
+      expect(can(admin, permission)).toBe(false);
+      expect(can(owner, permission)).toBe(true);
+    }
     expect(can(admin, "settings:update")).toBe(true);
-    expect(canAssignRole(admin, "ADMIN")).toBe(true);
+    expect(canAssignRole(admin, "ADMIN")).toBe(false);
     expect(canAssignRole(admin, "OWNER")).toBe(false);
+  });
+
+  it("keeps cashier, sales manager and dual sales/warehouse manager inside their duties", () => {
+    const cashier: Principal = { domain: "EMPLOYEE", role: "CASHIER", status: "ACTIVE" };
+    const sales: Principal = { domain: "EMPLOYEE", role: "SALES_MANAGER", status: "ACTIVE" };
+    const dual: Principal = { domain: "EMPLOYEE", role: "SALES_WAREHOUSE_MANAGER", status: "ACTIVE" };
+
+    expect(permissionsOf(cashier)).toEqual(["product:view", "inventory:view"]);
+    expect(can(cashier, "inventory:update")).toBe(false);
+    expect(can(cashier, "customer:view")).toBe(false);
+    expect(can(cashier, "user:create")).toBe(false);
+    expect(can(sales, "analytics:view")).toBe(true);
+    expect(can(sales, "customer:view")).toBe(true);
+    expect(can(sales, "inventory:update")).toBe(false);
+    expect(can(dual, "inventory:update")).toBe(true);
+    for (const employee of [cashier, sales, dual]) {
+      expect(can(employee, "user:create")).toBe(false);
+      expect(can(employee, "user:update")).toBe(false);
+      expect(can(employee, "user:role:update")).toBe(false);
+      expect(can(employee, "settings:update")).toBe(false);
+    }
   });
 
   it("gives owner every permission", () => {
@@ -95,7 +122,8 @@ describe("owner protection", () => {
   });
 
   it("allows only privileged actors to reactivate staff", () => {
-    expect(canReactivateUser(admin, { role: "INVENTORY_STAFF", status: "DISABLED" })).toBe(true);
+    expect(canReactivateUser(admin, { role: "INVENTORY_STAFF", status: "DISABLED" })).toBe(false);
+    expect(canReactivateUser(owner, { role: "INVENTORY_STAFF", status: "DISABLED" })).toBe(true);
     expect(canReactivateUser(viewer, { role: "INVENTORY_STAFF", status: "DISABLED" })).toBe(false);
     expect(canReactivateUser(admin, adminTarget)).toBe(false);
   });

@@ -4,6 +4,7 @@ import {
   ClipboardCheck,
   FolderTree,
   LayoutDashboard,
+  UserRound,
   MessagesSquare,
   Package,
   Settings,
@@ -27,6 +28,7 @@ export type NavItem = {
 
 /** التنقّل الأساسي للوحة الإدارة — يُفلتر مركزيًا حسب صلاحيات الموظف. */
 export const ADMIN_NAV: NavItem[] = [
+  { to: "/admin/me", label: "مساحتي", icon: UserRound, permission: "product:view" },
   { to: "/admin/dashboard", label: "لوحة التحكم", icon: LayoutDashboard, permission: "dashboard:view" },
   { to: "/admin/products", label: "المنتجات", icon: Package, permission: "product:view" },
   { to: "/admin/categories", label: "الأقسام", icon: FolderTree, permission: "category:view" },
@@ -48,8 +50,8 @@ export const LEGACY_NAV: NavItem[] = [
 ];
 
 export const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
-  { title: "العمليات", items: ADMIN_NAV.slice(0, 8) },
-  { title: "الحسابات والأمان", items: ADMIN_NAV.slice(8) },
+  { title: "العمليات", items: ADMIN_NAV.slice(0, 9) },
+  { title: "الحسابات والأمان", items: ADMIN_NAV.slice(9) },
   { title: "أدوات تشغيلية", items: LEGACY_NAV },
 ];
 

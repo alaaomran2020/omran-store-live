@@ -14,6 +14,16 @@ describe("admin SQL gateway normalization", () => {
     })).toMatchObject({ employeeId: "EMP-1", role: "CATALOG_MANAGER", status: "ACTIVE" });
   });
 
+  it("recognizes the new scoped roles returned by the employee directory", () => {
+    for (const role of ["SALES_WAREHOUSE_MANAGER", "SALES_MANAGER", "CASHIER"]) {
+      expect(normalizeEmployeeRecord({
+        employee_id: "EMP-NEW", full_name: "Test Employee", mobile: null,
+        access_email: "test@example.com", role, status: "ACTIVE",
+        created_at: "2026-10-24T00:00:00Z",
+      })?.role).toBe(role);
+    }
+  });
+
   it("keeps compatibility with existing camelCase employee rows", () => {
     expect(normalizeEmployeeRecord({
       employeeId: "EMP-2", fullName: "Viewer", mobile: "",

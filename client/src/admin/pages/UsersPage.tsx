@@ -2,7 +2,7 @@
  * إدارة الموظفين /admin/users
  *
  * قواعد أمنية مركزية (shared/rbac.ts) تُطبّق على كل إجراء:
- *   - إنشاء الموظف OWNER/ADMIN فقط؛ لا تسجيل ذاتي؛ الحالة تبدأ INVITED.
+ *   - إنشاء الموظف OWNER فقط؛ لا تسجيل ذاتي؛ الحالة تبدأ INVITED.
  *   - المالك وحده يُعيّن مالكًا، والمالك الأخير لا يُعطَّل ولا يُنزَّل.
  *   - الموظف المعطّل/الموقوف يُمنع عن اللوحة (AdminApp) وعلى البوابة أيضًا.
  * القناة: بوابة إجراءات (user_create/user_update) أو حزمة تشغيل يدوية +
@@ -10,6 +10,7 @@
  * إن فُعّل، وإلا تُعرض تسوية يدوية صادقة بلا أي رمز وهمي.
  */
 import { useState } from "react";
+import { Link } from "wouter";
 import { toast, Toaster } from "sonner";
 import { Check, Plus, RefreshCw, ShieldAlert, UserPlus, Users } from "lucide-react";
 import { AdminPageShell } from "@/admin/shell/AdminPageShell";
@@ -45,7 +46,7 @@ import {
 } from "@shared/rbac";
 import { normalizeEgyptianMobile, maskMobile, isEgyptianE164 } from "@shared/mobile";
 import { formatDateTime } from "@/admin/adminFormat";
-import { requestOtp, AuthClientError } from "@/lib/auth/authClient";
+import { requestOtp } from "@/lib/auth/authClient";
 
 const STATUS_TONE: Record<EmployeeStatus, "green" | "amber" | "red" | "slate"> = {
   ACTIVE: "green",
@@ -65,65 +66,69 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
   const { actor, principal } = useAdminIdentity();
   const [fullName, setFullName] = useState("");
   const [mobileInput, setMobileInput] = useState("");
-  const [role, setRole] = useState<EmployeeRole>("CATALOG_MANAGER");
+  const [accessEmail, setAccessEmail] = useState("");
+  const [role, setRole] = useState<EmployeeRole>("VIEWER");
   const [busy, setBusy] = useState(false);
   const directWrite = adminActionsConfigured();
 
   const mobile = normalizeEgyptianMobile(mobileInput);
-  const valid = fullName.trim().length >= 3 && isEgyptianE164(mobile ?? "") && canAssignRole(principal, role);
+  const email = accessEmail.trim().toLowerCase();
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const valid = fullName.trim().length >= 3 && isEgyptianE164(mobile ?? "") && emailValid && canPrincipal(principal, "user:create") && canAssignRole(principal, role);
 
   async function submit() {
     if (!valid || !mobile) {
-      toast.error("راجع الاسم ورقم الموبايل (أرقام مصرية فقط 01X) والدور.");
+      toast.error("راجع الاسم والبريد الإلكتروني ورقم الموبايل والدور.");
       return;
     }
     setBusy(true);
     try {
-      // 1) محاولة دعوة OTP عبر المزوّد الخادمي (لا رمز يُولّد في الواجهة).
-      let otpInvited = false;
-      try {
-        await requestOtp("EMPLOYEE", mobile);
-        otpInvited = true;
-      } catch (error) {
-        if (!(error instanceof AuthClientError) || error.code !== "PROVIDER_NOT_CONFIGURED") {
-          throw error;
-        }
-      }
-
+      // نطلب إضافة الموظف أولًا؛ OTP لا يعمل لموبايل لم يُدعَ بعد في الدليل.
       const record = {
         full_name: fullName.trim(),
         mobile,
+        access_email: email,
         role,
         status: "INVITED",
         invited_by: actor.id,
-        otp_invited: otpInvited ? "TRUE" : "FALSE",
+        otp_invited: "FALSE",
       };
 
-      if (directWrite) {
-        const result = await postAdminAction("user_create", record);
-        if (!result.ok) {
-          downloadRows("employee-invite.tsv", ["full_name", "mobile", "role", "status", "invited_by", "otp_invited"], [[record.full_name, record.mobile, record.role, record.status, record.invited_by, record.otp_invited]]);
+      const result = directWrite ? await postAdminAction("user_create", record) : null;
+      const gatewayAccepted = result?.ok === true;
+      if (!gatewayAccepted) {
+        // ليس حسابًا حقيقيًا ولا دعوة فعالة حتى يعتمد المالك الحزمة ويضيفه لـ Access.
+        downloadRows("employee-invite.tsv", ["full_name", "mobile", "access_email", "role", "status", "invited_by", "otp_invited"], [[record.full_name, record.mobile, record.access_email, record.role, record.status, record.invited_by, record.otp_invited]]);
+      }
+
+      let otpInvited = false;
+      if (gatewayAccepted) {
+        try {
+          await requestOtp("EMPLOYEE", mobile);
+          otpInvited = true;
+        } catch {
+          // فشل OTP لا يلغي طلب الإنشاء المقبول ولا يسمح بدخول دون تفعيل.
         }
-      } else {
-        downloadRows("employee-invite.tsv", ["full_name", "mobile", "role", "status", "invited_by", "otp_invited"], [[record.full_name, record.mobile, record.role, record.status, record.invited_by, record.otp_invited]]);
       }
 
       emitAudit(actor, {
-        action: "USER_CREATED",
+        action: gatewayAccepted ? "USER_CREATE_REQUEST_ACCEPTED" : "USER_INVITE_PACKET_PREPARED",
         targetType: "EMPLOYEE",
         targetId: mobile,
         targetName: fullName.trim(),
-        metadata: { role, status: "INVITED", otpInvited: otpInvited ? "true" : "false", channel: directWrite ? "gateway" : "manual_packet" },
+        metadata: { role, status: "INVITED", otpInvited: otpInvited ? "true" : "false", channel: gatewayAccepted ? "gateway" : "manual_packet" },
       });
 
-      if (otpInvited) {
-        toast.success("أُرسل رمز التحقق للموظف، وسيُفعَّل حسابه بعد تأكيد موبايله.");
+      if (!gatewayAccepted) {
+        toast.info("تم تجهيز ملف اعتماد الموظف فقط. لا دخول قبل اعتماده في الدليل وCloudflare Access.");
+      } else if (otpInvited) {
+        toast.success("بوابة الإدارة قبلت طلب الدعوة وأُرسل رمز الموبايل؛ لا دخول حتى اكتمال التفعيل وAccess.");
       } else {
-        toast.success("أُنشئت دعوة الموظف. الخطوات اليدوية موضّحة بالأسفل (Access + واتساب).");
+        toast.info("بوابة الإدارة قبلت طلب الدعوة، لكن OTP لم يُرسل. أكمل التفعيل في الدليل وAccess.");
       }
       onClose();
-    } catch (error) {
-      toast.error(error instanceof AuthClientError ? `تعذّر إرسال الدعوة (${error.code})` : "تعذّر إتمام الدعوة");
+    } catch {
+      toast.error("تعذّر تجهيز دعوة الموظف، حاول مرة تانية.");
     } finally {
       setBusy(false);
     }
@@ -136,10 +141,11 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
           <UserPlus size={19} className="text-brand-blue" /> دعوة موظف جديد
         </h2>
         <p className="mt-1 text-xs leading-6 text-brand-muted">
-          لا تسجيل ذاتي للموظفين. تبدأ الحالة INVITED ويتفعّل الحساب بعد تحقق OTP على موبايل الموظف.
+          المالك فقط ينشئ دعوة للوحة التحكم. تبدأ الحالة INVITED، ولا يُسمح بالدخول حتى تسجيل الموظف في الدليل واعتماده في Cloudflare Access والتحقق المطلوب.
         </p>
         <div className="mt-4 space-y-3">
-          <TextInput label="الاسم الكامل" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="مثال: محمد أحمد" />
+          <TextInput label="الاسم الكامل" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="اسم الموظف" />
+          <TextInput label="البريد المخصص لدخول Cloudflare Access" type="email" dir="ltr" value={accessEmail} onChange={e => setAccessEmail(e.target.value)} placeholder="employee@example.com" hint={accessEmail && !emailValid ? "اكتب بريد إلكتروني صحيح؛ لن يتم منحه الوصول تلقائيًا." : "لازم يكون البريد ده ضمن الأسماء المسموحة في سياسة Cloudflare Access بعد اعتماد الحساب."} />
           <TextInput
             label="رقم الموبايل (01X… أو +201X…)"
             inputMode="tel"
@@ -232,7 +238,11 @@ export default function UsersPage() {
       header: "الموظف",
       render: record => (
         <div>
-          <p className="font-extrabold text-brand-ink">{record.fullName}</p>
+          {canPrincipal(principal, "user:create") ? (
+            <Link className="font-extrabold text-brand-blue underline-offset-4 hover:underline" href={`/users/${encodeURIComponent(record.employeeId)}`} aria-label={`صفحة الموظف ${record.fullName}`}>
+              {record.fullName}
+            </Link>
+          ) : <p className="font-extrabold text-brand-ink">{record.fullName}</p>}
           <p className="text-[11px] font-bold text-brand-muted">{record.accessEmail ?? maskMobile(record.mobile)}</p>
         </div>
       ),
@@ -289,7 +299,7 @@ export default function UsersPage() {
   return (
     <AdminPageShell
       title="الموظفون"
-      subtitle="أدوار العاملين وحالاتهم — الدعوة إدارية فقط"
+      subtitle="المالك فقط يضيف حسابات لوحة التحكم ويغيّر صلاحياتها"
       actions={
         <>
           <AdminButton variant="ghost" size="sm" onClick={() => query.refetch()} loading={query.isFetching}>
