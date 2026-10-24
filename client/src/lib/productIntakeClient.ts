@@ -1,7 +1,5 @@
-const PRODUCT_INTAKE_WEBHOOK = "https://hook.eu1.make.com/s93aopio705d3jqgc4agzkxgdh4r9tdd";
-
+const PRODUCT_INTAKE_ENDPOINT = "/admin/api/product-intake";
 export type ProductIntakeSubmission = {
-  employeeName: string;
   productNameAr: string;
   sku: string;
   barcode: string;
@@ -37,7 +35,6 @@ export async function submitProductIntake(input: ProductIntakeSubmission): Promi
 
   append(form, "intake_id", intakeId);
   append(form, "received_at", receivedAt);
-  append(form, "employee_name", input.employeeName);
   append(form, "source", input.source);
   append(form, "source_reference", input.sourceReference);
   append(form, "barcode", input.barcode);
@@ -53,7 +50,8 @@ export async function submitProductIntake(input: ProductIntakeSubmission): Promi
   append(form, "intake_notes", input.intakeNotes);
   form.append("photo", input.photo, input.photo.name || `${intakeId}.jpg`);
 
-  const response = await fetch(PRODUCT_INTAKE_WEBHOOK, {
+  const response = await fetch(PRODUCT_INTAKE_ENDPOINT, {
+    credentials: "include",
     method: "POST",
     body: form,
     headers: {
@@ -62,7 +60,11 @@ export async function submitProductIntake(input: ProductIntakeSubmission): Promi
   });
 
   if (!response.ok) {
-    throw new Error(`تعذر إرسال المنتج إلى قاعدة التشغيل (${response.status})`);
+    if (response.status === 401 || response.status === 403) throw new Error("الحساب غير مصرح له بإضافة منتجات. تواصل مع المالك.");
+    if (response.status === 429) throw new Error("طلبات كثيرة. جرب بعد دقيقة.");
+    if (response.status === 503) throw new Error("بوابة إدخال المنتجات غير مفعّلة بعد.");
+    if (response.status === 409 || response.status === 502) throw new Error("حالة الإدخال غير مؤكدة؛ راجع سجل المراجعة قبل إعادة الإرسال.");
+    throw new Error(`تعذر إرسال المنتج (${response.status})`);
   }
 
   const receipt = (await response.json()) as Partial<ProductIntakeReceipt>;

@@ -86,6 +86,10 @@ jobs:
 
       - name: Repository integration audit
         run: node scripts/integration-audit.mjs
+      - name: Validate protected product intake API
+        run: |
+          node --test scripts/product-intake-security.test.mjs
+          pnpm exec wrangler pages functions build functions --outfile=tmp/intake-functions-validation.mjs
 
       - name: Quality gates
         run: |

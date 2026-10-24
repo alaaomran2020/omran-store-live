@@ -22,6 +22,8 @@ const required = [
   "client/src/lib/vipQr.ts",
   "client/src/lib/vipManualOperation.ts",
   "client/src/lib/productIntakeClient.ts",
+  "functions/admin/api/product-intake.js",
+  "scripts/product-intake-security.sql",
   "client/src/lib/analytics.ts",
   "client/src/lib/makeGateway.ts",
   "client/src/lib/publicProductsSnapshot.ts",
@@ -205,6 +207,18 @@ if (exists("client/src/lib/productIntakeClient.ts")) {
   assert(
     intakeClient.includes("NEEDS_REVIEW"),
     "product intake gateway must fail closed to NEEDS_REVIEW"
+  );
+}
+
+if (exists("client/src/lib/productIntakeClient.ts")) {
+  const intakeClient = read("client/src/lib/productIntakeClient.ts");
+  assert(
+    intakeClient.includes('/admin/api/product-intake'),
+    "product intake must use the protected first-party route"
+  );
+  assert(
+    !/hook\\.[a-z0-9-]+\\.make\\.com/i.test(intakeClient),
+    "client code must not expose a Make intake webhook"
   );
 }
 

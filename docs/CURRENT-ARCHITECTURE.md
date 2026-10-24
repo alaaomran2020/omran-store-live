@@ -11,6 +11,10 @@
 - Domains: `https://omrantoys.store` و `https://www.omrantoys.store`
 - Runtime: Static Vite storefront only
 
+## Proposed security-only exception (not deployed)
+
+At the owner's explicit request on 24 October 2026, a Cloudflare Pages Function under `/admin/api/product-intake` is being prepared for protected employee intake. It does not serve the catalog or any public customer route, and remains disabled until Access JWT verification, private D1 binding, Make secret rotation, authorized staff roles and staged tests are configured. See `PRODUCT-INTAKE-SECURITY-MIGRATION.md`. The static storefront rules below remain the deployed baseline until separately published.
+
 ## Runtime Rules
 
 المشروع الحالي لا يستخدم ولا يحتاج:
