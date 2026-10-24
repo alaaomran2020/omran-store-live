@@ -155,6 +155,11 @@ export default function SettingsPage() {
         <Card className="mt-4">
           <CardHeader title="إضافة موظف للوحة التحكم" icon={<UserPlus size={18} />} subtitle="متاح للمالك فقط — أنت تختار الموظف ودوره قبل منحه الوصول" />
           <div className="space-y-3 p-5 text-sm">
+            <div className="rounded-xl border border-brand-border bg-brand-cream p-3 text-xs leading-7 text-brand-navy">
+              <p className="font-extrabold">التوزيع الوظيفي المقترح</p>
+              <p>3 ملاك · مدير مبيعات ومخزن · مدير مبيعات · كاشير أساسي · 5 موظفين لاحقًا.</p>
+              <p className="text-brand-muted">دي وظائف معتمدة للتجهيز، مش حسابات فعلية. لا تُنشر أسماء الموظفين أو بيانات دخولهم داخل كود المتجر العام.</p>
+            </div>
             <p className="leading-7 text-brand-muted">
               من إدارة الموظفين تقدر تضيف اسم الموظف ورقم موبايله وتحدد صلاحياته، أو توقف وصوله بعد كده.
               الموظف ما يقدرش يسجّل نفسه ولا يضيف زميل أو يغيّر أدوار الحسابات.
