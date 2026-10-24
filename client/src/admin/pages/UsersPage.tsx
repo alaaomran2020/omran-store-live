@@ -2,7 +2,7 @@
  * إدارة الموظفين /admin/users
  *
  * قواعد أمنية مركزية (shared/rbac.ts) تُطبّق على كل إجراء:
- *   - إنشاء الموظف OWNER/ADMIN فقط؛ لا تسجيل ذاتي؛ الحالة تبدأ INVITED.
+ *   - إنشاء الموظف OWNER فقط؛ لا تسجيل ذاتي؛ الحالة تبدأ INVITED.
  *   - المالك وحده يُعيّن مالكًا، والمالك الأخير لا يُعطَّل ولا يُنزَّل.
  *   - الموظف المعطّل/الموقوف يُمنع عن اللوحة (AdminApp) وعلى البوابة أيضًا.
  * القناة: بوابة إجراءات (user_create/user_update) أو حزمة تشغيل يدوية +
@@ -10,6 +10,7 @@
  * إن فُعّل، وإلا تُعرض تسوية يدوية صادقة بلا أي رمز وهمي.
  */
 import { useState } from "react";
+import { Link } from "wouter";
 import { toast, Toaster } from "sonner";
 import { Check, Plus, RefreshCw, ShieldAlert, UserPlus, Users } from "lucide-react";
 import { AdminPageShell } from "@/admin/shell/AdminPageShell";
@@ -237,7 +238,11 @@ export default function UsersPage() {
       header: "الموظف",
       render: record => (
         <div>
-          <p className="font-extrabold text-brand-ink">{record.fullName}</p>
+          {canPrincipal(principal, "user:create") ? (
+            <Link className="font-extrabold text-brand-blue underline-offset-4 hover:underline" href={`/users/${encodeURIComponent(record.employeeId)}`} aria-label={`صفحة الموظف ${record.fullName}`}>
+              {record.fullName}
+            </Link>
+          ) : <p className="font-extrabold text-brand-ink">{record.fullName}</p>}
           <p className="text-[11px] font-bold text-brand-muted">{record.accessEmail ?? maskMobile(record.mobile)}</p>
         </div>
       ),
