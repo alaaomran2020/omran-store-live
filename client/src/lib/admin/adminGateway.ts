@@ -204,6 +204,38 @@ export function normalizeInventoryRecord(item: Record<string, unknown>): Invento
   });
 }
 
+/**
+ * نقطة قراءة الهوية الحالية فقط عبر نفس الدومين خلف Cloudflare Access.
+ * على الخادم التحقق من Access JWT واستخراج البريد منه (لا يُقبل بريد من العميل)،
+ * ثم إرجاع صف الموظف صاحب الجلسة فقط. HTTP 404/501 = لم تُربط بعد.
+ */
+export async function readOwnEmployee(): Promise<ReadResult<EmployeeRecord>> {
+  try {
+    const response = await fetch("/api/admin/me", {
+      credentials: "include",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    if (response.status === 404 || response.status === 501) {
+      return { status: "not_configured" };
+    }
+    if (!response.ok) {
+      return { status: "error", message: `HTTP ${response.status}` };
+    }
+    const body: unknown = await response.json().catch(() => null);
+    if (!isRecord(body) || !isRecord(body.employee)) {
+      return { status: "error", message: "invalid_employee_response" };
+    }
+    const employee = normalizeEmployeeRecord(body.employee);
+    if (!employee || !employee.accessEmail) {
+      return { status: "error", message: "invalid_employee_identity" };
+    }
+    return { status: "live", data: employee, fetchedAt: new Date().toISOString() };
+  } catch {
+    return { status: "error", message: "employee_identity_unavailable" };
+  }
+}
+
 export const readEmployees = () =>
   readList<EmployeeRecord>("employees", "employees", normalizeEmployeeRecord);
 
