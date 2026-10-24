@@ -47,10 +47,13 @@ describe("RBAC role matrix", () => {
     expect(can(inventory, "content:update")).toBe(false);
   });
 
-  it("gives admin broad but not owner-assigning power", () => {
-    expect(can(admin, "user:create")).toBe(true);
+  it("keeps all employee-access management exclusive to the owner", () => {
+    for (const permission of ["user:create", "user:update", "user:disable", "user:role:update"] as const) {
+      expect(can(admin, permission)).toBe(false);
+      expect(can(owner, permission)).toBe(true);
+    }
     expect(can(admin, "settings:update")).toBe(true);
-    expect(canAssignRole(admin, "ADMIN")).toBe(true);
+    expect(canAssignRole(admin, "ADMIN")).toBe(false);
     expect(canAssignRole(admin, "OWNER")).toBe(false);
   });
 
@@ -95,7 +98,8 @@ describe("owner protection", () => {
   });
 
   it("allows only privileged actors to reactivate staff", () => {
-    expect(canReactivateUser(admin, { role: "INVENTORY_STAFF", status: "DISABLED" })).toBe(true);
+    expect(canReactivateUser(admin, { role: "INVENTORY_STAFF", status: "DISABLED" })).toBe(false);
+    expect(canReactivateUser(owner, { role: "INVENTORY_STAFF", status: "DISABLED" })).toBe(true);
     expect(canReactivateUser(viewer, { role: "INVENTORY_STAFF", status: "DISABLED" })).toBe(false);
     expect(canReactivateUser(admin, adminTarget)).toBe(false);
   });
