@@ -48,18 +48,18 @@ export async function verifyAccessJWT(request,env,fetcher=fetch) {
     return ok&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(name)?{email:name}:null;
   }catch{return null}
 }
-function allowedStaff(name,env){
-  let users;
-  try{users=JSON.parse(String(env.PRODUCT_INTAKE_STAFF_JSON||''))}catch{return null}
-  if(!Array.isArray(users))return null;
-  const matches=users.filter(u=>email(u?.email)===name);
-  if(matches.length!==1)return null;
-  const user=matches[0];
-  const roles=['OWNER','ADMIN','CATALOG_MANAGER','INVENTORY_STAFF'];
-  return user.status==='ACTIVE'&&roles.includes(user.role)&&
-    typeof user.name==='string'&&user.name.trim()&&user.name.length<=140
-    ?user.name.trim():null;
+async function allowedStaff(name,env){
+  if(!env.STAFF_DB)return null;
+  const row=await env.STAFF_DB.prepare(
+    "SELECT full_name,role,status FROM staff_accounts WHERE lower(access_email)=?"
+  ).bind(name).first();
+  if(!row)return null;
+  const allowedRoles=['OWNER','ADMIN','CATALOG_MANAGER','INVENTORY_STAFF','SALES_WAREHOUSE_MANAGER'];
+  return row.status==='ACTIVE'&&allowedRoles.includes(row.role)&&
+    typeof row.full_name==='string'&&row.full_name.trim()&&row.full_name.length<=140
+    ?row.full_name.trim():null;
 }
+
 function endpoint(env){
   try{
     const u=new URL(String(env.PRODUCT_INTAKE_WEBHOOK_URL||''));
@@ -147,8 +147,7 @@ export async function handleProductIntake(request,env,fetcher=fetch) {
   if(request.method!=='POST')return fail(405,'method_not_allowed');
   if(!request.headers.get('origin')||request.headers.get('origin')!==new URL(request.url).origin)
     return fail(403,'invalid_origin');
-  if(!env?.INTAKE_DB||!env.ACCESS_TEAM_DOMAIN||!env.ACCESS_AUD||
-     !env.PRODUCT_INTAKE_STAFF_JSON||!endpoint(env))return fail(503,'not_configured');
+  if(!env?.INTAKE_DB||!env.STAFF_DB||!env.ACCESS_TEAM_DOMAIN||!env.ACCESS_AUD||!endpoint(env))return fail(503,'not_configured');
   try{
     const ip=(request.headers.get('cf-connecting-ip')||'unknown').slice(0,80);
     if(!await countRequest(env.INTAKE_DB,ip))
@@ -156,7 +155,8 @@ export async function handleProductIntake(request,env,fetcher=fetch) {
   }catch{return fail(503,'security_unavailable')}
   const identity=await verifyAccessJWT(request,env,fetcher);
   if(!identity)return fail(401,'unauthenticated');
-  const actor=allowedStaff(identity.email,env);
+  let actor;
+  try{actor=await allowedStaff(identity.email,env)}catch{return fail(503,'staff_directory_unavailable')}
   if(!actor)return fail(403,'forbidden');
   if(Number(request.headers.get('content-length')||0)>MAX_BODY)return fail(413,'too_large');
   if(!/^multipart\/form-data;\s*boundary=/.test(request.headers.get('content-type')||''))
