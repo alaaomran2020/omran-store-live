@@ -51,7 +51,7 @@ function mount(path: string, deniedPermission: Permission) {
 const blockedTitle = "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0635\u0644\u0627\u062d\u064a\u0629 \u0644\u0641\u062a\u062d \u0647\u0630\u0647 \u0627\u0644\u0635\u0641\u062d\u0629";
 
 const protectedRoutes: Array<[string, Permission]> = [
-  ["/admin", "dashboard:view"],
+  ["/admin/me", "product:view"],
   ["/admin/dashboard", "dashboard:view"],
   ["/admin/products", "product:view"],
   ["/admin/products/test-product", "product:view"],
@@ -63,6 +63,7 @@ const protectedRoutes: Array<[string, Permission]> = [
   ["/admin/reports", "analytics:view"],
   ["/admin/customers", "customer:view"],
   ["/admin/users", "user:view"],
+  ["/admin/users/owner-1", "user:create"],
   ["/admin/audit-log", "audit:view"],
   ["/admin/settings", "settings:view"],
   ["/admin/product-intake", "product:create"],
