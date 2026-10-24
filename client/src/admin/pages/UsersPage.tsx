@@ -72,7 +72,7 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
 
   const mobile = normalizeEgyptianMobile(mobileInput);
   const email = accessEmail.trim().toLowerCase();
-  const emailValid = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const valid = fullName.trim().length >= 3 && isEgyptianE164(mobile ?? "") && emailValid && canPrincipal(principal, "user:create") && canAssignRole(principal, role);
 
   async function submit() {
