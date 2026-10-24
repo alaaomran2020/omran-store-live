@@ -72,8 +72,8 @@ export default function ProductIntake() {
   }, [photo]);
 
   const handleFile = (file?: File) => {
-    if (!file || !file.type.startsWith("image/")) {
-      setError("اختر ملف صورة صالحًا.");
+    if (!file || !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("اختر صورة JPG أو PNG أو WebP.");
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
@@ -293,7 +293,7 @@ export default function ProductIntake() {
                 <ImagePlus size={18} /> رفع صورة
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   className="hidden"
                   onChange={e => handleFile(e.target.files?.[0])}
                 />
@@ -302,7 +302,7 @@ export default function ProductIntake() {
                 <Camera size={18} /> التقاط بالكاميرا
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   capture="environment"
                   className="hidden"
                   onChange={e => {
