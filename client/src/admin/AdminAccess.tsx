@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
-import { LogOut, MessageCircle, ShieldCheck } from "lucide-react";
+import { LogOut, ShieldCheck } from "lucide-react";
 import { SeoMetadata } from "@/components/SeoMetadata";
 import { BrutalCard, Notice, PageTitle } from "@/admin/ui";
 import AdminApp from "@/admin/AdminApp";
@@ -35,7 +34,6 @@ export async function readAccessIdentity(): Promise<CloudflareIdentity | null> {
 export default function AdminAccess() {
   const [accessState, setAccessState] = useState<AccessState>("checking");
   const [identity, setIdentity] = useState<CloudflareIdentity | null>(null);
-  const [, navigate] = useLocation();
 
   useEffect(() => {
     let cancelled = false;
@@ -44,19 +42,12 @@ export default function AdminAccess() {
       if (cancelled) return;
       setIdentity(result);
       setAccessState(result ? "allowed" : "denied");
-      if (
-        result &&
-        (window.location.pathname === "/admin" ||
-          window.location.pathname === "/admin/")
-      ) {
-        navigate("/admin/dashboard", { replace: true });
-      }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+  }, []);
 
   if (accessState === "allowed" && identity) {
     return (
@@ -129,13 +120,10 @@ export default function AdminAccess() {
                 >
                   <LogOut size={15} /> إعادة فحص الجلسة
                 </a>
-                <a
-                  href="/vip/staff-register"
-                  className="inline-flex items-center gap-2 border-2 border-sunbeam-hover bg-sunbeam px-4 py-2 text-sm font-black text-sunbeam-ink shadow-[3px_3px_0_0_#050A18] transition-colors hover:bg-sunbeam-hover"
-                >
-                  <MessageCircle size={17} /> تسجيل موظف جديد عبر واتساب
-                </a>
               </div>
+              <p className="mt-4 text-xs leading-6 text-slate-300">
+                إضافة حساب لوحة التحكم وصلاحياته تتم بواسطة مالك المتجر فقط من إعدادات الإدارة، ولا توجد استمارة تسجيل ذاتي.
+              </p>
             </BrutalCard>
           </>
         )}

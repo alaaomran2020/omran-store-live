@@ -12,6 +12,8 @@
 
 export const AUDIT_ACTIONS = [
   "USER_CREATED",
+  "USER_CREATE_REQUEST_ACCEPTED",
+  "USER_INVITE_PACKET_PREPARED",
   "USER_ROLE_CHANGED",
   "USER_DISABLED",
   "USER_REACTIVATED",
@@ -184,6 +186,8 @@ export function auditEventsToCsv(events: readonly AuditEvent[]): string {
 
 export const AUDIT_ACTION_LABELS_AR: Record<AuditAction, string> = {
   USER_CREATED: "إنشاء موظف",
+  USER_CREATE_REQUEST_ACCEPTED: "قبول طلب دعوة موظف",
+  USER_INVITE_PACKET_PREPARED: "تجهيز ملف دعوة للمراجعة",
   USER_ROLE_CHANGED: "تغيير دور موظف",
   USER_DISABLED: "تعطيل موظف",
   USER_REACTIVATED: "إعادة تفعيل موظف",
