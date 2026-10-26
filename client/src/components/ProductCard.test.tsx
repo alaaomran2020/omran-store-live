@@ -88,6 +88,14 @@ describe("ProductCard — روابط crawlable", () => {
     expect(screen.queryByText("SKU: SKU-C1")).toBeNull();
   });
 
+  it("يعرض صورة المنتج كاملة ويحافظ على مساحة لمس كافية لأزرار التفاصيل", () => {
+    const { container } = render(<ProductCard product={makeProduct()} onOpenDetails={vi.fn()} />);
+    const image = container.querySelector('[data-testid="product-card"] img');
+    expect(image?.className).toContain("object-contain");
+    expect(screen.getByRole("button", { name: "أضف للاستفسار" }).className).toContain("min-h-11");
+    expect(screen.getByRole("link", { name: "التفاصيل" }).className).toContain("min-h-11");
+  });
+
   it("رابط واتساب يظل يعمل ويشير للرابط الثابت للمنتج", () => {
     vi.stubEnv("VITE_WHATSAPP_NUMBER", "201000000000");
     window.history.replaceState({}, "", "/"); // حتى من الرئيسية: الرابط ثابت
