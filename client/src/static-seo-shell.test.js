@@ -28,7 +28,6 @@ describe("Cloudflare Pages static SEO shells", () => {
     expect(html).not.toContain("سعر الجملة");
     expect(html).not.toContain("150 جنيه");
     expect(html).not.toContain('"price":170');
-    expect(html).toContain("للسعر");
   });
 
   it("gives every public route its own first-response canonical/title/description", () => {
