@@ -95,9 +95,13 @@ function safeAbsoluteUrl(value: string | null | undefined, origin: string = SITE
 /** تنظيف نص الوصف: إزالة وسم HTML، ضغط الفراغات، وحد أقصى بقطع عند كلمة. */
 export function cleanDescriptionText(value: string | null | undefined, maxLength: number = DESCRIPTION_MAX_LENGTH): string {
   const withoutTags = (value ?? "")
+    // Descriptions also feed OG/Twitter and JSON-LD: strip any accidentally
+    // embedded commercial price sentence before using them in public metadata.
+    .replace(/(?:^|[.!؟]\s*)سعر\s+(?:الجملة|الشراء|البيع|القطاعي|التجزئة|للتجار)[^.!؟\n]*(?:[.!؟]|$)/giu, ". ")
     .replace(/<[^>]*>/g, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/\s+/g, " ")
+    .replace(/^\.\s*/, "")
     .trim();
   if (withoutTags.length <= maxLength) return withoutTags;
   const cut = withoutTags.slice(0, maxLength);
