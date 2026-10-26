@@ -94,6 +94,15 @@ export default function HomeSupportSections() {
                 )}
                 <h3 className={`text-lg font-black text-brand-navy ${index === 0 ? "mt-3" : ""}`}>{branch.name}</h3>
                 <p className="mt-2 text-sm font-semibold leading-7 text-brand-muted">{branch.address}</p>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branch.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-brand-blue/20 bg-brand-sky/50 px-3 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue hover:bg-brand-sky focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-blue/20"
+                  aria-label={`ابحث عن موقع ${branch.name} على الخريطة`}
+                >
+                  <MapPin size={16} aria-hidden="true" /> ابحث عن موقع الفرع
+                </a>
               </article>
             ))}
           </div>
