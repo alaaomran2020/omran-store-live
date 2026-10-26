@@ -2,25 +2,25 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import HomeAgeBrowse from "./HomeAgeBrowse";
+import type { Product } from "@/lib/productsClient";
 
 afterEach(cleanup);
 
 describe("التسوق حسب العمر", () => {
-  it("يربط كل فئة عمرية بفلتر الكتالوج الصحيح", () => {
+  it("لا يعرض روابط فارغة عندما لم تُوثق أعمار المنتجات", () => {
     render(<HomeAgeBrowse />);
+    expect(screen.queryByRole("heading", { name: "تسوق حسب العمر" })).toBeNull();
+  });
+
+  it("يعرض روابط العمر الموثقة فقط", () => {
+    render(<HomeAgeBrowse products={[{ ageMin: 3, ageMax: 5 } as Product]} />);
 
     expect(screen.getByRole("heading", { name: "تسوق حسب العمر" })).toBeTruthy();
     const ageLinks = screen
       .getAllByRole("link")
       .filter(link => link.getAttribute("href")?.includes("/products?age="));
 
-    expect(ageLinks).toHaveLength(5);
-    expect(ageLinks.map(link => link.getAttribute("href"))).toEqual([
-      "/products?age=0-2#feed",
-      "/products?age=3-5#feed",
-      "/products?age=6-8#feed",
-      "/products?age=9-12#feed",
-      "/products?age=13%2B#feed",
-    ]);
+    expect(ageLinks).toHaveLength(1);
+    expect(ageLinks[0].getAttribute("href")).toBe("/products?age=3-5#feed");
   });
 });
