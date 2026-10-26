@@ -14,7 +14,7 @@ import { productIdFromPath, productPagePath } from "@shared/productPaths";
 import { ProductStructuredData, setRobotsMeta } from "@/components/SeoMetadata";
 import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import { getInitialProductsSnapshot, loadPublishedCatalog, type Product, type ProductAvailability } from "@/lib/productsClient";
-import { AGE_FILTER_OPTIONS, filterProductsByAge, parseAgeRange } from "@/lib/productAge";
+import { AGE_FILTER_OPTIONS, filterProductsByAge, matchesAgeRange, parseAgeRange } from "@/lib/productAge";
 import { filterProductsByCatalog, type ProductCatalog } from "@/lib/productCatalog";
 import { trackEvent } from "@/lib/analytics";
 import { canonicalCategory, displayCategoryName } from "@shared/taxonomy";
@@ -112,6 +112,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   const brands = useMemo(() => Array.from(new Set(products.map(product => product.brand).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b, "ar")), [products]);
   const tags = useMemo(() => Array.from(new Set(products.flatMap(product => product.tags))).sort((a, b) => a.localeCompare(b, "ar")), [products]);
   const availabilityValues = useMemo(() => Array.from(new Set(products.map(product => product.availability))), [products]);
+  const availableAgeRanges = useMemo(() => AGE_FILTER_OPTIONS.filter(range => products.some(product => matchesAgeRange(product, range))), [products]);
 
   const filteredProducts = useMemo(() => {
     let result = category === ALL ? products : products.filter(product => displayCategoryName(product.category) === category);
@@ -346,7 +347,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
           </div>
           <div className={`rounded-2xl p-5 text-white shadow-lg sm:rounded-[2rem] sm:p-7 sm:shadow-xl ${isPopup ? "bg-[linear-gradient(135deg,#35134f,#6b278f_58%,#9c4caa)]" : "bg-brand-navy"}`}>
             <p className={`text-xs font-bold sm:text-sm ${isPopup ? "text-[#ffd85d]" : "text-brand-yellow"}`}>{isPopup ? "اختيارات POP UP" : isRamadanCategory ? "تفاصيل رمضان" : "اختار بسهولة"}</p>
-            <p className="mt-2 text-base font-bold leading-7 sm:mt-3 sm:text-xl sm:leading-8">{isPopup ? "هنا هتلاقي بالونات، هدايا ومستلزمات حفلات من POP UP." : isRamadanCategory ? "اختار التصميم المناسب ليك، وابعت كود المنتج على واتساب عشان تعرف السعر والمقاس المتوفر." : "استخدم فلتر السن والتصنيفات عشان توصل للعبة المناسبة بسرعة."}</p>
+            <p className="mt-2 text-base font-bold leading-7 sm:mt-3 sm:text-xl sm:leading-8">{isPopup ? "هنا هتلاقي بالونات، هدايا ومستلزمات حفلات من POP UP." : isRamadanCategory ? "اختار التصميم المناسب ليك، وابعت كود المنتج على واتساب عشان تعرف السعر والمقاس المتوفر." : "استخدم البحث والتصنيفات عشان توصل للعبة المناسبة بسرعة."}</p>
           </div>
         </section>
         )}
@@ -371,7 +372,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                     </div>
                   </div>
                 )}
-                {!isPopup && !isRamadanCategory && (
+                {!isPopup && !isRamadanCategory && availableAgeRanges.length > 0 && (
                   <div className="rounded-2xl border border-brand-border bg-brand-cream p-3.5 sm:p-4">
                     <div className="mb-2.5 flex items-center justify-between gap-3 sm:mb-3">
                       <p id={ageGroupLabelId} className="text-sm font-extrabold text-brand-navy">اختار حسب السن</p>
@@ -379,7 +380,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
                     </div>
                     <div role="group" aria-labelledby={ageGroupLabelId} className="-mx-3.5 flex snap-x snap-mandatory gap-2 overflow-x-auto px-3.5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
                       {ageChip(ALL, "كل الأعمار")}
-                      {AGE_FILTER_OPTIONS.map(range => ageChip(range.key, range.key === "13+" ? "13+ سنة" : `${range.key} سنوات`))}
+                      {availableAgeRanges.map(range => ageChip(range.key, range.key === "13+" ? "13+ سنة" : `${range.key} سنوات`))}
                     </div>
                     <p className="mt-2.5 text-[11px] leading-5 text-brand-muted sm:mt-3 sm:text-xs sm:leading-6">اختار الفئة العمرية المناسبة لعرض المنتجات المتاحة ليها.</p>
                   </div>

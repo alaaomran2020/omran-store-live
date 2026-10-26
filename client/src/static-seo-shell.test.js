@@ -15,6 +15,21 @@ describe("Cloudflare Pages static SEO shells", () => {
     expect(html).not.toContain('"offers":');
     expect(html).toContain('https://omrantoys.store/products/processed/generated/product-omr-raw-001-main.webp');
   });
+  it("keeps wholesale prices out of static SEO, social previews, JSON-LD and no-script fallback", () => {
+    const html = renderProductSeoShell(shell, {
+      id: "OMR-SPK-MIC-001",
+      name: "سماعة محمولة مع مايك لاسلكي",
+      category: "رفايع لعب أطفال",
+      description: "سماعة ممتازة للهدايا. سعر الجملة للتجار 150 جنيه.",
+      price: 170,
+      image: "/products/processed/product-speaker-wireless-mic-main.webp",
+    }, "toys");
+    expect(html).toContain("سماعة ممتازة للهدايا");
+    expect(html).not.toContain("سعر الجملة");
+    expect(html).not.toContain("150 جنيه");
+    expect(html).not.toContain('"price":170');
+  });
+
   it("gives every public route its own first-response canonical/title/description", () => {
     for (const [route, metadata] of Object.entries(PUBLIC_PAGE_SEO)) {
       const html = renderStaticSeoShell(shell, route);

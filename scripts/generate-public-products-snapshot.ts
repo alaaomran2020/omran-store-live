@@ -90,6 +90,14 @@ function validateProducts(products: Product[]): void {
     if (ids.has(product.id)) throw new Error(`Duplicate public product ID: ${product.id}`);
     ids.add(product.id);
     if (!product.image) throw new Error(`Public product has no displayable image: ${product.id}`);
+    // This repository and the generated client bundle are public. Financial
+    // values belong in the private inventory, never the public catalogue.
+    if (product.price !== null) {
+      throw new Error(`Public catalogue contains a price for ${product.id}; remove it before publishing`);
+    }
+    if (/سعر\s+(?:الجملة|الشراء|البيع|القطاعي|التجزئة|للتجار)[^.!؟\n]{0,100}[0-9٠-٩۰-۹]/iu.test(product.description)) {
+      throw new Error(`Public catalogue description contains a financial price for ${product.id}`);
+    }
   }
 }
 

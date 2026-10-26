@@ -1,4 +1,6 @@
 import { ArrowLeft } from "lucide-react";
+import { getInitialProductsSnapshot, type Product } from "@/lib/productsClient";
+import { matchesAgeRange, parseAgeRange } from "@/lib/productAge";
 
 const ageGroups = [
   { key: "0-2", label: "0–2", caption: "سنين" },
@@ -8,7 +10,14 @@ const ageGroups = [
   { key: "13+", label: "+13", caption: "سنة" },
 ] as const;
 
-export default function HomeAgeBrowse() {
+export default function HomeAgeBrowse({ products = getInitialProductsSnapshot().products }: { products?: Product[] }) {
+  // Only link to ages supported by verified bounds in the published catalogue.
+  const visibleGroups = ageGroups.filter(group => {
+    const range = parseAgeRange(group.key);
+    return range !== null && products.some(product => matchesAgeRange(product, range));
+  });
+  if (visibleGroups.length === 0) return null;
+
   return (
     <section className="border-b border-brand-border bg-brand-cream py-8 sm:py-11" aria-labelledby="home-age-title">
       <div className="container">
@@ -23,7 +32,7 @@ export default function HomeAgeBrowse() {
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {ageGroups.map(group => (
+          {visibleGroups.map(group => (
             <a
               key={group.key}
               href={`/products?age=${encodeURIComponent(group.key)}#feed`}

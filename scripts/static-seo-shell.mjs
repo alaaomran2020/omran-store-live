@@ -118,7 +118,14 @@ export function renderProductSeoShell(baseHtml, product, catalog) {
   const url = ORIGIN + section + "/p/" + encodeURIComponent(product.id);
   const name = product.name.trim();
   const title = [name, catalog === "popup" ? "POP UP" : "عمران تويز"].join(" | ").slice(0, 90);
-  const description = (product.description?.trim() || [name, product.category, "للسعر والتوفر تواصل معنا عبر واتساب"].filter(Boolean).join(" — ")).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").slice(0, 160);
+  // Defence in depth: never put a supplier/wholesale price in SEO,
+  // Open Graph, Twitter previews, JSON-LD or the no-JS product fallback.
+  const rawDescription = product.description?.trim() || "";
+  const publicDescription = rawDescription
+    .replace(/(?:^|[.!؟]\s*)سعر\s+(?:الجملة|الشراء|البيع|القطاعي|التجزئة|للتجار)[^.!؟\n]*(?:[.!؟]|$)/giu, ". ")
+    .replace(/\s+/g, " ").replace(/^\.\s*/, "").trim();
+  const description = (publicDescription || [name, product.category, "للسعر والتوفر تواصل معنا عبر واتساب"].filter(Boolean).join(" — "))
+    .replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").slice(0, 160);
   const candidate = product.processedImage || product.image;
   const image = typeof candidate === "string" && candidate.startsWith("/products/") && !candidate.includes("..") ? ORIGIN + candidate : ORIGIN + "/brand/logo.png";
   let html = renderStaticSeoShell(baseHtml, section);

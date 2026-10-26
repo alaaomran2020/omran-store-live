@@ -189,6 +189,21 @@ describe("ProductStructuredData — منتج", () => {
     expect(text).not.toContain("\"price\"");
   });
 
+  it("يحذف أي سعر جملة بالخطأ من وصف SEO والمشاركة والبيانات المهيكلة", () => {
+    render(<ProductStructuredData product={makeProduct({
+      price: 170,
+      description: "سماعة مناسبة للهدايا. سعر الجملة للتجار 150 جنيه.",
+    })} catalogPath="/products" />);
+    const description = metaContent("description", "name") ?? "";
+    expect(description).toContain("سماعة مناسبة للهدايا");
+    for (const value of [description, metaContent("og:description") ?? "",
+      metaContent("twitter:description", "name") ?? "",
+      JSON.stringify(productJsonLd())]) {
+      expect(value).not.toContain("سعر الجملة");
+      expect(value).not.toContain("150 جنيه");
+    }
+  });
+
   it("BreadcrumbList يطابق البنية: الرئيسية → القسم → المنتج", () => {
     const product = makeProduct();
     render(<ProductStructuredData product={product} catalogPath="/products" />);
