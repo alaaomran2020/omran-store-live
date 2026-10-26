@@ -83,7 +83,7 @@ export default function HomeCategoryHighlights({
         <div
           className={
             compact
-              ? "mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 sm:gap-3"
+              ? "mt-4 grid grid-cols-2 gap-2 min-[420px]:grid-cols-3 sm:grid-cols-6 sm:gap-3"
               : "mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6"
           }
         >
@@ -105,7 +105,7 @@ export default function HomeCategoryHighlights({
                 srcSet={categorySrcSet(image)}
                 sizes={
                   compact
-                    ? "64px"
+                    ? "(max-width: 639px) 80px, 64px"
                     : "(max-width: 639px) calc((100vw - 2.5rem) / 2), (max-width: 1023px) calc((100vw - 3rem) / 3), 16vw"
                 }
                 alt=""
@@ -116,7 +116,7 @@ export default function HomeCategoryHighlights({
                 decoding="async"
                 className={
                   compact
-                    ? "h-16 w-16 rounded-lg object-cover"
+                    ? "h-20 w-20 max-w-full rounded-lg object-cover sm:h-16 sm:w-16"
                     : "absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
                 }
               />

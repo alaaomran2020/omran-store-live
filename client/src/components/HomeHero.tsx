@@ -17,9 +17,18 @@ export default function HomeHero() {
     refetchOnWindowFocus: false,
     retry: 1,
   });
-  const featured = filterProductsByCatalog(data?.products ?? [], "toys")
+  // Use genuine approved product images from different categories where possible.
+  // The separate "أحدث منتجاتنا" section keeps its newest-first ordering.
+  const recentProducts = filterProductsByCatalog(data?.products ?? [], "toys")
     .filter(product => product.availability !== "unavailable")
-    .sort((a, b) => b.rowIndex - a.rowIndex).slice(0, 3);
+    .sort((a, b) => b.rowIndex - a.rowIndex);
+  const featured = recentProducts.filter(
+    (product, index, items) => items.findIndex(item => item.category === product.category) === index
+  ).slice(0, 3);
+  for (const product of recentProducts) {
+    if (featured.length === 3) break;
+    if (!featured.some(item => item.id === product.id)) featured.push(product);
+  }
   const number = whatsappNumber();
   const whatsappUrl = number
     ? `https://wa.me/${number}?text=${encodeURIComponent("مرحبًا، أريد الاستفسار عن منتجات عمران تويز.")}`
@@ -78,7 +87,7 @@ export default function HomeHero() {
         </div>
         {featured.length > 0 && (
           <div className="premium-hero-showcase" aria-label="من منتجات عمران">
-            <div className="premium-showcase-label"><span>من عالم اللعب</span><span lang="en" dir="ltr">OMRAN / PLAY & DISCOVER</span></div>
+            <div className="premium-showcase-label"><span>مختارات من عمران</span><span lang="en" dir="ltr">OMRAN / PLAY & DISCOVER</span></div>
             <div className="premium-showcase-grid">
               {featured.map((product, index) => (
                 <a key={product.id} href={productPagePath(product.id, "toys")} className={`premium-hero-product ${index === 0 ? "premium-hero-product-main" : ""}`}>

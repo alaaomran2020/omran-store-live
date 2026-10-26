@@ -14,7 +14,7 @@ export default function BrandHeader() {
   const whatsappUrl = number
     ? `https://wa.me/${number}?text=${encodeURIComponent(whatsappMessage)}`
     : null;
-  const navClass = (active: boolean, popup = false) => `min-h-11 items-center rounded-xl px-3 transition ${
+  const navClass = (active: boolean, popup = false) => `min-h-11 shrink-0 whitespace-nowrap items-center rounded-xl px-2.5 transition sm:px-3 ${
     active
       ? popup ? "bg-[#f7effb] text-[#542170]" : "bg-brand-navy text-white shadow-sm"
       : popup ? "text-[#6b278f] hover:bg-[#f7effb] hover:text-[#542170]" : "text-brand-navy hover:bg-brand-sky hover:text-brand-blue"
@@ -58,16 +58,16 @@ export default function BrandHeader() {
           />
         </form>
 
-        <nav className="flex w-full shrink-0 items-center justify-between gap-1 border-t border-brand-border/70 pt-2 text-xs font-extrabold lg:w-auto lg:justify-start lg:border-0 lg:pt-0 lg:text-sm" aria-label="أقسام المتجر">
+        <nav className="flex w-full flex-wrap items-center justify-center gap-1 border-t border-brand-border/70 pt-2 text-xs font-extrabold sm:justify-between lg:w-auto lg:flex-nowrap lg:justify-start lg:border-0 lg:pt-0 lg:text-sm" aria-label="أقسام المتجر">
           <a
             href="/products"
-            className={`inline-flex ${navClass(pathname === "/products")}`}
-            aria-current={pathname === "/products" ? "page" : undefined}
+            className={`inline-flex ${navClass(pathname.startsWith("/products"))}`}
+            aria-current={pathname.startsWith("/products") ? "page" : undefined}
           >
             لعب الأطفال
           </a>
           <a href="/#categories" className={`hidden xl:inline-flex ${navClass(false)}`}>الأقسام</a>
-          <a href="/#b2b" className={`hidden xl:inline-flex ${navClass(false)}`}>الجملة B2B</a>
+          <a href="/#b2b" className={`inline-flex ${navClass(false)}`}>الجملة B2B</a>
           <a
             href="/popup"
             className={`inline-flex ${navClass(isPopup, true)} font-black`}

@@ -65,7 +65,7 @@ export function ProductCard({
           <ProductImage
             product={product}
             priority={priority}
-            className={`h-full w-full transition duration-300 motion-reduce:transition-none sm:group-hover:scale-[1.02] motion-reduce:sm:group-hover:scale-100 ${isPopup ? "object-contain p-2 sm:p-3" : "object-cover"}`}
+            className="h-full w-full object-contain p-2 transition duration-300 motion-reduce:transition-none sm:p-3 sm:group-hover:scale-[1.02] motion-reduce:sm:group-hover:scale-100"
             sizesHint="(max-width: 639px) calc((100vw - 2.5rem) / 2), (max-width: 1023px) calc((100vw - 3rem) / 2), 25vw"
           />
           {product.category && (
@@ -103,11 +103,11 @@ export function ProductCard({
           )}
           <div className={isPopup ? "" : "grid grid-cols-2 gap-1.5"}>
             {!isPopup && (
-              <button type="button" disabled={!selectedForInquiry && inquiryItems.length >= MAX_INQUIRY_ITEMS} onClick={() => selectedForInquiry ? removeInquiryProduct(product.id) : addInquiryProduct(product)} aria-pressed={selectedForInquiry} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-blue/25 px-1.5 py-2 text-[11px] font-black text-brand-blue hover:bg-brand-sky disabled:cursor-not-allowed disabled:opacity-40 sm:text-xs">
+              <button type="button" disabled={!selectedForInquiry && inquiryItems.length >= MAX_INQUIRY_ITEMS} onClick={() => selectedForInquiry ? removeInquiryProduct(product.id) : addInquiryProduct(product)} aria-pressed={selectedForInquiry} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-blue/25 px-1.5 py-2 text-[11px] font-black text-brand-blue hover:bg-brand-sky disabled:cursor-not-allowed disabled:opacity-40 sm:text-xs">
                 {selectedForInquiry ? "إزالة من القائمة" : "أضف للاستفسار"}
               </button>
             )}
-            <a href={productHref} onClick={event => { event.preventDefault(); onOpenDetails(product); }} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-black text-brand-blue transition active:scale-[0.98] hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue motion-reduce:transition-none motion-reduce:active:scale-100 sm:gap-2 sm:px-4 sm:text-sm">
+            <a href={productHref} onClick={event => { event.preventDefault(); onOpenDetails(product); }} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-black text-brand-blue transition active:scale-[0.98] hover:bg-brand-sky focus-visible:ring-4 focus-visible:ring-brand-blue motion-reduce:transition-none motion-reduce:active:scale-100 sm:gap-2 sm:px-4 sm:text-sm">
               التفاصيل <Info size={14} aria-hidden="true" />
             </a>
           </div>
