@@ -54,36 +54,45 @@ describe("client/index.html — HTML الثابت (initial shell)", () => {
     expect(html).not.toContain("placeholder");
   });
 
-  it("JSON-LD: Organization + WebSite + LocalBusiness كلها صالحة ومطابقة للبيانات المعتمدة", () => {
+  it("JSON-LD: بيانات الشركة وفرعا طنطا كمتجرين مستقلين بدون معلومات مختلقة", () => {
     const blocks = jsonLdBlocks(html);
     const organization = blocks.find(b => b["@type"] === "Organization")!;
     const website = blocks.find(b => b["@type"] === "WebSite")!;
-    const local = blocks.find(b => b["@type"] === "LocalBusiness")!;
+    const stores = blocks.filter(b => b["@type"] === "ToyStore");
 
     expect(organization.name).toBe("شركة عمران التجارية");
     expect(organization.url).toBe("https://omrantoys.store/");
     expect(organization.logo).toBe("https://omrantoys.store/brand/logo.png");
+    expect(organization.telephone).toContain("+201555570269");
+    expect(organization.telephone).toContain("+20403336336");
+    expect((organization.address as Record<string, unknown>[])).toHaveLength(2);
 
     expect(website.url).toBe("https://omrantoys.store/");
     const action = website.potentialAction as Record<string, unknown>;
     expect(action["@type"]).toBe("SearchAction");
     expect(String(action.target)).toContain("/products?search=");
 
-    expect(local.name).toBe("شركة عمران التجارية");
-    expect(local.telephone).toContain("+201555570269");
-    expect(local.telephone).toContain("+20403336336");
-    const addresses = local.address as Record<string, unknown>[];
-    expect(addresses).toHaveLength(2);
-    const joined = JSON.stringify(addresses, null, 0);
-    expect(joined).toContain("ميدان السيد البدوي، شارع درب الأبشيهي");
-    expect(joined).toContain("الاستاد، أمام نادي سيتي كلوب ومطعم سي السيد");
-    expect(joined).toContain("طنطا");
-    // ممنوع اختلاق بيانات غير موثقة.
-    expect(joined).not.toContain("postalCode");
-    expect(joined).not.toContain("streetNumber");
-    for (const field of ["openingHours", "geo", "priceRange", "aggregateRating"]) {
-      expect(local).not.toHaveProperty(field);
+    expect(stores).toHaveLength(2);
+    expect(stores.map(s => s["@id"])).toEqual([
+      "https://omrantoys.store/#store-sayyid-albadawi",
+      "https://omrantoys.store/#store-estad",
+    ]);
+    const addresses = stores.map(store => store.address as Record<string, unknown>);
+    expect(addresses[0].streetAddress).toBe("ميدان السيد البدوي، شارع درب الأبشيهي");
+    expect(addresses[1].streetAddress).toBe("الاستاد، أمام نادي سيتي كلوب ومطعم سي السيد");
+    for (const store of stores) {
+      const address = store.address as Record<string, unknown>;
+      expect(address.addressLocality).toBe("طنطا");
+      expect(address.addressRegion).toBe("الغربية");
+      expect(address.addressCountry).toBe("EG");
+      expect(store.parentOrganization).toEqual({ "@id": "https://omrantoys.store/#organization" });
+      for (const field of ["openingHours", "geo", "priceRange", "aggregateRating", "telephone"]) {
+        expect(store).not.toHaveProperty(field);
+      }
+      expect(address).not.toHaveProperty("postalCode");
     }
+    expect(html).toContain("لعب أطفال وهدايا في طنطا");
+    expect(html).not.toContain("السعودية");
   });
 });
 
