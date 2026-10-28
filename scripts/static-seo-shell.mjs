@@ -108,10 +108,43 @@ export function renderStaticSeoShell(baseHtml, route) {
 }
 
 /**
+ * Lightweight, truthful HTML for search engines and visitors without JS.
+ * React replaces #root during boot, so this never duplicates the live UI.
+ * Only products passing the existing publication gate are passed by the build.
+ */
+export function renderCatalogDiscoveryShell(baseHtml, approvedProducts, mode) {
+  if (!["home", "toys", "popup"].includes(mode)) throw new Error("Invalid catalog preview mode");
+  if (!Array.isArray(approvedProducts)) throw new Error("Missing approved catalog for SEO preview");
+  const title = mode === "home" ? "عمران تويز — لعب أطفال وهدايا في طنطا" :
+    mode === "popup" ? "POP UP — بالونات وهدايا ومستلزمات حفلات" : "ألعاب الأطفال في عمران تويز";
+  const introduction = mode === "home"
+    ? "تصفح أحدث منتجات شركة عمران التجارية في طنطا، وشاهد الصور واستفسر عن الأسعار والتوفر عبر واتساب."
+    : mode === "popup"
+      ? "تصفح بالونات ومنتجات POP UP المنشورة، وشاهد صور المنتجات ثم استفسر عن السعر والتوفر عبر واتساب."
+      : "تصفح ألعاب الأطفال المنشورة في عمران تويز، واختر المنتج المناسب ثم استفسر عن السعر والتوفر عبر واتساب.";
+  const links = approvedProducts.map((product, index) => {
+    if (!product?.id || !/^[A-Za-z0-9_-]+$/.test(product.id) || !product.name?.trim()) return "";
+    const catalog = /^(POP-)/i.test(product.id) ? "popup" : "toys";
+    const href = (catalog === "popup" ? "/popup/p/" : "/products/p/") + encodeURIComponent(product.id);
+    const image = typeof (product.processedImage || product.image) === "string" ? (product.processedImage || product.image) : "";
+    const photo = index < 12 && image.startsWith("/products/") && !image.includes("..")
+      ? '<img src="' + htmlEscape(image) + '" alt="' + htmlEscape(product.name) + '" width="240" height="240" loading="lazy" decoding="async" /> ' : "";
+    return '<li>' + photo + '<a href="' + htmlEscape(href) + '">' + htmlEscape(product.name) + '</a></li>';
+  }).join("");
+  const body = '<main dir="rtl" aria-label="الكتالوج المعتمد">' +
+    '<h1>' + htmlEscape(title) + '</h1><p>' + htmlEscape(introduction) + '</p>' +
+    '<nav aria-label="تصفح كتالوج عمران"><a href="/">الرئيسية</a> · <a href="/products">ألعاب الأطفال</a> · <a href="/popup">بالونات وهدايا POP UP</a></nav>' +
+    '<section aria-label="المنتجات المنشورة"><h2>منتجات يمكن تصفحها</h2><ul>' + links + '</ul></section>' +
+    '</main>';
+  return replaceRequired(baseHtml, /<div id="root"><\/div>/i,
+    '<div id="root">' + body + '</div>', "catalog root");
+}
+
+/**
  * Static product detail head. With WhatsApp-only prices, Product/Offer markup
  * is deliberately not claimed: these are informative WebPage results.
  */
-export function renderProductSeoShell(baseHtml, product, catalog) {
+export function renderProductSeoShell(baseHtml, product, catalog, relatedProducts = []) {
   if (!product?.id || !/^[A-Za-z0-9_-]+$/.test(product.id) || !product.name?.trim()) throw new Error("Invalid approved product");
   if (!["toys", "popup"].includes(catalog)) throw new Error("Invalid catalog");
   const section = catalog === "popup" ? "/popup" : "/products";
@@ -151,5 +184,28 @@ export function renderProductSeoShell(baseHtml, product, catalog) {
     ]
   };
   html = replaceRequired(html, /<\/head>/i, '  <script id="omran-product-jsonld" type="application/ld+json">' + JSON.stringify(structured).replace(/</g, "\\u003c") + '</script>\n  </head>', "product head");
-  return replaceRequired(html, /<\/body>/i, '<noscript><main dir="rtl"><h1>' + htmlEscape(name) + '</h1><p>' + htmlEscape(description) + '</p><p>السعر والتوفر عبر واتساب</p></main></noscript>\n  </body>', "product body");
+  // Static product content in #root, not hidden inside <noscript>.
+  // Every product therefore has an H1, actual photo, readable description and
+  // crawlable internal links even before Google renders the JavaScript app.
+  const categoryLabel = String(product.category || "").trim();
+  const details = [
+    '<main dir="rtl" aria-label="تفاصيل المنتج">',
+    '<nav aria-label="مسار تصفح المنتج"><a href="/">الرئيسية</a> · <a href="' +
+      section + '">' + (catalog === "popup" ? "POP UP" : "ألعاب الأطفال") + '</a></nav>',
+    '<article><h1>' + htmlEscape(name) + '</h1>',
+    categoryLabel ? '<p>القسم: ' + htmlEscape(categoryLabel) + '</p>' : '',
+    '<img src="' + htmlEscape(image) + '" alt="' + htmlEscape(name) +
+      '" width="480" height="480" loading="eager" decoding="async" />',
+    '<p>' + htmlEscape(description) + '</p>',
+    '<p>كود الصنف: ' + htmlEscape(String(product.sku || product.id)) + '</p>',
+    '<p>السعر والتوفر بالاستفسار عبر واتساب.</p></article>',
+    '<section aria-label="منتجات مشابهة"><h2>منتجات أخرى من نفس القسم</h2><ul>',
+    ...relatedProducts.filter(other => other?.id && other.id !== product.id &&
+      /^[A-Za-z0-9_-]+$/.test(other.id) && other.name?.trim()).slice(0, 4)
+      .map(other => '<li><a href="' + section + '/p/' +
+        encodeURIComponent(other.id) + '">' + htmlEscape(other.name) + '</a></li>'),
+    '</ul></section></main>'
+  ].join("");
+  return replaceRequired(html, /<div id="root"><\/div>/i,
+    '<div id="root">' + details + '</div>', "product root");
 }
