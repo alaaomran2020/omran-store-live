@@ -3,7 +3,8 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
 import { writeSitemap, generateSitemapData } from "./scripts/sitemap-generate-core.mjs";
-import { renderStaticSeoShell, renderProductSeoShell } from "./scripts/static-seo-shell.mjs";
+import { renderStaticSeoShell, renderProductSeoShell, renderCatalogDiscoveryShell } from "./scripts/static-seo-shell.mjs";
+import { isPopUpProduct } from "./shared/productCatalog";
 import { OPENING_PROFILE } from "./shared/openingProfile";
 import {
   defineConfig,
@@ -346,19 +347,34 @@ function vitePluginSpaRouteShells(): Plugin {
       const indexPath = path.join(outDir, "index.html");
       if (!fs.existsSync(indexPath)) return;
       const shell = fs.readFileSync(indexPath, "utf8");
+      // The exact same approved catalog feeds the sitemap, client app and
+      // initial-response HTML. Avoid orphaned product pages when JS is unavailable.
+      const { products } = await generateSitemapData(path.resolve(import.meta.dirname));
+      const toys = products.filter(product => !isPopUpProduct(product));
+      const popup = products.filter(product => isPopUpProduct(product));
+      const featured = [...toys].sort((a, b) => (b.rowIndex ?? 0) - (a.rowIndex ?? 0)).slice(0, 8);
+      fs.writeFileSync(indexPath, renderCatalogDiscoveryShell(shell, [...featured, ...popup.slice(0, 3)], "home"), "utf8");
       for (const route of SPA_ROUTES) {
         const target = path.join(outDir, ...route.slice(1).split("/")) + ".html";
         fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.writeFileSync(target, renderStaticSeoShell(shell, route), "utf8");
+        let html = renderStaticSeoShell(shell, route);
+        if (route === "/products") html = renderCatalogDiscoveryShell(html, toys, "toys");
+        if (route === "/popup") html = renderCatalogDiscoveryShell(html, popup, "popup");
+        fs.writeFileSync(target, html, "utf8");
       }
       // Same vetted snapshot and publication gate used by sitemap and storefront.
-      const { products } = await generateSitemapData(path.resolve(import.meta.dirname));
       for (const product of products) {
-        const category = String(product.category || "").toLowerCase();
-        const isPopup = ["بالونات", "هدايا", "مستلزمات حفلات", "مستلزمات الحفلات", "حفلات ومناسبات", "ديكور حفلات", "ديكورات حفلات", "birthday", "party", "gift", "pop up", "popup"].some(marker => category.includes(marker));
+        const isPopup = isPopUpProduct(product);
         const target = path.join(outDir, isPopup ? "popup" : "products", "p", product.id + ".html");
         fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.writeFileSync(target, renderProductSeoShell(shell, product, isPopup ? "popup" : "toys"), "utf8");
+        const sameCatalog = isPopup ? popup : toys;
+        const relatedInCategory = sameCatalog.filter(other =>
+          other.id !== product.id && other.category === product.category
+        );
+        const related = (relatedInCategory.length ? relatedInCategory :
+          sameCatalog.filter(other => other.id !== product.id)).slice(0, 4);
+        fs.writeFileSync(target,
+          renderProductSeoShell(shell, product, isPopup ? "popup" : "toys", related), "utf8");
       }
       console.log(`[product-shells] ${products.length} approved products`);
       fs.writeFileSync(path.join(outDir, "404.html"), renderStaticSeoShell(shell, "/404"), "utf8");
