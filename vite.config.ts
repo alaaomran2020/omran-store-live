@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
 import { writeSitemap, generateSitemapData } from "./scripts/sitemap-generate-core.mjs";
-import { renderStaticSeoShell, renderProductSeoShell, renderCatalogDiscoveryShell } from "./scripts/static-seo-shell.mjs";
+import { renderStaticSeoShell, renderProductSeoShell, renderCatalogDiscoveryShell, selectHomeDiscoveryProducts } from "./scripts/static-seo-shell.mjs";
 import { isPopUpProduct } from "./shared/productCatalog";
 import { OPENING_PROFILE } from "./shared/openingProfile";
 import {
@@ -352,8 +352,8 @@ function vitePluginSpaRouteShells(): Plugin {
       const { products } = await generateSitemapData(path.resolve(import.meta.dirname));
       const toys = products.filter(product => !isPopUpProduct(product));
       const popup = products.filter(product => isPopUpProduct(product));
-      const featured = [...toys].sort((a, b) => (b.rowIndex ?? 0) - (a.rowIndex ?? 0)).slice(0, 8);
-      fs.writeFileSync(indexPath, renderCatalogDiscoveryShell(shell, [...featured, ...popup.slice(0, 3)], "home"), "utf8");
+      const homeProducts = selectHomeDiscoveryProducts(toys, popup);
+      fs.writeFileSync(indexPath, renderCatalogDiscoveryShell(shell, homeProducts, "home"), "utf8");
       for (const route of SPA_ROUTES) {
         const target = path.join(outDir, ...route.slice(1).split("/")) + ".html";
         fs.mkdirSync(path.dirname(target), { recursive: true });
