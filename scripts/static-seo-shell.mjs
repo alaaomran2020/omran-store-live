@@ -112,6 +112,28 @@ export function renderStaticSeoShell(baseHtml, route) {
  * React replaces #root during boot, so this never duplicates the live UI.
  * Only products passing the existing publication gate are passed by the build.
  */
+/**
+ * Preserve current featured products while giving crawlers direct links to
+ * varied evergreen toy categories. This changes only initial-response
+ * discovery links, not approved catalog data or the hydrated React UI.
+ */
+export function selectHomeDiscoveryProducts(toys, popup) {
+  const featured = [...toys].sort((a, b) => (b.rowIndex ?? 0) - (a.rowIndex ?? 0)).slice(0, 8);
+  const seenCategories = new Set();
+  const evergreen = toys.filter(product => {
+    const category = String(product.category || "").trim();
+    if (!category || category === "فوانيس رمضان" || category === "ramadan-lanterns" || seenCategories.has(category)) return false;
+    seenCategories.add(category);
+    return true;
+  }).slice(0, 8);
+  const seenProducts = new Set();
+  return [...featured, ...evergreen, ...popup.slice(0, 3)].filter(product => {
+    if (seenProducts.has(product.id)) return false;
+    seenProducts.add(product.id);
+    return true;
+  });
+}
+
 export function renderCatalogDiscoveryShell(baseHtml, approvedProducts, mode) {
   if (!["home", "toys", "popup"].includes(mode)) throw new Error("Invalid catalog preview mode");
   if (!Array.isArray(approvedProducts)) throw new Error("Missing approved catalog for SEO preview");

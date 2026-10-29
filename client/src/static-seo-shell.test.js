@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "./lib/publicProductsSnapshot";
 import { POPUP_PRODUCTS_SNAPSHOT } from "./lib/popupProductsSnapshot";
 import { describe, it, expect } from "vitest";
-import { PUBLIC_PAGE_SEO, renderStaticSeoShell, renderProductSeoShell, renderCatalogDiscoveryShell } from "../../scripts/static-seo-shell.mjs";
+import { PUBLIC_PAGE_SEO, renderStaticSeoShell, renderProductSeoShell, renderCatalogDiscoveryShell, selectHomeDiscoveryProducts } from "../../scripts/static-seo-shell.mjs";
 
 const shell = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
@@ -18,6 +18,27 @@ describe("Cloudflare Pages static SEO shells", () => {
       expect(product.processedImage, product.id).toMatch(/^\/products\//);
       expect(product.description, product.id).not.toMatch(/سعر\s+الجملة[^.!؟\n]*\d/u);
     }
+  });
+
+  it("preserves current featured links and adds distinct evergreen toy categories to home discovery", () => {
+    const seasonal = Array.from({ length: 8 }, (_, i) => ({
+      id: "OMR-RAM-" + (i + 1), name: "فانوس " + (i + 1),
+      category: "فوانيس رمضان", rowIndex: 2000 + i,
+    }));
+    const evergreen = Array.from({ length: 9 }, (_, i) => ({
+      id: "OMR-TOY-" + (i + 1), name: "لعبة " + (i + 1),
+      category: "قسم " + (i === 8 ? 1 : i + 1), rowIndex: i,
+    }));
+    const popup = [{ id: "POP-BAL-001", name: "بالون", category: "بالونات" }];
+    const selection = selectHomeDiscoveryProducts([...evergreen, ...seasonal], popup);
+    expect(selection.slice(0, 8).map(x => x.id)).toEqual([...seasonal].reverse().map(x => x.id));
+    expect(selection.slice(8, 16).map(x => x.id)).toEqual(evergreen.slice(0, 8).map(x => x.id));
+    expect(selection.at(-1).id).toBe("POP-BAL-001");
+    expect(new Set(selection.map(x => x.id)).size).toBe(selection.length);
+    const html = renderCatalogDiscoveryShell(shell, selection, "home");
+    expect(html).toContain('href="/products/p/OMR-RAM-8"');
+    expect(html).toContain('href="/products/p/OMR-TOY-1"');
+    expect(html).toContain('href="/popup/p/POP-BAL-001"');
   });
 
   it("includes crawlable product links on home, toys and POP UP without JS", () => {
