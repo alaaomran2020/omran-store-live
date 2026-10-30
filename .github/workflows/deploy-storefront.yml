@@ -391,10 +391,13 @@ jobs:
                       empty.append((label, owner, image, resolved.stat().st_size))
                       continue
               if found == 0:
-                  problems.append(
-                      f'{label}: no image references parsed from {snapshot_path} '
-                      f'(the gate must not be a silent no-op)'
-                  )
+                  if label == 'popup' and 'export const POPUP_PRODUCTS_SNAPSHOT: Product[] = [];' in source:
+                      print('popup: explicitly retired legacy catalog; no images expected')
+                  else:
+                      problems.append(
+                          f'{label}: no image references parsed from {snapshot_path} '
+                          f'(the gate must not be a silent no-op)'
+                      )
 
           if remote or unsafe or missing or empty or problems:
               print('::error::Deployment media integrity gate FAILED - refusing to deploy')
