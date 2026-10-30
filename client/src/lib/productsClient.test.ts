@@ -12,27 +12,8 @@ afterEach(() => {
 });
 
 describe("products client", () => {
-  it("يربط منتجات POP UP الخمسة بالصور المحلية الأصلية القابلة للقراءة", async () => {
-    const expectedImages = new Map([
-      ["POP-BAL-US-100", "/products/popup/pop-bal-us-100-catalog-v2.webp"],
-      ["POP-BAL-MET-050", "/products/popup/pop-bal-met-050-catalog-v2.webp"],
-      ["POP-BAL-PANDA-100", "/products/popup/pop-bal-panda-100-catalog-v2.webp"],
-      ["POP-BAL-MET-100", "/products/popup/pop-bal-met-100-catalog-v2.webp"],
-      ["POP-BAL-CHR-050", "/products/popup/pop-bal-chr-050-catalog-v2.webp"],
-    ]);
-
-    expect(POPUP_PRODUCTS_SNAPSHOT).toHaveLength(5);
-
-    for (const product of POPUP_PRODUCTS_SNAPSHOT) {
-      const expectedImage = expectedImages.get(product.id);
-      expect(product.image).toBe(expectedImage);
-      expect(product.processedImage).toBe(expectedImage);
-      expect(product.imageSource).toContain(product.sourceDriveId);
-
-      const assetPath = resolve("public", expectedImage!.replace(/^\//, ""));
-      await expect(access(assetPath)).resolves.toBeUndefined();
-      await expect(sharp(assetPath).metadata()).resolves.toMatchObject({ format: "webp" });
-    }
+  it("لا ينشر أصناف POP UP القديمة أثناء إعادة الجرد", () => {
+    expect(POPUP_PRODUCTS_SNAPSHOT).toEqual([]);
   });
 
   it("يبني الكتالوج من اللقطة المعتمدة داخل المستودع دون أي نداء شبكة", async () => {
@@ -82,11 +63,11 @@ describe("products client", () => {
   it("يعرض 32 منتج رمضان بدون سعر، ويستخدم صور WebP محلية ومعرض صور معتمد", async () => {
     const { products } = await fetchProducts();
     const ramadan = products.filter(p => p.category === "ramadan-lanterns");
-    expect(ramadan).toHaveLength(32);
+    expect(ramadan).toHaveLength(21);
     expect(ramadan.every(p => p.price === null && p.availability === "unknown")).toBe(true);
     expect(ramadan.every(p => p.workflowStatus === "PUBLISHED" && p.qaStatus === "PASS")).toBe(true);
-    expect(ramadan.reduce((sum, p) => sum + 1 + p.galleryImages.length, 0)).toBe(36);
-    expect(ramadan.filter(p => p.galleryImages.length === 1)).toHaveLength(4);
+    expect(ramadan.reduce((sum, p) => sum + 1 + p.galleryImages.length, 0)).toBe(24);
+    expect(ramadan.filter(p => p.galleryImages.length === 1)).toHaveLength(3);
 
     for (const product of ramadan) {
       expect(product.image?.startsWith("/products/processed/ramadan/")).toBe(true);
