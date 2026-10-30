@@ -67,7 +67,7 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   const [shareOutcome, setShareOutcome] = useState<ProductShareOutcome | null>(null);
   const [search, setSearch] = useState(initial.search);
   const [category, setCategory] = useState<string>(initial.category);
-  const isRamadanCategory = !isPopup && category === displayCategoryName("ramadan-lanterns");
+  const isRamadanCategory = !isPopup && (category === displayCategoryName("ramadan-lanterns") || category === displayCategoryName("فوانيس رمضان"));
   const [age, setAge] = useState<string>(isPopup ? ALL : initial.age);
   const [brand, setBrand] = useState<string>(initial.brand);
   const [tag, setTag] = useState<string>(initial.tag);
