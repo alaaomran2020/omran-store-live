@@ -35,7 +35,7 @@ jobs:
 
       - name: Validate one approved product
         env:
-          TEST_PRODUCT_ID: OMR-RAW-001
+          TEST_PRODUCT_ID: OMR-RAM-2026-035
         run: node scripts/master-data-pipeline.mjs
 
       - name: Assert read-only API-free contract

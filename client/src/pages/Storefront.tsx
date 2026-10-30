@@ -1,7 +1,6 @@
 import BrandHeader from "@/components/BrandHeader";
 import HomeHero from "@/components/HomeHero";
 import HomeProductShowcase from "@/components/HomeProductShowcase";
-import PopUpPromo from "@/components/PopUpPromo";
 import SiteFooter from "@/components/SiteFooter";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import HomeCategoryHighlights from "@/components/HomeCategoryHighlights";
@@ -27,7 +26,6 @@ export default function Storefront() {
         <HomeAgeBrowse />
         <StoreTrustFeatures />
         <HomeSupportSections />
-        <PopUpPromo />
       </main>
       <SiteFooter />
     </div>

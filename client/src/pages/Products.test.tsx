@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Products from "@/pages/Products";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "@/lib/publicProductsSnapshot";
 import { POPUP_PRODUCTS_SNAPSHOT } from "@/lib/popupProductsSnapshot";
+import { displayCategoryName } from "@shared/taxonomy";
 
 function renderCatalog(catalog: "toys" | "popup" = "toys") {
   const queryClient = new QueryClient({
@@ -90,7 +91,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
   it("يعرض قسم رمضان بصوره وأجوائه مع زر السؤال عن السعر دون فلتر سن أو شراء مباشر", async () => {
     window.history.replaceState({}, "", "/products?category=ramadan-lanterns");
     renderCatalog();
-    await waitFor(() => expect(cards()).toHaveLength(24));
+    await waitFor(() => expect(cards()).toHaveLength(21));
     expect(cards().every(card => card.getAttribute("data-product-id")?.startsWith("OMR-RAM-"))).toBe(true);
     expect(screen.getByRole("heading", { name: "زينة رمضان وتفاصيل تفرّح البيت" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "منتجات رمضان" })).toBeTruthy();
@@ -113,7 +114,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     });
     await waitFor(() => expect(screen.getByText(target.name)).toBeTruthy());
 
-    fireEvent.click(screen.getByRole("button", { name: new RegExp(target.category) }));
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(displayCategoryName(target.category)) }));
     expect(cards().every(card => {
       const id = card.getAttribute("data-product-id");
       return PUBLIC_PRODUCTS_SNAPSHOT.find(product => product.id === id)?.category === target.category;
@@ -159,7 +160,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
 
     const target = PUBLIC_PRODUCTS_SNAPSHOT[0];
-    fireEvent.click(screen.getByRole("button", { name: new RegExp(target.category) }));
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(displayCategoryName(target.category)) }));
     const filtered = cards().map(card => card.getAttribute("data-product-id"));
     expect(filtered.length).toBeGreaterThan(0);
     expect(filtered.every(id =>
@@ -176,22 +177,12 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     expect(catalogNetworkCalls()).toEqual([]);
   });
 
-  it("يعزل كتالوج POP UP ويعيد الحالة بعد إزالة بحث لا ينتمي إليه", async () => {
+  it("يعزل كتالوج POP UP دون إظهار الأصناف القديمة", async () => {
     renderCatalog("popup");
-    await waitFor(() => expect(cards()).toHaveLength(POPUP_PRODUCTS_SNAPSHOT.length));
-
-    expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(
-      POPUP_PRODUCTS_SNAPSHOT.map(product => product.id)
-    );
-    expect(cards().every(card => card.getAttribute("data-catalog") === "popup")).toBe(true);
-    expect(screen.queryByText("كتالوج لعب الأطفال")).toBeNull();
-
-    fireEvent.change(screen.getByTestId("product-search"), { target: { value: "سيارة" } });
-    await waitFor(() => expect(screen.getByText("لا توجد نتائج مطابقة لبحثك أو الفلاتر")).toBeTruthy());
-
-    fireEvent.click(screen.getByRole("button", { name: "مسح البحث والفلاتر" }));
-    await waitFor(() => expect(cards()).toHaveLength(POPUP_PRODUCTS_SNAPSHOT.length));
-    expect(cards().every(card => card.getAttribute("data-catalog") === "popup")).toBe(true);
+    await waitFor(() => expect(screen.queryByTestId("product-card")).toBeNull());
+    expect(POPUP_PRODUCTS_SNAPSHOT).toHaveLength(0);
+    expect(screen.getByRole("heading", { name: "كتالوج POP UP" })).toBeTruthy();
+    expect(catalogNetworkCalls()).toEqual([]);
   });
 
   it("يمسح search وsort من الحالة والرابط معًا", async () => {

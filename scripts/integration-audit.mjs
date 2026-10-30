@@ -324,9 +324,12 @@ if (exists(".github/workflows/deploy-storefront.yml")) {
 if (exists("client/src/lib/popupProductsSnapshot.ts")) {
   const popup = read("client/src/lib/popupProductsSnapshot.ts");
   const popupIds = [...popup.matchAll(/id:\s*"([^"]+)"/g)].map(match => match[1]);
+  // A temporary catalog reset may explicitly retire all legacy POP UP
+  // products. Accept only an exact empty export, never a partially missing feed.
+  const popupRetired = popup.includes("export const POPUP_PRODUCTS_SNAPSHOT: Product[] = [];");
   assert(
-    popupIds.length === 5,
-    `POP UP catalog must contain exactly 5 approved products, found ${popupIds.length}`
+    popupRetired ? popupIds.length === 0 : popupIds.length === 5,
+    `POP UP catalog must be either explicitly retired or contain 5 approved products, found ${popupIds.length}`
   );
   assert(
     popupIds.every(id => id.startsWith("POP-")),

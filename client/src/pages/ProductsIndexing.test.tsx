@@ -56,7 +56,7 @@ describe("حالة فهرسة روابط الكتالوج", () => {
   });
 
   it("حالة البحث noindex,follow (لا index bloat) مع بقاء الواجهة تعمل", async () => {
-    window.history.replaceState({}, "", "/products?search=%D9%85%D8%B7%D8%A8%D8%AE");
+    window.history.replaceState({}, "", "/products?search=%D9%81%D8%A7%D9%86%D9%88%D8%B3");
     renderCatalog();
     await waitFor(() => expect(screen.getAllByTestId("product-card").length).toBeGreaterThan(0));
 
