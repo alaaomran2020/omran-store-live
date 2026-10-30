@@ -229,6 +229,8 @@ export function canonicalCategory(raw: string): Category | null {
 /** اسم التصنيف المناسب للواجهة؛ يحفظ الاسم الخام إذا لم يوجد تطابق موثوق. */
 export function displayCategoryName(raw: string): string {
   const trimmed = (raw ?? "").trim();
+  if (trimmed === "ramadan-lanterns") return "مفارش رمضان";
+  if (trimmed === "فوانيس رمضان") return "فوانيس رمضان";
   return canonicalCategory(trimmed)?.name ?? trimmed;
 }
 
