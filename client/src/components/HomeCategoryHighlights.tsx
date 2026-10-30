@@ -10,36 +10,16 @@ type HomeCategory = {
 
 const categories: readonly HomeCategory[] = [
   {
-    name: "عربيات",
-    query: "عربيات",
-    image: "/categories/category-cars-approved.webp",
-  },
-  {
-    name: "عرايس",
-    query: "عرايس",
-    image: "/categories/category-dolls-approved.webp",
-  },
-  {
-    name: "أطقم المهن والتركيب",
-    query: "مطبخ دكتور نجار تنظيف",
-    href: "/products?category=role-play#feed",
-    image: "/categories/category-role-play-approved.webp",
-  },
-  {
-    name: "رفايع لعب أطفال",
-    query: "رفايع",
-    image: "/categories/category-misc-toys-approved.webp",
-  },
-  {
-    name: "الكور",
-    query: "كور",
-    image: "/categories/category-balls-approved.webp",
-  },
-  {
-    name: "رمضان",
-    query: "رمضان",
-    href: "/products?category=ramadan-lanterns#feed",
+    name: "فوانيس رمضان",
+    query: "فوانيس رمضان",
+    href: "/products?category=" + encodeURIComponent("فوانيس رمضان") + "#feed",
     image: "/categories/category-ramadan-approved.webp",
+  },
+  {
+    name: "مفارش رمضان",
+    query: "مفارش رمضان",
+    href: "/products?category=ramadan-lanterns#feed",
+    image: "/products/processed/ramadan/ramadan-0065-main.webp",
   },
 ];
 
@@ -69,7 +49,7 @@ export default function HomeCategoryHighlights({
               id="home-categories-title"
               className="font-hand-ar mt-1 text-3xl font-bold text-brand-navy sm:text-4xl"
             >
-              تسوق حسب القسم
+              تصفح فوانيس ومفارش رمضان
             </h2>
           </div>
           <a
@@ -102,7 +82,7 @@ export default function HomeCategoryHighlights({
             >
               <img
                 src={image}
-                srcSet={categorySrcSet(image)}
+                srcSet={image.startsWith("/categories/") ? categorySrcSet(image) : undefined}
                 sizes={
                   compact
                     ? "64px"
