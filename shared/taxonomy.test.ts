@@ -36,7 +36,8 @@ describe("canonicalCategory", () => {
     expect(canonicalCategory("فوانيس رمضان")?.id).toBe("ramadan-lanterns");
     expect(canonicalCategory("مفارش رمضان")?.id).toBe("ramadan-lanterns");
     expect(canonicalCategory("رمضان")?.visibility).toBe("visible");
-    expect(displayCategoryName("فوانيس رمضان")).toBe("رمضان");
+    expect(displayCategoryName("فوانيس رمضان")).toBe("فوانيس رمضان");
+    expect(displayCategoryName("ramadan-lanterns")).toBe("مفارش رمضان");
     expect(canonicalCategory("اسكوشي")?.id).toBe("arts-crafts");
   });
 
