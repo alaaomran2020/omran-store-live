@@ -90,7 +90,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
   it("يعرض قسم رمضان بصوره وأجوائه مع زر السؤال عن السعر دون فلتر سن أو شراء مباشر", async () => {
     window.history.replaceState({}, "", "/products?category=ramadan-lanterns");
     renderCatalog();
-    await waitFor(() => expect(cards()).toHaveLength(24));
+    await waitFor(() => expect(cards()).toHaveLength(21));
     expect(cards().every(card => card.getAttribute("data-product-id")?.startsWith("OMR-RAM-"))).toBe(true);
     expect(screen.getByRole("heading", { name: "زينة رمضان وتفاصيل تفرّح البيت" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "منتجات رمضان" })).toBeTruthy();
@@ -176,22 +176,12 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     expect(catalogNetworkCalls()).toEqual([]);
   });
 
-  it("يعزل كتالوج POP UP ويعيد الحالة بعد إزالة بحث لا ينتمي إليه", async () => {
+  it("يعزل كتالوج POP UP دون إظهار الأصناف القديمة", async () => {
     renderCatalog("popup");
-    await waitFor(() => expect(cards()).toHaveLength(POPUP_PRODUCTS_SNAPSHOT.length));
-
-    expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(
-      POPUP_PRODUCTS_SNAPSHOT.map(product => product.id)
-    );
-    expect(cards().every(card => card.getAttribute("data-catalog") === "popup")).toBe(true);
-    expect(screen.queryByText("كتالوج لعب الأطفال")).toBeNull();
-
-    fireEvent.change(screen.getByTestId("product-search"), { target: { value: "سيارة" } });
-    await waitFor(() => expect(screen.getByText("لا توجد نتائج مطابقة لبحثك أو الفلاتر")).toBeTruthy());
-
-    fireEvent.click(screen.getByRole("button", { name: "مسح البحث والفلاتر" }));
-    await waitFor(() => expect(cards()).toHaveLength(POPUP_PRODUCTS_SNAPSHOT.length));
-    expect(cards().every(card => card.getAttribute("data-catalog") === "popup")).toBe(true);
+    await waitFor(() => expect(screen.queryByTestId("product-card")).toBeNull());
+    expect(POPUP_PRODUCTS_SNAPSHOT).toHaveLength(0);
+    expect(screen.getByRole("heading", { name: "كتالوج POP UP" })).toBeTruthy();
+    expect(catalogNetworkCalls()).toEqual([]);
   });
 
   it("يمسح search وsort من الحالة والرابط معًا", async () => {
