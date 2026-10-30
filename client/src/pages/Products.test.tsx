@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Products from "@/pages/Products";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "@/lib/publicProductsSnapshot";
 import { POPUP_PRODUCTS_SNAPSHOT } from "@/lib/popupProductsSnapshot";
+import { displayCategoryName } from "@shared/taxonomy";
 
 function renderCatalog(catalog: "toys" | "popup" = "toys") {
   const queryClient = new QueryClient({
@@ -113,7 +114,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     });
     await waitFor(() => expect(screen.getByText(target.name)).toBeTruthy());
 
-    fireEvent.click(screen.getByRole("button", { name: new RegExp(target.category) }));
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(displayCategoryName(target.category)) }));
     expect(cards().every(card => {
       const id = card.getAttribute("data-product-id");
       return PUBLIC_PRODUCTS_SNAPSHOT.find(product => product.id === id)?.category === target.category;
@@ -159,7 +160,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
 
     const target = PUBLIC_PRODUCTS_SNAPSHOT[0];
-    fireEvent.click(screen.getByRole("button", { name: new RegExp(target.category) }));
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(displayCategoryName(target.category)) }));
     const filtered = cards().map(card => card.getAttribute("data-product-id"));
     expect(filtered.length).toBeGreaterThan(0);
     expect(filtered.every(id =>
