@@ -28,8 +28,11 @@ describe("Public catalogue privacy (WhatsApp enquiry only)", () => {
     }
   });
 
-  it("keeps the two affected products published and discoverable", () => {
-    expect(PUBLIC_PRODUCTS_SNAPSHOT.find(product => product.id === "OMR-SPK-MIC-001")?.name).toBe("سماعة محمولة مع مايك لاسلكي");
-    expect(PUBLIC_PRODUCTS_SNAPSHOT.find(product => product.id === "OMR-KIDS-WATCH-001")?.name).toBe("ساعة الأطفال الرقمية");
+  it("keeps formerly sensitive retired items out of all public catalogs", () => {
+    for (const id of ["OMR-SPK-MIC-001", "OMR-KIDS-WATCH-001"]) {
+      expect(PUBLIC_PRODUCTS_SNAPSHOT.some(product => product.id === id)).toBe(false);
+      expect(generated.products.some(product => product.id === id)).toBe(false);
+    }
   });
+
 });
