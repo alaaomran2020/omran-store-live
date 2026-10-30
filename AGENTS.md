@@ -16,14 +16,16 @@ This is the **existing production storefront** for شركة عمران التج�
 3. `client/src/index.css` and `client/src/design-system.css` — actual deployed tokens and typography.
 4. `docs/BRAND-GUIDELINES-EXECUTION.md` and `brand/social-templates.json` — storefront, product cards, and social execution.
 5. `docs/BRAND-GUIDELINES.md` and `brand/omran-banner-brief.md` — supporting context; do not let older conflicting colors override production.
-6. Relevant existing React pages/components and tests before proposing edits.
+6. `docs/OMRAN-MASTER-PROMPTS-2026.md` — index and execution contracts for all Omran prompt workstreams.
+7. `docs/OMRAN-EGYPT-SYSTEM-SINGLE-SOURCE-2026-10-31.md` — approved canonical inventory and recovery design, with separate execution gates.
+8. Relevant existing React pages/components and tests before proposing edits.
 
 When brand documents conflict, follow approved logo -> production index.css -> design-system.css -> current execution guidance -> older historical docs. Do not invent a new palette. Key production anchors: blue `#1769E0`, navy `#123B6D`, red `#C62828`, yellow `#FFC83D`, page `#F7F9FC`, text `#172033`; Cairo is the primary Arabic UI font.
 
 ## Non-negotiable business and data safety
 
 - The current *implemented* catalog source is `public/catalog/products.csv`, which generates a local public snapshot. Do not silently replace it with Sheets, Drive, Egypt System, Make, APIs, runtime fetches, or another source.
-- A future migration to Egypt System with recoverable Google Drive backups, and a reset of published products retaining approved Ramadan categories during transition, are **separate owner decisions requiring a dedicated plan, data mapping, reconciliation, rollback and explicit approval**. Never delete or republish products as a side effect of design work.
+- **Approved data authority as of 2026-10-31:** Egypt System / ESStores SQL Server is the company's sole editable item, package, barcode, stock, price and transaction ledger. Google Drive is the intended single current off-site recovery mirror (not an editable second master); the storefront is a read-only approved publication projection. Read `docs/OMRAN-EGYPT-SYSTEM-SINGLE-SOURCE-2026-10-31.md` for the seasonal-only transitional catalog and verified gaps. A live automated SQL backup / Drive sync / continuous website importer is **not proven running**; do not assume it is. Do not write to office SQL or automatically re-import legacy CSV/Sheets. Never delete or republish products as a side effect of design work.
 - Do not change public product IDs, names, SKUs, SEO URLs, images, stock, pricing, descriptions, or catalog publication rules without a separately approved, traceable product-data task.
 - Keep POP UP's isolated products and staff/admin permission boundaries intact. Do not add credentials, customer data, or secrets to the repository.
 - Show price and availability by WhatsApp enquiry unless a specific verified commercial policy change is approved. Never expose wholesale prices in public descriptions or metadata.
@@ -34,7 +36,7 @@ When brand documents conflict, follow approved logo -> production index.css -> d
 ## Codex workflow
 
 1. **Inspect first:** examine source, current assets, design system, active branches/PRs and relevant tests; report confirmed facts separately from assumptions.
-2. **Plan, then propose:** for creative work use `docs/CODEX-CREATIVE-CONCEPTS-2026.md`. Present five meaningfully different directions and a scored recommendation before implementing designs.
+2. **Choose a scoped prompt:** use `docs/OMRAN-MASTER-PROMPTS-2026.md` for tasks 01–14; Prompt 05 packaging is canceled and must not be executed. For creative work use `docs/CODEX-CREATIVE-CONCEPTS-2026.md`; present five meaningfully different directions and a scored recommendation before implementing designs. Never execute all prompts as one unsupervised change.
 3. **Approval gate:** no production UI changes, new public campaigns, catalog mutations, merges, releases or Cloudflare deploys without explicit owner approval for that scope. A documentation-only branch/PR is acceptable for review.
 4. **Small, reviewable changes:** branch from current `main`, avoid broad refactors; do not alter unrelated code.
 5. **Check locally before claiming success:** use `pnpm lint`, `pnpm check`, `pnpm test`, `pnpm build`, `node scripts/integration-audit.mjs`, and `node scripts/catalog-dependency-gate.mjs` when applicable. Record what actually ran, failures and limitations. Do not claim tests passed without evidence.
