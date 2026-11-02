@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { onRequest } from "../../../functions/api/products.js";
+import { onRequest as onEdgeRequest } from "../../../functions/edge-api/products.js";
 
 describe("Legacy public products API retirement", () => {
   it("fails closed rather than returning historical catalog data", async () => {
@@ -19,7 +20,14 @@ describe("Legacy public products API retirement", () => {
     expect(body).not.toHaveProperty("products");
   });
 
-  it("never serializes prices or internal catalog fields", async () => {
+  it("protects the edge-api alias with the same fail-closed response", async () => {
+    const response = onEdgeRequest();
+    expect(response.status).toBe(410);
+    expect(response.headers.get("cache-control")).toContain("no-store");
+    expect(await response.text()).toBe(await onRequest().text());
+  });
+
+  it("never serializes prices or internal catalog fields" async () => {
     const body = await onRequest().text();
     expect(body).not.toMatch(
       /price|cost|purchase|wholesale|retail|productPrompt|sourceDriveId|imageSource|rowIndex|سعر|الجملة|الشراء/i,
