@@ -21,9 +21,12 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const root = process.cwd();
-const selfPath = path.relative(root, new URL(import.meta.url).pathname);
+// Use decoded native paths, then a consistent separator for allow-list matching.
+const relativePath = absolute => path.relative(root, absolute).split(path.sep).join("/");
+const selfPath = relativePath(fileURLToPath(import.meta.url));
 
 /**
  * Verification code that names the forbidden strings on purpose, in order to
@@ -75,7 +78,7 @@ function collectFiles(relativeRoot) {
       if (BINARY_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) continue;
       // Tests legitimately name the forbidden strings to assert their absence.
       if (/\.test\.[cm]?[jt]sx?$/.test(entry.name)) continue;
-      out.push(path.relative(root, full));
+      out.push(relativePath(full));
     }
   };
   walk(absolute);
