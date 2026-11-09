@@ -1,0 +1,402 @@
+{
+  "sessionDate": "2026-11-09",
+  "source": "public live website",
+  "site": "https://omrantoys.store",
+  "sourceCommitExamined": "71075393caf3526b700efaae8db3f9f5c778702f",
+  "deployedCommit": "UNKNOWN",
+  "method": {
+    "browser": "headless Chrome",
+    "playwright": "1.65.0",
+    "viewportHeight": 900,
+    "deviceScaleFactor": 1,
+    "locale": "ar-EG",
+    "reducedMotion": "reduce",
+    "cpuThrottle": false,
+    "networkThrottle": false,
+    "contextReused": true,
+    "externalAnalyticsBlocked": true,
+    "whatsappOpened": false,
+    "formsSubmitted": "header search GET only"
+  },
+  "blockedHosts": [
+    "static.cloudflareinsights.com",
+    "analytics.ahrefs.com",
+    "hook.eu1.make.com"
+  ],
+  "screenshots": [
+    {
+      "name": "01-live-home-390.png",
+      "url": "https://omrantoys.store/",
+      "width": 390,
+      "height": 900,
+      "scrollWidth": 390,
+      "headerHeight": 192.53125,
+      "firstHeroMediaTop": 751.953125,
+      "canonical": "https://omrantoys.store/",
+      "robots": null,
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 8,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 324,
+        "loadEventMs": 326
+      },
+      "sha256": "9823d9b23a86da00944c675195f6b05b7123f57934c268e2d1d50cf5fe52a8a5",
+      "bytes": 132383
+    },
+    {
+      "name": "02-live-categories-390.png",
+      "url": "https://omrantoys.store/",
+      "width": 390,
+      "height": 900,
+      "scrollWidth": 390,
+      "headerHeight": 192.53125,
+      "firstHeroMediaTop": -179.046875,
+      "canonical": "https://omrantoys.store/",
+      "robots": null,
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 8,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 324,
+        "loadEventMs": 326
+      },
+      "sha256": "f26221d704640458fba748ca7104c1164da9ba3d0404bc07a969f1fe313529a8",
+      "bytes": 143356
+    },
+    {
+      "name": "03-live-details-390.png",
+      "url": "https://omrantoys.store/",
+      "width": 390,
+      "height": 900,
+      "scrollWidth": 390,
+      "headerHeight": 192.53125,
+      "firstHeroMediaTop": -284.046875,
+      "canonical": "https://omrantoys.store/products/p/OMR-RAM-2026-035",
+      "robots": "index,follow",
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 8,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 324,
+        "loadEventMs": 326
+      },
+      "sha256": "8b4530c7c40c35ba8ae96d31c2a4b05417a27ecc17b0afeda585fb9804f3c5fc",
+      "bytes": 254432
+    },
+    {
+      "name": "04-live-search-390.png",
+      "url": "https://omrantoys.store/products?search=%D9%81%D8%A7%D9%86%D9%88%D8%B3",
+      "width": 390,
+      "height": 900,
+      "scrollWidth": 390,
+      "headerHeight": 192.53125,
+      "canonical": "https://omrantoys.store/products",
+      "robots": "noindex,follow",
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 24,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 265,
+        "loadEventMs": 677
+      },
+      "sha256": "4ea54c49678098903f53b39e4bdaaf0e35701c7cf23ebef014a02bef2e5494e7",
+      "bytes": 226248
+    },
+    {
+      "name": "05-live-textiles-390.png",
+      "url": "https://omrantoys.store/products?category=ramadan-lanterns#feed",
+      "width": 390,
+      "height": 900,
+      "scrollWidth": 390,
+      "headerHeight": 192.53125,
+      "canonical": "https://omrantoys.store/products",
+      "robots": "noindex,follow",
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 21,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 256,
+        "loadEventMs": 666
+      },
+      "sha256": "5b73f2e850b2e9c0660b5a94c36d243328d743f721add3d4c09a20d1441f3e0d",
+      "bytes": 208085
+    },
+    {
+      "name": "06-live-branches-390.png",
+      "url": "https://omrantoys.store/#branches",
+      "width": 390,
+      "height": 900,
+      "scrollWidth": 390,
+      "headerHeight": 192.53125,
+      "firstHeroMediaTop": -4745.046875,
+      "canonical": "https://omrantoys.store/",
+      "robots": null,
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 8,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 245,
+        "loadEventMs": 1104
+      },
+      "sha256": "bbf0703b448483118b79235a33f31c9795dca7156f0692f6b1b6d596473a4798",
+      "bytes": 67885
+    },
+    {
+      "name": "07-live-wholesale-390.png",
+      "url": "https://omrantoys.store/#branches",
+      "width": 390,
+      "height": 900,
+      "scrollWidth": 390,
+      "headerHeight": 192.53125,
+      "firstHeroMediaTop": -3142.046875,
+      "canonical": "https://omrantoys.store/",
+      "robots": null,
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 8,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 245,
+        "loadEventMs": 1104
+      },
+      "sha256": "c36a4684ac5e5d47b6242ee849a7ca000bd787a2fde0c7a0948125e26e370964",
+      "bytes": 66854
+    },
+    {
+      "name": "01-live-home-360.png",
+      "url": "https://omrantoys.store/",
+      "width": 360,
+      "height": 900,
+      "scrollWidth": 360,
+      "headerHeight": 192.53125,
+      "firstHeroMediaTop": 751.953125,
+      "canonical": "https://omrantoys.store/",
+      "robots": null,
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 8,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 254,
+        "loadEventMs": 1107
+      },
+      "sha256": "e7ee205dfbc07de8c1238ddf35bcb0eb5c962b28ef1ad78a6a0ffc7a4d33614c",
+      "bytes": 130259
+    },
+    {
+      "name": "03-live-details-360.png",
+      "url": "https://omrantoys.store/",
+      "width": 360,
+      "height": 900,
+      "scrollWidth": 360,
+      "headerHeight": 192.53125,
+      "firstHeroMediaTop": -637.046875,
+      "canonical": "https://omrantoys.store/products/p/OMR-RAM-2026-035",
+      "robots": "index,follow",
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 8,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 254,
+        "loadEventMs": 1107
+      },
+      "sha256": "bc6feb48ed4e12242ab5877ce4de2508a78323e3a03f890f3c9ca3a63df691af",
+      "bytes": 250967
+    },
+    {
+      "name": "04-live-search-360.png",
+      "url": "https://omrantoys.store/products?search=%D9%81%D8%A7%D9%86%D9%88%D8%B3",
+      "width": 360,
+      "height": 900,
+      "scrollWidth": 360,
+      "headerHeight": 192.53125,
+      "canonical": "https://omrantoys.store/products",
+      "robots": "noindex,follow",
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 24,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 247,
+        "loadEventMs": 653
+      },
+      "sha256": "9938758b7389204772ad02c74417e411e84e9742b79c72d6ac67495aa65ff2fd",
+      "bytes": 201685
+    },
+    {
+      "name": "06-live-branches-360.png",
+      "url": "https://omrantoys.store/#branches",
+      "width": 360,
+      "height": 900,
+      "scrollWidth": 360,
+      "headerHeight": 192.53125,
+      "firstHeroMediaTop": -4768.046875,
+      "canonical": "https://omrantoys.store/",
+      "robots": null,
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 8,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 257,
+        "loadEventMs": 1110
+      },
+      "sha256": "36db0d3f5b34d3477eb09764149599caa2cf20ab68bd7da6ce3daf12e7d03ce6",
+      "bytes": 66754
+    },
+    {
+      "name": "01-live-home-320.png",
+      "url": "https://omrantoys.store/",
+      "width": 320,
+      "height": 900,
+      "scrollWidth": 320,
+      "headerHeight": 192.53125,
+      "firstHeroMediaTop": 808.09375,
+      "canonical": "https://omrantoys.store/",
+      "robots": null,
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 8,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 238,
+        "loadEventMs": 1052
+      },
+      "sha256": "dd9c0cf201d7b0bcbfcfc48bfa9c66b86e1f65d8b8dd74ec28904bbd5ee0d839",
+      "bytes": 115851
+    },
+    {
+      "name": "03-live-details-320.png",
+      "url": "https://omrantoys.store/",
+      "width": 320,
+      "height": 900,
+      "scrollWidth": 320,
+      "headerHeight": 192.53125,
+      "firstHeroMediaTop": -624.90625,
+      "canonical": "https://omrantoys.store/products/p/OMR-RAM-2026-035",
+      "robots": "index,follow",
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 8,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 238,
+        "loadEventMs": 1052
+      },
+      "sha256": "e5c90aa0b66987488c1c81ba31145372dc6f852fa3f48aab461a7e6c233d5038",
+      "bytes": 250136
+    },
+    {
+      "name": "04-live-search-320.png",
+      "url": "https://omrantoys.store/products?search=%D9%81%D8%A7%D9%86%D9%88%D8%B3",
+      "width": 320,
+      "height": 900,
+      "scrollWidth": 320,
+      "headerHeight": 192.53125,
+      "canonical": "https://omrantoys.store/products",
+      "robots": "noindex,follow",
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 24,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 206,
+        "loadEventMs": 614
+      },
+      "sha256": "db06582b9d4641b4a78cd2441b67819aa93b7962ac6bc6b662cf62689d0bb972",
+      "bytes": 270375
+    },
+    {
+      "name": "06-live-branches-320.png",
+      "url": "https://omrantoys.store/#branches",
+      "width": 320,
+      "height": 900,
+      "scrollWidth": 320,
+      "headerHeight": 192.53125,
+      "firstHeroMediaTop": -4891.90625,
+      "canonical": "https://omrantoys.store/",
+      "robots": null,
+      "visibleBrokenImageCount": 0,
+      "renderedCards": 8,
+      "navigation": {
+        "status": 200,
+        "domContentLoadedMs": 191,
+        "loadEventMs": 1018
+      },
+      "sha256": "e2fa5ee12241754d3813541badb7efbed90b57623468aa41de5757ce8c8ae2f4",
+      "bytes": 65281
+    }
+  ],
+  "dialogs": [
+    {
+      "width": 320,
+      "pageUrl": "https://omrantoys.store/",
+      "documentOverflow": false,
+      "galleryWidth": 365.39,
+      "leftmostContent": -61.39,
+      "actualMessageProductUrl": "https://omrantoys.store/",
+      "expectedProductUrl": "https://omrantoys.store/products/p/OMR-RAM-2026-035",
+      "tabContainment": {
+        "consecutiveTabs": 12,
+        "passed": true
+      },
+      "escapeCloses": true,
+      "restoredTrigger": "عرض تفاصيل فانوس سداسي بعروسة"
+    },
+    {
+      "width": 360,
+      "pageUrl": "https://omrantoys.store/",
+      "documentOverflow": false,
+      "galleryWidth": 365.39,
+      "leftmostContent": -21.39,
+      "actualMessageProductUrl": "https://omrantoys.store/",
+      "expectedProductUrl": "https://omrantoys.store/products/p/OMR-RAM-2026-035",
+      "tabContainment": {
+        "consecutiveTabs": 12,
+        "passed": true
+      },
+      "escapeCloses": true,
+      "restoredTrigger": "عرض تفاصيل فانوس سداسي بعروسة"
+    },
+    {
+      "width": 390,
+      "pageUrl": "https://omrantoys.store/",
+      "documentOverflow": false,
+      "galleryWidth": null,
+      "leftmostContent": 0,
+      "actualMessageProductUrl": "https://omrantoys.store/",
+      "expectedProductUrl": "https://omrantoys.store/products/p/OMR-RAM-2026-035",
+      "tabContainment": {
+        "consecutiveTabs": 12,
+        "passed": true
+      },
+      "escapeCloses": true,
+      "restoredTrigger": "عرض تفاصيل فانوس سداسي بعروسة"
+    }
+  ],
+  "http": [
+    {
+      "path": "/robots.txt",
+      "status": 200,
+      "contentType": "text/plain; charset=utf-8",
+      "bytes": 3092,
+      "sitemapDeclaration": "Sitemap: https://omrantoys.store/sitemap.xml"
+    },
+    {
+      "path": "/sitemap.xml",
+      "status": 200,
+      "contentType": "application/xml",
+      "bytes": 7472,
+      "sitemapUrls": 64
+    },
+    {
+      "path": "/products/p/OMR-RAM-2026-035",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 9926,
+      "canonical": "<link rel=\"canonical\" href=\"https://omrantoys.store/products/p/OMR-RAM-2026-035\" />",
+      "staticWhatsAppLink": false
+    }
+  ],
+  "errors": [],
+  "limits": [
+    "No real-device keyboard or screen reader test",
+    "No field LCP/INP/CLS or GSC result",
+    "Viewport overflow does not rule out clipped inner elements",
+    "Shared browser cache and allowed fonts; external analytics blocked"
+  ]
+}
