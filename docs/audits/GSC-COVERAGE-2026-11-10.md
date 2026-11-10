@@ -48,3 +48,26 @@
 - مراجعة نتيجة GitHub Actions لطلب المراجعة (فحوص المشروع والبناء وverify-static-assets).
 - إحضار أمثلة URL من Search Console لتحديد إصلاحات HTTP/الروابط الداخلية المطلوبة بالاسم.
 - مراجعة diff على فرع التطوير واعتماد أي نشر يدوياً بعد ذلك.
+
+## ملحق — تفصيل تقرير إعادة التوجيه الوارد 2026-11-10
+
+الملف المرفوع باسم `omrantoys.store-Coverage-Drilldown-2026-11-10.zip` **خاص حصراً** بسبب `صفحة تتضمن إعادة توجيه` (Page with redirect)، وليس قوائم الـ404 أو الـSoft 404 أو `Discovered – currently not indexed`. يتضمن 12 رابطاً وعمود `تاريخ آخر زحف`:
+
+| الرابط الموجود بالتقرير | آخر زحف |
+|---|---|
+| `http://omrantoys.store/` | 2026-11-05 |
+| `http://www.omrantoys.store/` | 2026-11-04 |
+| `https://www.omrantoys.store/` | 2026-11-02 |
+| `https://omrantoys.store/products/` | 2026-11-01 |
+| `https://omrantoys.store/products/?cat=dolls` | 2026-11-01 |
+| `http://omrantoys.store/index.html` | 2026-10-31 |
+| `https://omrantoys.store/index.html` | 2026-10-31 |
+| `https://www.omrantoys.store/products/` | 2026-09-27 |
+| `https://www.omrantoys.store/products?cat=educational` | 2026-09-26 |
+| `https://www.omrantoys.store/products/?cat=dolls` | 2026-09-26 |
+| `https://www.omrantoys.store/products?cat=dolls` | 2026-09-26 |
+| `https://www.omrantoys.store/products?cat=vehicles` | 2026-09-26 |
+
+**ما تم التحقق منه من الويب:** `https://www.omrantoys.store/` و`http://www.omrantoys.store/` يوجهان إلى `https://omrantoys.store/`؛ `https://omrantoys.store/products/` يوجه إلى `https://omrantoys.store/products`. لم يتسن تأكيد الحالة HTTP النهائية لكل رابط، خاصة `/index.html` والروابط ذات `?cat=`؛ فحص الويب أعاد خطأ وصول لبعضها. لا دليل هنا على ضرورة تعديل أي Canonical أو تغيير قائمة التحويلات.
+
+**قرار:** توثيق ومراقبة فقط، بدون تعديل تحويلات النطاق أو روابط المنتجات. ما زالت نحتاج ملفات تصدير منفصلة من صفحات **404 (8)** و**Soft 404 (2)** و**تم اكتشافها ولم تتم فهرستها (28)**، مع قائمة عناوين URL. لا يجوز نسبة روابط هذا الملحق لأيٍّ من تلك المشكلات.
