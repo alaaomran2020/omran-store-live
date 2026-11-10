@@ -84,6 +84,9 @@ jobs:
           print(f'Catalog generation guard: PASS ({len(ids)} approved products)')
           PY
 
+      - name: Guard source sitemap against retired products
+        run: node --test scripts/seo-sitemap-source.test.mjs
+
       - name: Repository integration audit
         run: node scripts/integration-audit.mjs
       - name: Validate protected product intake API
