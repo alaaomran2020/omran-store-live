@@ -22,6 +22,16 @@ function checkFile(filename) {
 checkFile(path.join(root, "index.html"));
 checkFile(path.join(root, "_headers"));
 checkFile(path.join(root, "sitemap.xml"));
+checkFile(path.join(root, "404.html"));
+// Cloudflare Pages must serve an actual 404 shell for unknown URLs; that shell
+// may never masquerade as a canonical, indexable storefront or product page.
+const notFoundHtml = fs.readFileSync(path.join(root, "404.html"), "utf8");
+if (!/<meta\s+name=["']robots["']\s+content=["'][^"']*noindex/i.test(notFoundHtml)) {
+  fail("404 shell is missing a noindex robots directive");
+}
+if (/<link\s+rel=["']canonical["']/i.test(notFoundHtml)) {
+  fail("404 shell must not advertise a canonical URL");
+}
 for (const name of ["cars", "dolls", "role-play", "misc-toys", "balls", "ramadan"]) {
   const dir = path.join(root, "categories", "category-" + name + "-approved");
   checkFile(dir + "-192.webp");
