@@ -130,6 +130,39 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
     expect(within(dialog).getAllByText(target.name).length).toBeGreaterThan(0);
   });
 
+  it("يرجع لنفس نتائج البحث والفرز بعد غلق تفاصيل منتج بدون تغيير رابط المنتج", async () => {
+    const target = newestProducts[0];
+    const listingUrl = `/products?search=${encodeURIComponent(target.name)}&sort=name-desc`;
+    window.history.replaceState({}, "", listingUrl);
+    renderCatalog();
+    await waitFor(() => expect(cards().length).toBeGreaterThan(0));
+    const filteredIds = cards().map(card => card.getAttribute("data-product-id"));
+    expect(filteredIds.length).toBeLessThan(initialVisibleCount);
+
+    fireEvent.click(within(cards()[0]).getByRole("link", { name: "التفاصيل" }));
+    await waitFor(() => expect(screen.getByTestId("product-details")).toBeTruthy());
+    expect(window.location.pathname).toBe(`/products/p/${encodeURIComponent(filteredIds[0]!)}`);
+    expect(window.location.search).toBe("");
+
+    fireEvent.click(screen.getByRole("button", { name: "إغلاق" }));
+    await waitFor(() => expect(screen.queryByTestId("product-details")).toBeNull());
+    expect(window.location.pathname + window.location.search).toBe(listingUrl);
+    expect((screen.getByTestId("product-search") as HTMLInputElement).value).toBe(target.name);
+    expect(cards().map(card => card.getAttribute("data-product-id"))).toEqual(filteredIds);
+  });
+
+  it("يحافظ على سلوك الرابط المباشر: إغلاق المنتج يرجع للكتالوج فقط", async () => {
+    const target = PUBLIC_PRODUCTS_SNAPSHOT[0];
+    window.history.replaceState({}, "", `/products/p/${encodeURIComponent(target.id)}`);
+    renderCatalog();
+    await screen.findByTestId("product-details");
+
+    fireEvent.click(screen.getByRole("button", { name: "إغلاق" }));
+    await waitFor(() => expect(screen.queryByTestId("product-details")).toBeNull());
+    expect(window.location.pathname).toBe("/products");
+    expect(window.location.search).toBe("");
+  });
+
   it("يبني رابط واتساب للاستفسار عن السعر والتوفر مع بقاء fallback الكتالوج مستقلًا", async () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
