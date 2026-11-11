@@ -71,4 +71,8 @@ Status: six tests passed, including rejection of a 46-piece old candidate as a v
 - Exact barcodes and package identifiers for all six photographed items are unavailable; no authoritative duplicate verdict can yet be reported.
 - The six photos are in a separate chat ZIP and require image QA / transfer before use in production.
 
+### Update (2026-11-11): verified originals safely recovered
+
+All six original source JPEG files were recovered from the owner's private ChatGPT file library and matched byte-for-byte (SHA-256) against `products.pending.json`. A review-only ZIP is now saved in the private Google Drive `03_PRODUCT_EXPORTS_QA/02_QA_RESULTS` directory. This resolves **original-photo recovery only**, not packaging/label QA, public-asset approval, Egypt System barcode/package matching or website publication. No new public catalog entries have been created.
+
 Do not merge or publish any product entries until these facts are verified.

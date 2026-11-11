@@ -19,6 +19,13 @@
 - Without exact barcodes, package IDs, and photo QA, no real duplicate verdict can be asserted.
 - No database updates, public-catalog changes, merges to main or Cloudflare publishing.
 
+## Follow-up on 2026-11-11 — original photo recovery
+
+- Recovered all six **original** owner-uploaded JPEG files (PHOTO-01 through PHOTO-06) from the user's private ChatGPT file library. Each SHA-256 exactly matches the individual hash already recorded in `docs/product-intake/2026-11-10-six-products/products.pending.json`.
+- Placed a review-only ZIP in the private authorized Google Drive `03_PRODUCT_EXPORTS_QA/02_QA_RESULTS` folder. It contains the six unchanged originals, a checksum manifest and a publication-blocker note. ZIP SHA-256: `0057e89162ac1999275c06a73c0868fc112d6a1d58f5a7efd0e75afb8b0c1be3`.
+- This **does not** verify current Egypt System item/package identities, approve any AI studio image, or publish any product. The official `00_CURRENT` and `01_NEW_ITEMS_EXPORTS` Drive folders were rechecked and remained empty.
+- Keep the photos private and pending until a fresh authoritative office export, barcode/package checks, duplicate review and owner publication approval.
+
 ## Next owner/admin gate
 - An authorized Windows administrator on HP Z620 must authorize the separate local SQL Server Express engine named OMRAN_REVIEW, with manual startup and no remote network connection.
 - Follow docs/EGYPT-SYSTEM-20261110-RECONCILIATION-HANDOFF.md to restore September into a NEW named database only; never overwrite any existing ESStores.
