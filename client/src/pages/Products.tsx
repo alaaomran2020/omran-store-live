@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { OfficialSocialEmbeds } from "@/components/OfficialSocialEmbeds";
 import { ProductCard, ProductCardSkeleton } from "@/components/ProductCard";
@@ -74,6 +74,9 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   const [availability, setAvailability] = useState<string>(initial.availability);
   const [sort, setSort] = useState<ProductSortMode>(initial.sort);
   const [openProductId, setOpenProductId] = useState<string | null>(initial.product);
+  // Keep the shopper's filtered results URL while a clean product permalink is open.
+  // This is navigation state only; individual product permalinks stay unchanged.
+  const catalogReturnUrl = useRef<string | null>(null);
   const [renderLimit, setRenderLimit] = useState(PRODUCTS_PAGE_SIZE);
   const categoryGroupLabelId = useId();
   const ageGroupLabelId = useId();
@@ -169,6 +172,10 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
     const url = new URL(window.location.href);
     const href = productPagePath(productId, catalog);
     if (window.location.pathname === href) return;
+    const catalogPath = catalog === "popup" ? "/popup" : "/products";
+    if (url.pathname === catalogPath && !url.searchParams.has("product")) {
+      catalogReturnUrl.current = url.pathname + url.search + url.hash;
+    }
     window.history.pushState({}, "", href);
   }, [catalog]);
 
@@ -222,10 +229,15 @@ export default function Products({ catalog = "toys", showAnnouncement = true }: 
   const handleCloseDetails = useCallback(() => {
     setOpenProductId(null);
     if (productIdFromPath(window.location.pathname, catalog)) {
-      window.history.replaceState({}, "", catalog === "popup" ? "/popup" : "/products");
+      window.history.replaceState(
+        {},
+        "",
+        catalogReturnUrl.current ?? (catalog === "popup" ? "/popup" : "/products")
+      );
     } else {
       updateUrl({ product: null });
     }
+    catalogReturnUrl.current = null;
   }, [catalog, updateUrl]);
   const handleSelectRelatedProduct = useCallback((product: Product) => {
     setOpenProductId(product.id);
