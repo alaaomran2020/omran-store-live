@@ -123,3 +123,9 @@ temp/
 # Manus version file (auto-generated, not part of source)
 client/public/__manus__/version.json
 .project-config.json
+
+## Egypt System private exports (never commit)
+/automation/egypt-system/private-review/
+/automation/egypt-system/private-export/
+*.bak
+*.bak.bin
