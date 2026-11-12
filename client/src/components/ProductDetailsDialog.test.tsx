@@ -109,6 +109,35 @@ describe("تفاصيل المنتج", () => {
     expect(screen.getByText("2 / 2")).toBeTruthy();
   });
 
+  it("يعرض الصورة المربعة كاملة مع الشعار ولا يغطيها شريط أزرار الموبايل", () => {
+    const studioProduct: Product = {
+      ...product,
+      id: "OMR-INTAKE-20261112-01",
+      name: "عروسة أطفال بشعر كيرلي ونظارة وردية",
+      image: "/products/processed/toys-20261112/omran-toy-01-studio.webp",
+      processedImage: "/products/processed/toys-20261112/omran-toy-01-studio.webp",
+    };
+    render(<ProductDetailsDialog product={studioProduct} onClose={vi.fn()} />);
+
+    const dialog = screen.getByTestId("product-details");
+    const scrollingContent = screen.getByTestId("product-details-scroll");
+    const actions = screen.getByTestId("product-mobile-actions");
+    const stage = screen.getByTestId("product-gallery-stage");
+    const photo = within(stage).getByRole("img", { name: studioProduct.name }) as HTMLImageElement;
+
+    // The CTA is a flex sibling, not an absolute overlay on the image/logo.
+    expect(scrollingContent.parentElement).toBe(actions.parentElement);
+    expect(scrollingContent.firstElementChild?.className).toContain("minmax(0,1fr)");
+    expect(actions.className).toContain("shrink-0");
+    expect(actions.className).not.toContain("absolute");
+    expect(stage.className).toContain("48dvh");
+    expect(photo.className).toContain("object-contain");
+    expect(photo.src).toContain("omran-toy-01-studio.webp");
+    expect(within(dialog).getAllByText(studioProduct.name).length).toBeGreaterThan(0);
+    expect(within(actions).getByRole("link", { name: "اسأل عن السعر والتوفر" })).toBeTruthy();
+    expect(within(actions).getByRole("button", { name: "إضافة إلى المفضلة" })).toBeTruthy();
+  });
+
   it("يغلق الـLightbox بمفتاح Escape دون إغلاق تفاصيل المنتج", () => {
     const productWithGallery: Product = {
       ...product,

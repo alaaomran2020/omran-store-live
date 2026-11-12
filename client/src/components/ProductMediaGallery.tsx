@@ -121,20 +121,20 @@ export function ProductMediaGallery({ product }: { product: Product }) {
   };
 
   return (
-    <div>
+    <div className="min-w-0">
       <ProductStructuredData product={product} catalogPath={catalogPath} />
 
       <div
         data-testid="product-gallery-stage"
-        className="relative aspect-square w-full touch-pan-y overflow-hidden rounded-2xl border border-brand-border bg-brand-cream"
+        className="relative h-[min(48dvh,calc(100vw-1.5rem))] w-full touch-pan-y overflow-hidden rounded-2xl border border-brand-border bg-brand-cream sm:aspect-square sm:h-auto"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
         <ProductImage
           product={selectedProduct}
           priority
-          className="h-full w-full object-contain"
-          sizesHint="(max-width: 768px) 100vw, 50vw"
+          className="h-full w-full object-contain p-2 sm:p-0"
+          sizesHint="(max-width: 640px) calc(100vw - 1.5rem), (max-width: 768px) 100vw, 50vw"
         />
 
         {selected && (

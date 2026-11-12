@@ -113,15 +113,15 @@ export function ProductDetailsDialog({
       onClick={onClose}
     >
       <div
-        className="flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-[1.5rem] bg-brand-surface shadow-2xl sm:max-h-[92vh] sm:rounded-2xl"
+        className="flex h-[94dvh] max-h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-[1.5rem] bg-brand-surface shadow-2xl sm:h-auto sm:max-h-[92vh] sm:rounded-2xl"
         onClick={e => e.stopPropagation()}
       >
         <div className="mx-auto mt-2 h-1.5 w-12 shrink-0 rounded-full bg-brand-border sm:hidden" aria-hidden="true" />
 
-        <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-4 border-b border-brand-border bg-brand-surface/95 px-4 py-3 backdrop-blur sm:px-5 sm:py-4">
-          <div className="min-w-0">
+        <div className="z-10 flex shrink-0 items-center justify-between gap-3 border-b border-brand-border bg-brand-surface/95 px-3 py-2.5 backdrop-blur sm:gap-4 sm:px-5 sm:py-4">
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-brand-blue sm:text-sm">تفاصيل المنتج</p>
-            <p className="mt-0.5 truncate text-sm font-extrabold text-brand-navy sm:hidden">{product.name}</p>
+            <h2 id={titleId} className="mt-0.5 line-clamp-2 break-words text-sm font-extrabold leading-5 text-brand-navy sm:hidden">{product.name}</h2>
           </div>
           <button
             ref={closeButtonRef}
@@ -134,23 +134,23 @@ export function ProductDetailsDialog({
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          <div className="grid gap-4 p-4 pb-28 sm:gap-6 sm:p-7 sm:pb-7 md:grid-cols-2">
+        <div data-testid="product-details-scroll" className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 p-3 pb-4 sm:gap-6 sm:p-7 sm:pb-7 md:grid-cols-2">
             <CatalogBreadcrumbs
               catalog={isPopUpProduct(product) ? "popup" : "toys"}
               category={product.category ? displayCategoryName(product.category) : undefined}
               productName={product.name}
-              className="md:col-span-2"
+              className="hidden sm:block md:col-span-2"
             />
             <ProductMediaGallery product={product} />
 
-            <div className="flex flex-col gap-3.5 sm:gap-4">
+            <div className="flex min-w-0 flex-col gap-3.5 sm:gap-4">
               {product.category && (
-                <span className="inline-flex w-fit rounded-full bg-brand-sky px-3 py-1.5 text-xs font-extrabold text-brand-navy">
+                <span className="inline-flex w-fit max-w-full break-words rounded-full bg-brand-sky px-3 py-1.5 text-xs font-extrabold text-brand-navy">
                   {displayCategoryName(product.category)}
                 </span>
               )}
-              <h2 id={titleId} className="hidden text-2xl font-extrabold leading-9 text-brand-ink sm:block sm:text-3xl">
+              <h2 className="hidden text-2xl font-extrabold leading-9 text-brand-ink sm:block sm:text-3xl">
                 {product.name}
               </h2>
               <dl className="grid grid-cols-2 gap-2 rounded-2xl border border-brand-border bg-white p-3 sm:p-4">
@@ -353,7 +353,7 @@ export function ProductDetailsDialog({
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 z-20 grid grid-cols-[1fr_auto] gap-2 border-t border-brand-border bg-white/96 p-3 pb-[max(.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:hidden">
+        <div data-testid="product-mobile-actions" className="z-20 grid shrink-0 grid-cols-[minmax(0,1fr)_auto] gap-2 border-t border-brand-border bg-white/96 px-3 py-2 pb-[max(.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:hidden">
           {waUrl ? (
             <>
             <a
@@ -361,12 +361,12 @@ export function ProductDetailsDialog({
               target="_blank"
               rel="noreferrer"
               onClick={handleWhatsAppClick}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-whatsapp px-3 py-3 text-xs font-extrabold text-white shadow-lg transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-whatsapp-hover"
+              className="inline-flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-xl bg-whatsapp px-3 py-2 text-center text-xs font-extrabold leading-5 text-white shadow-lg transition active:scale-[0.99] focus-visible:ring-4 focus-visible:ring-whatsapp-hover"
             >
               <MessageCircle size={17} aria-hidden="true" />
               اسأل عن السعر والتوفر
             </a>
-            <WishlistButton productId={product.id} productName={product.name} className="min-h-12 px-3 py-3" />
+            <WishlistButton productId={product.id} productName={product.name} className="min-h-12 whitespace-nowrap px-2.5 py-2 text-xs" />
             </>
           ) : (
             <>
@@ -377,7 +377,7 @@ export function ProductDetailsDialog({
             >
               متابعة التصفح
             </button>
-            <WishlistButton productId={product.id} productName={product.name} className="min-h-12 px-3 py-3" />
+            <WishlistButton productId={product.id} productName={product.name} className="min-h-12 whitespace-nowrap px-2.5 py-2 text-xs" />
             </>
           )}
         </div>
