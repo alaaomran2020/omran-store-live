@@ -74,7 +74,7 @@ describe("كتالوج المنتجات مع fallback محلي", () => {
   it("يعرض المنتجات المضافة حديثًا أولًا ويمكن الرجوع لترتيب الكتالوج", async () => {
     renderCatalog();
     await waitFor(() => expect(cards()).toHaveLength(initialVisibleCount));
-    expect(cards()[0].getAttribute("data-product-id")).toBe("OMR-RAM-2026-035");
+    expect(cards()[0].getAttribute("data-product-id")).toBe(newestProducts[0].id);
     expect(cards().slice(0, 3).map(card => card.getAttribute("data-product-id"))).toEqual(
       newestProducts.slice(0, 3).map(product => product.id)
     );

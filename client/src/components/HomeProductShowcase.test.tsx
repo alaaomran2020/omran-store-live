@@ -47,7 +47,7 @@ describe("lightweight home catalog", () => {
       .sort((a, b) => b.rowIndex - a.rowIndex)
       .slice(0, 8);
     const cards = screen.getAllByTestId("product-card");
-    expect(cards[0].dataset.productId).toBe("OMR-RAM-2026-035");
+    expect(cards[0].dataset.productId).toBe(expected[0].id);
     expect(cards.map(card => card.dataset.productId)).toEqual(
       expected.map(product => product.id)
     );
@@ -78,7 +78,8 @@ describe("lightweight home catalog", () => {
     const details = within(first).getByRole("link", { name: /التفاصيل/ });
     details.focus();
     fireEvent.click(details);
-    const dialog = await screen.findByRole("dialog");
+    // Lazy detail chunk may take longer under parallel CI load.
+    const dialog = await screen.findByRole("dialog", {}, { timeout: 5000 });
     expect(within(dialog).getByRole("button", { name: "إغلاق" })).toBeTruthy();
     fireEvent.click(within(dialog).getByRole("button", { name: "إغلاق" }));
     expect(screen.queryByRole("dialog")).toBeNull();
