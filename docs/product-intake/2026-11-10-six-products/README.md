@@ -1,21 +1,30 @@
-# Intake: 6 toy products photographed at Omran
+# عمران — صور وكتالوج 6 ألعاب (فرع مراجعة فقط)
 
-Created 2026-11-10 on isolated review branch.
+**الحالة:** OWNER-REQUESTED RELEASE PREPARED / NOT DEPLOYED YET — 12 نوفمبر 2026.
 
-**Status: DRAFT / NOT PUBLISHED.** This folder is a review and reconciliation package, not a new public source of truth. Do not edit `public/catalog/products.csv`, the generated public snapshots, or Egypt System without authoritative SQL item and package IDs.
+تم تجهيز إطلاق ويب للمنتجات الستة بطلب صريح من صاحب الشركة. Egypt System لم يدخل التشغيل بعد، ولذلك لا تُستخدم أكواد البرنامج أو الباركود أو الكميات أو الأسعار في هذا الإصدار؛ إعادة الربط معه لاحقًا مشروع منفصل. لا يحدث نشر إنتاجي إلا بعد اكتمال CI، والدمج المعتمد، وبدء مهمة النشر اليدوية.
 
-The six source photos were uploaded in the ChatGPT conversation. The separately delivered photo ZIP contains 6 original source photos and 6 AI studio **candidate** images, all as WebP. **Images have not been transferred into this repository**, because the COS image-saving tool could not access the ChatGPT page on the remote computer. Update asset paths after upload, review logos/text for generative drift, and prefer originals for verification.
+## المنجز
 
-Items: PHOTO-01 curly doll; PHOTO-02 47 PCS miniature kitchen; PHOTO-03 RC racing car; PHOTO-04 pink toy safe; PHOTO-05 blue camo gel-bead toy marked 14+; PHOTO-06 Air Batter plane launcher.
+- الصور الست الأصلية موجودة في حزمة Google Drive الخاصة `02_QA_RESULTS/Omran_6_Original_Photos_REVIEW_ONLY_2026-11-11.zip`. تم التحقق من SHA-256 لكل صورة مقابل سجل `products.pending.json`.
+- ست صور WebP مستخرجة من الأصول بعد تغيير التنسيق/الحجم فقط، بلا تعديل تركيب المنتج أو نص العبوة: `public/products/processed/toys-20261112/photo-XX-original.webp`.
+- تمت إضافة **ستة صفوف فقط على فرع التطوير** إلى `public/catalog/products.csv` بمعرّفات مستقلة للموقع `OMR-INTAKE-20261112-01` إلى `06`؛ هذه **ليست** SKU/Barcode ولا `EgyptSystem.Item_Id`.
+- بعد اعتماد صاحب المتجر تحديث جميع منتجات هذه المجموعة، جرى إعداد الصفوف لحالة `active=TRUE` و`workflow_status=PUBLISHED` و`qa_status=PASS`. الصورة الأساسية هي استوديو مُحسّن بالذكاء الاصطناعي من صورة المنتج الأصلي؛ تُحفظ الصور الحقيقية بجوارها للمراجعة والتوثيق. لا تُستخدم الصور الاصطناعية كدليل على تفاصيل غير واضحة في الأصل.
+- السعر، المخزون، كود Egypt System، الباركود ووحدة البيع غير مختلقة. منتج PHOTO-05 معلم `age_min=14` استنادًا إلى العبوة، مع تنبيه السلامة ضمن الوصف.
+- `review-catalog.json` يتضمن أسماء ووصفًا ومصادر صور وأصنافًا قديمة مشابهة للمراجعة، و`review-gallery.html` معرض محلي منفصل يعرض الصور الأصلية. جميع الصور التجارية المحسّنة داخل `public/products/processed/toys-20261112/omran-toy-XX-studio.webp`.
+- سكربت `node scripts/stage-six-toys-review.mjs` مُخصص لمرحلة المسودة السابقة فقط؛ سيرفض التشغيل على صفوف معتمدة بالفعل (fail closed).
 
-## Mandatory checks before publication
+## معاينة آمنة
 
-1. Scan each real product's barcode and look up existing `EgyptSystem.Item_Id` and `Item_Package_Id`, separately for each selling package; verify exact match to photograph and category. Check for existing records to avoid duplicate items.
-2. Register/update only through the authorized Egypt System workstation/approved workflow; the website is read-only mirror, not authority.
-3. Verify exact retail product photos, text, count, age labels, package contents, color, safety notes, sales unit; price/wholesale/cost and warehouse stock must stay private.
-4. Retrieve an audited read-only current inventory export to `00_CURRENT` and confirm `Store_Id` and active product identities. At time of inspection, folder was empty and `public/data/egypt-system-inventory.json` showed `AWAITING_SQL_EXPORT`.
-5. Once identifiers, uniqueness and visual QA pass, derive the immutable web product ID from verified Egypt System identity; then and only then add to the public catalog, generate local snapshots, run tests, and seek publication approval.
+افتح `docs/product-intake/2026-11-10-six-products/review-gallery.html` من نسخة التطوير على HP Z620. الصور تُعرض من مجلد المشروع عبر مسارات نسبية. هذا الملف ليس صفحة متصلة بمسارات الموقع العام وليس نشرًا على Cloudflare.
 
-**Publication gate:** `active=TRUE + workflow_status=PUBLISHED + qa_status=PASS`. The current records intentionally remain `REVIEW/NEEDS_REVIEW` and have no public ID.
+## الاحتياطات والمتابعة
 
-The material and descriptions are based on the *visible photos/packaging* only; product capabilities not physically verified are explicitly qualified. No prices, stock quantities, SKU, barcodes, Egypt System IDs, or other unsupported facts have been invented.
+1. **فحص التكرار** مع الأصناف القديمة المخفية؛ طقم مطبخ 47 قطعة في الصورة الجديدة **ليس** مطبخ 46 قطعة القديم لمجرد التشابه.
+2. مراجعة كل صورة أصلية وبيانات العبوة وعدد القطع والقياسات والاسم ووحدة البيع والتصنيف وملاحظات السلامة. المنتج PHOTO-05 يحتاج فحصًا خاصًا لتصنيف 14+ وتعليمات الاستخدام.
+3. التأكد من أن كل منتج مناسب للعرض ومتوافر فعليًا. لا نفترض أسعارًا أو أرصدة.
+4. إبقاء الأسعار «عبر واتساب» وحماية أسعار التكلفة والجملة.
+5. التحديث الحالي طلبه صاحب المتجر صراحةً؛ لكن الدمج والنشر على Cloudflare لا يتم إلا بعد اكتمال الفحوص، مع تتبّع طلب الدمج وحالة النشر الفعلية.
+6. بعد تشغيل Egypt System، أعد مطابقة كود الصنف والباركود ووحدة البيع والمخزن دون اعتبار معرّفات المعاينة أكوادًا للبرنامج.
+
+**الرجوع:** قبل النشر: إغلاق PR/عدم دمجه. بعد النشر: إعادة حالة الصفوف الستة إلى `active=FALSE`, وإعادة البناء والنشر عبر مسار الإصدار المعتاد. لا تتغير بيانات Egypt System.
