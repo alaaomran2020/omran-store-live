@@ -286,4 +286,20 @@
     <loc>https://omrantoys.store/products/p/OMR-INTAKE-20261112-06</loc>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://omrantoys.store/products/p/OMR-RAW-020</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products/p/OMR-CHAT-20261113-01</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products/p/OMR-CHAT-20261113-02</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://omrantoys.store/products/p/OMR-CHAT-20261113-03</loc>
+    <priority>0.6</priority>
+  </url>
 </urlset>
