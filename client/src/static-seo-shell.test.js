@@ -105,6 +105,29 @@ describe("Cloudflare Pages static SEO shells", () => {
     }
   });
 
+  it("shows an existing H1 and real internal links in the first HTML response for public content pages", () => {
+    const pages = ["/rewards", "/vip", "/vip/terms", "/vip/privacy", "/popup/videos"];
+    for (const route of pages) {
+      const html = renderStaticSeoShell(shell, route);
+      const body = html.match(/<div id="root">([\\s\\S]*?)<\\/div>/)?.[1] ?? "";
+      expect(body, route).toContain('<main dir="rtl"');
+      expect(body.match(/<h1>/g), route).toHaveLength(1);
+      expect(body, route).toContain('aria-label="روابط داخلية"');
+      expect(body, route).toMatch(/<a href="\\/(?:[^"]*)">/);
+      expect(html, route).not.toContain("<noscript>");
+    }
+  });
+
+  it("keeps truthful, sufficiently descriptive initial titles and descriptions for the affected routes", () => {
+    const pages = ["/rewards", "/vip", "/vip/terms", "/vip/privacy", "/popup/videos", "/popup"];
+    for (const route of pages) {
+      const seo = PUBLIC_PAGE_SEO[route];
+      expect(seo.title.length, route).toBeGreaterThanOrEqual(30);
+      expect(seo.description.length, route).toBeGreaterThanOrEqual(70);
+      expect(renderStaticSeoShell(shell, route), route).toContain('name="description" content="' + seo.description + '"');
+    }
+  });
+
   it("never presents private pages as indexable home pages", () => {
     for (const route of ["/admin", "/admin/products", "/account", "/account/login", "/vip/qr-test", "/vip/staff-register"]) {
       const html = renderStaticSeoShell(shell, route);
