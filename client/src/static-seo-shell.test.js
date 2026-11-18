@@ -112,7 +112,7 @@ describe("Cloudflare Pages static SEO shells", () => {
       expect(html).toContain('<div id="root"><main');
       expect((html.match(/<h1>/g) ?? [])).toHaveLength(1);
       expect(html).toContain('href="/products"');
-      expect(html).toMatch(/href="\\/products\\/p\\/OMR-/);
+      expect(html).toContain('href="/products/p/OMR-');
     }
     const sample = PUBLIC_PRODUCTS_SNAPSHOT.find(item => item.id === "OMR-RAM-2026-013");
     expect(sample).toBeDefined();
