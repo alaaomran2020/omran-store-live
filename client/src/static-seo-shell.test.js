@@ -13,6 +13,11 @@ function htmlEscaped(value) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+function metaContentInHtml(html, attribute, name) {
+  const pattern = new RegExp('<meta\\s+' + attribute + '="' + name + '"\\s+content="([^"]*)"', "i");
+  return html.match(pattern)?.[1] ?? null;
+}
+
 describe("Cloudflare Pages static SEO shells", () => {
 
   it("keeps priority home and toy catalog metadata aligned across initial HTML and React", () => {
@@ -26,9 +31,9 @@ describe("Cloudflare Pages static SEO shells", () => {
     expect(catalog.description.length).toBeLessThanOrEqual(160);
     const firstResponse = renderStaticSeoShell(shell, "/products");
     expect(firstResponse).toContain("<title>" + catalog.title + "</title>");
-    expect(firstResponse).toContain('name="description" content="' + htmlEscaped(catalog.description) + '"');
-    expect(firstResponse).toContain('property="og:description" content="' + htmlEscaped(catalog.description) + '"');
-    expect(firstResponse).toContain('name="twitter:description" content="' + htmlEscaped(catalog.description) + '"');
+    expect(metaContentInHtml(firstResponse, "name", "description")).toBe(htmlEscaped(catalog.description));
+    expect(metaContentInHtml(firstResponse, "property", "og:description")).toBe(htmlEscaped(catalog.description));
+    expect(metaContentInHtml(firstResponse, "name", "twitter:description")).toBe(htmlEscaped(catalog.description));
     const spaListing = readFileSync(new URL("./pages/ProductsPage.tsx", import.meta.url), "utf8");
     expect(spaListing).toContain(JSON.stringify(catalog.title));
     expect(spaListing).toContain(JSON.stringify(catalog.description));
@@ -206,7 +211,7 @@ describe("Cloudflare Pages static SEO shells", () => {
       const seo = PUBLIC_PAGE_SEO[route];
       expect(seo.title.length, route).toBeGreaterThanOrEqual(30);
       expect(seo.description.length, route).toBeGreaterThanOrEqual(70);
-      expect(renderStaticSeoShell(shell, route), route).toContain('name="description" content="' + htmlEscaped(seo.description) + '"');
+      expect(metaContentInHtml(renderStaticSeoShell(shell, route), "name", "description"), route).toBe(htmlEscaped(seo.description));
     }
   });
 
