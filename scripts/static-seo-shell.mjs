@@ -7,8 +7,8 @@ import { resolveProductMetaDescription } from "../shared/productMetaDescriptions
 
 export const PUBLIC_PAGE_SEO = Object.freeze({
   "/products": {
-    title: "لعب أطفال وهدايا في طنطا | عمران تويز",
-    description: "اكتشف ألعاب الأطفال والهدايا لدى عمران تويز من شركة عمران التجارية في طنطا، وشاهد الصور والتفاصيل واستفسر عن السعر والتوفر عبر واتساب.",
+    title: "لعب أطفال في طنطا | كتالوج عمران تويز - شركة عمران التجارية",
+    description: "تصفح كتالوج ألعاب الأطفال لدى شركة عمران التجارية في طنطا، وشاهد صور المنتجات وتفاصيلها. اختر حسب الفئة والعمر واستفسر عن أسعار الجملة والقطاعي عبر واتساب.",
   },
   "/popup": {
     title: "POP UP – Gifts & Balloons | شركة عمران التجارية",
@@ -180,13 +180,13 @@ export function selectHomeDiscoveryProducts(toys, popup) {
 export function renderCatalogDiscoveryShell(baseHtml, approvedProducts, mode) {
   if (!["home", "toys", "popup"].includes(mode)) throw new Error("Invalid catalog preview mode");
   if (!Array.isArray(approvedProducts)) throw new Error("Missing approved catalog for SEO preview");
-  const title = mode === "home" ? "عمران تويز — لعب أطفال وهدايا في طنطا" :
-    mode === "popup" ? "POP UP — بالونات وهدايا ومستلزمات حفلات" : "ألعاب الأطفال في عمران تويز";
+  const title = mode === "home" ? "لعب أطفال وهدايا في طنطا | عمران تويز" :
+    mode === "popup" ? "POP UP — بالونات وهدايا ومستلزمات حفلات" : "لعب أطفال في طنطا من شركة عمران التجارية";
   const introduction = mode === "home"
-    ? "تصفح أحدث منتجات شركة عمران التجارية في طنطا، وشاهد الصور واستفسر عن الأسعار والتوفر عبر واتساب."
+    ? "تصفح كتالوج لعب الأطفال والهدايا في طنطا من شركة عمران التجارية، واستفسر عن أسعار الجملة والقطاعي والكميات عبر واتساب."
     : mode === "popup"
       ? "تصفح بالونات ومنتجات POP UP المنشورة، وشاهد صور المنتجات ثم استفسر عن السعر والتوفر عبر واتساب."
-      : "تصفح ألعاب الأطفال المنشورة في عمران تويز، واختر المنتج المناسب ثم استفسر عن السعر والتوفر عبر واتساب.";
+      : "تصفح لعب الأطفال في طنطا من كتالوج شركة عمران التجارية، وشاهد تفاصيل المنتجات واستفسر عن الجملة والقطاعي عبر واتساب.";
   const links = approvedProducts.map((product, index) => {
     if (!product?.id || !/^[A-Za-z0-9_-]+$/.test(product.id) || !product.name?.trim()) return "";
     const catalog = /^(POP-)/i.test(product.id) ? "popup" : "toys";
