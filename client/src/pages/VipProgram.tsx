@@ -17,7 +17,7 @@ export default function VipProgram() {
   const href = support ? `https://wa.me/${support}?text=${encodeURIComponent("مرحبًا، أريد معرفة موعد إطلاق برنامج Omran VIP Card والمزايا المعتمدة.")}` : undefined;
   return (
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
-      <SeoMetadata path="/vip" title="برنامج Omran VIP" description="تعرف على كروت Omran VIP ومزاياها وشروط الخصومات لدى عمران تويز والأماكن المشاركة." />
+      <SeoMetadata path="/vip" title="برنامج بطاقات Omran VIP | شركة عمران التجارية" description="تعرّف على برنامج بطاقات Omran VIP، وأنواع الكروت والمزايا المعروضة وشروط الاستخدام والتحقق من الصلاحية، وروابط الشروط وإشعار الخصوصية." />
       <AnnouncementBar /><BrandHeader />
       <main id={MAIN_CONTENT_ID} tabIndex={-1}>
         <section className="border-b border-brand-border bg-gradient-to-l from-brand-navy via-brand-blue to-sky-600 py-12 text-white sm:py-16">
