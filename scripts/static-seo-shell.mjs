@@ -10,27 +10,56 @@ export const PUBLIC_PAGE_SEO = Object.freeze({
   },
   "/popup": {
     title: "POP UP – Gifts & Balloons | شركة عمران التجارية",
-    description: "هدايا وبالونات ومستلزمات حفلات من POP UP ضمن شركة عمران التجارية.",
+    description: "تعرّف على هدايا وبالونات ومستلزمات الحفلات لدى POP UP – Gifts & Balloons من شركة عمران التجارية، وتصفح المنتجات وفيديوهات تنسيقات المناسبات.",
   },
   "/popup/videos": {
-    title: "فيديوهات POP UP – Gifts & Balloons",
-    description: "شاهد فيديوهات POP UP للهدايا والبالونات وتنسيقات المناسبات.",
+    title: "فيديوهات هدايا وبالونات POP UP | شركة عمران التجارية",
+    description: "شاهد فيديوهات POP UP – Gifts & Balloons التي تعرض الهدايا والبالونات وتنسيقات المناسبات، ثم انتقل إلى قسم POP UP لتصفح المنتجات.",
   },
   "/rewards": {
-    title: "مزايا وعروض عمران تويز",
-    description: "تابع أحدث المزايا والعروض المتاحة لعملاء عمران تويز.",
+    title: "مزايا وعروض العملاء | شركة عمران التجارية",
+    description: "تابع صفحة مزايا وعروض العملاء في عمران تويز من شركة عمران التجارية، واطلع على المعلومات المنشورة عن المزايا والعروض عند تحديث الصفحة.",
   },
   "/vip": {
-    title: "برنامج Omran VIP",
-    description: "تعرف على كروت Omran VIP ومزاياها وشروط الخصومات لدى عمران تويز والأماكن المشاركة.",
+    title: "برنامج بطاقات Omran VIP | شركة عمران التجارية",
+    description: "تعرّف على برنامج بطاقات Omran VIP، وأنواع الكروت والمزايا المعروضة وشروط الاستخدام والتحقق من الصلاحية، وروابط الشروط وإشعار الخصوصية.",
   },
   "/vip/terms": {
-    title: "شروط استخدام Omran VIP",
-    description: "شروط تفعيل واستخدام واستبدال كروت Omran VIP.",
+    title: "شروط استخدام بطاقات Omran VIP | شركة عمران التجارية",
+    description: "راجع شروط تفعيل واستخدام كروت Omran VIP، وضوابط العروض والخصومات، وإجراءات فقد الكارت واستبداله والشكاوى كما هي موضحة في صفحة الشروط.",
   },
   "/vip/privacy": {
-    title: "خصوصية برنامج Omran VIP",
-    description: "إشعار خصوصية برنامج Omran VIP واستخدام بيانات العضوية والكروت.",
+    title: "خصوصية بيانات Omran VIP | شركة عمران التجارية",
+    description: "اقرأ إشعار خصوصية برنامج Omran VIP للتعرف على البيانات المستخدمة وأغراض المعالجة والمشاركة والحماية، وكيفية التعامل مع طلبات الوصول والتصحيح والمحو.",
+  },
+});
+
+/** Initial HTML summaries mirror already-approved public page copy; React replaces #root on hydration. */
+const PUBLIC_PAGE_FALLBACKS = Object.freeze({
+  "/rewards": {
+    h1: "مزايا وعروض مخصوصة لعملاء عمران تويز",
+    summary: "تابع الصفحة عشان تعرف أحدث المزايا والعروض الخاصة المتاحة لعملائنا.",
+    links: [["/", "الرئيسية"], ["/products", "تصفح المنتجات"]],
+  },
+  "/vip": {
+    h1: "خصومات محسوبة، وشروط واضحة، وتحقق فعلي من الكارت",
+    summary: "استفيد من عروض عمران تويز والأماكن المشاركة، مع شروط وحد أقصى واضح لكل خصم.",
+    links: [["/vip/terms", "شروط الاستخدام"], ["/vip/privacy", "إشعار الخصوصية"]],
+  },
+  "/vip/terms": {
+    h1: "شروط استخدام كروت Omran VIP",
+    summary: "راجع تفاصيل نوع الكارت وصلاحيته والعروض المتاحة وقت الشراء، لأن لكل عرض شروط استخدام مستقلة.",
+    links: [["/vip", "العودة لبرنامج Omran VIP"]],
+  },
+  "/vip/privacy": {
+    h1: "خصوصية برنامج Omran VIP",
+    summary: "بنستخدم أقل قدر من البيانات اللازمة لتقديم الخدمة وحماية حسابك ومتابعة طلباتك.",
+    links: [["/vip", "العودة لبرنامج Omran VIP"]],
+  },
+  "/popup/videos": {
+    h1: "شوف تنسيقات POP UP بالفيديو",
+    summary: "فيديوهات حقيقية للهدايا والبالونات وتنسيقات المناسبات من POP UP – Gifts & Balloons.",
+    links: [["/popup", "رجوع لصفحة POP UP"]],
   },
 });
 
@@ -103,6 +132,18 @@ export function renderStaticSeoShell(baseHtml, route) {
       '  <meta name="robots" content="noindex, nofollow" />\n  </head>',
       "head"
     );
+  }
+  const fallback = PUBLIC_PAGE_FALLBACKS[route];
+  if (fallback) {
+    const links = fallback.links.map(([href, label]) =>
+      '<a href="' + htmlEscape(href) + '">' + htmlEscape(label) + '</a>'
+    ).join(" · ");
+    const body = '<main dir="rtl" aria-label="محتوى الصفحة">' +
+      '<h1>' + htmlEscape(fallback.h1) + '</h1>' +
+      '<p>' + htmlEscape(fallback.summary) + '</p>' +
+      '<nav aria-label="روابط داخلية">' + links + '</nav></main>';
+    html = replaceRequired(html, /<div id="root"><\/div>/i,
+      '<div id="root">' + body + '</div>', "public page root");
   }
   return html;
 }
