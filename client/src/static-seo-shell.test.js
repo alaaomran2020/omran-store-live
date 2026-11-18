@@ -7,6 +7,10 @@ import { PUBLIC_PAGE_SEO, renderStaticSeoShell, renderProductSeoShell, renderCat
 
 const shell = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
+function htmlEscaped(value) {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 describe("Cloudflare Pages static SEO shells", () => {
 
   it("every approved product has a meaningful name, safe description and declared local image", () => {
@@ -99,7 +103,7 @@ describe("Cloudflare Pages static SEO shells", () => {
       const canonical = html.match(/<link rel="canonical"[^>]*>/gi) ?? [];
       expect(canonical, route).toHaveLength(1);
       expect(canonical[0], route).toContain('href="https://omrantoys.store' + route + '"');
-      expect(html, route).toContain("<title>" + metadata.title + "</title>");
+      expect(html, route).toContain("<title>" + htmlEscaped(metadata.title) + "</title>");
       expect(html, route).toContain('property="og:url" content="https://omrantoys.store' + route + '"');
       expect(html, route).not.toContain('name="robots" content="noindex');
     }
@@ -109,11 +113,11 @@ describe("Cloudflare Pages static SEO shells", () => {
     const pages = ["/rewards", "/vip", "/vip/terms", "/vip/privacy", "/popup/videos"];
     for (const route of pages) {
       const html = renderStaticSeoShell(shell, route);
-      const body = html.match(/<div id="root">([\\s\\S]*?)<\\/div>/)?.[1] ?? "";
+      const body = html.match(/<div id="root">([\s\S]*?)<\/div>/)?.[1] ?? "";
       expect(body, route).toContain('<main dir="rtl"');
       expect(body.match(/<h1>/g), route).toHaveLength(1);
       expect(body, route).toContain('aria-label="روابط داخلية"');
-      expect(body, route).toMatch(/<a href="\\/(?:[^"]*)">/);
+      expect(body, route).toMatch(/<a href="\/(?:[^"]*)">/);
       expect(html, route).not.toContain("<noscript>");
     }
   });
@@ -124,7 +128,7 @@ describe("Cloudflare Pages static SEO shells", () => {
       const seo = PUBLIC_PAGE_SEO[route];
       expect(seo.title.length, route).toBeGreaterThanOrEqual(30);
       expect(seo.description.length, route).toBeGreaterThanOrEqual(70);
-      expect(renderStaticSeoShell(shell, route), route).toContain('name="description" content="' + seo.description + '"');
+      expect(renderStaticSeoShell(shell, route), route).toContain('name="description" content="' + htmlEscaped(seo.description) + '"');
     }
   });
 
