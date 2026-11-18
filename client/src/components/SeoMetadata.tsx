@@ -18,6 +18,7 @@
 import { useEffect } from "react";
 import type { Product } from "@/lib/productsClient";
 import { displayCategoryName } from "@shared/taxonomy";
+import { resolveProductMetaDescription } from "@shared/productMetaDescriptions";
 import { isPubliclyVisible } from "@shared/products";
 import { productPagePath } from "@shared/productPaths";
 import {
@@ -312,13 +313,14 @@ export function ProductStructuredData({
 
     const title = buildPageTitle(product.name, catalogLabel);
     const rawDescription = product.description?.trim() ?? "";
-    const description = rawDescription
+    const defaultDescription = rawDescription
       ? cleanDescriptionText(rawDescription)
       : cleanDescriptionText(
           [product.name, categoryDisplay ? `${categoryDisplay} من` : "من", catalogLabel]
             .filter(Boolean)
             .join(" ")
         );
+    const description = resolveProductMetaDescription(id, defaultDescription);
     const ogImage = safeAbsoluteUrl(images[0] ?? null) ?? SOCIAL_FALLBACK_IMAGE;
 
     const previous = captureHeadState();
