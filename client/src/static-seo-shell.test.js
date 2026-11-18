@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "./lib/publicProductsSnapshot";
 import { POPUP_PRODUCTS_SNAPSHOT } from "./lib/popupProductsSnapshot";
+import { PRODUCT_META_DESCRIPTION_OVERRIDES } from "../../shared/productMetaDescriptions.js";
 import { describe, it, expect } from "vitest";
 import { PUBLIC_PAGE_SEO, renderStaticSeoShell, renderProductSeoShell, renderCatalogDiscoveryShell, selectHomeDiscoveryProducts } from "../../scripts/static-seo-shell.mjs";
 
@@ -72,6 +73,55 @@ describe("Cloudflare Pages static SEO shells", () => {
     expect(html).not.toContain("<noscript>");
   });
 
+
+  it("uses factual, distinct, 70–160 character metadata for the five audited products", () => {
+    const ids = ["OMR-RAM-2026-013", "OMR-RAM-2026-017", "OMR-RAM-0042", "OMR-RAM-0043", "OMR-RAM-0066"];
+    expect(Object.keys(PRODUCT_META_DESCRIPTION_OVERRIDES).sort()).toEqual([...ids].sort());
+    const uniqueDescriptions = new Set();
+    for (const id of ids) {
+      const product = PUBLIC_PRODUCTS_SNAPSHOT.find(item => item.id === id);
+      expect(product, id).toBeDefined();
+      const description = PRODUCT_META_DESCRIPTION_OVERRIDES[id];
+      expect(description.length, id).toBeGreaterThanOrEqual(70);
+      expect(description.length, id).toBeLessThanOrEqual(160);
+      expect(description, id).not.toMatch(/سعر\\s+الجملة|مخزون\\s*:/u);
+      uniqueDescriptions.add(description);
+      const html = renderProductSeoShell(shell, product, "toys");
+      const escaped = htmlEscaped(description);
+      expect(html, id).toContain('name="description" content="' + escaped + '"');
+      expect(html, id).toContain('property="og:description" content="' + escaped + '"');
+      expect(html, id).toContain('name="twitter:description" content="' + escaped + '"');
+      expect(html, id).toContain("<h1>" + htmlEscaped(product.name) + "</h1>");
+      expect(html, id).toContain('<p>' + escaped + '</p>');
+      expect(html, id).toContain('href="https://omrantoys.store/products/p/' + id + '"');
+      expect(html, id).toContain('id="omran-product-jsonld"');
+    }
+    expect(uniqueDescriptions.size).toBe(ids.length);
+  });
+
+  it("keeps the first-response home, product listing and product detail HTML crawlable", () => {
+    const home = renderCatalogDiscoveryShell(
+      shell,
+      selectHomeDiscoveryProducts(PUBLIC_PRODUCTS_SNAPSHOT, POPUP_PRODUCTS_SNAPSHOT),
+      "home"
+    );
+    const listing = renderCatalogDiscoveryShell(
+      renderStaticSeoShell(shell, "/products"), PUBLIC_PRODUCTS_SNAPSHOT, "toys"
+    );
+    for (const html of [home, listing]) {
+      expect(html).toContain('<div id="root"><main');
+      expect((html.match(/<h1>/g) ?? [])).toHaveLength(1);
+      expect(html).toContain('href="/products"');
+      expect(html).toContain('href="/products/p/OMR-');
+    }
+    const sample = PUBLIC_PRODUCTS_SNAPSHOT.find(item => item.id === "OMR-RAM-2026-013");
+    expect(sample).toBeDefined();
+    const product = renderProductSeoShell(shell, sample, "toys");
+    expect(product).toContain('<div id="root"><main');
+    expect((product.match(/<h1>/g) ?? [])).toHaveLength(1);
+    expect(product).toContain('href="/products"');
+    expect(product).toContain('id="omran-product-jsonld"');
+  });
 
   it("emits canonical, real image and safe informational schema in initial HTML for a published product", () => {
     const html = renderProductSeoShell(shell, { id: "OMR-RAW-001", name: "محلول فقاعات صابون", description: "", category: "ألعاب خارجية", processedImage: "/products/processed/generated/product-omr-raw-001-main.webp" }, "toys");
