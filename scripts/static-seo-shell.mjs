@@ -3,6 +3,8 @@
  * The React SPA still manages runtime metadata, but crawlers must not see every
  * route as the home page before JavaScript runs.
  */
+import { resolveProductMetaDescription } from "../shared/productMetaDescriptions.js";
+
 export const PUBLIC_PAGE_SEO = Object.freeze({
   "/products": {
     title: "لعب أطفال وهدايا في طنطا | عمران تويز",
@@ -220,8 +222,9 @@ export function renderProductSeoShell(baseHtml, product, catalog, relatedProduct
   const publicDescription = rawDescription
     .replace(/(?:^|[.!؟]\s*)سعر\s+(?:الجملة|الشراء|البيع|القطاعي|التجزئة|للتجار)[^.!؟\n]*(?:[.!؟]|$)/giu, ". ")
     .replace(/\s+/g, " ").replace(/^\.\s*/, "").trim();
-  const description = (publicDescription || [name, product.category, "للسعر والتوفر تواصل معنا عبر واتساب"].filter(Boolean).join(" — "))
+  const defaultDescription = (publicDescription || [name, product.category, "للسعر والتوفر تواصل معنا عبر واتساب"].filter(Boolean).join(" — "))
     .replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").slice(0, 160);
+  const description = resolveProductMetaDescription(product.id, defaultDescription);
   const candidate = product.processedImage || product.image;
   const image = typeof candidate === "string" && candidate.startsWith("/products/") && !candidate.includes("..") ? ORIGIN + candidate : ORIGIN + "/brand/logo.png";
   let html = renderStaticSeoShell(baseHtml, section);
