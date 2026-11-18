@@ -8,7 +8,7 @@ import { MAIN_CONTENT_ID } from "@/lib/a11y";
 export default function Rewards() {
   return (
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
-      <SeoMetadata path="/rewards" title="مزايا وعروض عمران تويز" description="تابع أحدث المزايا والعروض المتاحة لعملاء عمران تويز." />
+      <SeoMetadata path="/rewards" title="مزايا وعروض العملاء | شركة عمران التجارية" description="تابع صفحة مزايا وعروض العملاء في عمران تويز من شركة عمران التجارية، واطلع على المعلومات المنشورة عن المزايا والعروض عند تحديث الصفحة." />
       <AnnouncementBar />
       <BrandHeader />
       <main id={MAIN_CONTENT_ID} tabIndex={-1} className="container py-10 sm:py-16">

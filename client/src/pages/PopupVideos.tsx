@@ -34,8 +34,8 @@ export default function PopupVideos() {
     <div dir="rtl" className="min-h-screen bg-gradient-to-b from-fuchsia-50/60 via-white to-rose-50/40 text-brand-ink">
       <SeoMetadata
         path="/popup/videos"
-        title="فيديوهات POP UP – Gifts & Balloons"
-        description="شاهد فيديوهات POP UP للهدايا والبالونات وتنسيقات المناسبات."
+        title="فيديوهات هدايا وبالونات POP UP | شركة عمران التجارية"
+        description="شاهد فيديوهات POP UP – Gifts & Balloons التي تعرض الهدايا والبالونات وتنسيقات المناسبات، ثم انتقل إلى قسم POP UP لتصفح المنتجات."
       />
       <AnnouncementBar />
       <BrandHeader />

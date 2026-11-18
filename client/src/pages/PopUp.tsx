@@ -7,7 +7,7 @@ import { SOCIAL_EMBED_CONFIG } from "@/lib/socialEmbeds";
 import AnnouncementBar from "@/components/AnnouncementBar";
 
 const POPUP_TITLE = "POP UP – Gifts & Balloons | شركة عمران التجارية";
-const POPUP_DESCRIPTION = "هدايا وبالونات ومستلزمات حفلات من POP UP ضمن شركة عمران التجارية.";
+const POPUP_DESCRIPTION = "تعرّف على هدايا وبالونات ومستلزمات الحفلات لدى POP UP – Gifts & Balloons من شركة عمران التجارية، وتصفح المنتجات وفيديوهات تنسيقات المناسبات.";
 
 const POPUP_SOCIALS = [
   {

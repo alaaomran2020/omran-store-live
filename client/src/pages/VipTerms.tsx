@@ -15,7 +15,7 @@ const sections = [
 export default function VipTerms() {
   return (
     <div dir="rtl" className="min-h-screen bg-brand-cream text-brand-ink">
-      <SeoMetadata path="/vip/terms" title="شروط استخدام Omran VIP" description="شروط تفعيل واستخدام واستبدال كروت Omran VIP." />
+      <SeoMetadata path="/vip/terms" title="شروط استخدام بطاقات Omran VIP | شركة عمران التجارية" description="راجع شروط تفعيل واستخدام كروت Omran VIP، وضوابط العروض والخصومات، وإجراءات فقد الكارت واستبداله والشكاوى كما هي موضحة في صفحة الشروط." />
       <AnnouncementBar /><BrandHeader />
       <main id={MAIN_CONTENT_ID} tabIndex={-1} className="container max-w-4xl py-10 sm:py-14">
         <Link href="/vip" className="text-sm font-black text-brand-blue">العودة لبرنامج Omran VIP</Link>
