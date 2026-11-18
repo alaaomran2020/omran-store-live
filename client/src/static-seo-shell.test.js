@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { PUBLIC_PRODUCTS_SNAPSHOT } from "./lib/publicProductsSnapshot";
 import { POPUP_PRODUCTS_SNAPSHOT } from "./lib/popupProductsSnapshot";
 import { PRODUCT_META_DESCRIPTION_OVERRIDES } from "../../shared/productMetaDescriptions.js";
+import { HOME_TITLE, HOME_DESCRIPTION } from "../../shared/site";
 import { describe, it, expect } from "vitest";
 import { PUBLIC_PAGE_SEO, renderStaticSeoShell, renderProductSeoShell, renderCatalogDiscoveryShell, selectHomeDiscoveryProducts } from "../../scripts/static-seo-shell.mjs";
 
@@ -12,7 +13,39 @@ function htmlEscaped(value) {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+function metaContentInHtml(html, attribute, name) {
+  const pattern = new RegExp('<meta\\s+' + attribute + '="' + name + '"\\s+content="([^"]*)"', "i");
+  return html.match(pattern)?.[1] ?? null;
+}
+
 describe("Cloudflare Pages static SEO shells", () => {
+
+  it("keeps priority home and toy catalog metadata aligned across initial HTML and React", () => {
+    expect(HOME_TITLE.length).toBeLessThanOrEqual(70);
+    expect(HOME_DESCRIPTION.length).toBeLessThanOrEqual(160);
+    expect(shell).toContain("<title>" + HOME_TITLE + "</title>");
+    expect(shell).toContain('content="' + HOME_DESCRIPTION + '"');
+
+    const catalog = PUBLIC_PAGE_SEO["/products"];
+    expect(catalog.title.length).toBeLessThanOrEqual(70);
+    expect(catalog.description.length).toBeLessThanOrEqual(160);
+    const firstResponse = renderStaticSeoShell(shell, "/products");
+    expect(firstResponse).toContain("<title>" + catalog.title + "</title>");
+    expect(metaContentInHtml(firstResponse, "name", "description")).toBe(htmlEscaped(catalog.description));
+    expect(metaContentInHtml(firstResponse, "property", "og:description")).toBe(htmlEscaped(catalog.description));
+    expect(metaContentInHtml(firstResponse, "name", "twitter:description")).toBe(htmlEscaped(catalog.description));
+    const spaListing = readFileSync(new URL("./pages/ProductsPage.tsx", import.meta.url), "utf8");
+    expect(spaListing).toContain(JSON.stringify(catalog.title));
+    expect(spaListing).toContain(JSON.stringify(catalog.description));
+
+    const home = renderCatalogDiscoveryShell(shell, [], "home");
+    const listing = renderCatalogDiscoveryShell(firstResponse, [], "toys");
+    expect(home).toContain("<h1>لعب أطفال وهدايا في طنطا | عمران تويز</h1>");
+    expect(listing).toContain("<h1>لعب أطفال في طنطا من شركة عمران التجارية</h1>");
+    expect(home).toContain('href="/products"');
+    expect(listing).toContain('href="/products"');
+  });
+
 
   it("every approved product has a meaningful name, safe description and declared local image", () => {
     const products = [...PUBLIC_PRODUCTS_SNAPSHOT, ...POPUP_PRODUCTS_SNAPSHOT];
@@ -178,7 +211,7 @@ describe("Cloudflare Pages static SEO shells", () => {
       const seo = PUBLIC_PAGE_SEO[route];
       expect(seo.title.length, route).toBeGreaterThanOrEqual(30);
       expect(seo.description.length, route).toBeGreaterThanOrEqual(70);
-      expect(renderStaticSeoShell(shell, route), route).toContain('name="description" content="' + htmlEscaped(seo.description) + '"');
+      expect(metaContentInHtml(renderStaticSeoShell(shell, route), "name", "description"), route).toBe(htmlEscaped(seo.description));
     }
   });
 

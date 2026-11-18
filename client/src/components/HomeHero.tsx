@@ -40,13 +40,13 @@ export default function HomeHero() {
             id="home-hero-title"
             className="mt-3 text-3xl font-bold leading-[1.22] text-brand-navy sm:text-4xl"
           >
-            <span className="inline">لحظات صغيرة.</span>
+            <span className="inline">لعب أطفال في طنطا</span>
             <span className="block text-brand-blue">
-              فرحة كبيرة.
+              وهدايا من عمران تويز
             </span>
           </h1>
           <p className="mt-4 max-w-xl text-sm font-bold leading-7 text-brand-muted sm:text-lg sm:leading-8">
-            شوف اللعب بوضوح، اختار المناسب، واسأل عن السعر والكميات على واتساب.
+            تصفح ألعاب الأطفال والهدايا من شركة عمران التجارية في طنطا، واسأل عن أسعار الجملة والقطاعي والكميات عبر واتساب.
           </p>
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
