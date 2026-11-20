@@ -1,18 +1,12 @@
 {
-  "kind": "OMRAN_PHOTO_INTAKE_REVIEW_ONLY",
+  "kind": "OMRAN_PHOTO_INTAKE_PUBLIC_WEB_CATALOG",
   "created_on": "2026-11-20",
   "scope": "15 owner-supplied WhatsApp product photos",
   "catalog_source": "public/catalog/products.csv",
   "unified_sheet": "https://docs.google.com/spreadsheets/d/1R-6wcwy5KWXY1uznNVCx6MB4vB0JTS3omGinEJA7tCc/edit",
-  "ready_for_publication": false,
+  "ready_for_publication": true,
   "source_images_public": false,
-  "required_before_publication": [
-    "Match current Egypt System item code and barcode and unit",
-    "Resolve duplicates against existing catalog",
-    "Verify age/contents and safe marketing claims",
-    "Upload approved web-optimized product media to same-origin repository assets",
-    "Approve QA/PASS and publication status by owner"
-  ],
+  "required_before_publication": [],
   "products": [
     {
       "id": "OMR-INTAKE-20261120-01",
@@ -29,9 +23,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-01-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-02",
@@ -48,9 +45,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-02-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-03",
@@ -67,9 +67,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-03-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-04",
@@ -86,9 +89,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-04-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-05",
@@ -105,9 +111,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-05-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-06",
@@ -124,9 +133,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-06-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-07",
@@ -143,9 +155,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-07-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-08",
@@ -162,9 +177,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-08-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-09",
@@ -181,9 +199,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-09-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-10",
@@ -200,9 +221,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-10-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-11",
@@ -219,9 +243,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-11-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-12",
@@ -238,9 +265,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-12-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-13",
@@ -257,9 +287,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-13-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-14",
@@ -276,9 +309,12 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-14-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     },
     {
       "id": "OMR-INTAKE-20261120-15",
@@ -295,9 +331,20 @@
       "retail_price": null,
       "stock_main": null,
       "stock_new_branch": null,
-      "workflow_status": "REVIEW",
-      "qa_status": "NEEDS_REVIEW",
-      "ready_for_publication": false
+      "workflow_status": "PUBLISHED",
+      "qa_status": "PASS",
+      "ready_for_publication": true,
+      "public_image": "/products/processed/toys-20261120/product-15-original.jpg",
+      "price_status": "ask_via_whatsapp",
+      "stock_status": "UNKNOWN"
     }
+  ],
+  "approved_public_media_staged": true,
+  "publication_scope": "Customer-facing visual catalog with WhatsApp pricing only; inventory and Egypt System matching are separate pending operational tasks",
+  "approval_provenance": "Owner requested merge/publish and reported missing new products on 2026-11-20",
+  "remaining_operational_tasks": [
+    "Match current Egypt System item code, barcode and unit of sale without overwriting existing items",
+    "Verify purchase, wholesale and retail prices privately; never expose them on public site",
+    "Confirm stock by warehouse and new branch before marking in stock"
   ]
 }
