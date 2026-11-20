@@ -66,7 +66,7 @@ describe("20 November 2026 intake publication", () => {
     expect(newlyPublished).toHaveLength(15);
     expect(new Set(newlyPublished.map(product => product.id)).size).toBe(15);
     for (const product of newlyPublished) {
-      expect(product.image).toMatch(/^\\/products\\/processed\\/toys-20261120\\/product-\\d{2}-original\\.jpg$/);
+      expect(product.image).toMatch(/^\/products\/processed\/toys-20261120\/product-\d{2}-original\.jpg$/);
       expect(product.reviewReason).toBeNull();
       expect(product.price).toBeNull();
     }
